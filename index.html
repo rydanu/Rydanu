@@ -4756,11 +4756,13 @@ function addListing(){
     }).select().single().then(({ data, error }) => {
       if(error){ console.error('Angebot konnte nicht gespeichert werden:', error); alert('Das Angebot konnte nicht gespeichert werden. Bitte nochmal versuchen.'); return; }
       driverListings[0].dbId = data.id;
+      loadRealPublicListings();
     });
   }
 
   // this listing only becomes publicly bookable once the driver's account is approved
-  if(isApproved){
+  // (nur fuer die alte Demo — echte Fahrer werden ueber loadRealPublicListings() eingeblendet)
+  if(!realDriverProfile && isApproved){
     drivers.unshift({
       name: profile.fullName, tour:name, duration, vehicle:vehicleDisplayString(profile.vehicle), vehicleType:(profile.vehicle && profile.vehicle.vtype) || 'Standard Car',
       lang: profile.langs.length ? profile.langs : ["EN"], rating:"New · 0 tours", price,
