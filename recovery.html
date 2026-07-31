@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ryvio — Datenrettung</title>
+<style>
+  body{ font-family: -apple-system, sans-serif; background:#F7FAF4; color:#0B3D22; padding:20px; margin:0; }
+  h1{ font-size:1.3rem; }
+  p{ font-size:0.95rem; line-height:1.5; }
+  textarea{ width:100%; box-sizing:border-box; height:300px; font-family:monospace; font-size:0.7rem; padding:10px; border:1px solid #ccc; border-radius:6px; }
+  button{ background:#0C8A3E; color:#fff; border:none; padding:14px; border-radius:6px; font-size:1rem; font-weight:700; width:100%; margin-top:10px; cursor:pointer; }
+  .ok{ color:#0C8A3E; font-weight:700; }
+  .err{ color:#C0392B; font-weight:700; }
+</style>
+</head>
+<body>
+  <h1>🔧 Ryvio — Datenrettung</h1>
+  <p id="status">Suche nach gespeicherten Daten...</p>
+  <textarea id="output" readonly></textarea>
+  <button onclick="copyIt()">Text kopieren</button>
+
+<script>
+  const KEY = 'ryvio_demo_state_v1';
+  const LEGACY_KEY = 'localwise_demo_state_v1'; // pre-rebrand key, still checked as a fallback
+  const statusEl = document.getElementById('status');
+  const out = document.getElementById('output');
+  try {
+    const data = localStorage.getItem(KEY) || localStorage.getItem(LEGACY_KEY);
+    if (data) {
+      out.value = data;
+      statusEl.innerHTML = '<span class="ok">✓ Daten gefunden (' + data.length + ' Zeichen).</span> Kopiere den Text unten — er ist dein kompletter Datenstand. Später in der App unter "Import data" wieder einfügen.';
+    } else {
+      statusEl.innerHTML = '<span class="err">Keine gespeicherten Daten unter diesem Schlüssel gefunden.</span> Möglich, dass du diese Seite von einer anderen Adresse aus öffnest als vorher die App. Bitte prüfe, ob die Webadresse genau übereinstimmt.';
+    }
+  } catch (e) {
+    statusEl.innerHTML = '<span class="err">Fehler beim Lesen: ' + e.message + '</span>';
+  }
+
+  function copyIt(){
+    const done = () => { statusEl.innerHTML = '<span class="ok">✓ In die Zwischenablage kopiert.</span>'; };
+    const fail = () => {
+      try {
+        out.focus();
+        out.select();
+        out.setSelectionRange(0, out.value.length);
+        document.execCommand('copy');
+        statusEl.innerHTML = '<span class="ok">✓ Kopiert.</span>';
+      } catch(e) {
+        statusEl.innerHTML = '<span class="err">Automatisches Kopieren hat nicht geklappt — bitte ins Feld tippen, alles markieren, manuell kopieren.</span>';
+      }
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(out.value).then(done, fail);
+    } else {
+      fail();
+    }
+  }
+</script>
+</body>
+</html>
