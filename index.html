@@ -4850,6 +4850,54 @@ const drivers = [
 ];
 
 function initials(name){ return name.split(' ').map(w=>w[0]).slice(0,2).join(''); }
+
+// ---- echte freigeschaltete Fahrer + aktive Angebote fuer die Kunden-Suche laden ----
+async function loadRealPublicListings(){
+  const { data: approvedDrivers, error: dErr } = await supabaseClient
+    .from('drivers')
+    .select('id, name, region, lw_number, avatar_url, bio')
+    .eq('status', 'approved');
+  if(dErr){ console.error('Echte Fahrer konnten nicht geladen werden:', dErr); return; }
+  // vorher injizierte echte Karten wieder entfernen (verhindert Dubletten bei erneutem Laden)
+  for(let i = drivers.length - 1; i >= 0; i--){ if(drivers[i].isReal) drivers.splice(i, 1); }
+  if(!approvedDrivers || approvedDrivers.length === 0){ renderDriverGrid(visibleDrivers()); return; }
+  const driverMap = {};
+  approvedDrivers.forEach(d => { driverMap[d.id] = d; });
+  const ids = approvedDrivers.map(d => d.id);
+  const { data: listings, error: lErr } = await supabaseClient
+    .from('listings')
+    .select('*')
+    .eq('active', true)
+    .in('driver_id', ids);
+  if(lErr){ console.error('Echte Angebote konnten nicht geladen werden:', lErr); return; }
+  const realCards = (listings || []).map(l => {
+    const d = driverMap[l.driver_id] || {};
+    const det = l.details || {};
+    return {
+      isReal: true,
+      name: d.name || '—',
+      tour: l.title,
+      spots: det.spots || [],
+      duration: l.duration || '',
+      vehicle: '',
+      vehicleType: '',
+      lang: [],
+      rating: 'New · 0 tours',
+      price: l.price_display || '',
+      badge: 'New driver',
+      region: l.region,
+      services: det.services || [],
+      ownerId: d.id,
+      lwNumber: d.lw_number,
+      active: true,
+      airportRegions: det.airportRegions || null,
+      transferRegions: det.transferRegions || null,
+      photo: d.avatar_url || null
+    };
+  });
+  drivers.unshift(...realCards);
+  renderDriverGrid(visibleDrivers());
+}
 function formatRatingHTML(ratingStr){
   const parts = String(ratingStr || '').split('·').map(p=>p.trim());
   const scorePart = parts[0] || '';
@@ -6041,6 +6089,7 @@ const FX_SYMBOLS = { USD: '$', EUR: '€', AUD: 'A$' };
 const VTYPE_LABELS = { 'Standard Car': ['vt_standard','🚗'], 'Family Car': ['vt_family','🚙'], 'Minivan': ['vt_minivan','🚐'], 'Luxury Car': ['vt_luxury','🚘'], 'Large Vehicle': ['vt_large','🚌'] };
 
 renderDriverGrid(visibleDrivers());
+loadRealPublicListings();
 
 function isAirportFilterActive(){
   return selectedFilters.regions.includes('Airport');
