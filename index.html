@@ -4310,6 +4310,39 @@ function feeForPrice(priceStr, spots, driverId){
   const percent = getFeePercentForDriver(driverId || currentDriverId);
   return formatIDR(Math.round(num * (percent/100)));
 }
+// ---- echte Angebote (Listings) aus Supabase laden ----
+function mapListingRowToUI(row){
+  const d = row.details || {};
+  return {
+    dbId: row.id,
+    name: row.title,
+    price: row.price_display || '',
+    duration: row.duration || '',
+    bookings: 0,
+    fee: feeForPrice(row.price_display || '', d.spots || []),
+    active: row.active,
+    region: row.region,
+    services: d.services || [],
+    spots: d.spots || [],
+    extras: d.extras || [],
+    serviceRegions: d.serviceRegions || null,
+    featured: !!d.featured,
+    airportRegions: d.airportRegions || null,
+    transferRegions: d.transferRegions || null
+  };
+}
+async function loadRealListings(){
+  if(!realDriverProfile) return;
+  const { data, error } = await supabaseClient
+    .from('listings')
+    .select('*')
+    .eq('driver_id', realDriverProfile.id)
+    .order('created_at', { ascending: false });
+  if(error){ console.error('Angebote konnten nicht geladen werden:', error); return; }
+  driverListings = (data || []).map(mapListingRowToUI);
+  renderListings();
+}
+
 function renderListings(){
   const el = document.getElementById('listings-list');
   if(driverListings.length === 0){
@@ -4384,6 +4417,16 @@ function saveEditListing(){
   renderListings();
   renderDriverGrid(visibleDrivers());
   saveState();
+  if(l.dbId){
+    supabaseClient.from('listings').update({
+      title: l.name,
+      price_display: l.price,
+      duration: l.duration,
+      details: { services: l.services, spots: l.spots, extras: l.extras, serviceRegions: l.serviceRegions, featured: l.featured, airportRegions: l.airportRegions, transferRegions: l.transferRegions }
+    }).eq('id', l.dbId).then(({error})=>{
+      if(error) console.error('Änderung konnte nicht gespeichert werden:', error);
+    });
+  }
   closeEditListing();
 }
 function toggleListing(i){
@@ -4394,6 +4437,11 @@ function toggleListing(i){
   renderListings();
   renderDriverGrid(visibleDrivers());
   saveState();
+  if(listing.dbId){
+    supabaseClient.from('listings').update({ active: listing.active }).eq('id', listing.dbId).then(({error})=>{
+      if(error) console.error('Status konnte nicht gespeichert werden:', error);
+    });
+  }
 }
 function openRequestFromInboxMessage(msgIdx){
   const store = getStore();
@@ -4624,6 +4672,21 @@ function addListing(){
   const isApproved = profile.status !== 'pending';
 
   driverListings.unshift({name, price, duration, bookings:0, fee:feeForPrice(price, spots), active:true, region, services, spots, extras, serviceRegions, featured, airportRegions, transferRegions});
+
+  if(realDriverProfile){
+    supabaseClient.from('listings').insert({
+      driver_id: realDriverProfile.id,
+      title: name,
+      region: region || realDriverProfile.region,
+      price_display: price,
+      duration,
+      active: true,
+      details: { services, spots, extras, serviceRegions, featured, airportRegions, transferRegions }
+    }).select().single().then(({ data, error }) => {
+      if(error){ console.error('Angebot konnte nicht gespeichert werden:', error); return; }
+      driverListings[0].dbId = data.id;
+    });
+  }
 
   // this listing only becomes publicly bookable once the driver's account is approved
   if(isApproved){
@@ -7272,6 +7335,7 @@ async function checkDriverAuthState(){
   dash.style.display = 'grid';
   pendingBanner.style.display = driverRow.status === 'pending' ? 'block' : 'none';
   applyRealDriverProfileToUI(driverRow);
+  loadRealListings();
 }
 
 // Traegt das echte Fahrerprofil in die vorhandene Dashboard-Oberflaeche ein
