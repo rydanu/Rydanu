@@ -6163,7 +6163,6 @@ const FX_SYMBOLS = { USD: '$', EUR: '€', AUD: 'A$' };
 const VTYPE_LABELS = { 'Standard Car': ['vt_standard','🚗'], 'Family Car': ['vt_family','🚙'], 'Minivan': ['vt_minivan','🚐'], 'Luxury Car': ['vt_luxury','🚘'], 'Large Vehicle': ['vt_large','🚌'] };
 
 renderDriverGrid(visibleDrivers());
-loadRealPublicListings();
 
 function isAirportFilterActive(){
   return selectedFilters.regions.includes('Airport');
@@ -7391,6 +7390,7 @@ function goHome(){
 const SUPABASE_URL = 'https://xpmrefoscyroihoglmum.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_UB_OEdt_7dKMm7gKz_w3Sw_GeafRGHu';
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+loadRealPublicListings();
 
 let realDriverProfile = null; // vom Server geladenes echtes Fahrerprofil (ersetzt die Demo-Daten fuer Baustein 1)
 
