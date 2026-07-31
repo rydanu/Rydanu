@@ -7490,6 +7490,8 @@ async function checkDriverAuthState(){
 function applyRealDriverProfileToUI(d){
   const nameEl = document.getElementById('profile-pname');
   if(nameEl) nameEl.textContent = d.name || '—';
+  const greetEl = document.getElementById('dash-greeting');
+  if(greetEl) greetEl.textContent = (currentLang==='de' ? 'Hallo, ' : currentLang==='id' ? 'Halo, ' : 'Hi, ') + (d.name || '—');
   const locEl = document.getElementById('profile-ploc');
   if(locEl) locEl.textContent = '🚩 ' + (d.region === 'lombok' ? 'Lombok' : 'Bali');
   const lwEl = document.getElementById('profile-lwnumber');
