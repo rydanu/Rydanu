@@ -4489,11 +4489,12 @@ function saveEditListing(){
   if(l.dbId){
     supabaseClient.from('listings').update({
       title: l.name,
+      price_idr: parseIDR(l.price) || 0,
       price_display: l.price,
       duration: l.duration,
       details: { services: l.services, spots: l.spots, extras: l.extras, serviceRegions: l.serviceRegions, featured: l.featured, airportRegions: l.airportRegions, transferRegions: l.transferRegions }
     }).eq('id', l.dbId).then(({error})=>{
-      if(error) console.error('Änderung konnte nicht gespeichert werden:', error);
+      if(error){ console.error('Änderung konnte nicht gespeichert werden:', error); alert('Die Änderung konnte nicht gespeichert werden. Bitte nochmal versuchen.'); }
     });
   }
   closeEditListing();
@@ -4747,12 +4748,13 @@ function addListing(){
       driver_id: realDriverProfile.id,
       title: name,
       region: region || realDriverProfile.region,
+      price_idr: parseIDR(price) || 0,
       price_display: price,
       duration,
       active: true,
       details: { services, spots, extras, serviceRegions, featured, airportRegions, transferRegions }
     }).select().single().then(({ data, error }) => {
-      if(error){ console.error('Angebot konnte nicht gespeichert werden:', error); return; }
+      if(error){ console.error('Angebot konnte nicht gespeichert werden:', error); alert('Das Angebot konnte nicht gespeichert werden. Bitte nochmal versuchen.'); return; }
       driverListings[0].dbId = data.id;
     });
   }
