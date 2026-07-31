@@ -4390,7 +4390,7 @@ function mapListingRowToUI(row){
     bookings: 0,
     fee: feeForPrice(row.price_display || '', d.spots || []),
     active: row.active,
-    region: row.region,
+    region: d.area || row.region,
     services: d.services || [],
     spots: d.spots || [],
     extras: d.extras || [],
@@ -4747,12 +4747,12 @@ function addListing(){
     supabaseClient.from('listings').insert({
       driver_id: realDriverProfile.id,
       title: name,
-      region: region || realDriverProfile.region,
+      region: realDriverProfile.region,
       price_idr: parseIDR(price) || 0,
       price_display: price,
       duration,
       active: true,
-      details: { services, spots, extras, serviceRegions, featured, airportRegions, transferRegions }
+      details: { area: region, services, spots, extras, serviceRegions, featured, airportRegions, transferRegions }
     }).select().single().then(({ data, error }) => {
       if(error){ console.error('Angebot konnte nicht gespeichert werden:', error); alert('Das Angebot konnte nicht gespeichert werden. Bitte nochmal versuchen.'); return; }
       driverListings[0].dbId = data.id;
@@ -4957,7 +4957,7 @@ async function loadRealPublicListings(){
       rating: 'New · 0 tours',
       price: l.price_display || '',
       badge: 'New driver',
-      region: l.region,
+      region: det.area || l.region,
       services: det.services || [],
       ownerId: d.id,
       lwNumber: d.lw_number,
