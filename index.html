@@ -3995,6 +3995,45 @@ function renderAdminOpenPayments(){
     </div>
   `;}).join('');
 }
+// ---- echte Buchungen aus Supabase laden ----
+function formatDateDisplay(dateStr){
+  if(!dateStr) return '';
+  const dt = new Date(dateStr + 'T00:00:00');
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return dt.getDate() + ' ' + months[dt.getMonth()] + ' ' + dt.getFullYear();
+}
+function mapBookingRowToUI(row){
+  return {
+    dbId: row.id,
+    who: row.customer_name,
+    tour: (row.listing && row.listing.title) || '(Angebot gelöscht)',
+    when: formatDateDisplay(row.booking_date),
+    dateISO: row.booking_date,
+    status: row.status,
+    email: '', phone: row.customer_phone || '', pickup: '',
+    price: formatIDR(row.price_idr),
+    deposit: formatIDR(row.deposit_idr),
+    balance: formatIDR((row.price_idr || 0) - (row.deposit_idr || 0)),
+    ref: row.id.slice(0,8).toUpperCase(),
+    cancelReason: row.status === 'cancelled_by_driver' ? 'driver' : (row.status === 'cancelled_by_customer' ? 'customer' : null)
+  };
+}
+async function loadRealBookings(){
+  if(!realDriverProfile) return;
+  const { data, error } = await supabaseClient
+    .from('bookings')
+    .select('*, listing:listings(title)')
+    .eq('driver_id', realDriverProfile.id)
+    .order('created_at', { ascending: false });
+  if(error){ console.error('Buchungen konnten nicht geladen werden:', error); return; }
+  const all = (data || []).map(mapBookingRowToUI);
+  driverBookings = all.filter(b => b.status === 'pending' || b.status === 'confirmed');
+  completedBookings = all.filter(b => !(b.status === 'pending' || b.status === 'confirmed'));
+  renderDriverBookings();
+  if(typeof renderAllBookings === 'function') renderAllBookings();
+  if(typeof renderOverviewStats === 'function') renderOverviewStats();
+}
+
 function renderDriverBookings(){
   const el = document.getElementById('driver-bookings-list');
   if(driverBookings.length === 0){
@@ -4040,7 +4079,7 @@ let pendingCancelReason = null;
 function cancelBooking(i){
   const b = driverBookings[i];
   const tourTime = b.dateISO ? new Date(b.dateISO + 'T09:00:00') : parseBookingDateTime(b.when);
-  const now = new Date(2026,6,12,15,0); // simulated "now" for this demo
+  const now = b.dbId ? new Date() : new Date(2026,6,12,15,0); // simulated "now" for demo bookings only
   const hoursUntil = (tourTime - now) / 3600000;
   if(hoursUntil < 12){
     alert(t('alert_cancel_12h'));
@@ -4073,6 +4112,21 @@ function confirmFinalCancel(){
   pendingCancelIndex = null;
   pendingCancelReason = null;
   document.getElementById('cancel-reason-modal-bg').classList.remove('active');
+  if(realDriverProfile && b.dbId){
+    const newStatus = reason === 'driver' ? 'cancelled_by_driver' : 'cancelled_by_customer';
+    const updates = { status: newStatus };
+    if(reason === 'driver') updates.cancellation_fee_idr = CANCELLATION_FEE_IDR;
+    supabaseClient.from('bookings').update(updates).eq('id', b.dbId).then(({error})=>{
+      if(error){ console.error('Stornierung konnte nicht gespeichert werden:', error); return; }
+      loadRealBookings();
+    });
+    if(reason === 'driver'){
+      alert(t('cancel_outcome_driver_1') + ' ' + b.who + '.\n\n' + t('cancel_outcome_driver_2') + ' ' + formatIDR(CANCELLATION_FEE_IDR) + '.\n\n' + t('cancel_outcome_driver_3'));
+    } else {
+      alert(t('cancel_outcome_customer_1') + ' ' + b.who + '.\n\n' + t('cancel_outcome_customer_2'));
+    }
+    return;
+  }
   moveBookingToCompleted(currentDriverId, i, 'cancelled', reason);
   const store = driverDataStore[currentDriverId];
   if(!store.stats.cancellationFees) store.stats.cancellationFees = 0;
@@ -4103,6 +4157,13 @@ function completeBooking(i){
   const b = driverBookings[i];
   if(!b) return;
   if(!confirm(t('confirm_complete_booking') + ' ' + b.who + '?')) return;
+  if(realDriverProfile && b.dbId){
+    supabaseClient.from('bookings').update({ status: 'completed' }).eq('id', b.dbId).then(({error})=>{
+      if(error){ console.error('Konnte nicht abgeschlossen werden:', error); return; }
+      loadRealBookings();
+    });
+    return;
+  }
   moveBookingToCompleted(currentDriverId, i, 'completed');
   checkReferralBonus(currentDriverId);
   syncDriverRating(currentDriverId);
@@ -4143,6 +4204,14 @@ function confirmCancellation(i){
 }
 function acceptBooking(i){
   const b = driverBookings[i];
+  if(realDriverProfile && b.dbId){
+    supabaseClient.from('bookings').update({ status: 'confirmed' }).eq('id', b.dbId).then(({error})=>{
+      if(error){ console.error('Konnte nicht bestätigt werden:', error); return; }
+      loadRealBookings();
+    });
+    alert(t('alert_deposit_confirmed_1') + ' ' + b.who + ' ✓\n\n' + t('alert_deposit_confirmed_2'));
+    return;
+  }
   b.status = 'confirmed';
   driverDataStore[currentDriverId].stats.feesPaid = false;
   renderDriverBookings();
@@ -4875,6 +4944,7 @@ async function loadRealPublicListings(){
     const det = l.details || {};
     return {
       isReal: true,
+      dbListingId: l.id,
       name: d.name || '—',
       tour: l.title,
       spots: det.spots || [],
@@ -7092,6 +7162,30 @@ ${bpt('driverFeeLine')}</div>`;
     document.getElementById('notify-driver-status').classList.add('sent');
   }, 1600);
 
+  // echte Buchung eines echten Angebots -> in die Datenbank schreiben
+  if(currentDriver.isReal && currentDriver.ownerId){
+    const priceNum = parseIDR(currentDriver.price) || 0;
+    const feePercent = 10;
+    const feeIdr = Math.round(priceNum * feePercent / 100);
+    const depositIdr = Math.round(priceNum * 0.2);
+    supabaseClient.from('bookings').insert({
+      listing_id: currentDriver.dbListingId || null,
+      driver_id: currentDriver.ownerId,
+      customer_name: name,
+      customer_phone: phone,
+      booking_date: document.getElementById('f-date').value || new Date().toISOString().slice(0,10),
+      status: 'pending',
+      price_idr: priceNum,
+      deposit_idr: depositIdr,
+      fee_percent_applied: feePercent,
+      fee_idr: feeIdr
+    }).then(({ error }) => {
+      if(error) console.error('Buchung konnte nicht gespeichert werden:', error);
+    });
+    lastBookingRef = ref;
+    return;
+  }
+
   // push into the correct driver's booking list (their registered profile, if any)
   const targetId = currentDriver.ownerId && driverDataStore[currentDriver.ownerId] ? currentDriver.ownerId : 'wayan';
   driverDataStore[targetId].bookings.unshift({
@@ -7385,6 +7479,7 @@ async function checkDriverAuthState(){
   pendingBanner.style.display = driverRow.status === 'pending' ? 'block' : 'none';
   applyRealDriverProfileToUI(driverRow);
   loadRealListings();
+  loadRealBookings();
 }
 
 // Traegt das echte Fahrerprofil in die vorhandene Dashboard-Oberflaeche ein
