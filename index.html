@@ -983,7 +983,7 @@
         </select>
       </div>
       <div class="searchbar">
-        <input type="text" id="search-input" name="ryvio-destination-search" autocomplete="off" data-i18n-placeholder="search_placeholder" placeholder="Where to — Ubud, Uluwatu, Nusa Penida...">
+        <input type="text" id="search-input" name="ryvio-destination-search" autocomplete="ryvio-no-autofill" data-i18n-placeholder="search_placeholder" placeholder="Where to — Ubud, Uluwatu, Nusa Penida...">
         <button type="button" class="filter-toggle-btn" onclick="openFilters()"><span data-i18n="filters_btn">Filters</span> <span class="filter-count" id="filter-count" style="display:none;">0</span></button>
         <button onclick="runSearch()" data-i18n="search_btn">Search</button>
       </div>
@@ -1051,6 +1051,10 @@
       <div class="row" id="modal-transfer-region-row" style="display:none; align-items:center;">
         <span class="k" data-i18n="lbl_transfer_destination">Destination</span>
         <span class="v"><select id="modal-transfer-region-select" onchange="onTransferRegionChange()"></select></span>
+      </div>
+      <div class="row" id="modal-pickupregion-row" style="display:none; align-items:center;">
+        <span class="k" data-i18n="lbl_pickup_region">Your pickup region</span>
+        <span class="v"><select id="modal-pickupregion-select" onchange="onPickupRegionChange()"></select></span>
       </div>
       <div id="modal-transfer-map" style="display:none; margin:4px 0 12px;">
         <div style="border-radius:6px; overflow:hidden; border:1px solid var(--line);">
@@ -1266,7 +1270,6 @@
         <div>
           <div class="pname"><span id="profile-pname">Wayan S.</span></div>
           <div class="ploc" id="profile-ploc">🚩 Based in Amed</div>
-          <div class="ptier">PAY PER BOOKING</div>
           <div class="lw-number" id="profile-lwnumber" onclick="copyRyvioNumber()" style="cursor:pointer;" title="Klicken zum Kopieren">Your Ryvio number: RY-104</div>
           <div class="pservices" id="profile-services"></div>
           <div class="profile-links-row">
@@ -1426,6 +1429,17 @@
                 <button type="button" class="chip" data-value="Amed">Amed</button>
               </div>
             </div>
+            <div class="spots-section" id="nl-pickupregions-section" style="display:none;">
+              <div class="filter-group-title" data-i18n="nl_pickup_prices_title">Different price per pickup region? (optional — leave empty to use the same price everywhere)</div>
+              <div class="airport-region-grid" id="nl-pickupregions-grid">
+                <div class="airport-region-row"><span data-i18n="reg_kuta">Kuta &amp; surroundings</span><input type="text" data-region="Kuta" class="pr-price-input" placeholder="e.g. IDR 350,000"></div>
+                <div class="airport-region-row"><span data-i18n="reg_uluwatu">Uluwatu &amp; surroundings</span><input type="text" data-region="Uluwatu" class="pr-price-input" placeholder="e.g. IDR 400,000"></div>
+                <div class="airport-region-row"><span data-i18n="reg_lovina">Lovina &amp; surroundings</span><input type="text" data-region="Lovina" class="pr-price-input" placeholder="e.g. IDR 500,000"></div>
+                <div class="airport-region-row"><span data-i18n="reg_sidemen">Sidemen &amp; surroundings</span><input type="text" data-region="Sidemen" class="pr-price-input" placeholder="e.g. IDR 450,000"></div>
+                <div class="airport-region-row"><span data-i18n="reg_ubud">Ubud &amp; surroundings</span><input type="text" data-region="Ubud" class="pr-price-input" placeholder="e.g. IDR 350,000"></div>
+                <div class="airport-region-row"><span data-i18n="reg_amed">Amed &amp; surroundings</span><input type="text" data-region="Amed" class="pr-price-input" placeholder="e.g. IDR 550,000"></div>
+              </div>
+            </div>
             <p class="form-error" id="nl-error" style="width:100%;"></p>
             <button class="add-btn" onclick="addListing()">Save</button>
           </div>
@@ -1561,6 +1575,11 @@
       <button type="button" class="period-btn active" data-period="day" onclick="setAdminPeriod('day')" data-i18n="period_day">Daily</button>
       <button type="button" class="period-btn" data-period="month" onclick="setAdminPeriod('month')" data-i18n="period_month">Monthly</button>
       <button type="button" class="period-btn" data-period="year" onclick="setAdminPeriod('year')" data-i18n="period_year">Yearly</button>
+    </div>
+    <div id="admin-period-picker-wrap" style="margin:10px 0 18px;">
+      <input type="date" id="admin-period-day-picker" onchange="loadRealAdminStats()" style="padding:8px 10px; border:1px solid var(--line); border-radius:6px; font-family:'Public Sans';">
+      <input type="month" id="admin-period-month-picker" onchange="loadRealAdminStats()" style="display:none; padding:8px 10px; border:1px solid var(--line); border-radius:6px; font-family:'Public Sans';">
+      <select id="admin-period-year-picker" onchange="loadRealAdminStats()" style="display:none; padding:8px 10px; border:1px solid var(--line); border-radius:6px; font-family:'Public Sans';"></select>
     </div>
     <div class="stat-row" id="admin-stats-row"></div>
 
@@ -2324,20 +2343,78 @@
         <input type="text" id="el-name" maxlength="80">
         <div class="note" id="el-name-count" style="margin:-6px 0 4px; font-size:0.7rem; text-align:right;">0 / 80</div>
       </div>
-      <div class="form-row">
-        <div class="form-field">
-          <label data-i18n="el_price_label">Price *</label>
-          <input type="text" id="el-price" placeholder="IDR 550,000">
-        </div>
-        <div class="form-field">
-          <label data-i18n="el_duration_label">Duration</label>
-          <select id="el-duration"><option>Half day</option><option>Full day</option><option>Airport Transfer</option><option>Transfer</option><option>Fixed rate</option></select>
+      <input type="text" id="el-price" placeholder="Price, e.g. IDR 450,000">
+      <div class="spots-section">
+        <div class="filter-group-title" data-i18n="nl_spots_title">Available tours — tap what you offer</div>
+        <div class="chip-row" id="el-spots-row">
+          <button type="button" class="chip" data-value="Day tour">Day tour</button>
+          <button type="button" class="chip" data-value="Half-day tour">Half-day tour</button>
+          <button type="button" class="chip" data-value="Airport Transfer">Airport Transfer</button>
+          <button type="button" class="chip" data-value="Transfer">Transfer</button>
+          <button type="button" class="chip" data-value="Fixed rate">Fixed rate</button>
         </div>
       </div>
+      <label class="nl-service-check"><input type="checkbox" id="el-photo"> <span data-i18n="svc_offer_photo_only">📸 Photo service</span></label>
+      <label class="nl-service-check"><input type="checkbox" id="el-drone"> <span data-i18n="svc_offer_drone_only">🚁 Drone service</span></label>
       <label class="nl-service-check"><input type="checkbox" id="el-boat"> <span data-i18n="svc_offer_boat">🎫 Boat tickets</span></label>
       <label class="nl-service-check nl-featured-check"><input type="checkbox" id="el-featured"> ⭐ Featured placement (IDR 75,000/week)</label>
+      <div class="spots-section">
+        <div class="filter-group-title" data-i18n="nl_extras_title">Extra costs not included — tap all that apply</div>
+        <div class="chip-row" id="el-extras-row">
+          <button type="button" class="chip" data-value="Entrance fees">Entrance fees</button>
+          <button type="button" class="chip" data-value="Parking">Parking</button>
+          <button type="button" class="chip" data-value="Fuel">Fuel</button>
+          <button type="button" class="chip" data-value="Other">Other</button>
+        </div>
+      </div>
+      <div class="spots-section" id="el-airportregions-section" style="display:none;">
+        <div class="filter-group-title" data-i18n="nl_airport_regions_title">Airport destination regions — set a price per region (leave empty if not offered)</div>
+        <div class="airport-region-grid" id="el-airportregions-grid">
+          <div class="airport-region-row"><span data-i18n="reg_kuta">Kuta &amp; surroundings</span><input type="text" data-region="Kuta" class="ar-price-input" placeholder="e.g. IDR 200,000"></div>
+          <div class="airport-region-row"><span data-i18n="reg_uluwatu">Uluwatu &amp; surroundings</span><input type="text" data-region="Uluwatu" class="ar-price-input" placeholder="e.g. IDR 250,000"></div>
+          <div class="airport-region-row"><span data-i18n="reg_lovina">Lovina &amp; surroundings</span><input type="text" data-region="Lovina" class="ar-price-input" placeholder="e.g. IDR 550,000"></div>
+          <div class="airport-region-row"><span data-i18n="reg_sidemen">Sidemen &amp; surroundings</span><input type="text" data-region="Sidemen" class="ar-price-input" placeholder="e.g. IDR 400,000"></div>
+          <div class="airport-region-row"><span data-i18n="reg_ubud">Ubud &amp; surroundings</span><input type="text" data-region="Ubud" class="ar-price-input" placeholder="e.g. IDR 300,000"></div>
+          <div class="airport-region-row"><span data-i18n="reg_amed">Amed &amp; surroundings</span><input type="text" data-region="Amed" class="ar-price-input" placeholder="e.g. IDR 450,000"></div>
+        </div>
+      </div>
+      <div class="spots-section" id="el-transferregions-section" style="display:none;">
+        <div class="filter-group-title" data-i18n="nl_transfer_regions_title">Transfer destinations — set a price per destination (leave empty if not offered)</div>
+        <div class="airport-region-grid" id="el-transferregions-grid">
+          <div class="airport-region-row"><span data-i18n="reg_kuta">Kuta &amp; surroundings</span><input type="text" data-region="Kuta" class="tr-price-input" placeholder="e.g. IDR 100,000"></div>
+          <div class="airport-region-row"><span data-i18n="reg_uluwatu">Uluwatu &amp; surroundings</span><input type="text" data-region="Uluwatu" class="tr-price-input" placeholder="e.g. IDR 150,000"></div>
+          <div class="airport-region-row"><span data-i18n="reg_lovina">Lovina &amp; surroundings</span><input type="text" data-region="Lovina" class="tr-price-input" placeholder="e.g. IDR 500,000"></div>
+          <div class="airport-region-row"><span data-i18n="reg_sidemen">Sidemen &amp; surroundings</span><input type="text" data-region="Sidemen" class="tr-price-input" placeholder="e.g. IDR 350,000"></div>
+          <div class="airport-region-row"><span data-i18n="reg_ubud">Ubud &amp; surroundings</span><input type="text" data-region="Ubud" class="tr-price-input" placeholder="e.g. IDR 250,000"></div>
+          <div class="airport-region-row"><span data-i18n="reg_amed">Amed &amp; surroundings</span><input type="text" data-region="Amed" class="tr-price-input" placeholder="e.g. IDR 450,000"></div>
+        </div>
+      </div>
+      <div class="spots-section">
+        <div class="filter-group-title" data-i18n="nl_regions_title">Pickup regions you serve — travelers filtering by these starting points will see this tour</div>
+        <div class="chip-row" id="el-serviceregions-row">
+          <button type="button" class="chip" data-value="all">All regions</button>
+          <button type="button" class="chip" data-value="Kuta">Kuta</button>
+          <button type="button" class="chip" data-value="Uluwatu">Uluwatu</button>
+          <button type="button" class="chip" data-value="Lovina">Lovina</button>
+          <button type="button" class="chip" data-value="Sidemen">Sidemen</button>
+          <button type="button" class="chip" data-value="Ubud">Ubud</button>
+          <button type="button" class="chip" data-value="Amed">Amed</button>
+        </div>
+      </div>
+      <div class="spots-section" id="el-pickupregions-section" style="display:none;">
+        <div class="filter-group-title" data-i18n="nl_pickup_prices_title">Different price per pickup region? (optional — leave empty to use the same price everywhere)</div>
+        <div class="airport-region-grid" id="el-pickupregions-grid">
+          <div class="airport-region-row"><span data-i18n="reg_kuta">Kuta &amp; surroundings</span><input type="text" data-region="Kuta" class="pr-price-input" placeholder="e.g. IDR 350,000"></div>
+          <div class="airport-region-row"><span data-i18n="reg_uluwatu">Uluwatu &amp; surroundings</span><input type="text" data-region="Uluwatu" class="pr-price-input" placeholder="e.g. IDR 400,000"></div>
+          <div class="airport-region-row"><span data-i18n="reg_lovina">Lovina &amp; surroundings</span><input type="text" data-region="Lovina" class="pr-price-input" placeholder="e.g. IDR 500,000"></div>
+          <div class="airport-region-row"><span data-i18n="reg_sidemen">Sidemen &amp; surroundings</span><input type="text" data-region="Sidemen" class="pr-price-input" placeholder="e.g. IDR 450,000"></div>
+          <div class="airport-region-row"><span data-i18n="reg_ubud">Ubud &amp; surroundings</span><input type="text" data-region="Ubud" class="pr-price-input" placeholder="e.g. IDR 350,000"></div>
+          <div class="airport-region-row"><span data-i18n="reg_amed">Amed &amp; surroundings</span><input type="text" data-region="Amed" class="pr-price-input" placeholder="e.g. IDR 550,000"></div>
+        </div>
+      </div>
       <p class="form-error" id="el-error"></p>
       <button class="book-btn" onclick="saveEditListing()" data-i18n="el_save_btn">Save changes</button>
+      <button type="button" class="link-btn" id="el-delete-btn" style="color:#B03A3A; margin-top:10px;" onclick="deleteListingConfirm()" data-i18n="el_delete_btn">🗑️ Delete this listing</button>
     </div>
   </div>
 </div>
@@ -3168,17 +3245,18 @@ function openDriverPage(driverId, mode){
 }
 // echte "My Page" laden: Fahrerdaten, aktive Angebote, Bewertungen
 async function loadAndRenderRealDriverPage(driverId, mode){
-  const [{ data: driverRow, error: dErr }, { data: listingRows }, { data: reviewRows }] = await Promise.all([
+  const [{ data: driverRow, error: dErr }, { data: listingRows }, { data: reviewRows }, { data: mediaRows }] = await Promise.all([
     supabaseClient.from('drivers').select('*').eq('id', driverId).single(),
     supabaseClient.from('listings').select('title, price_display, duration').eq('driver_id', driverId).eq('active', true),
-    supabaseClient.from('reviews').select('stars, comment, created_at').eq('driver_id', driverId).order('created_at', { ascending:false })
+    supabaseClient.from('reviews').select('stars, comment, created_at').eq('driver_id', driverId).order('created_at', { ascending:false }),
+    supabaseClient.from('driver_media').select('*').eq('driver_id', driverId).order('created_at', { ascending:false })
   ]);
   if(dErr || !driverRow){
     console.error('Fahrerseite konnte nicht geladen werden:', dErr);
     closeDriverPage();
     return;
   }
-  dpRealData = { driver: driverRow, tours: listingRows || [], reviews: reviewRows || [] };
+  dpRealData = { driver: driverRow, tours: listingRows || [], reviews: reviewRows || [], media: mediaRows || [] };
   renderRealDriverPage(mode === 'owner');
 }
 function openDriverPageFromModal(){
@@ -3306,9 +3384,9 @@ function renderRealDriverPage(isOwner){
   document.getElementById('dp-about-pencil').style.display = isOwner ? 'inline-block' : 'none';
   document.getElementById('dp-about-edit').style.display = 'none';
   document.getElementById('dp-about-input').value = about;
-  // Foto-Galerie: Upload folgt in einem der naechsten Bausteine (Supabase Storage) — ehrlicher Platzhalter statt Demo-Fotos
-  document.getElementById('dp-upload-row').style.display = 'none';
-  document.getElementById('dp-gallery').innerHTML = `<div class="empty-state" style="grid-column:1/-1;">${t('dp_photo_upload_soon')}</div>`;
+  // Foto-/Video-Galerie: echte Medien anzeigen (Baustein 10)
+  document.getElementById('dp-upload-row').style.display = isOwner ? 'block' : 'none';
+  renderRealGallery(isOwner);
   const tours = dpRealData.tours;
   document.getElementById('dp-tours').innerHTML = tours.length
     ? tours.map(l => `
@@ -3341,7 +3419,173 @@ function renderRealDriverPage(isOwner){
   document.getElementById('dp-leave-review-btn').style.display = 'none';
   document.getElementById('dp-request-tour-btn').style.display = 'none';
 }
-// Klick auf eine echte Tour in der My Page -> normalen Buchungs-Dialog oeffnen
+// ---- echte Foto-/Video-Galerie auf der My Page (Baustein 10) ----
+function renderRealGallery(isOwner){
+  const gallery = document.getElementById('dp-gallery');
+  if(!gallery) return;
+  const media = (dpRealData && dpRealData.media) || [];
+  if(media.length === 0){
+    gallery.innerHTML = `<div class="empty-state" style="grid-column:1/-1;">${isOwner ? t('dp_gallery_empty_owner') : t('dp_gallery_empty')}</div>`;
+    return;
+  }
+  gallery.innerHTML = media.map(m=>{
+    const safeCaption = (m.caption||'').replace(/"/g,'&quot;');
+    return `
+    <div class="dp-media-cell">
+      <div class="dp-media-item" ${m.media_type==='video' ? `onclick="openRealVideoLightbox('${m.id}')" style="cursor:pointer;"` : ''}>
+        ${m.media_type==='video'
+          ? (m.thumbnail_url
+              ? `<img src="${m.thumbnail_url}" alt="${safeCaption}"><span class="dp-play-badge">▶</span>`
+              : `<div class="dp-video-noThumb"><span class="dp-play-badge">▶</span></div>`)
+          : `<img src="${m.url}" alt="${safeCaption}">`}
+        ${isOwner ? `<button type="button" class="dp-media-del" onclick="event.stopPropagation(); deleteRealPageMedia('${m.id}')">✕</button>` : ''}
+      </div>
+      ${isOwner
+        ? `<input type="text" class="dp-caption-input" value="${safeCaption}" data-i18n-placeholder="dp_caption_ph" placeholder="e.g. Waterfall" onchange="updateRealMediaCaption('${m.id}', this.value)">`
+        : (m.caption ? `<div class="dp-caption-label">${m.caption}</div>` : '')}
+    </div>`;
+  }).join('');
+}
+// Bild auf eine sinnvolle Groesse verkleinern, bevor es hochgeladen wird (spart Speicher & Ladezeit)
+function resizeImageToBlob(file, maxDim, quality, callback){
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(img.width * scale);
+      canvas.height = Math.round(img.height * scale);
+      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+      canvas.toBlob(callback, 'image/jpeg', quality);
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+async function handleRealPageMediaUpload(event){
+  const file = event.target.files[0];
+  if(!file) return;
+  const isVideo = file.type.startsWith('video/');
+  const isPhoto = file.type.startsWith('image/');
+  if(!isVideo && !isPhoto){
+    alert(t('dp_unsupported_file'));
+    event.target.value = '';
+    return;
+  }
+  const media = (dpRealData && dpRealData.media) || [];
+  if(isPhoto){
+    if(media.filter(m=>m.media_type==='photo').length >= 20){
+      alert(t('dp_photo_limit'));
+      event.target.value = '';
+      return;
+    }
+    resizeImageToBlob(file, 1080, 0.82, async (blob) => {
+      try{
+        const path = `${dpDriverId}/photo_${Date.now()}.jpg`;
+        const { error: upErr } = await supabaseClient.storage.from('driver-media').upload(path, blob, { contentType:'image/jpeg' });
+        if(upErr){ console.error('Foto-Upload fehlgeschlagen:', upErr); alert('Foto-Upload ist fehlgeschlagen. Bitte nochmal versuchen.'); return; }
+        const { data: pub } = supabaseClient.storage.from('driver-media').getPublicUrl(path);
+        const { error: insErr } = await supabaseClient.from('driver_media').insert({ driver_id: dpDriverId, media_type:'photo', url: pub.publicUrl });
+        if(insErr){ console.error('Foto konnte nicht gespeichert werden:', insErr); return; }
+        await reloadRealGallery();
+      } finally { event.target.value = ''; }
+    });
+  } else {
+    if(media.filter(m=>m.media_type==='video').length >= 5){
+      alert(t('dp_video_limit'));
+      event.target.value = '';
+      return;
+    }
+    const url = URL.createObjectURL(file);
+    const probe = document.createElement('video');
+    probe.preload = 'metadata';
+    probe.muted = true;
+    probe.playsInline = true;
+    probe.onloadedmetadata = () => {
+      if(probe.duration > 31){
+        URL.revokeObjectURL(url);
+        alert(t('dp_video_too_long'));
+        event.target.value = '';
+        return;
+      }
+      if(file.size > 6 * 1024 * 1024){
+        URL.revokeObjectURL(url);
+        alert(t('dp_video_too_big'));
+        event.target.value = '';
+        return;
+      }
+      probe.currentTime = Math.min(0.3, probe.duration / 2);
+      probe.onseeked = async () => {
+        let thumbBlob = null;
+        try{
+          const canvas = document.createElement('canvas');
+          const maxDim = 480;
+          const scale = Math.min(1, maxDim / Math.max(probe.videoWidth, probe.videoHeight));
+          canvas.width = probe.videoWidth * scale;
+          canvas.height = probe.videoHeight * scale;
+          canvas.getContext('2d').drawImage(probe, 0, 0, canvas.width, canvas.height);
+          thumbBlob = await new Promise(res => canvas.toBlob(res, 'image/jpeg', 0.7));
+        }catch(e){ /* Thumbnail-Erstellung kann fehlschlagen — dann eben ohne Vorschaubild */ }
+        URL.revokeObjectURL(url);
+        try{
+          const stamp = Date.now();
+          const videoPath = `${dpDriverId}/video_${stamp}.mp4`;
+          const { error: upErr } = await supabaseClient.storage.from('driver-media').upload(videoPath, file, { contentType: file.type || 'video/mp4' });
+          if(upErr){ console.error('Video-Upload fehlgeschlagen:', upErr); alert('Video-Upload ist fehlgeschlagen. Bitte nochmal versuchen.'); return; }
+          const { data: videoPub } = supabaseClient.storage.from('driver-media').getPublicUrl(videoPath);
+          let thumbnailUrl = null;
+          if(thumbBlob){
+            const thumbPath = `${dpDriverId}/video_${stamp}_thumb.jpg`;
+            const { error: thumbErr } = await supabaseClient.storage.from('driver-media').upload(thumbPath, thumbBlob, { contentType:'image/jpeg' });
+            if(!thumbErr){
+              const { data: thumbPub } = supabaseClient.storage.from('driver-media').getPublicUrl(thumbPath);
+              thumbnailUrl = thumbPub.publicUrl;
+            }
+          }
+          const { error: insErr } = await supabaseClient.from('driver_media').insert({
+            driver_id: dpDriverId, media_type:'video', url: videoPub.publicUrl, thumbnail_url: thumbnailUrl
+          });
+          if(insErr){ console.error('Video konnte nicht gespeichert werden:', insErr); return; }
+          await reloadRealGallery();
+        } finally { event.target.value = ''; }
+      };
+    };
+    probe.onerror = () => {
+      URL.revokeObjectURL(url);
+      alert(t('dp_video_unreadable'));
+      event.target.value = '';
+    };
+    probe.src = url;
+  }
+}
+async function reloadRealGallery(){
+  const { data, error } = await supabaseClient.from('driver_media').select('*').eq('driver_id', dpDriverId).order('created_at', { ascending:false });
+  if(error){ console.error('Galerie konnte nicht neu geladen werden:', error); return; }
+  if(dpRealData) dpRealData.media = data || [];
+  renderRealGallery(dpMode === 'owner');
+}
+async function updateRealMediaCaption(id, value){
+  const { error } = await supabaseClient.from('driver_media').update({ caption: value.trim() }).eq('id', id);
+  if(error) console.error('Bildunterschrift konnte nicht gespeichert werden:', error);
+  if(dpRealData){
+    const m = (dpRealData.media||[]).find(x=>x.id===id);
+    if(m) m.caption = value.trim();
+  }
+}
+async function deleteRealPageMedia(id){
+  if(!confirm(t('dp_media_del_confirm'))) return;
+  const { error } = await supabaseClient.from('driver_media').delete().eq('id', id);
+  if(error){ console.error('Medium konnte nicht gelöscht werden:', error); return; }
+  await reloadRealGallery();
+}
+function openRealVideoLightbox(id){
+  const m = (dpRealData && dpRealData.media || []).find(x=>x.id===id);
+  if(!m || m.media_type!=='video') return;
+  const player = document.getElementById('dp-video-lightbox-player');
+  player.src = m.url;
+  document.getElementById('dp-video-lightbox').style.display = 'flex';
+}
 async function bookRealTourFromPage(tourTitle){
   let pub = drivers.find(dd => dd.isReal && dd.ownerId===dpDriverId && dd.tour===tourTitle);
   if(!pub){
@@ -3375,7 +3619,7 @@ async function saveRealPageAbout(){
   renderRealDriverPage(dpMode === 'owner');
 }
 function handlePageMediaUpload(event){
-  if(dpIsReal) return; // echter Foto-Upload folgt in einem der naechsten Bausteine (Supabase Storage)
+  if(dpIsReal){ handleRealPageMediaUpload(event); return; }
   const file = event.target.files[0];
   if(!file) return;
   const p = driverProfiles[dpDriverId];
@@ -5213,7 +5457,8 @@ function mapListingRowToUI(row){
     serviceRegions: d.serviceRegions || null,
     featured: !!d.featured,
     airportRegions: d.airportRegions || null,
-    transferRegions: d.transferRegions || null
+    transferRegions: d.transferRegions || null,
+    pickupRegionPrices: d.pickupRegionPrices || null
   };
 }
 async function loadRealListings(){
@@ -5245,21 +5490,100 @@ function renderListings(){
         ${l.serviceRegions ? `<div class="spots-line" style="color:var(--teal);">🚐 Pickup: ${l.serviceRegions==='all' ? 'All regions' : l.serviceRegions.join(', ')}</div>` : ''}
         ${l.airportRegions && Object.keys(l.airportRegions).length ? `<div class="spots-line" style="color:var(--teal);">✈️ ${Object.entries(l.airportRegions).map(([r,p])=>r+': '+p).join(' · ')}</div>` : ''}
         ${l.transferRegions && Object.keys(l.transferRegions).length ? `<div class="spots-line" style="color:var(--teal);">🚐 ${Object.entries(l.transferRegions).map(([r,p])=>r+': '+p).join(' · ')}</div>` : ''}
+        ${l.pickupRegionPrices && Object.keys(l.pickupRegionPrices).length ? `<div class="spots-line" style="color:var(--teal);">🚩 ${Object.entries(l.pickupRegionPrices).map(([r,p])=>r+': '+p).join(' · ')}</div>` : ''}
       </div>
       <div class="toggle ${l.active?'':'off'}" onclick="event.stopPropagation(); toggleListing(${i})"></div>
     </div>
   `).join('');
 }
 let editingListingIndex = null;
+let elSelectedSpots = [];
+document.querySelectorAll('#el-spots-row .chip').forEach(chip=>{
+  chip.addEventListener('click', ()=>{
+    const val = chip.dataset.value;
+    const idx = elSelectedSpots.indexOf(val);
+    if(idx===-1){ elSelectedSpots.push(val); chip.classList.add('chip-active'); }
+    else { elSelectedSpots.splice(idx,1); chip.classList.remove('chip-active'); }
+    const isAirport = elSelectedSpots.includes('Airport Transfer');
+    document.getElementById('el-airportregions-section').style.display = isAirport ? 'block' : 'none';
+    const isTransfer = elSelectedSpots.includes('Transfer');
+    document.getElementById('el-transferregions-section').style.display = isTransfer ? 'block' : 'none';
+    if(isAirport || isTransfer) document.getElementById('el-price').classList.remove('field-error');
+  });
+});
+let elSelectedExtras = [];
+document.querySelectorAll('#el-extras-row .chip').forEach(chip=>{
+  chip.addEventListener('click', ()=>{
+    const val = chip.dataset.value;
+    const idx = elSelectedExtras.indexOf(val);
+    if(idx===-1){ elSelectedExtras.push(val); chip.classList.add('chip-active'); }
+    else { elSelectedExtras.splice(idx,1); chip.classList.remove('chip-active'); }
+  });
+});
+let elSelectedServiceRegions = [];
+document.querySelectorAll('#el-serviceregions-row .chip').forEach(chip=>{
+  chip.addEventListener('click', ()=>{
+    const val = chip.dataset.value;
+    const row = document.getElementById('el-serviceregions-row');
+    if(val==='all'){
+      const isActive = chip.classList.contains('chip-active');
+      row.querySelectorAll('.chip').forEach(ch=>ch.classList.remove('chip-active'));
+      elSelectedServiceRegions = [];
+      if(!isActive){ chip.classList.add('chip-active'); elSelectedServiceRegions = ['all']; }
+      document.getElementById('el-pickupregions-section').style.display = 'none';
+      return;
+    }
+    const allChip = row.querySelector('[data-value="all"]');
+    allChip.classList.remove('chip-active');
+    elSelectedServiceRegions = elSelectedServiceRegions.filter(r=>r!=='all');
+    const idx = elSelectedServiceRegions.indexOf(val);
+    if(idx===-1){ elSelectedServiceRegions.push(val); chip.classList.add('chip-active'); }
+    else { elSelectedServiceRegions.splice(idx,1); chip.classList.remove('chip-active'); }
+    document.getElementById('el-pickupregions-section').style.display = (elSelectedServiceRegions.length >= 2) ? 'block' : 'none';
+  });
+});
 function openEditListing(i){
   editingListingIndex = i;
   const l = driverListings[i];
   if(!l) return;
   document.getElementById('el-name').value = l.name;
   document.getElementById('el-price').value = l.price;
-  document.getElementById('el-duration').value = l.duration && ['Half day','Full day','Airport Transfer','Transfer','Fixed rate'].includes(l.duration) ? l.duration : 'Full day';
-  document.getElementById('el-boat').checked = !!(l.services && l.services.includes('Boat'));
+
+  elSelectedSpots = Array.isArray(l.spots) ? [...l.spots] : [];
+  document.querySelectorAll('#el-spots-row .chip').forEach(ch=>ch.classList.toggle('chip-active', elSelectedSpots.includes(ch.dataset.value)));
+  const isAirport = elSelectedSpots.includes('Airport Transfer');
+  const isTransfer = elSelectedSpots.includes('Transfer');
+  document.getElementById('el-airportregions-section').style.display = isAirport ? 'block' : 'none';
+  document.getElementById('el-transferregions-section').style.display = isTransfer ? 'block' : 'none';
+
+  const services = l.services || [];
+  document.getElementById('el-photo').checked = services.includes('Photo');
+  document.getElementById('el-drone').checked = services.includes('Drone');
+  document.getElementById('el-boat').checked = services.includes('Boat');
   document.getElementById('el-featured').checked = !!l.featured;
+
+  elSelectedExtras = Array.isArray(l.extras) ? [...l.extras] : [];
+  document.querySelectorAll('#el-extras-row .chip').forEach(ch=>ch.classList.toggle('chip-active', elSelectedExtras.includes(ch.dataset.value)));
+
+  document.querySelectorAll('#el-airportregions-grid .ar-price-input').forEach(inp=>{
+    inp.value = (l.airportRegions && l.airportRegions[inp.dataset.region]) || '';
+  });
+  document.querySelectorAll('#el-transferregions-grid .tr-price-input').forEach(inp=>{
+    inp.value = (l.transferRegions && l.transferRegions[inp.dataset.region]) || '';
+  });
+  document.querySelectorAll('#el-pickupregions-grid .pr-price-input').forEach(inp=>{
+    inp.value = (l.pickupRegionPrices && l.pickupRegionPrices[inp.dataset.region]) || '';
+  });
+
+  const sr = l.serviceRegions;
+  elSelectedServiceRegions = sr === 'all' ? ['all'] : (Array.isArray(sr) ? [...sr] : []);
+  document.querySelectorAll('#el-serviceregions-row .chip').forEach(ch=>{
+    ch.classList.toggle('chip-active', ch.dataset.value==='all' ? elSelectedServiceRegions.includes('all') : elSelectedServiceRegions.includes(ch.dataset.value));
+  });
+  document.getElementById('el-pickupregions-section').style.display = (elSelectedServiceRegions.length >= 2 && !elSelectedServiceRegions.includes('all')) ? 'block' : 'none';
+
+  document.getElementById('el-name').classList.remove('field-error');
+  document.getElementById('el-price').classList.remove('field-error');
   document.getElementById('el-error').textContent = '';
   document.getElementById('edit-listing-modal-bg').classList.add('active');
 }
@@ -5268,20 +5592,73 @@ function saveEditListing(){
   if(editingListingIndex === null) return;
   const l = driverListings[editingListingIndex];
   const name = document.getElementById('el-name').value.trim();
-  const price = document.getElementById('el-price').value.trim();
+  let price = document.getElementById('el-price').value.trim();
+  const spots = [...elSelectedSpots];
+  const isAirport = spots.includes('Airport Transfer');
+  const isTransfer = spots.includes('Transfer');
+
+  let airportRegions = null;
+  if(isAirport){
+    const obj = {};
+    document.querySelectorAll('#el-airportregions-grid .ar-price-input').forEach(inp=>{
+      const val = inp.value.trim();
+      if(val) obj[inp.dataset.region] = val;
+    });
+    if(Object.keys(obj).length) airportRegions = obj;
+  }
+  let transferRegions = null;
+  if(isTransfer){
+    const obj = {};
+    document.querySelectorAll('#el-transferregions-grid .tr-price-input').forEach(inp=>{
+      const val = inp.value.trim();
+      if(val) obj[inp.dataset.region] = val;
+    });
+    if(Object.keys(obj).length) transferRegions = obj;
+  }
+  const serviceRegions = elSelectedServiceRegions.includes('all') ? 'all' : [...elSelectedServiceRegions];
+  let pickupRegionPrices = null;
+  if(serviceRegions !== 'all' && serviceRegions.length >= 2){
+    const obj = {};
+    document.querySelectorAll('#el-pickupregions-grid .pr-price-input').forEach(inp=>{
+      const val = inp.value.trim();
+      if(val && serviceRegions.includes(inp.dataset.region)) obj[inp.dataset.region] = val;
+    });
+    if(Object.keys(obj).length) pickupRegionPrices = obj;
+  }
+  if(isAirport && !price && airportRegions){
+    const nums = Object.values(airportRegions).map(p=>parseIDR(p)).filter(n=>n>0);
+    if(nums.length) price = 'from ' + formatIDR(Math.min(...nums));
+  }
+  if(isTransfer && !price && transferRegions){
+    const nums = Object.values(transferRegions).map(p=>parseIDR(p)).filter(n=>n>0);
+    if(nums.length) price = 'from ' + formatIDR(Math.min(...nums));
+  }
+
   document.getElementById('el-name').classList.toggle('field-error', !name);
-  document.getElementById('el-price').classList.toggle('field-error', !price);
-  if(!name || !price){
+  const priceMissing = !price && !(isAirport && airportRegions) && !(isTransfer && transferRegions);
+  document.getElementById('el-price').classList.toggle('field-error', priceMissing);
+  if(!name || priceMissing){
     document.getElementById('el-error').textContent = t('el_error');
     return;
   }
+  document.getElementById('el-error').textContent = '';
+
   const oldName = l.name;
+  const duration = spots.includes('Fixed rate') ? 'Fixed rate' : (spots.find(s => s !== 'Fixed rate') || l.duration || 'Full day');
   l.name = name;
   l.price = price;
-  l.duration = document.getElementById('el-duration').value;
+  l.duration = duration;
+  l.spots = spots;
   const services = [];
+  if(document.getElementById('el-photo').checked) services.push('Photo');
+  if(document.getElementById('el-drone').checked) services.push('Drone');
   if(document.getElementById('el-boat').checked) services.push('Boat');
   l.services = services;
+  l.extras = [...elSelectedExtras];
+  l.serviceRegions = serviceRegions;
+  l.airportRegions = airportRegions;
+  l.transferRegions = transferRegions;
+  l.pickupRegionPrices = pickupRegionPrices;
   l.featured = document.getElementById('el-featured').checked;
   l.fee = feeForPrice(price, l.spots);
   // sync the public traveler card
@@ -5292,6 +5669,12 @@ function saveEditListing(){
     pub.price = price;
     pub.duration = l.duration;
     pub.services = services;
+    pub.spots = spots;
+    pub.extras = l.extras;
+    pub.serviceRegions = l.serviceRegions;
+    pub.airportRegions = airportRegions;
+    pub.transferRegions = transferRegions;
+    pub.pickupRegionPrices = pickupRegionPrices;
     pub.featured = l.featured;
     if(l.featured) pub.badge = '⭐ Top offer';
   }
@@ -5304,12 +5687,34 @@ function saveEditListing(){
       price_idr: parseIDR(l.price) || 0,
       price_display: l.price,
       duration: l.duration,
-      details: { services: l.services, spots: l.spots, extras: l.extras, serviceRegions: l.serviceRegions, featured: l.featured, airportRegions: l.airportRegions, transferRegions: l.transferRegions }
+      details: { services: l.services, spots: l.spots, extras: l.extras, serviceRegions: l.serviceRegions, featured: l.featured, airportRegions: l.airportRegions, transferRegions: l.transferRegions, pickupRegionPrices: l.pickupRegionPrices }
     }).eq('id', l.dbId).then(({error})=>{
       if(error){ console.error('Änderung konnte nicht gespeichert werden:', error); alert('Die Änderung konnte nicht gespeichert werden. Bitte nochmal versuchen.'); }
+      else { loadRealPublicListings(); }
     });
   }
   closeEditListing();
+}
+function deleteListingConfirm(){
+  if(editingListingIndex === null) return;
+  const l = driverListings[editingListingIndex];
+  if(!l) return;
+  if(!confirm(t('el_delete_confirm').replace('{name}', l.name))) return;
+  const idx = drivers.findIndex(d => (d.ownerId===currentDriverId || (!d.ownerId && d.name===driverProfiles[currentDriverId].fullName)) && d.tour===l.name);
+  if(idx !== -1) drivers.splice(idx, 1);
+  const dbId = l.dbId;
+  driverListings.splice(editingListingIndex, 1);
+  editingListingIndex = null;
+  renderListings();
+  renderDriverGrid(visibleDrivers());
+  saveState();
+  closeEditListing();
+  if(dbId){
+    supabaseClient.from('listings').delete().eq('id', dbId).then(({error})=>{
+      if(error){ console.error('Angebot konnte nicht gelöscht werden:', error); alert('Das Angebot konnte nicht gelöscht werden. Bitte nochmal versuchen.'); }
+      else { loadRealPublicListings(); }
+    });
+  }
 }
 function toggleListing(i){
   const listing = driverListings[i];
@@ -5464,6 +5869,7 @@ document.querySelectorAll('#nl-serviceregions-row .chip').forEach(chip=>{
       row.querySelectorAll('.chip').forEach(ch=>ch.classList.remove('chip-active'));
       nlSelectedServiceRegions = [];
       if(!isActive){ chip.classList.add('chip-active'); nlSelectedServiceRegions = ['all']; }
+      document.getElementById('nl-pickupregions-section').style.display = 'none';
       return;
     }
     // selecting a specific region deselects "all"
@@ -5473,6 +5879,7 @@ document.querySelectorAll('#nl-serviceregions-row .chip').forEach(chip=>{
     const idx = nlSelectedServiceRegions.indexOf(val);
     if(idx===-1){ nlSelectedServiceRegions.push(val); chip.classList.add('chip-active'); }
     else { nlSelectedServiceRegions.splice(idx,1); chip.classList.remove('chip-active'); }
+    document.getElementById('nl-pickupregions-section').style.display = (nlSelectedServiceRegions.length >= 2) ? 'block' : 'none';
   });
 });
 function addListing(){
@@ -5508,6 +5915,15 @@ function addListing(){
       if(val) obj[inp.dataset.region] = val;
     });
     if(Object.keys(obj).length) transferRegions = obj;
+  }
+  let pickupRegionPrices = null;
+  if(serviceRegions !== 'all' && serviceRegions.length >= 2){
+    const obj = {};
+    document.querySelectorAll('#nl-pickupregions-grid .pr-price-input').forEach(inp=>{
+      const val = inp.value.trim();
+      if(val && serviceRegions.includes(inp.dataset.region)) obj[inp.dataset.region] = val;
+    });
+    if(Object.keys(obj).length) pickupRegionPrices = obj;
   }
   // airport transfers: the main price is optional — it's derived from the cheapest region price
   if(isAirport && !price && airportRegions){
@@ -5553,7 +5969,7 @@ function addListing(){
   const region = serviceRegions==='all' ? profile.region : serviceRegions[0];
   const isApproved = profile.status !== 'pending';
 
-  driverListings.unshift({name, price, duration, bookings:0, fee:feeForPrice(price, spots), active:true, region, services, spots, extras, serviceRegions, featured, airportRegions, transferRegions});
+  driverListings.unshift({name, price, duration, bookings:0, fee:feeForPrice(price, spots), active:true, region, services, spots, extras, serviceRegions, featured, airportRegions, transferRegions, pickupRegionPrices});
 
   if(realDriverProfile){
     supabaseClient.from('listings').insert({
@@ -5564,7 +5980,7 @@ function addListing(){
       price_display: price,
       duration,
       active: true,
-      details: { area: region, services, spots, extras, serviceRegions, featured, airportRegions, transferRegions }
+      details: { area: region, services, spots, extras, serviceRegions, featured, airportRegions, transferRegions, pickupRegionPrices }
     }).select().single().then(({ data, error }) => {
       if(error){ console.error('Angebot konnte nicht gespeichert werden:', error); alert('Das Angebot konnte nicht gespeichert werden. Bitte nochmal versuchen.'); return; }
       driverListings[0].dbId = data.id;
@@ -5613,6 +6029,10 @@ function addListing(){
   document.querySelectorAll('#nl-airportregions-grid .ar-price-input').forEach(inp=>{ inp.value=''; });
   document.getElementById('nl-airportregions-section').style.display = 'none';
   document.getElementById('nl-airportregions-section').classList.remove('field-error');
+  document.querySelectorAll('#nl-transferregions-grid .tr-price-input').forEach(inp=>{ inp.value=''; });
+  document.getElementById('nl-transferregions-section').style.display = 'none';
+  document.querySelectorAll('#nl-pickupregions-grid .pr-price-input').forEach(inp=>{ inp.value=''; });
+  document.getElementById('nl-pickupregions-section').style.display = 'none';
   toggleAddForm();
   renderListings();
   renderDriverGrid(visibleDrivers());
@@ -5781,6 +6201,7 @@ async function loadRealPublicListings(){
       active: true,
       airportRegions: det.airportRegions || null,
       transferRegions: det.transferRegions || null,
+      pickupRegionPrices: det.pickupRegionPrices || null,
       photo: d.avatar_url || null,
       femaleDriver: driverBadges.includes('female_driver'),
       childFriendly: driverBadges.includes('child_friendly'),
@@ -6180,7 +6601,7 @@ const translations = {
     lbl_date: "Date", lbl_guests: "Guests", lbl_total: "Total tour price", lbl_pickup: "Pickup", lbl_tour_singular: "tour", lbl_tour_plural: "tours", lbl_rating_new: "New",
     lbl_deposit_paid: "Deposit paid", lbl_cash_due: "Cash due to driver", lbl_your_car: "Your driver's car",
     lbl_fullname: "Full name", lbl_whatsapp: 'WhatsApp number <span class="optional">(for booking confirmation)</span>', ep_eyebrow: "Your profile", ep_title: "Edit profile",
-    lbl_pickup_loc: "Pickup location", lbl_deposit_due: "Deposit due now (20%)", lbl_airport_destination: "Destination region", lbl_transfer_destination: "Destination",
+    lbl_pickup_loc: "Pickup location", lbl_deposit_due: "Deposit due now (20%)", lbl_airport_destination: "Destination region", lbl_transfer_destination: "Destination", lbl_pickup_region: "Your pickup region",
     lbl_balance: "Balance — pay driver in cash on the day",
     deposit_hint: "⚠️ Only the 20% deposit is due now to secure your booking. The remaining 80% is paid to your driver in cash at the start of the tour.",
     confirm_title: "Booking requested",
@@ -6283,7 +6704,7 @@ const translations = {
     nav_listings: "My listings",
     nav_bookings: "Bookings", booking_history_title: "Booking history",
     bd_title: "Booking details", bd_email: "Email", bd_phone: "WhatsApp", bd_ref: "Reference", bd_status: "Status",
-    rcpt_title: "Receipt", rcpt_no: "Receipt no.", rcpt_item: "Booking fees", rcpt_total: "Total paid", rcpt_note: "This receipt was also sent to your email address. Payment method: your saved payment method (Stripe).", el_eyebrow: "My listings", el_title: "Edit listing", el_name_label: "Tour name *", el_price_label: "Price *", el_duration_label: "Duration", el_save_btn: "Save changes", el_error: "Please fill the highlighted fields.", rcpt_credit_applied: "Referral credit applied",
+    rcpt_title: "Receipt", rcpt_no: "Receipt no.", rcpt_item: "Booking fees", rcpt_total: "Total paid", rcpt_note: "This receipt was also sent to your email address. Payment method: your saved payment method (Stripe).", el_eyebrow: "My listings", el_title: "Edit listing", el_name_label: "Tour name *", el_price_label: "Price *", el_duration_label: "Duration", el_save_btn: "Save changes", el_error: "Please fill the highlighted fields.", el_delete_btn: "🗑️ Delete this listing", el_delete_confirm: "Really delete \"{name}\"? This cannot be undone.", nl_pickup_prices_title: "Different price per pickup region? (optional — leave empty to use the same price everywhere)", rcpt_credit_applied: "Referral credit applied",
     admin_openpay_title: "Open payments", admin_openpay_sub: "Drivers whose automatic month-end fee payment failed. They have 5 days to settle before their account is automatically suspended.",
     admin_run_settlement_btn: "Run month-end settlement now (test)", admin_openpay_empty: "No open payments right now — everyone is settled.",
     admin_openpay_amount: "Amount due", admin_openpay_due: "Due date", admin_openpay_suspended: "🚫 Suspended", admin_openpay_overdue: "Overdue",
@@ -6455,7 +6876,7 @@ const translations = {
     lbl_date: "Datum", lbl_guests: "Gäste", lbl_total: "Gesamtpreis der Tour", lbl_pickup: "Abholung", lbl_tour_singular: "Tour", lbl_tour_plural: "Touren", lbl_rating_new: "Neu",
     lbl_deposit_paid: "Anzahlung geleistet", lbl_cash_due: "Bar an den Fahrer", lbl_your_car: "Das Auto deines Fahrers",
     lbl_fullname: "Vollständiger Name", lbl_whatsapp: 'WhatsApp-Nummer <span class="optional">(für die Buchungsbestätigung)</span>', ep_eyebrow: "Dein Profil", ep_title: "Profil bearbeiten",
-    lbl_pickup_loc: "Abholort", lbl_deposit_due: "Anzahlung jetzt fällig (20%)", lbl_airport_destination: "Zielregion", lbl_transfer_destination: "Ziel",
+    lbl_pickup_loc: "Abholort", lbl_deposit_due: "Anzahlung jetzt fällig (20%)", lbl_airport_destination: "Zielregion", lbl_transfer_destination: "Ziel", lbl_pickup_region: "Deine Abholregion",
     lbl_balance: "Restbetrag — bar an den Fahrer am Tourtag",
     deposit_hint: "⚠️ Nur die 20% Anzahlung ist jetzt fällig, um deine Buchung zu sichern. Die restlichen 80% zahlst du deinem Fahrer bar zu Beginn der Tour.",
     confirm_title: "Buchung angefragt",
@@ -6558,7 +6979,7 @@ const translations = {
     nav_listings: "Meine Angebote",
     nav_bookings: "Buchungen", booking_history_title: "Buchungsverlauf",
     bd_title: "Buchungsdetails", bd_email: "E-Mail", bd_phone: "WhatsApp", bd_ref: "Referenz", bd_status: "Status",
-    rcpt_title: "Beleg", rcpt_no: "Beleg-Nr.", rcpt_item: "Buchungsgebühren", rcpt_total: "Gesamt bezahlt", rcpt_note: "Dieser Beleg wurde zusätzlich an deine E-Mail-Adresse gesendet. Zahlungsmethode: deine hinterlegte Zahlungsmethode (Stripe).", el_eyebrow: "Meine Angebote", el_title: "Angebot bearbeiten", el_name_label: "Tour-Name *", el_price_label: "Preis *", el_duration_label: "Dauer", el_save_btn: "Änderungen speichern", el_error: "Bitte fülle die markierten Felder aus.", rcpt_credit_applied: "Empfehlungs-Gutschrift angerechnet",
+    rcpt_title: "Beleg", rcpt_no: "Beleg-Nr.", rcpt_item: "Buchungsgebühren", rcpt_total: "Gesamt bezahlt", rcpt_note: "Dieser Beleg wurde zusätzlich an deine E-Mail-Adresse gesendet. Zahlungsmethode: deine hinterlegte Zahlungsmethode (Stripe).", el_eyebrow: "Meine Angebote", el_title: "Angebot bearbeiten", el_name_label: "Tour-Name *", el_price_label: "Preis *", el_duration_label: "Dauer", el_save_btn: "Änderungen speichern", el_error: "Bitte fülle die markierten Felder aus.", el_delete_btn: "🗑️ Angebot löschen", el_delete_confirm: "\"{name}\" wirklich löschen? Das kann nicht rückgängig gemacht werden.", nl_pickup_prices_title: "Unterschiedlicher Preis je Abholregion? (optional — leer lassen für überall denselben Preis)", rcpt_credit_applied: "Empfehlungs-Gutschrift angerechnet",
     admin_openpay_title: "Offene Zahlungen", admin_openpay_sub: "Fahrer, deren automatische Monatsend-Gebührenzahlung fehlgeschlagen ist. Sie haben 5 Tage Zeit zu zahlen, bevor ihr Konto automatisch gesperrt wird.",
     admin_run_settlement_btn: "Monatsabrechnung jetzt ausführen (Test)", admin_openpay_empty: "Aktuell keine offenen Zahlungen — alles beglichen.",
     admin_openpay_amount: "Fälliger Betrag", admin_openpay_due: "Fällig am", admin_openpay_suspended: "🚫 Gesperrt", admin_openpay_overdue: "Überfällig",
@@ -6730,7 +7151,7 @@ const translations = {
     lbl_date: "Tanggal", lbl_guests: "Tamu", lbl_total: "Total harga tur", lbl_pickup: "Penjemputan", lbl_tour_singular: "tur", lbl_tour_plural: "tur", lbl_rating_new: "Baru",
     lbl_deposit_paid: "Deposit dibayar", lbl_cash_due: "Tunai untuk sopir", lbl_your_car: "Mobil sopir Anda",
     lbl_fullname: "Nama lengkap", lbl_whatsapp: 'Nomor WhatsApp <span class="optional">(untuk konfirmasi pemesanan)</span>', ep_eyebrow: "Profil Anda", ep_title: "Edit profil",
-    lbl_pickup_loc: "Lokasi penjemputan", lbl_deposit_due: "Deposit jatuh tempo sekarang (20%)", lbl_airport_destination: "Wilayah tujuan", lbl_transfer_destination: "Tujuan",
+    lbl_pickup_loc: "Lokasi penjemputan", lbl_deposit_due: "Deposit jatuh tempo sekarang (20%)", lbl_airport_destination: "Wilayah tujuan", lbl_transfer_destination: "Tujuan", lbl_pickup_region: "Wilayah penjemputan Anda",
     lbl_balance: "Sisa — bayar tunai ke sopir pada hari tur",
     deposit_hint: "⚠️ Hanya deposit 20% yang harus dibayar sekarang. Sisa 80% dibayar tunai ke sopir Anda saat tur dimulai.",
     confirm_title: "Pemesanan diajukan",
@@ -6833,7 +7254,7 @@ const translations = {
     nav_listings: "Tur saya",
     nav_bookings: "Pemesanan", booking_history_title: "Riwayat pemesanan",
     bd_title: "Detail pemesanan", bd_email: "Email", bd_phone: "WhatsApp", bd_ref: "Referensi", bd_status: "Status",
-    rcpt_title: "Kuitansi", rcpt_no: "No. kuitansi", rcpt_item: "Biaya pemesanan", rcpt_total: "Total dibayar", rcpt_note: "Kuitansi ini juga dikirim ke alamat email Anda. Metode pembayaran: metode pembayaran tersimpan Anda (Stripe).", el_eyebrow: "Tur saya", el_title: "Edit tur", el_name_label: "Nama tur *", el_price_label: "Harga *", el_duration_label: "Durasi", el_save_btn: "Simpan perubahan", el_error: "Mohon isi kolom yang ditandai.", rcpt_credit_applied: "Kredit referral diterapkan",
+    rcpt_title: "Kuitansi", rcpt_no: "No. kuitansi", rcpt_item: "Biaya pemesanan", rcpt_total: "Total dibayar", rcpt_note: "Kuitansi ini juga dikirim ke alamat email Anda. Metode pembayaran: metode pembayaran tersimpan Anda (Stripe).", el_eyebrow: "Tur saya", el_title: "Edit tur", el_name_label: "Nama tur *", el_price_label: "Harga *", el_duration_label: "Durasi", el_save_btn: "Simpan perubahan", el_error: "Mohon isi kolom yang ditandai.", el_delete_btn: "🗑️ Hapus tur ini", el_delete_confirm: "Yakin ingin menghapus \"{name}\"? Tindakan ini tidak dapat dibatalkan.", nl_pickup_prices_title: "Harga berbeda per wilayah penjemputan? (opsional — kosongkan untuk harga yang sama di mana saja)", rcpt_credit_applied: "Kredit referral diterapkan",
     admin_openpay_title: "Pembayaran terbuka", admin_openpay_sub: "Sopir yang pembayaran biaya akhir bulan otomatisnya gagal. Mereka punya 5 hari untuk melunasi sebelum akun mereka otomatis ditangguhkan.",
     admin_run_settlement_btn: "Jalankan penyelesaian akhir bulan sekarang (uji)", admin_openpay_empty: "Tidak ada pembayaran terbuka saat ini — semua sudah lunas.",
     admin_openpay_amount: "Jumlah jatuh tempo", admin_openpay_due: "Tanggal jatuh tempo", admin_openpay_suspended: "🚫 Ditangguhkan", admin_openpay_overdue: "Terlambat",
@@ -7853,6 +8274,19 @@ function openModal(d){
     transferMapBox.style.display = 'none';
     currentDriver.transferDestination = null;
   }
+  const pickupRow = document.getElementById('modal-pickupregion-row');
+  if(d.pickupRegionPrices && Object.keys(d.pickupRegionPrices).length){
+    const sel = document.getElementById('modal-pickupregion-select');
+    sel.innerHTML = Object.entries(d.pickupRegionPrices).map(([r,p])=>`<option value="${r}">${r} — ${p}</option>`).join('');
+    // wenn der Kunde vorher schon nach einer Region gesucht hat, die dieser Fahrer bedient, gleich vorauswaehlen
+    const searched = (document.getElementById('search-input').value || '').trim().toLowerCase();
+    const preferred = Object.keys(d.pickupRegionPrices).find(r => searched && r.toLowerCase().includes(searched));
+    if(preferred) sel.value = preferred;
+    pickupRow.style.display = 'flex';
+    onPickupRegionChange();
+  } else {
+    pickupRow.style.display = 'none';
+  }
   renderOtherTours(d);
   document.getElementById('pay-driver').textContent = d.name;
   document.getElementById('pay-tour').textContent = d.tour;
@@ -7927,6 +8361,21 @@ function onTransferRegionChange(){
     renderRouteMap('modal-transfer-map-leaflet', 'modal-transfer-route-info', originCoords, coords, originLabel, region, '🚐');
   } else {
     mapBox.style.display = 'none';
+  }
+}
+function onPickupRegionChange(){
+  if(!currentDriver || !currentDriver.pickupRegionPrices) return;
+  if(currentDriver._basePrice === undefined) currentDriver._basePrice = currentDriver.price;
+  const region = document.getElementById('modal-pickupregion-select').value;
+  const price = currentDriver.pickupRegionPrices[region];
+  if(price){
+    currentDriver.price = price;
+    document.getElementById('modal-price').innerHTML = priceBlockHTML(price);
+    document.getElementById('pay-total').innerHTML = priceBlockHTML(price);
+    const totalNum = parseIDR(price);
+    const depositNum = totalNum * 0.2;
+    document.getElementById('pay-deposit').innerHTML = priceBlockHTML(depositNum);
+    document.getElementById('pay-balance').innerHTML = priceBlockHTML(totalNum - depositNum);
   }
 }
 function goToStep(step){
@@ -8566,6 +9015,8 @@ function applyRealDriverProfileToUI(d){
     lwEl.textContent = 'Your Ryvio number: ' + (d.lw_number || '—');
     lwEl.dataset.rawNumber = d.lw_number || '';
   }
+  const svcEl = document.getElementById('profile-services');
+  if(svcEl) svcEl.textContent = ''; // Foto/Drohne-Zusatzservice wird hier bewusst nicht angezeigt
   const initialsEl = document.getElementById('driver-avatar');
   if(initialsEl){
     if(d.avatar_url){
@@ -8618,20 +9069,49 @@ let adminPeriod = 'month';
 function setAdminPeriod(p){
   adminPeriod = p;
   document.querySelectorAll('#admin-period-tabs .period-btn').forEach(b=>b.classList.toggle('active', b.dataset.period===p));
+  const dayPicker = document.getElementById('admin-period-day-picker');
+  const monthPicker = document.getElementById('admin-period-month-picker');
+  const yearPicker = document.getElementById('admin-period-year-picker');
+  if(dayPicker) dayPicker.style.display = (p==='day') ? 'inline-block' : 'none';
+  if(monthPicker) monthPicker.style.display = (p==='month') ? 'inline-block' : 'none';
+  if(yearPicker) yearPicker.style.display = (p==='year') ? 'inline-block' : 'none';
+  if(yearPicker && !yearPicker.options.length){
+    const thisYear = new Date().getFullYear();
+    for(let y = thisYear + 1; y >= thisYear - 5; y--){
+      const opt = document.createElement('option');
+      opt.value = y; opt.textContent = y;
+      if(y === thisYear) opt.selected = true;
+      yearPicker.appendChild(opt);
+    }
+  }
   renderAdminStats();
 }
 // demo factors so daily/monthly/yearly show plausible different figures
 const periodFactor = { day: 1, month: 22, year: 240 };
-// liefert den Start-/End-Zeitraum (als 'YYYY-MM-DD') fuer den gewaehlten Zeitraum-Tab
+// liefert den Start-/End-Zeitraum (als 'YYYY-MM-DD') fuer den gewaehlten Zeitraum-Tab.
+// Nutzt die getroffene Datum-/Monat-/Jahr-Auswahl - ist nichts ausgewaehlt, gilt der aktuelle Tag/Monat/Jahr.
 function periodDateRange(period){
   const now = new Date();
-  const y = now.getFullYear(), m = now.getMonth(), d = now.getDate();
-  let start, end;
-  if(period==='day'){ start = new Date(y,m,d); end = new Date(y,m,d+1); }
-  else if(period==='month'){ start = new Date(y,m,1); end = new Date(y,m+1,1); }
-  else { start = new Date(y,0,1); end = new Date(y+1,0,1); }
   const fmt = dt => dt.toISOString().slice(0,10);
-  return { start: fmt(start), end: fmt(end) };
+  if(period==='day'){
+    const picker = document.getElementById('admin-period-day-picker');
+    const val = picker && picker.value; // 'YYYY-MM-DD'
+    if(val){
+      const [y,m,d] = val.split('-').map(Number);
+      return { start: fmt(new Date(y, m-1, d)), end: fmt(new Date(y, m-1, d+1)) };
+    }
+    return { start: fmt(new Date(now.getFullYear(), now.getMonth(), now.getDate())), end: fmt(new Date(now.getFullYear(), now.getMonth(), now.getDate()+1)) };
+  }
+  if(period==='month'){
+    const picker = document.getElementById('admin-period-month-picker');
+    const val = picker && picker.value; // 'YYYY-MM'
+    let y = now.getFullYear(), m = now.getMonth();
+    if(val){ const [yy,mm] = val.split('-').map(Number); y = yy; m = mm-1; }
+    return { start: fmt(new Date(y, m, 1)), end: fmt(new Date(y, m+1, 1)) };
+  }
+  const picker = document.getElementById('admin-period-year-picker');
+  const y = (picker && picker.value) ? parseInt(picker.value, 10) : now.getFullYear();
+  return { start: fmt(new Date(y, 0, 1)), end: fmt(new Date(y+1, 0, 1)) };
 }
 async function loadRealAdminStats(){
   const { start, end } = periodDateRange(adminPeriod);
