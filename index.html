@@ -205,7 +205,7 @@
   .driver-photo{ display:flex; align-items:center; justify-content:center; margin-bottom:10px; }
   .driver-photo .initials{
     width:56px; height:56px; border-radius:50%; background:var(--ink); color:var(--paper);
-    display:flex; align-items:center; justify-content:center; font-family:'Fraunces'; font-weight:600; font-size:1.2rem;
+    display:flex; align-items:center; justify-content:center; font-family:'Public Sans'; font-weight:700; font-size:1.2rem;
   }
   .driver-photo .initials.photo-lg{
     width:118px; height:118px; font-size:2rem;
@@ -249,7 +249,7 @@
   .modal-header .eyebrow{ font-family:'JetBrains Mono'; font-size:0.68rem; text-transform:uppercase; letter-spacing:0.14em; color:var(--gold); }
   .modal-avatar{
     width:40px; height:40px; border-radius:50%; background:var(--teal); color:#fff; margin-bottom:8px;
-    display:flex; align-items:center; justify-content:center; font-family:'Fraunces'; font-weight:600;
+    display:flex; align-items:center; justify-content:center; font-family:'Public Sans'; font-weight:700;
     background-size:cover; background-position:center;
   }
   .modal-header h2{ margin-top:8px; }
@@ -618,6 +618,11 @@
   }
   .dp-edit-pencil:hover{ opacity:1; }
   .dp-about-text{ font-size:0.95rem; line-height:1.65; white-space:pre-wrap; }
+  .dp-section textarea, .dp-section input[type="text"]{
+    width:100%; box-sizing:border-box; padding:11px 12px; border:1px solid var(--line); border-radius:5px;
+    font-family:'Public Sans'; font-size:0.9rem; background:#fff; color:var(--ink); outline:none;
+  }
+  .dp-section textarea{ resize:vertical; }
   .dp-gallery{ display:grid; grid-template-columns:repeat(3, 1fr); gap:10px 6px; }
   .dp-media-cell{ display:flex; flex-direction:column; gap:4px; }
   .dp-media-item{ position:relative; aspect-ratio:1; border-radius:6px; overflow:hidden; background:var(--paper-dim); }
@@ -3864,6 +3869,7 @@ function loadDriverContext(id){
   showDashSection('overview');
 }
 function renderProfileChip(){
+  if(realDriverProfile) return; // echte Fahrer werden ausschliesslich ueber applyRealDriverProfileToUI() dargestellt
   const p = driverProfiles[currentDriverId];
   document.getElementById('profile-pname').textContent = p.name;
   const regionSet = new Set();
@@ -7432,6 +7438,7 @@ function cropImageToSquare(file, size, callback){
 }
 
 function handlePhotoUpload(event){
+  if(realDriverProfile){ handleRealPhotoUpload(event); return; }
   const file = event.target.files[0];
   if(!file) return;
   cropImageToSquare(file, 500, (dataUrl) => {
@@ -7441,6 +7448,36 @@ function handlePhotoUpload(event){
     drivers.filter(d => d.ownerId===currentDriverId).forEach(d => d.photo = dataUrl);
     renderDriverGrid(visibleDrivers());
     saveState();
+  });
+}
+// echtes Profilfoto hochladen: in Supabase Storage speichern und drivers.avatar_url aktualisieren (Baustein 10)
+async function handleRealPhotoUpload(event){
+  const file = event.target.files[0];
+  if(!file) return;
+  cropImageToSquare(file, 500, async (dataUrl) => {
+    try{
+      const blob = await (await fetch(dataUrl)).blob();
+      const path = `${realDriverProfile.id}/avatar.jpg`;
+      const { error: upErr } = await supabaseClient.storage.from('avatars').upload(path, blob, { contentType:'image/jpeg', upsert:true });
+      if(upErr){ console.error('Foto-Upload fehlgeschlagen:', upErr); alert('Foto-Upload ist fehlgeschlagen. Bitte nochmal versuchen.'); return; }
+      const { data: pub } = supabaseClient.storage.from('avatars').getPublicUrl(path);
+      // Datum als Cache-Buster anhaengen, sonst zeigt der Browser das alte gecachte Foto weiter an
+      const avatar_url = pub.publicUrl + '?t=' + Date.now();
+      const { data, error } = await supabaseClient.from('drivers').update({ avatar_url }).eq('id', realDriverProfile.id).select().single();
+      if(error){ console.error('Foto konnte nicht am Profil gespeichert werden:', error); return; }
+      realDriverProfile = data;
+      applyRealDriverProfileToUI(realDriverProfile);
+      loadRealPublicListings();
+      if(dpIsReal && dpRealData && dpDriverId === realDriverProfile.id){
+        dpRealData.driver = data;
+        renderRealDriverPage(dpMode === 'owner');
+      }
+    } catch(e){
+      console.error('Foto-Upload fehlgeschlagen:', e);
+      alert('Foto-Upload ist fehlgeschlagen. Bitte nochmal versuchen.');
+    } finally {
+      event.target.value = '';
+    }
   });
 }
 
@@ -8203,8 +8240,16 @@ function applyRealDriverProfileToUI(d){
   }
   const initialsEl = document.getElementById('driver-avatar');
   if(initialsEl){
-    const initials = (d.name || '?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
-    initialsEl.textContent = initials;
+    if(d.avatar_url){
+      initialsEl.style.backgroundImage = `url(${d.avatar_url})`;
+      initialsEl.style.backgroundSize = 'cover';
+      initialsEl.style.backgroundPosition = 'center';
+      initialsEl.textContent = '';
+    } else {
+      initialsEl.style.backgroundImage = 'none';
+      const initials = (d.name || '?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+      initialsEl.textContent = initials;
+    }
   }
 }
 
