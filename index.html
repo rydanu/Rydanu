@@ -7889,7 +7889,7 @@ function switchView(view){
   document.getElementById('tab-driver').classList.toggle('active', view==='driver');
   document.getElementById('tab-admin').classList.toggle('active', view==='admin');
   if(view==='driver'){ checkDriverAuthState(); }
-  if(view==='admin'){ renderAdminList(); }
+  if(view==='admin'){ renderAdminList(); loadAdminPendingDrivers(); }
 }
 function switchViewProgrammatic(view){
   document.getElementById('view-customer').classList.toggle('active', view==='customer');
@@ -7899,7 +7899,7 @@ function switchViewProgrammatic(view){
   document.getElementById('tab-driver').classList.toggle('active', view==='driver');
   document.getElementById('tab-admin').classList.toggle('active', view==='admin');
   if(view==='driver'){ checkDriverAuthState(); }
-  if(view==='admin'){ renderAdminList(); }
+  if(view==='admin'){ renderAdminList(); loadAdminPendingDrivers(); }
 }
 function populateDemoDriverSwitcher(){
   const sel = document.getElementById('demo-driver-select');
@@ -7984,6 +7984,60 @@ function renderAdminDriverStats(){
     <div class="stat-card"><div class="num">${formatIDR(revenue)}</div><div class="lbl">${t('admin_stat_driver_revenue')}</div></div>
     <div class="stat-card"><div class="num">${formatIDR(feeRevenue)}</div><div class="lbl">${t('admin_stat_driver_fee_revenue')}</div></div>
   `;
+}
+// ---- echter Admin-Bereich (Baustein 9a): ausstehende Fahrer freischalten/ablehnen ----
+async function loadAdminPendingDrivers(){
+  const { data, error } = await supabaseClient.from('drivers').select('*').eq('status', 'pending').order('created_at', { ascending:true });
+  if(error){ console.error('Ausstehende Fahrer konnten nicht geladen werden (evtl. nicht als Admin eingeloggt):', error); return; }
+  renderRealAdminPendingDrivers(data || []);
+}
+function renderRealAdminPendingDrivers(list){
+  const el = document.getElementById('admin-pending-list');
+  if(!el) return;
+  if(list.length === 0){
+    el.innerHTML = `<div class="empty-state">${t('admin_empty_pending')}</div>`;
+    return;
+  }
+  el.innerHTML = list.map(p=>`
+    <div class="panel" style="margin-bottom:16px;">
+      <div class="panel-head"><h3>${escapeHtml(p.name||'—')}</h3><span class="status-pill pending">Pending</span></div>
+      <div class="booking-row"><div><div class="who">Region</div></div><span>${p.region==='lombok' ? 'Lombok' : 'Bali'}</span></div>
+      <div class="booking-row"><div><div class="who">E-Mail</div></div><span>${escapeHtml(p.email||'—')}</span></div>
+      <div class="booking-row"><div><div class="who">Telefon</div></div><span>${escapeHtml(p.phone||'—')}</span></div>
+      <div class="booking-row"><div><div class="who">Ryvio-Nummer</div></div><span>${p.lw_number||'—'}</span></div>
+      <p class="note" style="padding:0 20px;">ℹ️ Der Dokumenten-Upload bei der Registrierung ist noch nicht angebunden — Prüfung aktuell nur anhand dieser Basisdaten möglich.</p>
+      <div style="padding:0 20px 16px;">
+        <button class="book-btn" onclick="approveRealDriver('${p.id}')">✓ Approve driver</button>
+        <div class="reject-box">
+          <textarea id="reject-reason-real-${p.id}" rows="2" placeholder="Reason for rejection (required to reject)..."></textarea>
+          <button type="button" class="cancel-btn" style="width:100%;padding:9px;border-radius:5px;" onclick="rejectRealDriver('${p.id}')">✕ Reject driver</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+async function approveRealDriver(id){
+  if(!confirm('Diesen Fahrer wirklich freischalten?')) return;
+  const { error } = await supabaseClient.from('drivers').update({ status:'approved' }).eq('id', id);
+  if(error){ console.error('Freischalten fehlgeschlagen:', error); alert('Freischalten fehlgeschlagen: ' + error.message); return; }
+  await supabaseClient.from('driver_messages').insert({
+    driver_id: id, type:'admin', subject: t('approved_inbox_title'), body: t('approved_inbox_body')
+  });
+  loadAdminPendingDrivers();
+  loadRealPublicListings(); // damit ein frisch freigeschalteter Fahrer sofort in der Suche erscheint
+  alert('Fahrer freigeschaltet ✓');
+}
+async function rejectRealDriver(id){
+  const reasonEl = document.getElementById('reject-reason-real-'+id);
+  const reason = reasonEl ? reasonEl.value.trim() : '';
+  if(!reason){ alert(t('admin_err_rejection_reason')); return; }
+  if(!confirm('Diesen Fahrer wirklich ablehnen?')) return;
+  const { error } = await supabaseClient.from('drivers').update({ status:'rejected' }).eq('id', id);
+  if(error){ console.error('Ablehnen fehlgeschlagen:', error); alert('Ablehnen fehlgeschlagen: ' + error.message); return; }
+  await supabaseClient.from('driver_messages').insert({
+    driver_id: id, type:'admin', subject: t('rejected_inbox_title'), body: t('rejected_inbox_body').replace('{reason}', reason)
+  });
+  loadAdminPendingDrivers();
+  alert('Fahrer abgelehnt ✓');
 }
 function renderAdminList(){
   renderAdminStats();
