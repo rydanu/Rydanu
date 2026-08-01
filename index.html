@@ -1470,6 +1470,25 @@
       <p class="form-error" id="fee-credit-status"></p>
     </div>
     <button type="button" class="link-btn" onclick="openFeeCreditsModal()">📋 <span data-i18n="admin_view_credits_btn">Alle Gutschriften anzeigen</span> (<span id="fee-credits-count">0</span>)</button>
+
+    <h3 style="margin-top:24px;" data-i18n="admin_topup_title">Guthaben manuell aufladen</h3>
+    <p class="dash-head" style="display:block; margin-bottom:20px;" data-i18n="admin_topup_sub">Solange es noch keinen echten Zahlungsanbieter gibt, kannst du hier Test-Guthaben direkt einem Fahrer gutschreiben.</p>
+    <div class="panel" style="padding:16px; margin-bottom:20px;">
+      <div class="form-field">
+        <label data-i18n="admin_select_driver">Fahrer auswählen</label>
+        <select id="balance-topup-driver-select"></select>
+      </div>
+      <div class="form-field">
+        <label data-i18n="admin_topup_amount">Betrag (IDR)</label>
+        <input type="number" id="balance-topup-amount" min="0" step="10000" placeholder="z.B. 500000">
+      </div>
+      <div class="form-field">
+        <label data-i18n="admin_topup_note">Notiz (optional)</label>
+        <input type="text" id="balance-topup-note" placeholder="z.B. Test-Guthaben für Baustein 9b">
+      </div>
+      <button type="button" class="period-btn" onclick="createRealBalanceTopup()" style="background:var(--gold); border-color:var(--gold); color:var(--ink); font-weight:700;" data-i18n="admin_topup_save_btn">Guthaben aufladen</button>
+      <p class="form-error" id="balance-topup-status"></p>
+    </div>
   </div>
 </div>
 
@@ -5302,7 +5321,8 @@ async function loadRealPublicListings(){
   const { data: approvedDrivers, error: dErr } = await supabaseClient
     .from('drivers')
     .select('id, name, region, lw_number, avatar_url, bio')
-    .eq('status', 'approved');
+    .eq('status', 'approved')
+    .eq('is_locked', false);
   if(dErr){ console.error('Echte Fahrer konnten nicht geladen werden:', dErr); return; }
   // vorher injizierte echte Karten wieder entfernen (verhindert Dubletten bei erneutem Laden)
   for(let i = drivers.length - 1; i >= 0; i--){ if(drivers[i].isReal) drivers.splice(i, 1); }
@@ -5855,6 +5875,11 @@ const translations = {
     admin_feeoverride_title: "Set an individual fee rate", admin_select_driver: "Select driver", admin_fee_percent: "Fee in % (0 or higher)",
     admin_fee_start: "Start date", admin_fee_end: "End date", admin_fee_save_btn: "Save",
     admin_credit_title: "Create a fee credit", admin_credit_amount: "Amount (IDR)", admin_credit_note: "Note (optional)", admin_credit_save_btn: "Create credit", admin_view_overrides_btn: "View all individual fee rates", admin_view_credits_btn: "View all credits", admin_view_drivers_btn: "View all drivers", admin_filter_by_driver: "Filter by driver",
+    admin_topup_title: "Manually top up balance", admin_topup_sub: "As long as there's no real payment provider yet, you can credit a driver with test balance directly here.", admin_topup_amount: "Amount (IDR)", admin_topup_note: "Note (optional)", admin_topup_save_btn: "Top up balance", admin_topup_fill_required: "Please select a driver and enter an amount.", admin_topup_success: "✓ Balance topped up.", admin_topup_notify_title: "💰 Your balance was topped up", admin_topup_notify_body: "Ryvio added {amount} to your balance.",
+    admin_locked_alert: "Driver locked ✓", admin_unlocked_alert: "Driver unlocked ✓",
+    lock_notice_title: "Your account has been locked 🚫", lock_notice_body: "Your account was locked by Ryvio — your listings are hidden from travelers and you can't receive new bookings until it's unlocked again. Contact support if you have questions.",
+    unlock_notice_title: "Your account is active again ✓", unlock_notice_body: "Good news — your account has been unlocked. Your listings are visible again and you can receive new bookings.",
+    admin_fc_cannot_delete_applied: "This credit was already used against a fee and can no longer be deleted.",
     fee_rate_vip_bonus: "🌟 VIP Bonus", fee_rate_zero_fees: "0% fees", fee_rate_valid_until: "valid until {date}", fee_rate_valid_unlimited: "valid indefinitely",
     fee_rate_current: "📊 Your current commission:", fee_rate_special_condition: "special rate", fee_rate_standard: "Standard", fee_rate_unlimited_short: "unlimited",
     admin_fo_fill_required: "Please select a driver and enter a percentage.", admin_fo_negative_error: "The percentage cannot be negative.",
@@ -6122,6 +6147,11 @@ const translations = {
     admin_feeoverride_title: "Individuellen Gebührensatz festlegen", admin_select_driver: "Fahrer auswählen", admin_fee_percent: "Gebühr in % (0 oder höher)",
     admin_fee_start: "Startdatum", admin_fee_end: "Enddatum", admin_fee_save_btn: "Speichern",
     admin_credit_title: "Gebühren-Gutschrift erstellen", admin_credit_amount: "Betrag (IDR)", admin_credit_note: "Notiz (optional)", admin_credit_save_btn: "Gutschrift erstellen", admin_view_overrides_btn: "Alle individuellen Gebührensätze anzeigen", admin_view_credits_btn: "Alle Gutschriften anzeigen", admin_view_drivers_btn: "Alle Fahrer anzeigen", admin_filter_by_driver: "Nach Fahrer filtern",
+    admin_topup_title: "Guthaben manuell aufladen", admin_topup_sub: "Solange es noch keinen echten Zahlungsanbieter gibt, kannst du hier Test-Guthaben direkt einem Fahrer gutschreiben.", admin_topup_amount: "Betrag (IDR)", admin_topup_note: "Notiz (optional)", admin_topup_save_btn: "Guthaben aufladen", admin_topup_fill_required: "Bitte einen Fahrer auswählen und einen Betrag eingeben.", admin_topup_success: "✓ Guthaben aufgeladen.", admin_topup_notify_title: "💰 Dein Guthaben wurde aufgeladen", admin_topup_notify_body: "Ryvio hat deinem Guthaben {amount} hinzugefügt.",
+    admin_locked_alert: "Fahrer gesperrt ✓", admin_unlocked_alert: "Fahrer entsperrt ✓",
+    lock_notice_title: "Dein Konto wurde gesperrt 🚫", lock_notice_body: "Dein Konto wurde von Ryvio gesperrt — deine Angebote sind für Reisende nicht sichtbar und du kannst keine neuen Buchungen mehr erhalten, bis es wieder entsperrt wird. Kontaktiere den Support bei Fragen.",
+    unlock_notice_title: "Dein Konto ist wieder aktiv ✓", unlock_notice_body: "Gute Nachricht — dein Konto wurde entsperrt. Deine Angebote sind wieder sichtbar und du kannst neue Buchungen erhalten.",
+    admin_fc_cannot_delete_applied: "Diese Gutschrift wurde bereits mit einer Gebühr verrechnet und kann nicht mehr gelöscht werden.",
     fee_rate_vip_bonus: "🌟 VIP Bonus", fee_rate_zero_fees: "0% Gebühren", fee_rate_valid_until: "gültig bis {date}", fee_rate_valid_unlimited: "unbefristet gültig",
     fee_rate_current: "📊 Deine aktuelle Provision:", fee_rate_special_condition: "Sonderkondition", fee_rate_standard: "Standard", fee_rate_unlimited_short: "unbefristet",
     admin_fo_fill_required: "Bitte Fahrer und Prozentsatz angeben.", admin_fo_negative_error: "Der Prozentsatz darf nicht negativ sein.",
@@ -6389,6 +6419,11 @@ const translations = {
     admin_feeoverride_title: "Tetapkan tarif biaya individual", admin_select_driver: "Pilih sopir", admin_fee_percent: "Biaya dalam % (0 atau lebih)",
     admin_fee_start: "Tanggal mulai", admin_fee_end: "Tanggal akhir", admin_fee_save_btn: "Simpan",
     admin_credit_title: "Buat kredit biaya", admin_credit_amount: "Jumlah (IDR)", admin_credit_note: "Catatan (opsional)", admin_credit_save_btn: "Buat kredit", admin_view_overrides_btn: "Lihat semua tarif biaya individual", admin_view_credits_btn: "Lihat semua kredit", admin_view_drivers_btn: "Lihat semua sopir", admin_filter_by_driver: "Filter berdasarkan sopir",
+    admin_topup_title: "Isi ulang saldo secara manual", admin_topup_sub: "Selama belum ada penyedia pembayaran resmi, Anda dapat menambahkan saldo uji coba langsung ke sopir di sini.", admin_topup_amount: "Jumlah (IDR)", admin_topup_note: "Catatan (opsional)", admin_topup_save_btn: "Isi ulang saldo", admin_topup_fill_required: "Silakan pilih sopir dan masukkan jumlah.", admin_topup_success: "✓ Saldo telah diisi ulang.", admin_topup_notify_title: "💰 Saldo Anda telah diisi ulang", admin_topup_notify_body: "Ryvio menambahkan {amount} ke saldo Anda.",
+    admin_locked_alert: "Sopir diblokir ✓", admin_unlocked_alert: "Sopir dibuka blokirnya ✓",
+    lock_notice_title: "Akun Anda telah diblokir 🚫", lock_notice_body: "Akun Anda telah diblokir oleh Ryvio — tur Anda tidak terlihat oleh wisatawan dan Anda tidak dapat menerima pemesanan baru sampai dibuka kembali. Hubungi dukungan jika ada pertanyaan.",
+    unlock_notice_title: "Akun Anda aktif kembali ✓", unlock_notice_body: "Kabar baik — akun Anda telah dibuka blokirnya. Tur Anda terlihat kembali dan Anda dapat menerima pemesanan baru.",
+    admin_fc_cannot_delete_applied: "Kredit ini sudah digunakan untuk biaya dan tidak dapat dihapus lagi.",
     fee_rate_vip_bonus: "🌟 VIP Bonus", fee_rate_zero_fees: "0% biaya", fee_rate_valid_until: "berlaku hingga {date}", fee_rate_valid_unlimited: "berlaku tanpa batas waktu",
     fee_rate_current: "📊 Komisi Anda saat ini:", fee_rate_special_condition: "tarif khusus", fee_rate_standard: "Standar", fee_rate_unlimited_short: "tanpa batas",
     admin_fo_fill_required: "Harap pilih sopir dan masukkan persentase.", admin_fo_negative_error: "Persentase tidak boleh negatif.",
@@ -8177,6 +8212,7 @@ function rejectDriver(id){
   alert(t('rejected_alert').replace('{name}', p.fullName));
 }
 function renderAdminBlockList(){
+  if(realDriverProfile){ renderRealAdminBlockList(); return; }
   const el = document.getElementById('admin-drivers-list');
   if(!el) return;
   const searchInput = document.getElementById('drivers-block-search');
@@ -8215,10 +8251,25 @@ function allDriverOptionsHTML(){
 function allDriverFilterOptionsHTML(){
   return `<option value="">${t('admin_all_drivers_option')}</option>` + allDriverOptionsHTML();
 }
-function renderFeeOverridePanel(){
+async function renderFeeOverridePanel(){
   const driverSel = document.getElementById('fee-override-driver-select');
   const creditSel = document.getElementById('fee-credit-driver-select');
   if(!driverSel || !creditSel) return; // not on this view
+  if(realDriverProfile){
+    await loadRealAllDriversCache();
+    const optsHTML = realDriverOptionsHTML();
+    driverSel.innerHTML = optsHTML;
+    creditSel.innerHTML = optsHTML;
+    const topupSel = document.getElementById('balance-topup-driver-select');
+    if(topupSel) topupSel.innerHTML = optsHTML;
+    const ovFilter = document.getElementById('fee-overrides-filter-select');
+    const crFilter = document.getElementById('fee-credits-filter-select');
+    if(ovFilter) ovFilter.innerHTML = realDriverFilterOptionsHTML();
+    if(crFilter) crFilter.innerHTML = realDriverFilterOptionsHTML();
+    renderRealFeeOverridesList();
+    renderRealFeeCreditsList();
+    return;
+  }
   const optsHTML = allDriverOptionsHTML();
   driverSel.innerHTML = optsHTML;
   creditSel.innerHTML = optsHTML;
@@ -8240,6 +8291,7 @@ function openFeeCreditsModal(){ document.getElementById('fee-credits-modal-bg').
 function closeFeeCreditsModal(){ document.getElementById('fee-credits-modal-bg').classList.remove('active'); }
 document.getElementById('fee-credits-modal-bg').addEventListener('click', e=>{ if(e.target.id==='fee-credits-modal-bg') closeFeeCreditsModal(); });
 function createFeeOverride(){
+  if(realDriverProfile){ createRealFeeOverride(); return; }
   const driverId = document.getElementById('fee-override-driver-select').value;
   const percent = document.getElementById('fee-override-percent').value;
   const start = document.getElementById('fee-override-start').value;
@@ -8289,6 +8341,7 @@ function deleteFeeOverride(id){
   saveState();
 }
 function renderFeeOverridesList(){
+  if(realDriverProfile){ renderRealFeeOverridesList(); return; }
   const el = document.getElementById('admin-fee-overrides-list');
   if(!el) return;
   const filterSel = document.getElementById('fee-overrides-filter-select');
@@ -8312,6 +8365,7 @@ function renderFeeOverridesList(){
   }).join('');
 }
 function createFeeCredit(){
+  if(realDriverProfile){ createRealFeeCredit(); return; }
   const driverId = document.getElementById('fee-credit-driver-select').value;
   const amount = document.getElementById('fee-credit-amount').value;
   const note = document.getElementById('fee-credit-note').value;
@@ -8366,6 +8420,7 @@ function deleteFeeCredit(id){
   saveState();
 }
 function renderFeeCreditsList(){
+  if(realDriverProfile){ renderRealFeeCreditsList(); return; }
   const el = document.getElementById('admin-fee-credits-list');
   if(!el) return;
   const filterSel = document.getElementById('fee-credits-filter-select');
@@ -8403,6 +8458,222 @@ function toggleBlockDriver(id){
   renderDriverGrid(visibleDrivers());
   saveState();
 }
+
+// ---- echter Admin-Bereich (Baustein 9b): Fahrer sperren/entsperren, Sonderkonditionen, Gutschriften, Guthaben aufladen ----
+let realAllDriversCache = [];
+async function loadRealAllDriversCache(){
+  const { data, error } = await supabaseClient.from('drivers')
+    .select('id, name, lw_number, region, is_locked, locked_since, fees_due_idr, balance_idr')
+    .eq('status', 'approved')
+    .order('name');
+  if(error){ console.error('Fahrerliste konnte nicht geladen werden (evtl. nicht als Admin eingeloggt):', error); realAllDriversCache = []; return; }
+  realAllDriversCache = data || [];
+}
+function realDriverOptionsHTML(){
+  return realAllDriversCache.map(d => `<option value="${d.id}">${escapeHtml(d.name)} (${d.lw_number||'—'})</option>`).join('');
+}
+function realDriverFilterOptionsHTML(){
+  return `<option value="">${t('admin_all_drivers_option')}</option>` + realDriverOptionsHTML();
+}
+async function renderRealAdminBlockList(){
+  const el = document.getElementById('admin-drivers-list');
+  if(!el) return;
+  await loadRealAllDriversCache();
+  const searchInput = document.getElementById('drivers-block-search');
+  const query = (searchInput ? searchInput.value : '').trim().toLowerCase();
+  let list = realAllDriversCache;
+  const countEl = document.getElementById('admin-drivers-count');
+  if(countEl) countEl.textContent = list.length;
+  if(query){
+    list = list.filter(d =>
+      (d.name||'').toLowerCase().includes(query) ||
+      (d.lw_number||'').toLowerCase().includes(query) ||
+      (d.region||'').toLowerCase().includes(query)
+    );
+  }
+  if(list.length === 0){
+    el.innerHTML = `<div class="empty-state">${t('admin_empty_approved')}</div>`;
+    return;
+  }
+  el.innerHTML = list.map(d=>{
+    const safeName = escapeHtml(d.name).replace(/'/g, "\\'");
+    return `
+    <div class="booking-row admin-driver-row ${d.is_locked?'blocked-row':''}" onclick="toggleRealDriverLock('${d.id}', ${d.is_locked ? 'true':'false'}, '${safeName}')">
+      <div><div class="who">${escapeHtml(d.name)}</div><div class="when">${d.region==='lombok'?'Lombok':'Bali'} · ${t('admin_stat_fees')||'Gebühren'}: ${formatIDR(d.fees_due_idr||0)}</div></div>
+      <span class="status-pill ${d.is_locked?'pending':'confirmed'}">${d.is_locked ? t('admin_status_blocked') : t('admin_status_active')}</span>
+    </div>`;
+  }).join('');
+}
+async function toggleRealDriverLock(id, isLocked, name){
+  const msg = isLocked ? t('admin_confirm_unblock').replace('{name}', name) : t('admin_confirm_block').replace('{name}', name);
+  if(!confirm(msg)) return;
+  const newLocked = !isLocked;
+  const { error } = await supabaseClient.from('drivers').update({
+    is_locked: newLocked,
+    locked_since: newLocked ? new Date().toISOString() : null
+  }).eq('id', id);
+  if(error){ alert('Sperren/Entsperren fehlgeschlagen: ' + error.message); console.error(error); return; }
+  await supabaseClient.from('driver_messages').insert({
+    driver_id: id,
+    type: newLocked ? 'lock_notice' : 'unlock_notice',
+    subject: newLocked ? t('lock_notice_title') : t('unlock_notice_title'),
+    body: newLocked ? t('lock_notice_body') : t('unlock_notice_body')
+  });
+  await renderRealAdminBlockList();
+  loadRealPublicListings(); // gesperrter Fahrer sofort aus der Kundensuche entfernen (bzw. entsperrten wieder rein)
+  alert(newLocked ? t('admin_locked_alert') : t('admin_unlocked_alert'));
+}
+
+// -- Sonderkonditionen (fee_overrides), echt --
+async function loadRealFeeOverridesCache(filterDriverId){
+  let q = supabaseClient.from('fee_overrides').select('*, driver:drivers(name, lw_number)').order('created_at', { ascending:false });
+  if(filterDriverId) q = q.eq('driver_id', filterDriverId);
+  const { data, error } = await q;
+  if(error){ console.error('Sonderkonditionen konnten nicht geladen werden:', error); return []; }
+  return data || [];
+}
+async function createRealFeeOverride(){
+  const driverId = document.getElementById('fee-override-driver-select').value;
+  const percent = document.getElementById('fee-override-percent').value;
+  const start = document.getElementById('fee-override-start').value;
+  const end = document.getElementById('fee-override-end').value;
+  const statusEl = document.getElementById('fee-override-status');
+  if(!driverId || percent === '' || percent === null){ statusEl.style.color=''; statusEl.textContent = t('admin_fo_fill_required'); return; }
+  if(Number(percent) < 0){ statusEl.style.color=''; statusEl.textContent = t('admin_fo_negative_error'); return; }
+  const { error } = await supabaseClient.from('fee_overrides').insert({
+    driver_id: driverId,
+    fee_percent: Number(percent),
+    starts_at: start || new Date().toISOString().slice(0,10),
+    ends_at: end || null,
+    created_by: (realDriverProfile && realDriverProfile.name) ? realDriverProfile.name : 'admin'
+  });
+  if(error){ statusEl.style.color='var(--danger)'; statusEl.textContent = 'Fehler: ' + error.message; return; }
+  statusEl.style.color = 'var(--teal)';
+  statusEl.textContent = t('admin_fo_saved');
+  const range = (start || end) ? t('admin_fo_range_from_to').replace('{start}', start||'…').replace('{end}', end||'…') : t('admin_fo_range_immediate');
+  await supabaseClient.from('driver_messages').insert({
+    driver_id: driverId, type:'admin', subject: t('admin_fo_notify_title'),
+    body: t('admin_fo_notify_body_set').replace('{percent}', Number(percent)).replace('{range}', range)
+  });
+  document.getElementById('fee-override-percent').value = '';
+  document.getElementById('fee-override-start').value = '';
+  document.getElementById('fee-override-end').value = '';
+  renderRealFeeOverridesList();
+}
+async function deleteRealFeeOverride(id, driverId){
+  if(!confirm(t('admin_fo_confirm_delete'))) return;
+  const { error } = await supabaseClient.from('fee_overrides').delete().eq('id', id);
+  if(error){ alert('Löschen fehlgeschlagen: ' + error.message); return; }
+  await supabaseClient.from('driver_messages').insert({
+    driver_id: driverId, type:'admin', subject: t('admin_fo_notify_title'), body: t('admin_fo_notify_body_removed')
+  });
+  renderRealFeeOverridesList();
+}
+async function renderRealFeeOverridesList(){
+  const el = document.getElementById('admin-fee-overrides-list');
+  if(!el) return;
+  const filterSel = document.getElementById('fee-overrides-filter-select');
+  const filterDriverId = filterSel ? filterSel.value : '';
+  const list = await loadRealFeeOverridesCache(filterDriverId || null);
+  const countEl = document.getElementById('fee-overrides-count');
+  if(countEl) countEl.textContent = list.length;
+  if(list.length === 0){
+    el.innerHTML = `<div class="empty-state">${filterDriverId ? t('admin_fo_empty_filtered') : t('admin_fo_empty_default')}</div>`;
+    return;
+  }
+  const today = new Date().toISOString().slice(0,10);
+  el.innerHTML = list.map(o=>{
+    const name = o.driver ? o.driver.name : o.driver_id;
+    const active = o.starts_at <= today && (!o.ends_at || o.ends_at >= today);
+    const range = (o.starts_at || o.ends_at) ? `${o.starts_at||'…'} – ${o.ends_at||'…'}` : t('admin_fo_unlimited');
+    return `
+    <div class="booking-row">
+      <div><div class="who">${escapeHtml(name)} — ${o.fee_percent}%</div><div class="when">${range} ${active ? '· <span style="color:var(--teal); font-weight:700;">'+t('admin_fo_active_tag')+'</span>' : ''}</div></div>
+      <button type="button" class="link-btn" style="color:var(--danger);" onclick="deleteRealFeeOverride('${o.id}','${o.driver_id}')">${t('admin_delete_btn')}</button>
+    </div>`;
+  }).join('');
+}
+
+// -- Gebühren-Gutschriften (fee_credits), echt --
+async function loadRealFeeCreditsCache(filterDriverId){
+  let q = supabaseClient.from('fee_credits').select('*, driver:drivers(name, lw_number)').order('created_at', { ascending:false });
+  if(filterDriverId) q = q.eq('driver_id', filterDriverId);
+  const { data, error } = await q;
+  if(error){ console.error('Gutschriften konnten nicht geladen werden:', error); return []; }
+  return data || [];
+}
+async function createRealFeeCredit(){
+  const driverId = document.getElementById('fee-credit-driver-select').value;
+  const amount = document.getElementById('fee-credit-amount').value;
+  const note = document.getElementById('fee-credit-note').value;
+  const statusEl = document.getElementById('fee-credit-status');
+  if(!driverId || !amount || Number(amount) <= 0){ statusEl.style.color=''; statusEl.textContent = t('admin_fc_fill_required'); return; }
+  const { error } = await supabaseClient.from('fee_credits').insert({
+    driver_id: driverId, amount_idr: Number(amount), source: 'admin'
+  });
+  if(error){ statusEl.style.color='var(--danger)'; statusEl.textContent = 'Fehler: ' + error.message; return; }
+  const creditNote = note ? ': ' + note : '';
+  await supabaseClient.from('driver_messages').insert({
+    driver_id: driverId, type:'admin', subject: t('admin_fc_notify_title'),
+    body: t('admin_fc_notify_body').replace('{amount}', formatIDR(Number(amount))).replace('{note}', creditNote)
+  });
+  statusEl.style.color = 'var(--teal)';
+  statusEl.textContent = t('admin_fc_created');
+  document.getElementById('fee-credit-amount').value = '';
+  document.getElementById('fee-credit-note').value = '';
+  renderRealFeeCreditsList();
+}
+async function deleteRealFeeCredit(id, driverId, applied){
+  if(applied){ alert(t('admin_fc_cannot_delete_applied')); return; }
+  if(!confirm(t('admin_fc_confirm_delete'))) return;
+  const { error } = await supabaseClient.from('fee_credits').delete().eq('id', id);
+  if(error){ alert('Löschen fehlgeschlagen: ' + error.message); return; }
+  renderRealFeeCreditsList();
+}
+async function renderRealFeeCreditsList(){
+  const el = document.getElementById('admin-fee-credits-list');
+  if(!el) return;
+  const filterSel = document.getElementById('fee-credits-filter-select');
+  const filterDriverId = filterSel ? filterSel.value : '';
+  const list = await loadRealFeeCreditsCache(filterDriverId || null);
+  const countEl = document.getElementById('fee-credits-count');
+  if(countEl) countEl.textContent = list.length;
+  if(list.length === 0){
+    el.innerHTML = `<div class="empty-state">${filterDriverId ? t('admin_fc_empty_filtered') : t('admin_fc_empty_default')}</div>`;
+    return;
+  }
+  const localeMap = {en:'en-GB', de:'de-DE', id:'id-ID'};
+  el.innerHTML = list.map(c=>{
+    const name = c.driver ? c.driver.name : c.driver_id;
+    const dateStr = new Date(c.created_at).toLocaleDateString(localeMap[currentLang] || 'en-GB');
+    return `
+    <div class="booking-row">
+      <div><div class="who">${escapeHtml(name)} — ${formatIDR(c.amount_idr)}</div><div class="when">${dateStr}${c.applied ? ' · ✓ verrechnet' : ''}</div></div>
+      <button type="button" class="link-btn" style="color:var(--danger);" onclick="deleteRealFeeCredit('${c.id}','${c.driver_id}', ${c.applied?'true':'false'})">${t('admin_delete_btn')}</button>
+    </div>`;
+  }).join('');
+}
+
+// -- Guthaben manuell aufladen (balance_idr), echt, per RPC --
+async function createRealBalanceTopup(){
+  const driverId = document.getElementById('balance-topup-driver-select').value;
+  const amount = document.getElementById('balance-topup-amount').value;
+  const note = document.getElementById('balance-topup-note').value;
+  const statusEl = document.getElementById('balance-topup-status');
+  if(!driverId || !amount || Number(amount) <= 0){ statusEl.style.color=''; statusEl.textContent = t('admin_topup_fill_required'); return; }
+  const subject = t('admin_topup_notify_title');
+  const body = t('admin_topup_notify_body').replace('{amount}', formatIDR(Number(amount))) + (note ? ' ' + note : '');
+  const { error } = await supabaseClient.rpc('admin_add_driver_balance', {
+    p_driver_id: driverId, p_amount: Number(amount), p_subject: subject, p_body: body
+  });
+  if(error){ statusEl.style.color='var(--danger)'; statusEl.textContent = 'Fehler: ' + error.message; return; }
+  statusEl.style.color = 'var(--teal)';
+  statusEl.textContent = t('admin_topup_success');
+  document.getElementById('balance-topup-amount').value = '';
+  document.getElementById('balance-topup-note').value = '';
+  loadRealAllDriversCache();
+}
+
 // ---- support conversation: ONE thread per driver, entries appended over time ----
 let supportThreads = {}; // keyed by driverId
 function getOrCreateThread(driverId, subjectIfNew){
