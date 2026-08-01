@@ -1489,6 +1489,25 @@
       <button type="button" class="period-btn" onclick="createRealBalanceTopup()" style="background:var(--gold); border-color:var(--gold); color:var(--ink); font-weight:700;" data-i18n="admin_topup_save_btn">Guthaben aufladen</button>
       <p class="form-error" id="balance-topup-status"></p>
     </div>
+    <button type="button" class="link-btn" onclick="openBalanceOverviewModal()">📋 <span data-i18n="admin_view_balances_btn">Alle Guthaben anzeigen</span> (<span id="balance-overview-count">0</span>)</button>
+  </div>
+</div>
+
+<!-- balance overview modal -->
+<div class="modal-bg" id="balance-overview-modal-bg">
+  <div class="modal" style="max-width:520px;">
+    <div class="modal-header">
+      <button class="modal-close" onclick="closeBalanceOverviewModal()">✕</button>
+      <span class="eyebrow" data-i18n="admin_topup_title">Guthaben manuell aufladen</span>
+      <h2 data-i18n="admin_view_balances_btn">Alle Guthaben anzeigen</h2>
+    </div>
+    <div class="modal-body">
+      <div class="form-field" style="margin-bottom:14px;">
+        <label data-i18n="admin_filter_by_driver">Nach Fahrer filtern</label>
+        <select id="balance-overview-filter-select" onchange="renderBalanceOverviewList()"></select>
+      </div>
+      <div id="admin-balance-overview-list"></div>
+    </div>
   </div>
 </div>
 
@@ -5880,6 +5899,7 @@ const translations = {
     lock_notice_title: "Your account has been locked 🚫", lock_notice_body: "Your account was locked by Ryvio — your listings are hidden from travelers and you can't receive new bookings until it's unlocked again. Contact support if you have questions.",
     unlock_notice_title: "Your account is active again ✓", unlock_notice_body: "Good news — your account has been unlocked. Your listings are visible again and you can receive new bookings.",
     admin_fc_cannot_delete_applied: "This credit was already used against a fee and can no longer be deleted.",
+    admin_view_balances_btn: "View all balances",
     fee_rate_vip_bonus: "🌟 VIP Bonus", fee_rate_zero_fees: "0% fees", fee_rate_valid_until: "valid until {date}", fee_rate_valid_unlimited: "valid indefinitely",
     fee_rate_current: "📊 Your current commission:", fee_rate_special_condition: "special rate", fee_rate_standard: "Standard", fee_rate_unlimited_short: "unlimited",
     admin_fo_fill_required: "Please select a driver and enter a percentage.", admin_fo_negative_error: "The percentage cannot be negative.",
@@ -6152,6 +6172,7 @@ const translations = {
     lock_notice_title: "Dein Konto wurde gesperrt 🚫", lock_notice_body: "Dein Konto wurde von Ryvio gesperrt — deine Angebote sind für Reisende nicht sichtbar und du kannst keine neuen Buchungen mehr erhalten, bis es wieder entsperrt wird. Kontaktiere den Support bei Fragen.",
     unlock_notice_title: "Dein Konto ist wieder aktiv ✓", unlock_notice_body: "Gute Nachricht — dein Konto wurde entsperrt. Deine Angebote sind wieder sichtbar und du kannst neue Buchungen erhalten.",
     admin_fc_cannot_delete_applied: "Diese Gutschrift wurde bereits mit einer Gebühr verrechnet und kann nicht mehr gelöscht werden.",
+    admin_view_balances_btn: "Alle Guthaben anzeigen",
     fee_rate_vip_bonus: "🌟 VIP Bonus", fee_rate_zero_fees: "0% Gebühren", fee_rate_valid_until: "gültig bis {date}", fee_rate_valid_unlimited: "unbefristet gültig",
     fee_rate_current: "📊 Deine aktuelle Provision:", fee_rate_special_condition: "Sonderkondition", fee_rate_standard: "Standard", fee_rate_unlimited_short: "unbefristet",
     admin_fo_fill_required: "Bitte Fahrer und Prozentsatz angeben.", admin_fo_negative_error: "Der Prozentsatz darf nicht negativ sein.",
@@ -6424,6 +6445,7 @@ const translations = {
     lock_notice_title: "Akun Anda telah diblokir 🚫", lock_notice_body: "Akun Anda telah diblokir oleh Ryvio — tur Anda tidak terlihat oleh wisatawan dan Anda tidak dapat menerima pemesanan baru sampai dibuka kembali. Hubungi dukungan jika ada pertanyaan.",
     unlock_notice_title: "Akun Anda aktif kembali ✓", unlock_notice_body: "Kabar baik — akun Anda telah dibuka blokirnya. Tur Anda terlihat kembali dan Anda dapat menerima pemesanan baru.",
     admin_fc_cannot_delete_applied: "Kredit ini sudah digunakan untuk biaya dan tidak dapat dihapus lagi.",
+    admin_view_balances_btn: "Lihat semua saldo",
     fee_rate_vip_bonus: "🌟 VIP Bonus", fee_rate_zero_fees: "0% biaya", fee_rate_valid_until: "berlaku hingga {date}", fee_rate_valid_unlimited: "berlaku tanpa batas waktu",
     fee_rate_current: "📊 Komisi Anda saat ini:", fee_rate_special_condition: "tarif khusus", fee_rate_standard: "Standar", fee_rate_unlimited_short: "tanpa batas",
     admin_fo_fill_required: "Harap pilih sopir dan masukkan persentase.", admin_fo_negative_error: "Persentase tidak boleh negatif.",
@@ -8266,6 +8288,10 @@ async function renderFeeOverridePanel(){
     const crFilter = document.getElementById('fee-credits-filter-select');
     if(ovFilter) ovFilter.innerHTML = realDriverFilterOptionsHTML();
     if(crFilter) crFilter.innerHTML = realDriverFilterOptionsHTML();
+    const balFilter = document.getElementById('balance-overview-filter-select');
+    if(balFilter) balFilter.innerHTML = realDriverFilterOptionsHTML();
+    const balCount = document.getElementById('balance-overview-count');
+    if(balCount) balCount.textContent = realAllDriversCache.length;
     renderRealFeeOverridesList();
     renderRealFeeCreditsList();
     return;
@@ -8672,6 +8698,31 @@ async function createRealBalanceTopup(){
   document.getElementById('balance-topup-amount').value = '';
   document.getElementById('balance-topup-note').value = '';
   loadRealAllDriversCache();
+}
+
+// -- Guthaben-Übersicht (alle Fahrer mit aktuellem Guthaben), echt --
+function openBalanceOverviewModal(){ document.getElementById('balance-overview-modal-bg').classList.add('active'); renderBalanceOverviewList(); }
+function closeBalanceOverviewModal(){ document.getElementById('balance-overview-modal-bg').classList.remove('active'); }
+document.getElementById('balance-overview-modal-bg').addEventListener('click', e=>{ if(e.target.id==='balance-overview-modal-bg') closeBalanceOverviewModal(); });
+async function renderBalanceOverviewList(){
+  const el = document.getElementById('admin-balance-overview-list');
+  if(!el) return;
+  if(!realDriverProfile){ el.innerHTML = ''; return; }
+  await loadRealAllDriversCache();
+  const filterSel = document.getElementById('balance-overview-filter-select');
+  const filterDriverId = filterSel ? filterSel.value : '';
+  const list = filterDriverId ? realAllDriversCache.filter(d => d.id === filterDriverId) : realAllDriversCache;
+  const countEl = document.getElementById('balance-overview-count');
+  if(countEl) countEl.textContent = realAllDriversCache.length;
+  if(list.length === 0){
+    el.innerHTML = `<div class="empty-state">${t('admin_empty_approved')}</div>`;
+    return;
+  }
+  el.innerHTML = list.slice().sort((a,b)=> (b.balance_idr||0) - (a.balance_idr||0)).map(d=>`
+    <div class="booking-row">
+      <div><div class="who">${escapeHtml(d.name)}</div><div class="when">${d.lw_number||'—'} · ${d.is_locked ? t('admin_status_blocked') : t('admin_status_active')}</div></div>
+      <span style="font-weight:700;">${formatIDR(d.balance_idr||0)}</span>
+    </div>`).join('');
 }
 
 // ---- support conversation: ONE thread per driver, entries appended over time ----
