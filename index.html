@@ -4602,7 +4602,7 @@ async function archiveRealMessage(idx){
   if(error) console.error('Nachricht konnte nicht archiviert werden:', error);
 }
 function updateRealInboxDot(){
-  const unreadCount = realMessages.filter(m=>!m.is_read && !m.archived).length;
+  const unreadCount = realMessages.filter(m=>!m.is_read && !m.archived).length + (mySupportThreadUnread ? 1 : 0);
   const dot = document.getElementById('inbox-dot');
   if(dot){
     dot.style.display = unreadCount > 0 ? 'inline-block' : 'none';
@@ -4716,6 +4716,11 @@ function updateInboxDot(){
 function updateAdminMailBadge(){
   const tabMail = document.getElementById('tab-admin-mail');
   if(!tabMail) return;
+  if(realDriverProfile){
+    const hasUnread = realAdminThreads.some(t=>t.unread_for_admin);
+    tabMail.style.display = hasUnread ? 'inline-flex' : 'none';
+    return;
+  }
   const hasUnread = Object.values(supportThreads).some(th => th.unreadForAdmin);
   tabMail.style.display = hasUnread ? 'inline-block' : 'none';
 }
@@ -7859,6 +7864,7 @@ async function checkDriverAuthState(){
   loadRealListings();
   loadRealBookings();
   loadRealInbox();
+  refreshSupportBadgeForDriver();
 }
 
 // Traegt das echte Fahrerprofil in die vorhandene Dashboard-Oberflaeche ein
@@ -7889,7 +7895,7 @@ function switchView(view){
   document.getElementById('tab-driver').classList.toggle('active', view==='driver');
   document.getElementById('tab-admin').classList.toggle('active', view==='admin');
   if(view==='driver'){ checkDriverAuthState(); }
-  if(view==='admin'){ renderAdminList(); loadAdminPendingDrivers(); }
+  if(view==='admin'){ renderAdminList(); loadAdminPendingDrivers(); loadRealAdminMessages(); }
 }
 function switchViewProgrammatic(view){
   document.getElementById('view-customer').classList.toggle('active', view==='customer');
@@ -7899,7 +7905,7 @@ function switchViewProgrammatic(view){
   document.getElementById('tab-driver').classList.toggle('active', view==='driver');
   document.getElementById('tab-admin').classList.toggle('active', view==='admin');
   if(view==='driver'){ checkDriverAuthState(); }
-  if(view==='admin'){ renderAdminList(); loadAdminPendingDrivers(); }
+  if(view==='admin'){ renderAdminList(); loadAdminPendingDrivers(); loadRealAdminMessages(); }
 }
 function populateDemoDriverSwitcher(){
   const sel = document.getElementById('demo-driver-select');
@@ -7922,7 +7928,36 @@ function setAdminPeriod(p){
 }
 // demo factors so daily/monthly/yearly show plausible different figures
 const periodFactor = { day: 1, month: 22, year: 240 };
+async function loadRealAdminStats(){
+  const [{ data: driversAgg, error: dErr }, { data: bookingsAgg, error: bErr }] = await Promise.all([
+    supabaseClient.from('drivers').select('fees_due_idr, status'),
+    supabaseClient.from('bookings').select('status')
+  ]);
+  if(dErr || bErr){ console.error('Geschäftsbericht konnte nicht geladen werden (evtl. nicht als Admin eingeloggt):', dErr||bErr); return; }
+  const drv = driversAgg || [];
+  const bkg = bookingsAgg || [];
+  const feesDueTotal = drv.reduce((s,d)=>s + (d.fees_due_idr||0), 0);
+  const approvedCount = drv.filter(d=>d.status==='approved').length;
+  const bookedCount = bkg.length;
+  const cancelledCount = bkg.filter(b=>b.status==='cancelled_by_driver' || b.status==='cancelled_by_customer' || b.status==='no_show').length;
+  const el = document.getElementById('admin-stats-row');
+  if(el){
+    el.innerHTML = `
+      <div class="stat-card"><div class="num" style="font-size:1.05rem;">${formatIDR(feesDueTotal)}</div><div class="lbl">Offene Gebühren gesamt</div></div>
+      <div class="stat-card"><div class="num">${bookedCount}</div><div class="lbl">${t('admin_stat_booked')}</div></div>
+      <div class="stat-card"><div class="num">${cancelledCount}</div><div class="lbl">${t('admin_stat_cancelled')}</div></div>
+      <div class="stat-card"><div class="num">${approvedCount}</div><div class="lbl">${t('admin_stat_drivers')}</div></div>
+    `;
+  }
+}
 function renderAdminStats(){
+  const tabs = document.getElementById('admin-period-tabs');
+  if(realDriverProfile){
+    if(tabs) tabs.style.display = 'none'; // Aufschlüsselung nach Tag/Monat/Jahr folgt später für echte Zahlen
+    loadRealAdminStats();
+    return;
+  }
+  if(tabs) tabs.style.display = '';
   const el = document.getElementById('admin-stats-row');
   if(!el) return;
   const f = periodFactor[adminPeriod];
@@ -8391,7 +8426,34 @@ function renderThreadEntries(containerId, entries){
 }
 
 // ---- driver side: start / continue the thread via the Support button ----
-function openSupportMsg(){
+let realThread = null; // { subject, archived, messages: [...] } für den echten, eingeloggten Fahrer
+let mySupportThreadUnread = false;
+async function loadMyThread(){
+  if(!realDriverProfile) return;
+  const { data: threadRow } = await supabaseClient.from('support_threads').select('*').eq('driver_id', realDriverProfile.id).maybeSingle();
+  const { data: msgs, error } = await supabaseClient.from('support_thread_messages').select('*').eq('driver_id', realDriverProfile.id).order('created_at', { ascending:true });
+  if(error){ console.error('Chat konnte nicht geladen werden:', error); return; }
+  realThread = { subject: (threadRow && threadRow.subject) || 'Nachricht an Ryvio Support', archived: threadRow ? threadRow.archived : false, messages: msgs || [] };
+}
+async function refreshSupportBadgeForDriver(){
+  if(!realDriverProfile) return;
+  const { data } = await supabaseClient.from('support_threads').select('unread_for_driver').eq('driver_id', realDriverProfile.id).maybeSingle();
+  mySupportThreadUnread = !!(data && data.unread_for_driver);
+  updateRealInboxDot();
+}
+async function openSupportMsg(){
+  if(realDriverProfile){
+    await loadMyThread();
+    if(realThread && realThread.messages.length){
+      openDriverThreadView();
+      return;
+    }
+    document.getElementById('sup-subject').value='';
+    document.getElementById('sup-body').value='';
+    document.getElementById('sup-error').textContent='';
+    document.getElementById('support-modal-bg').classList.add('active');
+    return;
+  }
   const thread = supportThreads[currentDriverId];
   if(thread && thread.entries.length){
     openDriverThreadView();
@@ -8403,18 +8465,38 @@ function openSupportMsg(){
   document.getElementById('support-modal-bg').classList.add('active');
 }
 function closeSupportMsg(){ document.getElementById('support-modal-bg').classList.remove('active'); }
-function sendSupportMsg(){
+async function sendSupportMsg(){
   const subject = document.getElementById('sup-subject').value.trim();
   const body = document.getElementById('sup-body').value.trim();
   if(!subject || !body){
     document.getElementById('sup-error').textContent = t('support_error');
     return;
   }
+  if(realDriverProfile){
+    const { error } = await supabaseClient.from('support_thread_messages').insert({ driver_id: realDriverProfile.id, sender:'driver', body });
+    if(error){ console.error('Nachricht konnte nicht gesendet werden:', error); document.getElementById('sup-error').textContent = 'Etwas ist schiefgelaufen. Bitte nochmal versuchen.'; return; }
+    await supabaseClient.from('support_threads').update({ subject }).eq('driver_id', realDriverProfile.id);
+    closeSupportMsg();
+    alert(t('support_sent'));
+    return;
+  }
   addDriverEntry(currentDriverId, body, subject);
   closeSupportMsg();
   alert(t('support_sent'));
 }
-function openDriverThreadView(){
+async function openDriverThreadView(){
+  if(realDriverProfile){
+    await loadMyThread();
+    document.getElementById('driver-thread-subject').textContent = realThread ? realThread.subject : '';
+    renderThreadEntries('driver-thread-entries', (realThread ? realThread.messages : []).map(m=>({from:m.sender, body:m.body, date: formatDateDisplay((m.created_at||'').slice(0,10))})));
+    document.getElementById('driver-thread-reply-text').value = '';
+    document.getElementById('driver-thread-reply-status').textContent = '';
+    document.getElementById('driver-thread-modal-bg').classList.add('active');
+    await supabaseClient.from('support_threads').update({ unread_for_driver:false }).eq('driver_id', realDriverProfile.id);
+    mySupportThreadUnread = false;
+    updateRealInboxDot();
+    return;
+  }
   const thread = getOrCreateThread(currentDriverId);
   document.getElementById('driver-thread-subject').textContent = thread.subject;
   renderThreadEntries('driver-thread-entries', thread.entries);
@@ -8423,17 +8505,34 @@ function openDriverThreadView(){
   document.getElementById('driver-thread-modal-bg').classList.add('active');
 }
 function closeDriverThreadView(){ document.getElementById('driver-thread-modal-bg').classList.remove('active'); }
-function sendDriverThreadReply(){
+async function sendDriverThreadReply(){
   const reply = document.getElementById('driver-thread-reply-text').value.trim();
   if(!reply){
     document.getElementById('driver-thread-reply-status').textContent = t('admin_msg_reply_empty');
+    return;
+  }
+  if(realDriverProfile){
+    const { error } = await supabaseClient.from('support_thread_messages').insert({ driver_id: realDriverProfile.id, sender:'driver', body: reply });
+    if(error){ console.error('Antwort konnte nicht gesendet werden:', error); document.getElementById('driver-thread-reply-status').textContent = 'Etwas ist schiefgelaufen.'; return; }
+    closeDriverThreadView();
     return;
   }
   addDriverEntry(currentDriverId, reply);
   closeDriverThreadView();
 }
 
-function openAdminComposeMsg(){
+async function openAdminComposeMsg(){
+  if(realDriverProfile){
+    const { data: drv, error } = await supabaseClient.from('drivers').select('id, name, lw_number').order('name');
+    if(error) console.error('Fahrerliste konnte nicht geladen werden:', error);
+    const sel = document.getElementById('admin-compose-driver-select');
+    sel.innerHTML = (drv||[]).map(d=>`<option value="${d.id}">${escapeHtml(d.name)} (${d.lw_number||'—'})</option>`).join('');
+    document.getElementById('admin-compose-subject').value = '';
+    document.getElementById('admin-compose-body').value = '';
+    document.getElementById('admin-compose-error').textContent = '';
+    document.getElementById('admin-compose-modal-bg').classList.add('active');
+    return;
+  }
   const sel = document.getElementById('admin-compose-driver-select');
   sel.innerHTML = Object.keys(driverProfiles).map(id=>{
     const p = driverProfiles[id];
@@ -8445,12 +8544,21 @@ function openAdminComposeMsg(){
   document.getElementById('admin-compose-modal-bg').classList.add('active');
 }
 function closeAdminComposeMsg(){ document.getElementById('admin-compose-modal-bg').classList.remove('active'); }
-function sendAdminComposeMsg(){
+async function sendAdminComposeMsg(){
   const driverId = document.getElementById('admin-compose-driver-select').value;
   const subject = document.getElementById('admin-compose-subject').value.trim();
   const body = document.getElementById('admin-compose-body').value.trim();
   if(!driverId || !subject || !body){
     document.getElementById('admin-compose-error').textContent = t('support_error');
+    return;
+  }
+  if(realDriverProfile){
+    const { error } = await supabaseClient.from('support_thread_messages').insert({ driver_id: driverId, sender:'admin', body });
+    if(error){ console.error('Nachricht konnte nicht gesendet werden:', error); document.getElementById('admin-compose-error').textContent = 'Etwas ist schiefgelaufen.'; return; }
+    await supabaseClient.from('support_threads').update({ subject }).eq('driver_id', driverId);
+    closeAdminComposeMsg();
+    await loadRealAdminMessages();
+    openAdminMsgDetail(driverId);
     return;
   }
   addAdminEntry(driverId, body, subject);
@@ -8462,6 +8570,29 @@ function sendAdminComposeMsg(){
   openAdminMsgDetail(driverId);
 }
 // ---- admin side: one row per driver thread ----
+let realAdminThreads = [];
+async function loadRealAdminMessages(){
+  const { data: threads, error } = await supabaseClient.from('support_threads').select('*').order('updated_at', { ascending:false });
+  if(error){ console.error('Chats konnten nicht geladen werden (evtl. nicht als Admin eingeloggt):', error); return; }
+  const ids = (threads||[]).map(t=>t.driver_id);
+  let driversMap = {};
+  if(ids.length){
+    const { data: drv } = await supabaseClient.from('drivers').select('id, name, lw_number').in('id', ids);
+    (drv||[]).forEach(d=>{ driversMap[d.id] = d; });
+  }
+  let lastMsgMap = {};
+  if(ids.length){
+    const { data: msgs } = await supabaseClient.from('support_thread_messages').select('driver_id, body, created_at').in('driver_id', ids).order('created_at', { ascending:false });
+    (msgs||[]).forEach(m=>{ if(!lastMsgMap[m.driver_id]) lastMsgMap[m.driver_id] = m; });
+  }
+  realAdminThreads = (threads||[]).map(t=>({
+    ...t,
+    driverName: (driversMap[t.driver_id] && driversMap[t.driver_id].name) || '—',
+    lwNumber: (driversMap[t.driver_id] && driversMap[t.driver_id].lw_number) || '—',
+    lastMessage: lastMsgMap[t.driver_id] || null
+  }));
+  renderAdminMessages();
+}
 let adminMsgViewTab = 'inbox';
 function setAdminMsgViewTab(view){
   adminMsgViewTab = view;
@@ -8472,6 +8603,26 @@ function renderAdminMessages(){
   const el = document.getElementById('admin-messages-list');
   updateAdminMailBadge();
   if(!el) return;
+  if(realDriverProfile){
+    const threads = realAdminThreads.filter(t => adminMsgViewTab==='archive' ? t.archived : !t.archived);
+    if(threads.length === 0){
+      el.innerHTML = `<div class="empty-state">${adminMsgViewTab==='archive' ? t('empty_archive') : t('empty_inbox')}</div>`;
+      return;
+    }
+    el.innerHTML = threads.map(th=>`
+      <div class="mailbox-row ${th.unread_for_admin?'unread':''}" onclick="openAdminMsgDetail('${th.driver_id}')">
+        <div class="mailbox-row-main">
+          <div class="mailbox-subject">${th.unread_for_admin?'● ':''}${escapeHtml(th.subject)}</div>
+          <div class="mailbox-preview">${escapeHtml(th.driverName)} · ${th.lwNumber} — ${th.lastMessage ? escapeHtml(th.lastMessage.body) : ''}</div>
+        </div>
+        <div class="mailbox-meta">
+          <div class="mailbox-date">${th.lastMessage ? formatDateDisplay((th.lastMessage.created_at||'').slice(0,10)) : ''}</div>
+          ${!th.archived ? `<button type="button" class="accept-btn" style="margin-top:6px;" onclick="event.stopPropagation(); archiveAdminMessage('${th.driver_id}')">✓ ${t('mark_done_btn')}</button>` : `<span class="mailbox-replied-tag">${t('archived_tag')}</span>`}
+        </div>
+      </div>
+    `).join('');
+    return;
+  }
   const threads = Object.values(supportThreads).filter(th => adminMsgViewTab==='archive' ? th.archived : !th.archived);
   if(threads.length === 0){
     el.innerHTML = `<div class="empty-state">${adminMsgViewTab==='archive' ? t('empty_archive') : t('empty_inbox')}</div>`;
@@ -8496,14 +8647,38 @@ function renderAdminMessages(){
     </div>
   `;}).join('');
 }
-function archiveAdminMessage(driverId){
+async function archiveAdminMessage(driverId){
+  if(realDriverProfile){
+    const { error } = await supabaseClient.from('support_threads').update({ archived:true }).eq('driver_id', driverId);
+    if(error){ console.error('Konnte nicht archiviert werden:', error); return; }
+    await loadRealAdminMessages();
+    return;
+  }
   if(supportThreads[driverId]){ supportThreads[driverId].archived = true; }
   renderAdminMessages();
   saveState();
 }
 let currentAdminThreadDriverId = null;
-function openAdminMsgDetail(driverId){
+async function openAdminMsgDetail(driverId){
   currentAdminThreadDriverId = driverId;
+  if(realDriverProfile){
+    const th = realAdminThreads.find(t=>t.driver_id===driverId);
+    if(!th) return;
+    document.getElementById('admin-msg-subject').textContent = th.subject;
+    document.getElementById('admin-msg-from').textContent = th.driverName + ' · ' + th.lwNumber;
+    const { data: msgs, error } = await supabaseClient.from('support_thread_messages').select('*').eq('driver_id', driverId).order('created_at', { ascending:true });
+    if(error) console.error('Verlauf konnte nicht geladen werden:', error);
+    renderThreadEntries('admin-msg-entries', (msgs||[]).map(m=>({from:m.sender, body:m.body, date: formatDateDisplay((m.created_at||'').slice(0,10))})));
+    document.getElementById('admin-msg-reply-text').value = '';
+    document.getElementById('admin-msg-reply-status').textContent = '';
+    document.getElementById('admin-msg-archive-btn').style.display = th.archived ? 'none' : 'block';
+    document.getElementById('admin-msg-detail-modal-bg').classList.add('active');
+    if(th.unread_for_admin){
+      const { error: uErr } = await supabaseClient.from('support_threads').update({ unread_for_admin:false }).eq('driver_id', driverId);
+      if(!uErr){ th.unread_for_admin = false; renderAdminMessages(); }
+    }
+    return;
+  }
   const thread = supportThreads[driverId];
   if(!thread) return;
   thread.unreadForAdmin = false;
@@ -8518,11 +8693,18 @@ function openAdminMsgDetail(driverId){
   saveState();
 }
 function closeAdminMsgDetail(){ document.getElementById('admin-msg-detail-modal-bg').classList.remove('active'); }
-function sendAdminMsgReply(){
+async function sendAdminMsgReply(){
   if(!currentAdminThreadDriverId) return;
   const reply = document.getElementById('admin-msg-reply-text').value.trim();
   if(!reply){
     document.getElementById('admin-msg-reply-status').textContent = t('admin_msg_reply_empty');
+    return;
+  }
+  if(realDriverProfile){
+    const { error } = await supabaseClient.from('support_thread_messages').insert({ driver_id: currentAdminThreadDriverId, sender:'admin', body: reply });
+    if(error){ console.error('Antwort konnte nicht gesendet werden:', error); document.getElementById('admin-msg-reply-status').textContent = 'Etwas ist schiefgelaufen.'; return; }
+    await loadRealAdminMessages();
+    closeAdminMsgDetail();
     return;
   }
   addAdminEntry(currentAdminThreadDriverId, reply);
