@@ -1227,8 +1227,8 @@
           <div class="panel-head"><h3 data-i18n="driver_perf_title">Your bookings &amp; revenue</h3></div>
           <div style="padding:14px 20px;">
             <div class="period-tabs" id="driver-period-tabs">
-              <button type="button" class="period-btn active" data-period="day" onclick="setDriverPeriod('day')" data-i18n="period_day">Daily</button>
-              <button type="button" class="period-btn" data-period="month" onclick="setDriverPeriod('month')" data-i18n="period_month">Monthly</button>
+              <button type="button" class="period-btn" data-period="day" onclick="setDriverPeriod('day')" data-i18n="period_day">Daily</button>
+              <button type="button" class="period-btn active" data-period="month" onclick="setDriverPeriod('month')" data-i18n="period_month">Monthly</button>
               <button type="button" class="period-btn" data-period="year" onclick="setDriverPeriod('year')" data-i18n="period_year">Yearly</button>
             </div>
             <div class="stat-row" id="driver-perf-row" style="margin-bottom:0;"></div>
@@ -3778,7 +3778,38 @@ let driverPeriod = 'month';
 function setDriverPeriod(p){
   driverPeriod = p;
   document.querySelectorAll('#driver-period-tabs .period-btn').forEach(b=>b.classList.toggle('active', b.dataset.period===p));
+  if(realDriverProfile){ renderRealDriverPerformance(); return; }
   renderDriverPerformance();
+}
+// echte Buchungen & Umsatz nach Zeitraum (Tag/Monat/Jahr) fuer den echten Fahrer
+function renderRealDriverPerformance(){
+  const el = document.getElementById('driver-perf-row');
+  if(!el || !realDriverProfile) return;
+  const all = [...(driverBookings||[]), ...(completedBookings||[])];
+  const now = new Date(); // echtes heutiges Datum (nicht simuliert, anders als im Demo-Modus)
+  const inPeriod = (b)=>{
+    if(!b.dateISO) return driverPeriod==='year';
+    const [y,m,d] = b.dateISO.split('-').map(Number);
+    const bd = new Date(y, m-1, d);
+    if(driverPeriod==='day') return bd.toDateString()===now.toDateString();
+    if(driverPeriod==='month') return bd.getFullYear()===now.getFullYear() && bd.getMonth()===now.getMonth();
+    return bd.getFullYear()===now.getFullYear();
+  };
+  const scoped = all.filter(inPeriod);
+  const isCancelled = (b) => b.status==='cancelled_by_driver' || b.status==='cancelled_by_customer' || b.status==='no_show';
+  const notCancelled = scoped.filter(b=>!isCancelled(b));
+  const count = notCancelled.length;
+  const revenue = notCancelled.reduce((sum,b)=>sum + (b.priceIdrRaw||0), 0);
+  const cancelled = scoped.filter(isCancelled).length;
+  const bookingFees = scoped.filter(b=>b.status==='completed').reduce((sum,b)=>sum + (b.feeIdrRaw||0), 0);
+  const cancelFees = scoped.filter(b=>b.status==='cancelled_by_driver').reduce((sum,b)=>sum + (b.cancellationFeeIdrRaw||0), 0);
+  const feesForPeriod = bookingFees + cancelFees;
+  el.innerHTML = `
+    <div class="stat-card"><div class="num">${count}</div><div class="lbl">${t('driver_stat_bookings')}</div></div>
+    <div class="stat-card"><div class="num mono" style="font-size:1.05rem;">${formatIDR(revenue)}</div><div class="lbl">${t('driver_stat_revenue')}</div></div>
+    <div class="stat-card"><div class="num mono" style="font-size:1.05rem;">${formatIDR(feesForPeriod)}</div><div class="lbl">${t('driver_stat_fees')}</div></div>
+    <div class="stat-card"><div class="num">${cancelled}</div><div class="lbl">${t('driver_stat_cancelled')}</div></div>
+  `;
 }
 function renderDriverPerformance(){
   const el = document.getElementById('driver-perf-row');
@@ -4020,7 +4051,7 @@ async function renderRealOverviewStats(){
     `;
   }
   const perfRow = document.getElementById('driver-perf-row');
-  if(perfRow) perfRow.innerHTML = ''; // Umsatz-/Buchungs-Auswertung nach Zeitraum folgt spaeter
+  if(perfRow) renderRealDriverPerformance();
 
   renderRealReviewsList(revs);
 }
@@ -4246,6 +4277,9 @@ function mapBookingRowToUI(row){
     price: formatIDR(row.price_idr),
     deposit: formatIDR(row.deposit_idr),
     balance: formatIDR((row.price_idr || 0) - (row.deposit_idr || 0)),
+    priceIdrRaw: row.price_idr || 0,
+    feeIdrRaw: row.fee_idr || 0,
+    cancellationFeeIdrRaw: row.cancellation_fee_idr || 0,
     ref: row.id.slice(0,8).toUpperCase(),
     cancelReason: row.status === 'cancelled_by_driver' ? 'driver' : (row.status === 'cancelled_by_customer' ? 'customer' : null)
   };
