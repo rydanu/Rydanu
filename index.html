@@ -367,7 +367,7 @@
   .dash-nav .profile-chip .initials{ background-size:cover; background-position:center; }
   .dash-nav .profile-chip .initials{
     width:152px; height:152px; border-radius:50%; background:var(--teal); color:#fff;
-    display:flex; align-items:center; justify-content:center; font-family:'Fraunces'; font-weight:600; font-size:2.4rem;
+    display:flex; align-items:center; justify-content:center; font-family:'Public Sans'; font-weight:700; font-size:2.4rem;
   }
   .dash-nav .profile-chip .pname{ font-weight:700; font-size:1.2rem; margin-top:6px; }
   .dash-nav .profile-chip .ploc{ font-size:0.85rem; color:var(--teal); margin:3px 0; }
@@ -600,7 +600,7 @@
   .dp-hero{ text-align:center; padding:48px 20px 36px; background:var(--ink); color:var(--paper); }
   .dp-avatar{
     width:176px; height:176px; border-radius:50%; background:var(--teal); color:#fff; margin:0 auto 18px;
-    display:flex; align-items:center; justify-content:center; font-family:'Fraunces'; font-weight:600; font-size:2.86rem;
+    display:flex; align-items:center; justify-content:center; font-family:'Public Sans'; font-weight:700; font-size:2.86rem;
     background-size:cover; background-position:center; border:4px solid var(--gold);
   }
   .dp-hero h1{ font-family:'Fraunces'; font-size:2rem; margin:0 0 8px; }
@@ -885,7 +885,7 @@
         </select>
       </div>
       <div class="searchbar">
-        <input type="text" id="search-input" data-i18n-placeholder="search_placeholder" placeholder="Where to — Ubud, Uluwatu, Nusa Penida...">
+        <input type="text" id="search-input" name="ryvio-destination-search" autocomplete="off" data-i18n-placeholder="search_placeholder" placeholder="Where to — Ubud, Uluwatu, Nusa Penida...">
         <button type="button" class="filter-toggle-btn" onclick="openFilters()"><span data-i18n="filters_btn">Filters</span> <span class="filter-count" id="filter-count" style="display:none;">0</span></button>
         <button onclick="runSearch()" data-i18n="search_btn">Search</button>
       </div>
@@ -1171,7 +1171,7 @@
           <div class="pservices" id="profile-services"></div>
           <div class="profile-links-row">
             <button type="button" class="edit-profile-link" onclick="openEditProfile()" data-i18n="edit_profile_link">Edit profile</button>
-            <button type="button" class="edit-profile-link" onclick="openDriverPage(currentDriverId, 'owner')">🌴 <span data-i18n="my_page_link">My page</span></button>
+            <button type="button" class="edit-profile-link" onclick="openMyPageOwner()">🌴 <span data-i18n="my_page_link">My page</span></button>
           </div>
         </div>
       </div>
@@ -1738,6 +1738,10 @@
       <div class="form-field">
         <label data-i18n="lbl_fullname">Full name</label>
         <input type="text" id="ep-name">
+      </div>
+      <div class="form-field">
+        <label data-i18n-html="lbl_whatsapp">WhatsApp number <span class="optional">(for booking confirmation)</span></label>
+        <input type="tel" id="ep-phone" placeholder="+62 812 3456 7890">
       </div>
       <div class="form-field">
         <label data-i18n="rd_region_label">Home region</label>
@@ -2881,21 +2885,48 @@ function openQrModal(){
 }
 function closeQrModal(){ document.getElementById('qr-modal-bg').classList.remove('active'); }
 document.getElementById('qr-modal-bg').addEventListener('click', e=>{ if(e.target.id==='qr-modal-bg') closeQrModal(); });
+let dpIsReal = false; // zeigt gerade eine echte "My Page" (statt Demo)?
+let dpRealData = null; // { driver, tours, reviews } fuer die echte My Page
 function openDriverPage(driverId, mode){
-  const p = driverProfiles[driverId];
-  if(!p) return;
-  // the driver page is a full-screen view — close any modal open behind it first
   document.querySelectorAll('.modal-bg.active').forEach(m => m.classList.remove('active'));
   dpDriverId = driverId;
   dpMode = mode || 'visitor';
-  if(!p.page) p.page = { about:'', media:[] };
-  renderDriverPage();
+  const p = driverProfiles[driverId];
   document.getElementById('driver-page').style.display = 'block';
   document.getElementById('driver-page').scrollTop = 0;
+  if(p){
+    dpIsReal = false;
+    if(!p.page) p.page = { about:'', media:[] };
+    renderDriverPage();
+    return;
+  }
+  // kein Demo-Profil mit dieser ID -> echte Fahrer-Seite aus Supabase laden (Baustein 10)
+  dpIsReal = true;
+  loadAndRenderRealDriverPage(driverId, dpMode);
+}
+// echte "My Page" laden: Fahrerdaten, aktive Angebote, Bewertungen
+async function loadAndRenderRealDriverPage(driverId, mode){
+  const [{ data: driverRow, error: dErr }, { data: listingRows }, { data: reviewRows }] = await Promise.all([
+    supabaseClient.from('drivers').select('*').eq('id', driverId).single(),
+    supabaseClient.from('listings').select('title, price_display, duration').eq('driver_id', driverId).eq('active', true),
+    supabaseClient.from('reviews').select('stars, comment, created_at').eq('driver_id', driverId).order('created_at', { ascending:false })
+  ]);
+  if(dErr || !driverRow){
+    console.error('Fahrerseite konnte nicht geladen werden:', dErr);
+    closeDriverPage();
+    return;
+  }
+  dpRealData = { driver: driverRow, tours: listingRows || [], reviews: reviewRows || [] };
+  renderRealDriverPage(mode === 'owner');
 }
 function openDriverPageFromModal(){
-  if(!currentDriver || !currentDriver.ownerId || !driverProfiles[currentDriver.ownerId]) return;
+  if(!currentDriver || !currentDriver.ownerId) return;
   openDriverPage(currentDriver.ownerId, 'visitor');
+}
+// echtes Fahrer-Dashboard -> eigene "My Page" oeffnen (nutzt realDriverProfile statt der Demo-ID)
+function openMyPageOwner(){
+  if(realDriverProfile){ openDriverPage(realDriverProfile.id, 'owner'); return; }
+  openDriverPage(currentDriverId, 'owner');
 }
 function closeDriverPage(){ document.getElementById('driver-page').style.display = 'none'; }
 function renderDriverPage(){
@@ -2981,6 +3012,84 @@ function renderDriverPage(){
   document.getElementById('dp-msg-name').value = '';
   document.getElementById('dp-msg-text').value = '';
 }
+// echte "My Page" rendern (Baustein 10) — nutzt dieselben dp-* Elemente wie die Demo-Seite,
+// aber Fotos/Galerie-Upload und die Demo-only Kontakt-/Bewertungsformulare kommen erst spaeter
+function renderRealDriverPage(isOwner){
+  const d = dpRealData.driver;
+  const avatar = document.getElementById('dp-avatar');
+  if(d.avatar_url){ avatar.style.backgroundImage = `url(${d.avatar_url})`; avatar.textContent = ''; }
+  else { avatar.style.backgroundImage = 'none'; avatar.textContent = initials(d.name || '?'); }
+  document.getElementById('dp-name').textContent = d.name || '—';
+  const langs = (d.languages && d.languages.length) ? d.languages.join(', ') : 'EN';
+  document.getElementById('dp-meta').textContent = '🚩 ' + (d.home_area || (d.region === 'lombok' ? 'Lombok' : 'Bali')) + ' · ' + langs;
+  const dpLwEl = document.getElementById('dp-lw');
+  dpLwEl.textContent = d.lw_number || '';
+  dpLwEl.dataset.rawNumber = d.lw_number || '';
+  const rank = getDriverRank(d.rank_points || 0);
+  document.getElementById('dp-rank').innerHTML = `<span class="rank-badge rank-${rank.key}">${rank.emoji} ${t(rank.labelKey)}</span>`;
+  const svcEl = document.getElementById('dp-services');
+  if(svcEl){
+    const services = d.services || [];
+    const badges = [];
+    if(services.includes('female_driver')) badges.push(`<span class="trust-badge"><span class="tb-emoji">👩</span>${t('badge_female')}</span>`);
+    if(services.includes('child_friendly')) badges.push(`<span class="trust-badge"><span class="tb-emoji">👶</span>${t('badge_child')}</span>`);
+    if(services.includes('tour_guide_certified')) badges.push(`<span class="trust-badge"><span class="tb-emoji">🎓</span>${t('badge_guide')}</span>`);
+    if(services.includes('first_aid_trained')) badges.push(`<span class="trust-badge"><span class="tb-emoji">🩹</span>${t('badge_firstaid')}</span>`);
+    svcEl.innerHTML = badges.join('');
+  }
+  const aboutText = document.getElementById('dp-about-text');
+  const about = d.bio || '';
+  aboutText.textContent = about || (isOwner ? t('dp_about_empty_owner') : t('dp_about_empty'));
+  aboutText.style.display = 'block';
+  document.getElementById('dp-about-pencil').style.display = isOwner ? 'inline-block' : 'none';
+  document.getElementById('dp-about-edit').style.display = 'none';
+  document.getElementById('dp-about-input').value = about;
+  // Foto-Galerie: Upload folgt in einem der naechsten Bausteine (Supabase Storage) — ehrlicher Platzhalter statt Demo-Fotos
+  document.getElementById('dp-upload-row').style.display = 'none';
+  document.getElementById('dp-gallery').innerHTML = `<div class="empty-state" style="grid-column:1/-1;">${t('dp_photo_upload_soon')}</div>`;
+  const tours = dpRealData.tours;
+  document.getElementById('dp-tours').innerHTML = tours.length
+    ? tours.map(l => `
+        <div class="dp-tour-row" style="cursor:pointer;" onclick="bookRealTourFromPage('${(l.title||'').replace(/'/g,"\\'")}')">
+          <div><div class="tname">${l.title}</div><div class="tmeta">${priceBlockHTML(l.price_display)} · ${l.duration || ''}</div></div>
+          <span class="dp-tour-arrow">›</span>
+        </div>
+      `).join('')
+    : `<div class="empty-state">${t('dp_tours_empty')}</div>`;
+  const revs = dpRealData.reviews;
+  const summaryEl = document.getElementById('dp-reviews-summary');
+  if(revs.length){
+    const avg = revs.reduce((s,r)=>s+r.stars,0) / revs.length;
+    const avgRounded = Math.round(avg);
+    const starsHTML = '★'.repeat(avgRounded) + '☆'.repeat(5-avgRounded);
+    summaryEl.innerHTML = `<span class="dp-reviews-avg-stars">${starsHTML}</span> <span class="dp-reviews-avg-num">${avg.toFixed(1)}</span> <span class="dp-reviews-avg-count">(${revs.length} ${revs.length===1 ? t('dp_review_singular') : t('dp_review_plural')})</span>`;
+  } else {
+    summaryEl.innerHTML = '';
+  }
+  document.getElementById('dp-reviews').innerHTML = revs.length
+    ? revs.map(r => `
+        <div class="dp-review">
+          <div class="r-head"><span class="r-name">${formatDateDisplay((r.created_at||'').slice(0,10))}</span><span class="r-stars">${'★'.repeat(r.stars)}${'☆'.repeat(5-r.stars)}</span></div>
+          <div class="r-text">${r.comment || ''}</div>
+        </div>
+      `).join('')
+    : `<div class="empty-state">${t('dp_reviews_empty')}</div>`;
+  // Kontaktformular & Standalone-Bewertung sind noch Demo-only-Funktionen (keine echte Anbindung) -> fuer echte Seiten ausgeblendet
+  document.getElementById('dp-message-section').style.display = 'none';
+  document.getElementById('dp-leave-review-btn').style.display = 'none';
+  document.getElementById('dp-request-tour-btn').style.display = 'none';
+}
+// Klick auf eine echte Tour in der My Page -> normalen Buchungs-Dialog oeffnen
+async function bookRealTourFromPage(tourTitle){
+  let pub = drivers.find(dd => dd.isReal && dd.ownerId===dpDriverId && dd.tour===tourTitle);
+  if(!pub){
+    await loadRealPublicListings();
+    pub = drivers.find(dd => dd.isReal && dd.ownerId===dpDriverId && dd.tour===tourTitle);
+  }
+  if(!pub) return;
+  closeDriverPage();
+  openModal(pub);
+}
 function toggleAboutEdit(show){
   document.getElementById('dp-about-text').style.display = show ? 'none' : 'block';
   document.getElementById('dp-about-edit').style.display = show ? 'block' : 'none';
@@ -2988,13 +3097,24 @@ function toggleAboutEdit(show){
   if(show) document.getElementById('dp-about-input').focus();
 }
 function savePageAbout(){
+  if(dpIsReal){ saveRealPageAbout(); return; }
   const p = driverProfiles[dpDriverId];
   if(!p.page) p.page = { about:'', media:[] };
   p.page.about = document.getElementById('dp-about-input').value.trim();
   saveState();
   renderDriverPage();
 }
+// echten "Über mich"-Text speichern (Baustein 10)
+async function saveRealPageAbout(){
+  const bio = document.getElementById('dp-about-input').value.trim();
+  const { data, error } = await supabaseClient.from('drivers').update({ bio }).eq('id', dpDriverId).select().single();
+  if(error){ console.error('Über-mich-Text konnte nicht gespeichert werden:', error); return; }
+  dpRealData.driver = data;
+  if(realDriverProfile && realDriverProfile.id === dpDriverId) realDriverProfile = data;
+  renderRealDriverPage(dpMode === 'owner');
+}
 function handlePageMediaUpload(event){
+  if(dpIsReal) return; // echter Foto-Upload folgt in einem der naechsten Bausteine (Supabase Storage)
   const file = event.target.files[0];
   if(!file) return;
   const p = driverProfiles[dpDriverId];
@@ -5157,7 +5277,7 @@ function addListing(){
   document.getElementById('nl-price').classList.toggle('field-error', priceMissing);
   document.getElementById('nl-airportregions-section').classList.toggle('field-error', airportPricesMissing);
   document.getElementById('nl-transferregions-section').classList.toggle('field-error', transferPricesMissing);
-  const regionsMissing = serviceRegions!=='all' && serviceRegions.length===0;
+  const regionsMissing = serviceRegions!=='all' && serviceRegions.length===0 && !isAirport;
   document.getElementById('nl-serviceregions-row').closest('.spots-section').classList.toggle('field-error', regionsMissing);
   const err = document.getElementById('nl-error');
   if(!name || priceMissing || airportPricesMissing || transferPricesMissing || regionsMissing){
@@ -5363,7 +5483,7 @@ function initials(name){ return name.split(' ').map(w=>w[0]).slice(0,2).join('')
 async function loadRealPublicListings(){
   const { data: approvedDrivers, error: dErr } = await supabaseClient
     .from('drivers')
-    .select('id, name, region, lw_number, avatar_url, bio')
+    .select('id, name, region, home_area, lw_number, avatar_url, bio, languages, vehicle, services, rank_points')
     .eq('status', 'approved')
     .eq('is_locked', false);
   if(dErr){ console.error('Echte Fahrer konnten nicht geladen werden:', dErr); return; }
@@ -5382,6 +5502,8 @@ async function loadRealPublicListings(){
   const realCards = (listings || []).map(l => {
     const d = driverMap[l.driver_id] || {};
     const det = l.details || {};
+    const vehicle = d.vehicle || {};
+    const driverBadges = d.services || [];
     return {
       isReal: true,
       dbListingId: l.id,
@@ -5389,9 +5511,9 @@ async function loadRealPublicListings(){
       tour: l.title,
       spots: det.spots || [],
       duration: l.duration || '',
-      vehicle: '',
-      vehicleType: '',
-      lang: [],
+      vehicle: vehicleDisplayString(vehicle),
+      vehicleType: vehicle.vtype || '',
+      lang: (d.languages && d.languages.length) ? d.languages : ['EN'],
       rating: 'New · 0 tours',
       price: l.price_display || '',
       badge: 'New driver',
@@ -5402,7 +5524,12 @@ async function loadRealPublicListings(){
       active: true,
       airportRegions: det.airportRegions || null,
       transferRegions: det.transferRegions || null,
-      photo: d.avatar_url || null
+      photo: d.avatar_url || null,
+      femaleDriver: driverBadges.includes('female_driver'),
+      childFriendly: driverBadges.includes('child_friendly'),
+      tourGuideCertified: driverBadges.includes('tour_guide_certified'),
+      firstAidTrained: driverBadges.includes('first_aid_trained'),
+      rankPoints: d.rank_points || 0
     };
   });
   drivers.unshift(...realCards);
@@ -5595,6 +5722,7 @@ function closeRegisterAfterPending(){
 // ---- edit profile ----
 let epSelectedLangs = [];
 function openEditProfile(){
+  if(realDriverProfile){ openEditProfileReal(); return; }
   const p = driverProfiles[currentDriverId];
   document.getElementById('ep-name').value = p.fullName;
   document.getElementById('ep-region').value = p.region;
@@ -5615,6 +5743,35 @@ function openEditProfile(){
   const pay = p.payment || {};
   document.getElementById('ep-paylink').value = pay.link || '';
   document.getElementById('ep-qris').checked = pay.qris !== false;
+  document.getElementById('ep-phone').value = '';
+  document.getElementById('ep-error').textContent = '';
+  document.getElementById('edit-profile-modal-bg').classList.add('active');
+}
+// echtes Fahrerprofil ins Bearbeiten-Formular laden (Baustein 10)
+function openEditProfileReal(){
+  const d = realDriverProfile;
+  document.getElementById('ep-name').value = d.name || '';
+  document.getElementById('ep-region').value = d.home_area || 'Ubud';
+  const langs = (d.languages && d.languages.length) ? d.languages : ['EN'];
+  epSelectedLangs = [...langs];
+  document.querySelectorAll('[data-group="ep-lang"] .chip').forEach(c=>{
+    c.classList.toggle('chip-active', epSelectedLangs.includes(c.dataset.value));
+  });
+  const v = d.vehicle || {};
+  document.getElementById('ep-vtype').value = v.vtype || 'Standard Car';
+  document.getElementById('ep-car').value = v.car || '';
+  document.getElementById('ep-seats').value = v.seats || '';
+  document.getElementById('ep-plate').value = v.plate || '';
+  document.getElementById('ep-color').value = v.color || '';
+  const services = d.services || [];
+  document.getElementById('ep-female').checked = services.includes('female_driver');
+  document.getElementById('ep-childfriendly').checked = services.includes('child_friendly');
+  document.getElementById('ep-guidecert').checked = services.includes('tour_guide_certified');
+  document.getElementById('ep-firstaid').checked = services.includes('first_aid_trained');
+  const pay = d.payment || {};
+  document.getElementById('ep-paylink').value = pay.link || '';
+  document.getElementById('ep-qris').checked = pay.qris !== false;
+  document.getElementById('ep-phone').value = d.phone || '';
   document.getElementById('ep-error').textContent = '';
   document.getElementById('edit-profile-modal-bg').classList.add('active');
 }
@@ -5629,6 +5786,7 @@ document.querySelectorAll('[data-group="ep-lang"] .chip').forEach(chip=>{
   });
 });
 function saveEditProfile(){
+  if(realDriverProfile){ saveEditProfileReal(); return; }
   const name = document.getElementById('ep-name').value.trim();
   const region = document.getElementById('ep-region').value;
   if(!name){
@@ -5672,6 +5830,51 @@ function saveEditProfile(){
   renderDriverGrid(visibleDrivers());
   closeEditProfile();
   saveState();
+}
+// echtes Fahrerprofil in Supabase speichern (Baustein 10)
+async function saveEditProfileReal(){
+  const name = document.getElementById('ep-name').value.trim();
+  if(!name){
+    document.getElementById('ep-error').textContent = t('ep_err_name');
+    return;
+  }
+  const home_area = document.getElementById('ep-region').value;
+  const languages = epSelectedLangs.length ? [...epSelectedLangs] : ['EN'];
+  const services = [];
+  if(document.getElementById('ep-female').checked) services.push('female_driver');
+  if(document.getElementById('ep-childfriendly').checked) services.push('child_friendly');
+  if(document.getElementById('ep-guidecert').checked) services.push('tour_guide_certified');
+  if(document.getElementById('ep-firstaid').checked) services.push('first_aid_trained');
+  const vehicle = {
+    vtype: document.getElementById('ep-vtype').value,
+    car: document.getElementById('ep-car').value.trim(),
+    seats: document.getElementById('ep-seats').value.trim(),
+    plate: document.getElementById('ep-plate').value.trim(),
+    color: document.getElementById('ep-color').value.trim()
+  };
+  const payment = {
+    qris: document.getElementById('ep-qris').checked,
+    link: document.getElementById('ep-paylink').value.trim()
+  };
+  const phone = document.getElementById('ep-phone').value.trim();
+
+  document.getElementById('ep-error').textContent = '';
+  const { data, error } = await supabaseClient
+    .from('drivers')
+    .update({ name, home_area, languages, services, vehicle, payment, phone })
+    .eq('id', realDriverProfile.id)
+    .select()
+    .single();
+  if(error){
+    console.error('Profil konnte nicht gespeichert werden:', error);
+    document.getElementById('ep-error').textContent = 'Speichern fehlgeschlagen. Bitte nochmal versuchen.';
+    return;
+  }
+  realDriverProfile = data;
+  applyRealDriverProfileToUI(realDriverProfile);
+  closeEditProfile();
+  // Suche neu laden, damit Sprachen/Fahrzeug/Merkmale sofort auch in der Kundensuche stimmen
+  loadRealPublicListings();
 }
 
 // ---- language switch (DE / EN / ID) ----
@@ -5777,7 +5980,7 @@ const translations = {
     dp_about_title: "About me", dp_about_placeholder: "Tell travelers about yourself — your experience, your favorite spots, what makes your tours special...", dp_about_save: "Save text", dp_about_empty: "This driver hasn't written an introduction yet.",
     dp_about_empty_owner: "You haven't written anything yet — tap the pencil to introduce yourself to travelers.", dp_about_cancel: "Cancel",
     dp_qr_title: "Your Ryvio QR code", dp_qr_note: "Share this with travelers — they'll land straight on your page to book.", dp_qr_send_btn: "Send QR code via WhatsApp", dp_qr_wa_text: "Check out my Ryvio driver page and book directly with me:",
-    dp_gallery_title: "Photos & videos", dp_upload_btn: "Upload photo or video", dp_gallery_empty: "No photos or videos yet.", dp_gallery_empty_owner: "Upload photos and short videos of your tours — travelers love seeing real impressions!",
+    dp_gallery_title: "Photos & videos", dp_upload_btn: "Upload photo or video", dp_gallery_empty: "No photos or videos yet.", dp_gallery_empty_owner: "Upload photos and short videos of your tours — travelers love seeing real impressions!", dp_photo_upload_soon: "Photo upload is coming soon.",
     dp_tours_title: "My tours on Ryvio", dp_tours_empty: "No active tours right now.",
     dp_reviews_title: "What guests say", dp_reviews_empty: "No reviews yet.", dp_review_singular: "review", dp_review_plural: "reviews",
     dp_msg_title: "Send me a message", dp_msg_name_ph: "Your name", dp_msg_text_ph: "Your message to the driver...", dp_msg_send: "✉️ Send message",
@@ -5931,6 +6134,7 @@ const translations = {
     admin_fo_saved: "✓ Saved and driver notified.", admin_fo_confirm_delete: "Really delete this individual fee rate? The driver will pay the standard 10% again.",
     admin_fo_notify_title: "📊 Your fee has been adjusted",
     admin_fo_notify_body_set: "You now have an individual fee rate of {percent}% per booking ({range}). You can see your current rate anytime under \"Fees & billing\".",
+    admin_fo_notify_body_vip: "🌟 You've got VIP status: 0% fees on all your bookings ({range})! You can see your current rate anytime under \"Fees & billing\".",
     admin_fo_notify_body_removed: "Your individual fee rate has been removed. You are now back to the standard rate of 10% per booking.",
     admin_fo_range_from_to: "{start} to {end}", admin_fo_range_immediate: "effective immediately, ongoing",
     admin_fo_active_tag: "active", admin_fo_unlimited: "unlimited",
@@ -6051,7 +6255,7 @@ const translations = {
     dp_about_title: "Über mich", dp_about_placeholder: "Erzähle Reisenden von dir — deine Erfahrung, deine Lieblingsorte, was deine Touren besonders macht...", dp_about_save: "Text speichern", dp_about_empty: "Dieser Fahrer hat noch keine Vorstellung geschrieben.",
     dp_about_empty_owner: "Du hast noch nichts geschrieben — tippe auf den Stift, um dich Reisenden vorzustellen.", dp_about_cancel: "Abbrechen",
     dp_qr_title: "Dein Ryvio QR-Code", dp_qr_note: "Teile ihn mit Reisenden — sie landen direkt auf deiner Seite und können buchen.", dp_qr_send_btn: "QR-Code per WhatsApp senden", dp_qr_wa_text: "Schau dir meine Ryvio-Fahrerseite an und buche direkt bei mir:",
-    dp_gallery_title: "Fotos & Videos", dp_upload_btn: "Foto oder Video hochladen", dp_gallery_empty: "Noch keine Fotos oder Videos.", dp_gallery_empty_owner: "Lade Fotos und kurze Videos deiner Touren hoch — Reisende lieben echte Eindrücke!",
+    dp_gallery_title: "Fotos & Videos", dp_upload_btn: "Foto oder Video hochladen", dp_gallery_empty: "Noch keine Fotos oder Videos.", dp_gallery_empty_owner: "Lade Fotos und kurze Videos deiner Touren hoch — Reisende lieben echte Eindrücke!", dp_photo_upload_soon: "Foto-Upload kommt bald.",
     dp_tours_title: "Meine Touren auf Ryvio", dp_tours_empty: "Aktuell keine aktiven Touren.",
     dp_reviews_title: "Das sagen Gäste", dp_reviews_empty: "Noch keine Bewertungen.", dp_review_singular: "Bewertung", dp_review_plural: "Bewertungen",
     dp_msg_title: "Schreib mir eine Nachricht", dp_msg_name_ph: "Dein Name", dp_msg_text_ph: "Deine Nachricht an den Fahrer...", dp_msg_send: "✉️ Nachricht senden",
@@ -6205,6 +6409,7 @@ const translations = {
     admin_fo_saved: "✓ Gespeichert und Fahrer benachrichtigt.", admin_fo_confirm_delete: "Diesen individuellen Gebührensatz wirklich löschen? Der Fahrer zahlt danach wieder den Standardsatz von 10%.",
     admin_fo_notify_title: "📊 Deine Gebühr wurde angepasst",
     admin_fo_notify_body_set: "Für deinen Account gilt ab jetzt ein individueller Gebührensatz von {percent}% pro Buchung ({range}). Deinen aktuellen Satz siehst du jederzeit in deinem Profil unter \"Gebühren & Abrechnung\".",
+    admin_fo_notify_body_vip: "🌟 Du hast jetzt VIP-Status: 0% Gebühren auf alle deine Buchungen ({range})! Deinen aktuellen Satz siehst du jederzeit in deinem Profil unter \"Gebühren & Abrechnung\".",
     admin_fo_notify_body_removed: "Dein individueller Gebührensatz wurde entfernt. Für dich gilt jetzt wieder der Standardsatz von 10% pro Buchung.",
     admin_fo_range_from_to: "{start} bis {end}", admin_fo_range_immediate: "ab sofort, unbefristet",
     admin_fo_active_tag: "aktiv", admin_fo_unlimited: "unbegrenzt",
@@ -6325,7 +6530,7 @@ const translations = {
     dp_about_title: "Tentang saya", dp_about_placeholder: "Ceritakan tentang diri Anda kepada wisatawan — pengalaman Anda, tempat favorit, apa yang membuat tur Anda istimewa...", dp_about_save: "Simpan teks", dp_about_empty: "Sopir ini belum menulis perkenalan.",
     dp_about_empty_owner: "Anda belum menulis apa pun — ketuk ikon pensil untuk memperkenalkan diri kepada wisatawan.", dp_about_cancel: "Batal",
     dp_qr_title: "Kode QR Ryvio Anda", dp_qr_note: "Bagikan ini kepada wisatawan — mereka akan langsung ke halaman Anda untuk memesan.", dp_qr_send_btn: "Kirim kode QR via WhatsApp", dp_qr_wa_text: "Lihat halaman sopir Ryvio saya dan pesan langsung dengan saya:",
-    dp_gallery_title: "Foto & video", dp_upload_btn: "Unggah foto atau video", dp_gallery_empty: "Belum ada foto atau video.", dp_gallery_empty_owner: "Unggah foto dan video singkat tur Anda — wisatawan suka melihat kesan nyata!",
+    dp_gallery_title: "Foto & video", dp_upload_btn: "Unggah foto atau video", dp_gallery_empty: "Belum ada foto atau video.", dp_gallery_empty_owner: "Unggah foto dan video singkat tur Anda — wisatawan suka melihat kesan nyata!", dp_photo_upload_soon: "Unggah foto akan segera hadir.",
     dp_tours_title: "Tur saya di Ryvio", dp_tours_empty: "Tidak ada tur aktif saat ini.",
     dp_reviews_title: "Kata para tamu", dp_reviews_empty: "Belum ada ulasan.", dp_review_singular: "ulasan", dp_review_plural: "ulasan",
     dp_msg_title: "Kirim saya pesan", dp_msg_name_ph: "Nama Anda", dp_msg_text_ph: "Pesan Anda untuk sopir...", dp_msg_send: "✉️ Kirim pesan",
@@ -6479,6 +6684,7 @@ const translations = {
     admin_fo_saved: "✓ Disimpan dan sopir telah diberi tahu.", admin_fo_confirm_delete: "Yakin ingin menghapus tarif biaya individual ini? Sopir akan kembali membayar tarif standar 10%.",
     admin_fo_notify_title: "📊 Biaya Anda telah disesuaikan",
     admin_fo_notify_body_set: "Akun Anda sekarang memiliki tarif biaya individual sebesar {percent}% per pemesanan ({range}). Anda dapat melihat tarif Anda saat ini kapan saja di \"Biaya & tagihan\".",
+    admin_fo_notify_body_vip: "🌟 Anda mendapat status VIP: 0% biaya untuk semua pemesanan Anda ({range})! Anda dapat melihat tarif Anda saat ini kapan saja di \"Biaya & tagihan\".",
     admin_fo_notify_body_removed: "Tarif biaya individual Anda telah dihapus. Anda sekarang kembali ke tarif standar 10% per pemesanan.",
     admin_fo_range_from_to: "{start} hingga {end}", admin_fo_range_immediate: "berlaku segera, tanpa batas waktu",
     admin_fo_active_tag: "aktif", admin_fo_unlimited: "tanpa batas",
@@ -6572,7 +6778,7 @@ function renderDriverGrid(list){
         </div>
         <div class="name-row">
           <h3>${d.name}</h3>
-          ${d.ownerId && driverProfiles[d.ownerId] ? driverRankBadgeHTML(d.ownerId, 'sm') : ''}
+          ${ownerRankBadgeHTML(d, 'sm')}
         </div>
         <div class="rating">${formatRatingHTML(d.rating)}</div>
         ${trustBadgesHTML(d)}
@@ -6891,6 +7097,16 @@ function driverRankBadgeHTML(driverId, size){
   const rank = getDriverRank(b.total);
   const cls = size === 'sm' ? 'rank-badge rank-badge-sm' : 'rank-badge';
   return `<span class="${cls} rank-${rank.key}">${rank.emoji} ${t(rank.labelKey)}</span>`;
+}
+// Rang-Badge fuer eine Fahrerkarte in der Suche — funktioniert sowohl fuer Demo- als auch fuer echte Fahrer (Baustein 10)
+function ownerRankBadgeHTML(d, size){
+  if(d.ownerId && driverProfiles[d.ownerId]) return driverRankBadgeHTML(d.ownerId, size);
+  if(d.isReal && typeof d.rankPoints === 'number'){
+    const rank = getDriverRank(d.rankPoints);
+    const cls = size === 'sm' ? 'rank-badge rank-badge-sm' : 'rank-badge';
+    return `<span class="${cls} rank-${rank.key}">${rank.emoji} ${t(rank.labelKey)}</span>`;
+  }
+  return '';
 }
 // ============ end driver rank & badge system ============
 // approximate demo exchange rates — for real launch these would come from a live FX API
@@ -7314,7 +7530,7 @@ function openModal(d){
     svcRow.style.display = 'none';
   }
   const pageLink = document.getElementById('modal-page-link');
-  if(pageLink) pageLink.style.display = (d.ownerId && driverProfiles[d.ownerId]) ? 'inline-block' : 'none';
+  if(pageLink) pageLink.style.display = (d.ownerId && (driverProfiles[d.ownerId] || d.isReal)) ? 'inline-block' : 'none';
   const reqTourBtn = document.getElementById('modal-request-tour-btn');
   if(reqTourBtn) reqTourBtn.style.display = (d.ownerId && driverProfiles[d.ownerId]) ? 'block' : 'none';
   const startRegions = d.serviceRegions==='all' ? t('all_regions')
@@ -7854,7 +8070,7 @@ async function openCalendar(){
   const now = new Date();
   calViewYear = now.getFullYear();
   calViewMonth = now.getMonth();
-  if(realDriverProfile) await loadRealBlockedDays();
+  if(realDriverProfile){ await Promise.all([loadRealBlockedDays(), loadRealBookings()]); }
   renderCalendar();
   document.getElementById('cal-modal-bg').classList.add('active');
 }
@@ -7979,7 +8195,7 @@ function applyRealDriverProfileToUI(d){
   const greetEl = document.getElementById('dash-greeting');
   if(greetEl) greetEl.textContent = (currentLang==='de' ? 'Hallo, ' : currentLang==='id' ? 'Halo, ' : 'Hi, ') + (d.name || '—');
   const locEl = document.getElementById('profile-ploc');
-  if(locEl) locEl.textContent = '🚩 ' + (d.region === 'lombok' ? 'Lombok' : 'Bali');
+  if(locEl) locEl.textContent = '🚩 ' + (d.home_area || (d.region === 'lombok' ? 'Lombok' : 'Bali'));
   const lwEl = document.getElementById('profile-lwnumber');
   if(lwEl){
     lwEl.textContent = 'Your Ryvio number: ' + (d.lw_number || '—');
@@ -8367,8 +8583,10 @@ function createFeeOverride(){
   statusEl.textContent = t('admin_fo_saved');
   // notify the driver so they know their fee rate changed
   const range = (start || end) ? t('admin_fo_range_from_to').replace('{start}', start||'…').replace('{end}', end||'…') : t('admin_fo_range_immediate');
-  pushInboxMessage(driverId, t('admin_fo_notify_title'),
-    t('admin_fo_notify_body_set').replace('{percent}', Number(percent)).replace('{range}', range));
+  const noticeBody = Number(percent) === 0
+    ? t('admin_fo_notify_body_vip').replace('{range}', range)
+    : t('admin_fo_notify_body_set').replace('{percent}', Number(percent)).replace('{range}', range);
+  pushInboxMessage(driverId, t('admin_fo_notify_title'), noticeBody);
   document.getElementById('fee-override-percent').value = '';
   document.getElementById('fee-override-start').value = '';
   document.getElementById('fee-override-end').value = '';
@@ -8604,9 +8822,12 @@ async function createRealFeeOverride(){
   statusEl.style.color = 'var(--teal)';
   statusEl.textContent = t('admin_fo_saved');
   const range = (start || end) ? t('admin_fo_range_from_to').replace('{start}', start||'…').replace('{end}', end||'…') : t('admin_fo_range_immediate');
+  const noticeBody = Number(percent) === 0
+    ? t('admin_fo_notify_body_vip').replace('{range}', range)
+    : t('admin_fo_notify_body_set').replace('{percent}', Number(percent)).replace('{range}', range);
   await supabaseClient.from('driver_messages').insert({
     driver_id: driverId, type:'system', subject: t('admin_fo_notify_title'),
-    body: t('admin_fo_notify_body_set').replace('{percent}', Number(percent)).replace('{range}', range)
+    body: noticeBody
   });
   document.getElementById('fee-override-percent').value = '';
   document.getElementById('fee-override-start').value = '';
