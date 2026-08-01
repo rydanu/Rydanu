@@ -501,6 +501,17 @@
     background:var(--teal-soft); border:1px solid var(--teal); color:var(--teal);
     font-family:'JetBrains Mono'; font-size:0.72rem; padding:6px 12px; border-radius:20px;
   }
+  .fee-rate-badge{
+    font-family:'JetBrains Mono'; text-align:right; padding:6px 12px; border-radius:20px;
+    border:1px solid var(--teal); background:var(--teal-soft); color:var(--teal);
+    font-size:0.72rem; font-weight:700; line-height:1.45;
+  }
+  .fee-rate-badge-main{ display:block; }
+  .fee-rate-badge-sub{ display:block; font-weight:600; opacity:0.85; }
+  .fee-rate-badge-vip{
+    border-color:var(--gold); background:#FFF7DA; color:#7A5C00;
+  }
+  .fee-rate-badge-vip .fee-rate-badge-main{ font-size:0.95rem; font-weight:800; }
 
   .stat-row{ display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:32px; }
   .stat-card{ background:#fff; border:1px solid var(--line); border-radius:6px; padding:18px; }
@@ -1193,7 +1204,7 @@
           </div>
           <div style="display:flex; flex-direction:column; align-items:flex-end; gap:8px;">
             <span class="plan-chip plan-chip-clickable" data-i18n="plan_chip_text" onclick="openTerms('fees')">Free listing · Commission per booking from $2</span>
-            <div id="current-fee-rate-display" style="font-family:'JetBrains Mono'; font-size:0.78rem; font-weight:700; color:var(--teal); text-align:right;"></div>
+            <div id="current-fee-rate-display" class="fee-rate-badge" style="display:none;"></div>
           </div>
         </div>
 
@@ -3948,17 +3959,21 @@ function renderRankPanel(){
 function renderCurrentFeeRate(){
   const el = document.getElementById('current-fee-rate-display');
   if(!el) return;
+  el.style.display = 'inline-block';
   const override = getActiveFeeOverride(currentDriverId);
   if(override && Number(override.percent) === 0){
     const untilStr = override.endDate ? t('fee_rate_valid_until').replace('{date}', override.endDate) : t('fee_rate_valid_unlimited');
-    el.innerHTML = `<span style="font-weight:800;">${t('fee_rate_vip_bonus')}</span><br><span style="font-weight:600;">${t('fee_rate_zero_fees')}</span> · ${untilStr}`;
+    el.classList.add('fee-rate-badge-vip');
+    el.innerHTML = `<span class="fee-rate-badge-main">${t('fee_rate_vip_bonus')}</span><span class="fee-rate-badge-sub">${t('fee_rate_zero_fees')} · ${untilStr}</span>`;
   } else if(override){
+    el.classList.remove('fee-rate-badge-vip');
     const range = (override.startDate || override.endDate)
       ? `${override.startDate||'…'} – ${override.endDate||t('fee_rate_unlimited_short')}`
       : t('fee_rate_unlimited_short');
-    el.textContent = `${t('fee_rate_current')} ${override.percent}% (${t('fee_rate_special_condition')}, ${range})`;
+    el.innerHTML = `<span class="fee-rate-badge-main">${t('fee_rate_current')} ${override.percent}%</span><span class="fee-rate-badge-sub">${t('fee_rate_special_condition')}, ${range}</span>`;
   } else {
-    el.textContent = `${t('fee_rate_current')} ${DEFAULT_FEE_PERCENT}% (${t('fee_rate_standard')})`;
+    el.classList.remove('fee-rate-badge-vip');
+    el.innerHTML = `<span class="fee-rate-badge-main">${t('fee_rate_current')} ${DEFAULT_FEE_PERCENT}%</span><span class="fee-rate-badge-sub">${t('fee_rate_standard')}</span>`;
   }
 }
 function escapeHtml(str){
@@ -4067,17 +4082,21 @@ async function renderRealOverviewStats(){
   // aktueller Gebührensatz (Standard oder Sonderkondition)
   const rateEl = document.getElementById('current-fee-rate-display');
   if(rateEl){
+    rateEl.style.display = 'inline-block';
     const ov = (overrides && overrides[0]) || null;
     if(ov && Number(ov.fee_percent) === 0){
       const untilStr = ov.ends_at ? t('fee_rate_valid_until').replace('{date}', formatDateDisplay(ov.ends_at)) : t('fee_rate_valid_unlimited');
-      rateEl.innerHTML = `<span style="font-weight:800;">${t('fee_rate_vip_bonus')}</span><br><span style="font-weight:600;">${t('fee_rate_zero_fees')}</span> · ${untilStr}`;
+      rateEl.classList.add('fee-rate-badge-vip');
+      rateEl.innerHTML = `<span class="fee-rate-badge-main">${t('fee_rate_vip_bonus')}</span><span class="fee-rate-badge-sub">${t('fee_rate_zero_fees')} · ${untilStr}</span>`;
     } else if(ov){
+      rateEl.classList.remove('fee-rate-badge-vip');
       const range = (ov.starts_at || ov.ends_at)
         ? `${ov.starts_at ? formatDateDisplay(ov.starts_at) : '…'} – ${ov.ends_at ? formatDateDisplay(ov.ends_at) : t('fee_rate_unlimited_short')}`
         : t('fee_rate_unlimited_short');
-      rateEl.textContent = `${t('fee_rate_current')} ${ov.fee_percent}% (${t('fee_rate_special_condition')}, ${range})`;
+      rateEl.innerHTML = `<span class="fee-rate-badge-main">${t('fee_rate_current')} ${ov.fee_percent}%</span><span class="fee-rate-badge-sub">${t('fee_rate_special_condition')}, ${range}</span>`;
     } else {
-      rateEl.textContent = `${t('fee_rate_current')} ${DEFAULT_FEE_PERCENT}% (${t('fee_rate_standard')})`;
+      rateEl.classList.remove('fee-rate-badge-vip');
+      rateEl.innerHTML = `<span class="fee-rate-badge-main">${t('fee_rate_current')} ${DEFAULT_FEE_PERCENT}%</span><span class="fee-rate-badge-sub">${t('fee_rate_standard')}</span>`;
     }
   }
   const codeEl = document.getElementById('referral-code-display');
@@ -4545,6 +4564,11 @@ function showDashSection(name){
 function getStore(){ return driverDataStore[currentDriverId]; }
 function renderFeeStatements(){
   const el = document.getElementById('feestatements-list');
+  if(realDriverProfile){
+    // Echte Gebührenzahlung ist noch nicht angebunden (kein Zahlungsanbieter) — ehrlich anzeigen statt Demo-Belege zu zeigen
+    el.innerHTML = `<div class="empty-state">${t('real_receipts_not_yet')}</div>`;
+    return;
+  }
   const receipts = getStore().receipts || [];
   if(receipts.length === 0){
     el.innerHTML = `<div class="empty-state">${t('empty_receipts')}</div>`;
@@ -5794,6 +5818,7 @@ const translations = {
     empty_listings: "You don't have any listings yet. Add your first tour below — it will appear for travelers right away.",
     empty_history: "No booking history yet.", empty_reviews: "No reviews yet — they'll appear here after your first completed tours.",
     empty_receipts: "No receipts yet — they appear here after you pay your fees.", empty_inbox: "No messages yet.",
+    real_receipts_not_yet: "Real fee payments aren't connected yet — a payment provider is coming before launch. Your current fees are shown on the overview page.",
     nav_overview: "Overview",
     nav_listings: "My listings",
     nav_bookings: "Bookings", booking_history_title: "Booking history",
@@ -6067,6 +6092,7 @@ const translations = {
     empty_listings: "Du hast noch keine Angebote. Füge unten deine erste Tour hinzu — sie erscheint sofort für Reisende.",
     empty_history: "Noch keine Buchungshistorie.", empty_reviews: "Noch keine Bewertungen — sie erscheinen hier nach deinen ersten Touren.",
     empty_receipts: "Noch keine Belege — sie erscheinen hier, nachdem du deine Gebühren bezahlt hast.", empty_inbox: "Noch keine Nachrichten.",
+    real_receipts_not_yet: "Echte Gebührenzahlungen sind noch nicht angebunden — ein Zahlungsanbieter kommt vor dem Start. Deine aktuellen Gebühren siehst du auf der Übersichtsseite.",
     nav_overview: "Übersicht",
     nav_listings: "Meine Angebote",
     nav_bookings: "Buchungen", booking_history_title: "Buchungsverlauf",
@@ -6340,6 +6366,7 @@ const translations = {
     empty_listings: "Anda belum punya tur. Tambahkan tur pertama di bawah — langsung terlihat oleh wisatawan.",
     empty_history: "Belum ada riwayat pemesanan.", empty_reviews: "Belum ada ulasan — muncul di sini setelah tur pertama Anda.",
     empty_receipts: "Belum ada kuitansi — muncul di sini setelah Anda membayar biaya.", empty_inbox: "Belum ada pesan.",
+    real_receipts_not_yet: "Pembayaran biaya nyata belum terhubung — penyedia pembayaran akan hadir sebelum peluncuran. Biaya Anda saat ini terlihat di halaman ringkasan.",
     nav_overview: "Ringkasan",
     nav_listings: "Tur saya",
     nav_bookings: "Pemesanan", booking_history_title: "Riwayat pemesanan",
@@ -8133,7 +8160,7 @@ async function approveRealDriver(id){
   const { error } = await supabaseClient.from('drivers').update({ status:'approved' }).eq('id', id);
   if(error){ console.error('Freischalten fehlgeschlagen:', error); alert('Freischalten fehlgeschlagen: ' + error.message); return; }
   await supabaseClient.from('driver_messages').insert({
-    driver_id: id, type:'admin', subject: t('approved_inbox_title'), body: t('approved_inbox_body')
+    driver_id: id, type:'system', subject: t('approved_inbox_title'), body: t('approved_inbox_body')
   });
   loadAdminPendingDrivers();
   loadRealPublicListings(); // damit ein frisch freigeschalteter Fahrer sofort in der Suche erscheint
@@ -8147,7 +8174,7 @@ async function rejectRealDriver(id){
   const { error } = await supabaseClient.from('drivers').update({ status:'rejected' }).eq('id', id);
   if(error){ console.error('Ablehnen fehlgeschlagen:', error); alert('Ablehnen fehlgeschlagen: ' + error.message); return; }
   await supabaseClient.from('driver_messages').insert({
-    driver_id: id, type:'admin', subject: t('rejected_inbox_title'), body: t('rejected_inbox_body').replace('{reason}', reason)
+    driver_id: id, type:'system', subject: t('rejected_inbox_title'), body: t('rejected_inbox_body').replace('{reason}', reason)
   });
   loadAdminPendingDrivers();
   alert('Fahrer abgelehnt ✓');
@@ -8578,7 +8605,7 @@ async function createRealFeeOverride(){
   statusEl.textContent = t('admin_fo_saved');
   const range = (start || end) ? t('admin_fo_range_from_to').replace('{start}', start||'…').replace('{end}', end||'…') : t('admin_fo_range_immediate');
   await supabaseClient.from('driver_messages').insert({
-    driver_id: driverId, type:'admin', subject: t('admin_fo_notify_title'),
+    driver_id: driverId, type:'system', subject: t('admin_fo_notify_title'),
     body: t('admin_fo_notify_body_set').replace('{percent}', Number(percent)).replace('{range}', range)
   });
   document.getElementById('fee-override-percent').value = '';
@@ -8591,7 +8618,7 @@ async function deleteRealFeeOverride(id, driverId){
   const { error } = await supabaseClient.from('fee_overrides').delete().eq('id', id);
   if(error){ alert('Löschen fehlgeschlagen: ' + error.message); return; }
   await supabaseClient.from('driver_messages').insert({
-    driver_id: driverId, type:'admin', subject: t('admin_fo_notify_title'), body: t('admin_fo_notify_body_removed')
+    driver_id: driverId, type:'system', subject: t('admin_fo_notify_title'), body: t('admin_fo_notify_body_removed')
   });
   renderRealFeeOverridesList();
 }
@@ -8640,7 +8667,7 @@ async function createRealFeeCredit(){
   if(error){ statusEl.style.color='var(--danger)'; statusEl.textContent = 'Fehler: ' + error.message; return; }
   const creditNote = note ? ': ' + note : '';
   await supabaseClient.from('driver_messages').insert({
-    driver_id: driverId, type:'admin', subject: t('admin_fc_notify_title'),
+    driver_id: driverId, type:'system', subject: t('admin_fc_notify_title'),
     body: t('admin_fc_notify_body').replace('{amount}', formatIDR(Number(amount))).replace('{note}', creditNote)
   });
   statusEl.style.color = 'var(--teal)';
