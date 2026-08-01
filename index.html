@@ -443,8 +443,56 @@
   .inbox-date{ font-family:'JetBrains Mono'; font-size:0.66rem; color:var(--ink-soft); }
   .field-error{ border-color:#C0392B !important; box-shadow:0 0 0 2px rgba(192,57,43,0.18) !important; }
   .admin-driver-row{ cursor:pointer; background:#fff; border:1px solid var(--line); border-radius:8px; margin-bottom:8px; }
+  /* Baustein 10: Hamburger-Menü fuer SEO-Ratgeber-Unterseiten */
+  .hamburger-btn{
+    background:none; border:1px solid rgba(242,236,216,0.35); color:var(--paper); font-size:1.1rem;
+    width:38px; height:38px; border-radius:6px; cursor:pointer; margin-right:6px;
+  }
+  .hamburger-btn:hover{ border-color:var(--gold); color:var(--gold); }
+  .seo-menu-overlay{
+    display:none; position:fixed; inset:0; background:rgba(11,61,34,0.45); z-index:400;
+  }
+  .seo-menu-overlay.active{ display:block; }
+  .seo-menu-panel{
+    position:fixed; top:0; left:-320px; width:300px; height:100%; background:var(--paper); z-index:401;
+    box-shadow:4px 0 18px rgba(0,0,0,0.15); transition:left 0.22s ease; overflow-y:auto;
+  }
+  .seo-menu-panel.active{ left:0; }
+  .seo-menu-head{
+    display:flex; justify-content:space-between; align-items:center; background:var(--ink); color:var(--paper);
+    padding:20px 20px 16px; font-family:'Fraunces'; font-size:1.15rem;
+  }
+  .seo-menu-link{
+    display:block; padding:16px 20px; border-bottom:1px solid var(--line); color:var(--ink);
+    text-decoration:none; font-weight:600; font-size:0.95rem;
+  }
+  .seo-menu-link:hover{ background:var(--teal-soft); }
   .admin-driver-row:hover{ border-color:var(--teal); }
   .admin-driver-row.blocked-row{ opacity:0.65; background:#FBE4DC; }
+  /* Baustein 10: Admin-Listen als 2-spaltige Kachel-Ansicht statt langer Einzelspalte */
+  #admin-drivers-list, #admin-fee-overrides-list, #admin-fee-credits-list, #admin-messages-list, #admin-balance-overview-list{
+    display:grid; grid-template-columns:1fr 1fr; gap:10px;
+  }
+  #admin-drivers-list .booking-row, #admin-fee-overrides-list .booking-row,
+  #admin-fee-credits-list .booking-row, #admin-messages-list .booking-row,
+  #admin-balance-overview-list .booking-row{
+    margin:0; border:1px solid var(--line); border-radius:8px; background:#fff; transition:background-color 0.15s ease;
+  }
+  #admin-drivers-list .booking-row:hover, #admin-fee-overrides-list .booking-row:hover,
+  #admin-fee-credits-list .booking-row:hover, #admin-messages-list .booking-row:hover,
+  #admin-balance-overview-list .booking-row:hover{
+    background:var(--teal-soft);
+  }
+  #admin-drivers-list .empty-state, #admin-fee-overrides-list .empty-state,
+  #admin-fee-credits-list .empty-state, #admin-messages-list .empty-state,
+  #admin-balance-overview-list .empty-state{
+    grid-column:1/-1;
+  }
+  @media (max-width:860px){
+    #admin-drivers-list, #admin-fee-overrides-list, #admin-fee-credits-list, #admin-messages-list, #admin-balance-overview-list{
+      grid-template-columns:1fr;
+    }
+  }
   .stat-card-clickable{ cursor:pointer; border:1.5px solid var(--gold); }
   .pay-fees-hint{ font-family:'JetBrains Mono'; font-size:0.62rem; color:var(--teal); margin-top:4px; font-weight:700; }
   .referral-credit-row{ font-family:'JetBrains Mono'; font-size:0.62rem; color:var(--teal); margin-top:4px; font-weight:700; }
@@ -518,6 +566,21 @@
 
   .stat-row{ display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:32px; }
   .stat-card{ background:#fff; border:1px solid var(--line); border-radius:6px; padding:18px; }
+  .admin-tile-grid{ display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:8px; }
+  .admin-tile{
+    border:1px solid var(--line); border-radius:10px; padding:18px 16px; cursor:pointer;
+    background:#fff; transition:background .15s ease, border-color .15s ease; text-align:left;
+    display:block; width:100%; font-family:'Public Sans';
+  }
+  .admin-tile:hover{ background:var(--teal-soft); border-color:var(--teal); }
+  .admin-tile .at-icon{ font-size:1.5rem; margin-bottom:8px; display:block; }
+  .admin-tile .at-title{ font-weight:700; font-size:0.92rem; margin-bottom:4px; color:var(--ink); }
+  .admin-tile .at-sub{ font-size:0.76rem; color:var(--ink-soft); line-height:1.4; }
+  .admin-back-link{
+    display:inline-flex; align-items:center; gap:4px; margin-bottom:18px; cursor:pointer;
+    color:var(--teal); font-weight:700; font-family:'Public Sans'; font-size:0.88rem; background:none; border:none; padding:0;
+  }
+  @media (max-width:520px){ .admin-tile-grid{ gap:10px; } .admin-tile{ padding:14px 12px; } }
   .stat-card .num{ font-family:'Fraunces'; font-size:1.7rem; font-weight:600; }
   .stat-card .lbl{ font-family:'JetBrains Mono'; font-size:0.68rem; text-transform:uppercase; letter-spacing:0.08em; color:var(--ink-soft); margin-top:4px; }
 
@@ -862,6 +925,7 @@
     </div>
   </div>
   <div class="tabs">
+    <button type="button" class="hamburger-btn" onclick="toggleSeoMenu()" aria-label="Menü">☰</button>
     <button class="tab-btn active" id="tab-customer" data-i18n="tab_travelers" onclick="switchView('customer')">For Travelers</button>
     <button class="tab-btn" id="tab-driver" onclick="switchView('driver')"><span data-i18n="tab_driver">Driver Dashboard</span> <span class="tab-mail-badge" id="tab-driver-mail" style="display:none;">✉️</span></button>
     <button class="tab-btn tab-btn-register" data-i18n="tab_register" onclick="openRegisterDriver()">+ Register as Driver</button>
@@ -871,6 +935,32 @@
     <button type="button" class="lang-btn active" data-lang="en" onclick="setLanguage('en')">EN</button>
     <button type="button" class="lang-btn" data-lang="de" onclick="setLanguage('de')">DE</button>
     <button type="button" class="lang-btn" data-lang="id" onclick="setLanguage('id')">ID</button>
+  </div>
+</div>
+
+<!-- SEO-Menü: Ratgeber-Unterseiten (Baustein 10) -->
+<div class="seo-menu-overlay" id="seo-menu-overlay" onclick="closeSeoMenu()"></div>
+<div class="seo-menu-panel" id="seo-menu-panel">
+  <div class="seo-menu-head">
+    <span>Reise-Ratgeber</span>
+    <button type="button" class="modal-close" onclick="closeSeoMenu()">✕</button>
+  </div>
+  <a href="#" class="seo-menu-link" onclick="openInfoPage('anreise'); return false;">✈️ Anreise nach Bali</a>
+  <a href="#" class="seo-menu-link" onclick="openInfoPage('aktivitaeten'); return false;">🌴 Aktivitäten &amp; Sehenswürdigkeiten</a>
+  <a href="#" class="seo-menu-link" onclick="openInfoPage('einreise'); return false;">🛂 Einreisebestimmungen</a>
+  <a href="#" class="seo-menu-link" onclick="openInfoPage('reisetipps'); return false;">💡 Reise-Tipps für Bali</a>
+  <a href="#" class="seo-menu-link" onclick="openInfoPage('reisezeit'); return false;">☀️ Beste Reisezeit</a>
+  <a href="#" class="seo-menu-link" onclick="openInfoPage('lombok'); return false;">🏝️ Lombok entdecken</a>
+</div>
+
+<!-- Wiederverwendbare Info-Seite (fuer alle SEO-Unterseiten) -->
+<div class="driver-page" id="info-page" style="display:none;">
+  <div class="dp-topbar">
+    <button type="button" class="dp-back" onclick="closeInfoPage()">‹ Zurück</button>
+  </div>
+  <div class="dp-section" style="padding-top:36px;">
+    <h1 id="info-page-title" style="font-family:'Fraunces'; font-size:1.8rem; margin:0 0 18px;"></h1>
+    <div id="info-page-body" style="font-size:0.98rem; line-height:1.7;"></div>
   </div>
 </div>
 
@@ -1142,6 +1232,7 @@
         <input type="email" id="auth-login-email" placeholder="E-Mail" class="auth-input">
         <input type="password" id="auth-login-password" placeholder="Passwort" class="auth-input">
         <button type="button" class="btn-primary auth-submit-btn" onclick="handleDriverLogin()">Anmelden</button>
+        <p class="note" style="text-align:center;"><a href="#" onclick="openForgotPassword(); return false;">Passwort vergessen?</a></p>
         <p class="note" style="text-align:center;">Noch kein Konto? <a href="#" onclick="toggleAuthForm('signup'); return false;">Jetzt registrieren</a></p>
       </div>
 
@@ -1408,16 +1499,64 @@
 <!-- admin view: approve pending drivers (demo only) -->
 <div class="view" id="view-admin">
   <div style="max-width:760px; margin:0 auto; padding:32px 20px;">
+
+    <div class="admin-tile-grid" id="admin-tile-menu">
+      <button type="button" class="admin-tile" onclick="showAdminSection('pending')">
+        <span class="at-icon">🆕</span>
+        <span class="at-title">Freischaltungen</span>
+        <span class="at-sub">Neue Fahrer prüfen und freischalten</span>
+      </button>
+      <button type="button" class="admin-tile" onclick="showAdminSection('openpay')">
+        <span class="at-icon">💳</span>
+        <span class="at-title">Offene Zahlungen</span>
+        <span class="at-sub">Fahrer mit fehlgeschlagener Gebührenzahlung</span>
+      </button>
+      <button type="button" class="admin-tile" onclick="showAdminSection('stats')">
+        <span class="at-icon">📊</span>
+        <span class="at-title">Geschäftsübersicht</span>
+        <span class="at-sub">Gebühren, Buchungen &amp; Stornos nach Zeitraum</span>
+      </button>
+      <button type="button" class="admin-tile" onclick="showAdminSection('driverstats')">
+        <span class="at-icon">📈</span>
+        <span class="at-title">Fahrer-Statistik</span>
+        <span class="at-sub">Touren pro Fahrer im Detail ansehen</span>
+      </button>
+      <button type="button" class="admin-tile" onclick="showAdminSection('messages')">
+        <span class="at-icon">✉️</span>
+        <span class="at-title">Nachrichten</span>
+        <span class="at-sub">Nachrichten von Fahrern lesen &amp; beantworten</span>
+      </button>
+      <button type="button" class="admin-tile" onclick="showAdminSection('block')">
+        <span class="at-icon">🔒</span>
+        <span class="at-title">Fahrer verwalten</span>
+        <span class="at-sub">Sperren, entsperren oder löschen</span>
+      </button>
+      <button type="button" class="admin-tile" onclick="showAdminSection('money')" style="grid-column:1 / -1;">
+        <span class="at-icon">💰</span>
+        <span class="at-title">Geld — Gebühren &amp; Gutschriften</span>
+        <span class="at-sub">Individuelle Sätze, Gutschriften &amp; Guthaben aufladen</span>
+      </button>
+    </div>
+
+    <button type="button" class="admin-back-link" id="admin-back-link" onclick="showAdminHome()" style="display:none;">‹ Zurück zur Übersicht</button>
+
+    <div id="admin-sec-pending" style="display:none;">
     <h2 data-i18n="admin_title">Pending driver approvals</h2>
     <p class="dash-head" style="display:block; margin-bottom:20px;" data-i18n="admin_sub">Review uploaded documents, then approve to make a driver's listings publicly bookable.</p>
     <div id="admin-pending-list"></div>
 
-    <h2 style="margin-top:32px;" data-i18n="admin_openpay_title">Open payments</h2>
+    </div>
+
+    <div id="admin-sec-openpay" style="display:none;">
+    <h2 style="margin-top:0;" data-i18n="admin_openpay_title">Open payments</h2>
     <p class="dash-head" style="display:block; margin-bottom:14px;" data-i18n="admin_openpay_sub">Drivers whose automatic month-end fee payment failed. They have 5 days to settle before their account is automatically suspended.</p>
     <button type="button" class="link-btn" onclick="runMonthEndSettlementManual()" style="margin-bottom:14px; text-align:left; padding:0;">▶ <span data-i18n="admin_run_settlement_btn">Run month-end settlement now (test)</span></button>
     <div class="panel" id="admin-openpayments-list" style="margin-bottom:8px;"></div>
 
-    <h2 style="margin-top:32px;" data-i18n="admin_stats_title">Business overview</h2>
+    </div>
+
+    <div id="admin-sec-stats" style="display:none;">
+    <h2 style="margin-top:0;" data-i18n="admin_stats_title">Business overview</h2>
     <div class="period-tabs" id="admin-period-tabs">
       <button type="button" class="period-btn active" data-period="day" onclick="setAdminPeriod('day')" data-i18n="period_day">Daily</button>
       <button type="button" class="period-btn" data-period="month" onclick="setAdminPeriod('month')" data-i18n="period_month">Monthly</button>
@@ -1425,14 +1564,20 @@
     </div>
     <div class="stat-row" id="admin-stats-row"></div>
 
-    <h2 style="margin-top:32px;" data-i18n="admin_driverstats_title">Driver statistics</h2>
+    </div>
+
+    <div id="admin-sec-driverstats" style="display:none;">
+    <h2 style="margin-top:0;" data-i18n="admin_driverstats_title">Driver statistics</h2>
     <p class="dash-head" style="display:block; margin-bottom:14px;" data-i18n="admin_driverstats_sub">Select a driver to see their completed and cancelled tours.</p>
     <div class="form-field" style="max-width:340px;">
       <select id="admin-driver-stats-select" onchange="renderAdminDriverStats()"></select>
     </div>
     <div class="stat-row" id="admin-driver-stats-row"></div>
 
-    <h2 style="margin-top:32px;" data-i18n="admin_messages_title">Messages from drivers</h2>
+    </div>
+
+    <div id="admin-sec-messages" style="display:none;">
+    <h2 style="margin-top:0;" data-i18n="admin_messages_title">Messages from drivers</h2>
     <button type="button" class="period-btn" onclick="openAdminComposeMsg()" style="margin-bottom:14px; background:var(--gold); border-color:var(--gold); color:var(--ink); font-weight:700;">✉️ <span data-i18n="admin_compose_btn">Message a driver</span></button>
     <div class="period-tabs" id="admin-msg-view-tabs">
       <button type="button" class="period-btn active" data-view="inbox" onclick="setAdminMsgViewTab('inbox')" data-i18n="mailbox_tab_inbox">Inbox</button>
@@ -1440,11 +1585,17 @@
     </div>
     <div class="panel" id="admin-messages-list" style="margin-bottom:8px;"></div>
 
-    <h2 style="margin-top:32px;" data-i18n="admin_block_title">All drivers — block / unblock</h2>
+    </div>
+
+    <div id="admin-sec-block" style="display:none;">
+    <h2 style="margin-top:0;" data-i18n="admin_block_title">All drivers — block / unblock</h2>
     <p class="dash-head" style="display:block; margin-bottom:20px;" data-i18n="admin_block_sub">Tap a driver to block them — blocked drivers and all their tours disappear from the traveler view immediately.</p>
     <button type="button" class="link-btn" onclick="openDriversBlockModal()">📋 <span data-i18n="admin_view_drivers_btn">Alle Fahrer anzeigen</span> (<span id="admin-drivers-count">0</span>)</button>
 
-    <h2 style="margin-top:32px;" data-i18n="admin_money_title">💰 Geld — Gebühren &amp; Gutschriften</h2>
+    </div>
+
+    <div id="admin-sec-money" style="display:none;">
+    <h2 style="margin-top:0;" data-i18n="admin_money_title">💰 Geld — Gebühren &amp; Gutschriften</h2>
     <p class="dash-head" style="display:block; margin-bottom:20px;" data-i18n="admin_money_sub">Standardmäßig gilt für alle Fahrer 10% Provision pro Buchung. Hier kannst du für einzelne Fahrer einen abweichenden Satz für einen bestimmten Zeitraum festlegen, oder eine Gutschrift erstellen.</p>
 
     <h3 data-i18n="admin_feeoverride_title">Individuellen Gebührensatz festlegen</h3>
@@ -1510,6 +1661,8 @@
       <p class="form-error" id="balance-topup-status"></p>
     </div>
     <button type="button" class="link-btn" onclick="openBalanceOverviewModal()">📋 <span data-i18n="admin_view_balances_btn">Alle Guthaben anzeigen</span> (<span id="balance-overview-count">0</span>)</button>
+    </div>
+
   </div>
 </div>
 
@@ -1736,6 +1889,48 @@
 </div>
 
 <!-- edit profile modal -->
+<!-- Passwort vergessen -->
+<div class="modal-bg" id="forgot-password-modal-bg">
+  <div class="modal">
+    <div class="modal-header">
+      <button class="modal-close" onclick="closeForgotPassword()">✕</button>
+      <span class="eyebrow">Fahrer-Bereich</span>
+      <h2>Passwort vergessen</h2>
+    </div>
+    <div class="modal-body">
+      <p class="note" style="margin-top:0;">Gib deine E-Mail-Adresse ein. Wir schicken dir einen Link, mit dem du ein neues Passwort setzen kannst.</p>
+      <div class="form-field">
+        <label>E-Mail</label>
+        <input type="email" id="forgot-password-email" placeholder="deine@email.com">
+      </div>
+      <p class="form-error" id="forgot-password-status"></p>
+      <button class="book-btn" onclick="handleForgotPassword()">Link zum Zurücksetzen senden</button>
+    </div>
+  </div>
+</div>
+
+<!-- Neues Passwort setzen (wird automatisch geöffnet, wenn jemand über den Reset-Link zurückkommt) -->
+<div class="modal-bg" id="new-password-modal-bg">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="eyebrow">Fahrer-Bereich</span>
+      <h2>Neues Passwort setzen</h2>
+    </div>
+    <div class="modal-body">
+      <div class="form-field">
+        <label>Neues Passwort (mind. 6 Zeichen)</label>
+        <input type="password" id="new-password-input" placeholder="Neues Passwort">
+      </div>
+      <div class="form-field">
+        <label>Neues Passwort wiederholen</label>
+        <input type="password" id="new-password-confirm" placeholder="Passwort wiederholen">
+      </div>
+      <p class="form-error" id="new-password-status"></p>
+      <button class="book-btn" onclick="handleSetNewPassword()">Passwort speichern</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-bg" id="edit-profile-modal-bg">
   <div class="modal">
     <div class="modal-header">
@@ -2139,8 +2334,6 @@
           <select id="el-duration"><option>Half day</option><option>Full day</option><option>Airport Transfer</option><option>Transfer</option><option>Fixed rate</option></select>
         </div>
       </div>
-      <label class="nl-service-check"><input type="checkbox" id="el-photo"> <span data-i18n="svc_offer_photo_only">📸 Photo service</span></label>
-      <label class="nl-service-check"><input type="checkbox" id="el-drone"> <span data-i18n="svc_offer_drone_only">🚁 Drone service</span></label>
       <label class="nl-service-check"><input type="checkbox" id="el-boat"> <span data-i18n="svc_offer_boat">🎫 Boat tickets</span></label>
       <label class="nl-service-check nl-featured-check"><input type="checkbox" id="el-featured"> ⭐ Featured placement (IDR 75,000/week)</label>
       <p class="form-error" id="el-error"></p>
@@ -2896,6 +3089,66 @@ function closeQrModal(){ document.getElementById('qr-modal-bg').classList.remove
 document.getElementById('qr-modal-bg').addEventListener('click', e=>{ if(e.target.id==='qr-modal-bg') closeQrModal(); });
 let dpIsReal = false; // zeigt gerade eine echte "My Page" (statt Demo)?
 let dpRealData = null; // { driver, tours, reviews } fuer die echte My Page
+// ---- SEO-Menü / Ratgeber-Unterseiten (Baustein 10) ----
+// Die Texte hier sind bewusst nur kurze Startpunkte, damit die Seiten nicht leer sind.
+// Die eigentlichen SEO-/Ratgeber-Inhalte schreibt Jörg selbst — einfach den body-Text
+// im jeweiligen Eintrag unten ersetzen.
+const INFO_PAGES = {
+  anreise: {
+    title: '✈️ Anreise nach Bali',
+    body: `<p>Die meisten internationalen Flüge landen am Flughafen Ngurah Rai (DPS) bei Denpasar im Süden Balis. Von Europa aus gibt es keine Direktflüge — üblich sind Umstiege in Doha, Singapur, Kuala Lumpur oder Istanbul.</p>
+      <p>Vom Flughafen aus geht es am bequemsten mit einem vorab gebuchten privaten Fahrer weiter — genau das kannst du direkt über Ryvio organisieren, ganz ohne Verhandeln am Ausgang.</p>
+      <p><em>Ausführlicher Inhalt folgt.</em></p>`
+  },
+  aktivitaeten: {
+    title: '🌴 Aktivitäten & Sehenswürdigkeiten',
+    body: `<p>Bali bietet weit mehr als Strände: Reisterrassen in Ubud, Tempel wie Tanah Lot und Uluwatu, Wasserfälle im Norden und Osten, Vulkanwanderungen am Batur und Nusa Penida als Tagesausflug.</p>
+      <p>Ein lokaler Fahrer über Ryvio kennt die besten Routen und weniger überlaufenen Ecken abseits der Touristenpfade.</p>
+      <p><em>Ausführlicher Inhalt folgt.</em></p>`
+  },
+  einreise: {
+    title: '🛂 Einreisebestimmungen',
+    body: `<p>Für die meisten Nationalitäten ist ein Visa on Arrival (VOA) bzw. e-VOA für kurze Aufenthalte möglich, das online im Voraus beantragt werden kann. Der Reisepass sollte noch mindestens 6 Monate gültig sein.</p>
+      <p>Bitte informiere dich vor Abreise immer über die aktuell gültigen Bestimmungen bei der offiziellen indonesischen Einwanderungsbehörde, da sich Regeln ändern können.</p>
+      <p><em>Ausführlicher Inhalt folgt.</em></p>`
+  },
+  reisetipps: {
+    title: '💡 Reise-Tipps für Bali',
+    body: `<p>Landeswährung ist der indonesische Rupiah (IDR). Eine lokale SIM-Karte oder eSIM lohnt sich für Navigation und Erreichbarkeit. Leichte, respektvolle Kleidung wird besonders beim Tempelbesuch erwartet (Sarong wird oft vor Ort gestellt).</p>
+      <p>Verhandeln ist bei informellem Handel üblich — bei Ryvio legt jeder Fahrer seinen Preis dagegen von Anfang an transparent fest.</p>
+      <p><em>Ausführlicher Inhalt folgt.</em></p>`
+  },
+  reisezeit: {
+    title: '☀️ Beste Reisezeit für Bali',
+    body: `<p>Die Trockenzeit von April bis Oktober gilt allgemein als beste Reisezeit, mit den wenigsten Niederschlägen zwischen Juni und September. Die Regenzeit (November bis März) bringt kurze, kräftige Schauer, meist am Nachmittag.</p>
+      <p><em>Ausführlicher Inhalt folgt.</em></p>`
+  },
+  lombok: {
+    title: '🏝️ Lombok entdecken',
+    body: `<p>Balis ruhigere Nachbarinsel Lombok bietet unter anderem den Vulkan Rinjani, die Gili-Inseln und weniger überlaufene Strände. Auch auf Lombok sind lokale Ryvio-Fahrer buchbar.</p>
+      <p><em>Ausführlicher Inhalt folgt.</em></p>`
+  }
+};
+function toggleSeoMenu(){
+  document.getElementById('seo-menu-overlay').classList.toggle('active');
+  document.getElementById('seo-menu-panel').classList.toggle('active');
+}
+function closeSeoMenu(){
+  document.getElementById('seo-menu-overlay').classList.remove('active');
+  document.getElementById('seo-menu-panel').classList.remove('active');
+}
+function openInfoPage(pageId){
+  const page = INFO_PAGES[pageId];
+  if(!page) return;
+  closeSeoMenu();
+  document.querySelectorAll('.modal-bg.active').forEach(m => m.classList.remove('active'));
+  document.getElementById('info-page-title').textContent = page.title;
+  document.getElementById('info-page-body').innerHTML = page.body;
+  document.getElementById('info-page').style.display = 'block';
+  document.getElementById('info-page').scrollTop = 0;
+}
+function closeInfoPage(){ document.getElementById('info-page').style.display = 'none'; }
+
 function openDriverPage(driverId, mode){
   document.querySelectorAll('.modal-bg.active').forEach(m => m.classList.remove('active'));
   dpDriverId = driverId;
@@ -5005,8 +5258,6 @@ function openEditListing(i){
   document.getElementById('el-name').value = l.name;
   document.getElementById('el-price').value = l.price;
   document.getElementById('el-duration').value = l.duration && ['Half day','Full day','Airport Transfer','Transfer','Fixed rate'].includes(l.duration) ? l.duration : 'Full day';
-  document.getElementById('el-photo').checked = !!(l.services && l.services.includes('Photo'));
-  document.getElementById('el-drone').checked = !!(l.services && l.services.includes('Drone'));
   document.getElementById('el-boat').checked = !!(l.services && l.services.includes('Boat'));
   document.getElementById('el-featured').checked = !!l.featured;
   document.getElementById('el-error').textContent = '';
@@ -5029,8 +5280,6 @@ function saveEditListing(){
   l.price = price;
   l.duration = document.getElementById('el-duration').value;
   const services = [];
-  if(document.getElementById('el-photo').checked){ services.push('Photo'); }
-  if(document.getElementById('el-drone').checked){ services.push('Drone'); }
   if(document.getElementById('el-boat').checked) services.push('Boat');
   l.services = services;
   l.featured = document.getElementById('el-featured').checked;
@@ -8208,6 +8457,52 @@ async function handleDriverLogin(){
   await checkDriverAuthState();
 }
 
+// ---- Passwort zuruecksetzen (Baustein 10) ----
+function openForgotPassword(){
+  document.getElementById('forgot-password-email').value = document.getElementById('auth-login-email').value.trim();
+  document.getElementById('forgot-password-status').textContent = '';
+  document.getElementById('forgot-password-modal-bg').classList.add('active');
+}
+function closeForgotPassword(){ document.getElementById('forgot-password-modal-bg').classList.remove('active'); }
+document.getElementById('forgot-password-modal-bg').addEventListener('click', e=>{ if(e.target.id==='forgot-password-modal-bg') closeForgotPassword(); });
+async function handleForgotPassword(){
+  const email = document.getElementById('forgot-password-email').value.trim();
+  const statusEl = document.getElementById('forgot-password-status');
+  if(!email){ statusEl.style.color='var(--danger)'; statusEl.textContent = 'Bitte E-Mail-Adresse eingeben.'; return; }
+  statusEl.style.color = 'var(--ink-soft)';
+  statusEl.textContent = 'Einen Moment...';
+  const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+    redirectTo: location.origin + location.pathname
+  });
+  if(error){ statusEl.style.color='var(--danger)'; statusEl.textContent = 'Fehler: ' + error.message; return; }
+  statusEl.style.color = 'var(--teal)';
+  statusEl.textContent = 'E-Mail verschickt ✓ — bitte den Link in der Mail öffnen (auch im Spam-Ordner nachschauen).';
+}
+// Wird automatisch aufgerufen, wenn jemand ueber den Link aus der Reset-Mail zurueckkommt
+supabaseClient.auth.onAuthStateChange((event, session) => {
+  if(event === 'PASSWORD_RECOVERY'){
+    document.getElementById('new-password-input').value = '';
+    document.getElementById('new-password-confirm').value = '';
+    document.getElementById('new-password-status').textContent = '';
+    document.getElementById('new-password-modal-bg').classList.add('active');
+  }
+});
+async function handleSetNewPassword(){
+  const pw1 = document.getElementById('new-password-input').value;
+  const pw2 = document.getElementById('new-password-confirm').value;
+  const statusEl = document.getElementById('new-password-status');
+  if(!pw1 || pw1.length < 6){ statusEl.style.color='var(--danger)'; statusEl.textContent = 'Das Passwort muss mindestens 6 Zeichen haben.'; return; }
+  if(pw1 !== pw2){ statusEl.style.color='var(--danger)'; statusEl.textContent = 'Die beiden Passwörter stimmen nicht überein.'; return; }
+  statusEl.style.color = 'var(--ink-soft)';
+  statusEl.textContent = 'Einen Moment...';
+  const { error } = await supabaseClient.auth.updateUser({ password: pw1 });
+  if(error){ statusEl.style.color='var(--danger)'; statusEl.textContent = 'Fehler: ' + error.message; return; }
+  document.getElementById('new-password-modal-bg').classList.remove('active');
+  alert('Neues Passwort gespeichert ✓ Du bist jetzt eingeloggt.');
+  await checkDriverAuthState();
+  switchViewProgrammatic('driver');
+}
+
 async function handleDriverLogout(){
   await supabaseClient.auth.signOut();
   realDriverProfile = null;
@@ -8503,7 +8798,32 @@ async function rejectRealDriver(id){
   loadAdminPendingDrivers();
   alert(msgError ? 'Fahrer abgelehnt ✓ (die Benachrichtigung konnte allerdings nicht gesendet werden)' : 'Fahrer abgelehnt ✓');
 }
+// ---- Admin: Kachelmenü <-> einzelne Abschnitte (weniger Scrollen) ----
+const ADMIN_SECTIONS = ['pending','openpay','stats','driverstats','messages','block','money'];
+function showAdminSection(id){
+  const menu = document.getElementById('admin-tile-menu');
+  if(menu) menu.style.display = 'none';
+  const backLink = document.getElementById('admin-back-link');
+  if(backLink) backLink.style.display = 'inline-flex';
+  ADMIN_SECTIONS.forEach(s=>{
+    const el = document.getElementById('admin-sec-'+s);
+    if(el) el.style.display = (s===id) ? 'block' : 'none';
+  });
+  const wrap = document.querySelector('#view-admin > div');
+  if(wrap) wrap.scrollIntoView({ behavior:'instant', block:'start' });
+}
+function showAdminHome(){
+  const menu = document.getElementById('admin-tile-menu');
+  if(menu) menu.style.display = '';
+  const backLink = document.getElementById('admin-back-link');
+  if(backLink) backLink.style.display = 'none';
+  ADMIN_SECTIONS.forEach(s=>{
+    const el = document.getElementById('admin-sec-'+s);
+    if(el) el.style.display = 'none';
+  });
+}
 function renderAdminList(){
+  showAdminHome();
   renderAdminStats();
   renderAdminDriverStats();
   renderAdminMessages();
@@ -8877,11 +9197,24 @@ async function renderRealAdminBlockList(){
   el.innerHTML = list.map(d=>{
     const safeName = escapeHtml(d.name).replace(/'/g, "\\'");
     return `
-    <div class="booking-row admin-driver-row ${d.is_locked?'blocked-row':''}" onclick="toggleRealDriverLock('${d.id}', ${d.is_locked ? 'true':'false'}, '${safeName}')">
-      <div><div class="who">${escapeHtml(d.name)}</div><div class="when">${d.region==='lombok'?'Lombok':'Bali'} · ${t('admin_stat_fees')||'Gebühren'}: ${formatIDR(d.fees_due_idr||0)}</div></div>
+    <div class="booking-row admin-driver-row ${d.is_locked?'blocked-row':''}">
+      <div style="cursor:pointer; flex:1;" onclick="toggleRealDriverLock('${d.id}', ${d.is_locked ? 'true':'false'}, '${safeName}')">
+        <div class="who">${escapeHtml(d.name)}</div><div class="when">${d.region==='lombok'?'Lombok':'Bali'} · ${t('admin_stat_fees')||'Gebühren'}: ${formatIDR(d.fees_due_idr||0)}</div>
+      </div>
       <span class="status-pill ${d.is_locked?'pending':'confirmed'}">${d.is_locked ? t('admin_status_blocked') : t('admin_status_active')}</span>
+      <button type="button" class="cancel-btn" style="margin-left:8px; padding:6px 10px; border-radius:5px; white-space:nowrap;" onclick="event.stopPropagation(); deleteRealDriver('${d.id}', '${safeName}')">🗑️ Löschen</button>
     </div>`;
   }).join('');
+}
+// Fahrer unwiderruflich loeschen (Baustein 10) — inkl. Login-Konto, Angebote, Buchungen, Bewertungen etc.
+async function deleteRealDriver(id, name){
+  const typed = prompt(`ACHTUNG: Das löscht "${name}" unwiderruflich, inklusive aller Angebote, Buchungen, Bewertungen und des Login-Kontos.\n\nTippe zur Bestätigung den Namen "${name}" genau so ein:`);
+  if(typed !== name){ if(typed !== null) alert('Name stimmte nicht überein — nichts wurde gelöscht.'); return; }
+  const { error } = await supabaseClient.rpc('admin_delete_driver', { p_driver_id: id });
+  if(error){ alert('Löschen fehlgeschlagen: ' + error.message); console.error(error); return; }
+  await renderRealAdminBlockList();
+  loadRealPublicListings();
+  alert(`"${name}" wurde gelöscht ✓`);
 }
 async function toggleRealDriverLock(id, isLocked, name){
   const msg = isLocked ? t('admin_confirm_unblock').replace('{name}', name) : t('admin_confirm_block').replace('{name}', name);
