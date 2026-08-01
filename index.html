@@ -7512,7 +7512,8 @@ function closeModal(){
 document.getElementById('modal-bg').addEventListener('click', e=>{ if(e.target.id==='modal-bg') closeModal(); });
 
 // ---- calendar ----
-let calEvents = {}; // blocked days only, keyed 'YYYY-MM-DD'
+let calEvents = {}; // blocked days only, keyed 'YYYY-MM-DD' (Demo-Fahrer)
+let realBlockedDays = new Set(); // dieselben Tage, aber fuer den echten, eingeloggten Fahrer aus Supabase
 const MONTH_NAMES_SHORT = {Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
 function pad2(n){ return String(n).padStart(2,'0'); }
 // Prefer the reliable dateISO stored on the booking; fall back to parsing the display text
@@ -7572,7 +7573,7 @@ function renderCalendar(){
   for(let day=1; day<=daysInMonth; day++){
     const key = calViewYear+'-'+pad2(calViewMonth+1)+'-'+pad2(day);
     const dayBookings = bookingsByDate[key] || [];
-    const isBlocked = !!calEvents[key];
+    const isBlocked = realDriverProfile ? realBlockedDays.has(key) : !!calEvents[key];
     let status = null;
     if(dayBookings.some(b=>b.status==='confirmed')) status = 'booked';
     else if(dayBookings.some(b=>b.status==='pending' || b.status==='cancel_requested')) status = 'pending';
@@ -7623,7 +7624,24 @@ function openCalDayDetail(key, dayBookings){
 }
 function closeCalDayDetail(){ document.getElementById('cal-day-modal-bg').classList.remove('active'); }
 document.getElementById('cal-day-modal-bg').addEventListener('click', e=>{ if(e.target.id==='cal-day-modal-bg') closeCalDayDetail(); });
-function toggleBlock(el, key){
+async function toggleBlock(el, key){
+  if(realDriverProfile){
+    if(realBlockedDays.has(key)){
+      const { error } = await supabaseClient.from('calendar_blocked_days').delete()
+        .eq('driver_id', realDriverProfile.id).eq('blocked_date', key);
+      if(error){ console.error('Tag konnte nicht entsperrt werden:', error); return; }
+      realBlockedDays.delete(key);
+      el.classList.remove('blocked');
+    } else {
+      const { error } = await supabaseClient.from('calendar_blocked_days').insert({
+        driver_id: realDriverProfile.id, blocked_date: key
+      });
+      if(error){ console.error('Tag konnte nicht blockiert werden:', error); return; }
+      realBlockedDays.add(key);
+      el.classList.add('blocked');
+    }
+    return;
+  }
   if(calEvents[key]){
     el.classList.remove('blocked');
     delete calEvents[key];
@@ -7633,10 +7651,19 @@ function toggleBlock(el, key){
   }
   saveState();
 }
-function openCalendar(){
+// laedt die echten blockierten Tage des eingeloggten Fahrers aus Supabase
+async function loadRealBlockedDays(){
+  if(!realDriverProfile) return;
+  const { data, error } = await supabaseClient.from('calendar_blocked_days')
+    .select('blocked_date').eq('driver_id', realDriverProfile.id);
+  if(error){ console.error('Blockierte Tage konnten nicht geladen werden:', error); return; }
+  realBlockedDays = new Set((data||[]).map(r=>r.blocked_date));
+}
+async function openCalendar(){
   const now = new Date();
   calViewYear = now.getFullYear();
   calViewMonth = now.getMonth();
+  if(realDriverProfile) await loadRealBlockedDays();
   renderCalendar();
   document.getElementById('cal-modal-bg').classList.add('active');
 }
