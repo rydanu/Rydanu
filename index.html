@@ -2125,12 +2125,14 @@
       <div class="mailbox-detail-meta" id="driver-msg-from">Name · RY-000 · Date</div>
       <div class="mailbox-detail-body" id="driver-msg-body">Message body</div>
 
-      <div class="form-field" style="margin-top:18px;">
-        <label data-i18n="support_msg_label">Your message</label>
-        <textarea id="driver-msg-reply-text" rows="4" placeholder="Write your reply..."></textarea>
+      <div id="driver-msg-reply-section">
+        <div class="form-field" style="margin-top:18px;">
+          <label data-i18n="support_msg_label">Your message</label>
+          <textarea id="driver-msg-reply-text" rows="4" placeholder="Write your reply..."></textarea>
+        </div>
+        <p class="form-error" id="driver-msg-reply-status" style="color:var(--teal);"></p>
+        <button class="book-btn" onclick="sendDriverMsgReply()" data-i18n="support_send_btn">Send message</button>
       </div>
-      <p class="form-error" id="driver-msg-reply-status" style="color:var(--teal);"></p>
-      <button class="book-btn" onclick="sendDriverMsgReply()" data-i18n="support_send_btn">Send message</button>
       <button class="link-btn" id="driver-msg-archive-btn" onclick="archiveCurrentDriverMsg()" style="display:block; width:100%; text-align:center; margin-top:6px;">✓ <span data-i18n="mark_done_btn">Mark as done</span></button>
     </div>
   </div>
@@ -4499,7 +4501,7 @@ function showDashSection(name){
   if(name==='bookings') renderAllBookings();
   if(name==='requests') renderTourRequests();
   if(name==='subscription') renderFeeStatements();
-  if(name==='inbox') renderInbox();
+  if(name==='inbox'){ if(realDriverProfile) loadRealInbox(); else renderInbox(); }
 }
 function getStore(){ return driverDataStore[currentDriverId]; }
 function renderFeeStatements(){
@@ -4537,6 +4539,66 @@ function openReceiptDetail(i){
   document.getElementById('receipt-modal-bg').classList.add('active');
 }
 function closeReceiptDetail(){ document.getElementById('receipt-modal-bg').classList.remove('active'); }
+// ---- echter Posteingang (Baustein 8) ----
+let realMessages = [];
+let currentRealMsgIndex = null;
+async function loadRealInbox(){
+  if(!realDriverProfile) return;
+  const tabs = document.getElementById('inbox-view-tabs');
+  if(tabs) tabs.style.display = 'none'; // kein Archiv-Konzept im echten Posteingang
+  const { data, error } = await supabaseClient.from('driver_messages')
+    .select('*').eq('driver_id', realDriverProfile.id).order('created_at', { ascending:false });
+  if(error){ console.error('Nachrichten konnten nicht geladen werden:', error); return; }
+  realMessages = data || [];
+  renderRealInbox();
+  updateRealInboxDot();
+}
+const DRIVER_MSG_TYPE_ICON = { fee_reminder:'💳', lock_notice:'🚫', unlock_notice:'✓', admin:'👤', system:'ℹ️' };
+function renderRealInbox(){
+  const el = document.getElementById('inbox-list');
+  if(!el) return;
+  if(realMessages.length === 0){
+    el.innerHTML = `<div class="empty-state">${t('empty_inbox')}</div>`;
+    return;
+  }
+  el.innerHTML = realMessages.map((m,idx)=>`
+    <div class="inbox-row ${!m.is_read?'unread':''}" style="cursor:pointer;" onclick="openRealMsgDetail(${idx})">
+      <div class="inbox-title">${!m.is_read?'● ':''}${DRIVER_MSG_TYPE_ICON[m.type]||''} ${escapeHtml(m.subject)}</div>
+      <div class="inbox-body">${escapeHtml(m.body)}</div>
+      <div class="inbox-date">${formatDateDisplay((m.created_at||'').slice(0,10))} · Ryvio</div>
+    </div>
+  `).join('');
+}
+async function openRealMsgDetail(idx){
+  currentRealMsgIndex = idx;
+  const m = realMessages[idx];
+  if(!m) return;
+  document.getElementById('driver-msg-subject').textContent = m.subject;
+  document.getElementById('driver-msg-from').textContent = (realDriverProfile.name||'') + ' · ' + (realDriverProfile.lw_number||'—') + ' · ' + formatDateDisplay((m.created_at||'').slice(0,10));
+  document.getElementById('driver-msg-body').textContent = m.body;
+  // Antworten auf System-Nachrichten ist noch nicht angebunden (kommt ggf. spaeter über den Support-Bereich)
+  const replySection = document.getElementById('driver-msg-reply-section');
+  if(replySection) replySection.style.display = 'none';
+  document.getElementById('driver-msg-archive-btn').style.display = 'none';
+  document.getElementById('driver-msg-detail-modal-bg').classList.add('active');
+  if(!m.is_read){
+    m.is_read = true;
+    renderRealInbox();
+    updateRealInboxDot();
+    const { error } = await supabaseClient.from('driver_messages').update({ is_read:true }).eq('id', m.id);
+    if(error) console.error('Nachricht konnte nicht als gelesen markiert werden:', error);
+  }
+}
+function updateRealInboxDot(){
+  const unreadCount = realMessages.filter(m=>!m.is_read).length;
+  const dot = document.getElementById('inbox-dot');
+  if(dot){
+    dot.style.display = unreadCount > 0 ? 'inline-block' : 'none';
+    dot.textContent = unreadCount > 0 ? String(unreadCount) : '';
+  }
+  const navItem = dot ? dot.closest('.dash-nav-item') : null;
+  if(navItem) navItem.classList.toggle('has-unread', unreadCount > 0);
+}
 function pushInboxMessage(driverId, title, body, link){
   const store = driverDataStore[driverId];
   if(!store) return;
@@ -4550,6 +4612,8 @@ function setInboxViewTab(view){
   renderInbox();
 }
 function renderInbox(){
+  const tabs = document.getElementById('inbox-view-tabs');
+  if(tabs) tabs.style.display = '';
   const el = document.getElementById('inbox-list');
   const all = getStore().messages || [];
   const msgs = all.filter(m => inboxViewTab==='archive' ? m.archived : !m.archived);
@@ -4587,6 +4651,8 @@ function openDriverMsgDetail(idx){
   document.getElementById('driver-msg-body').textContent = m.body;
   document.getElementById('driver-msg-reply-text').value = '';
   document.getElementById('driver-msg-reply-status').textContent = m.replied ? t('admin_msg_replied_note') : '';
+  const replySection = document.getElementById('driver-msg-reply-section');
+  if(replySection) replySection.style.display = 'block';
   document.getElementById('driver-msg-archive-btn').style.display = m.archived ? 'none' : 'block';
   document.getElementById('driver-msg-detail-modal-bg').classList.add('active');
   renderInbox();
@@ -4620,6 +4686,7 @@ function archiveInboxMessage(idx){
   saveState();
 }
 function updateInboxDot(){
+  if(realDriverProfile){ updateRealInboxDot(); return; }
   const msgs = (driverDataStore[currentDriverId] && driverDataStore[currentDriverId].messages) || [];
   const unreadCount = msgs.filter(m=>m.unread && !m.archived).length;
   const dot = document.getElementById('inbox-dot');
@@ -7777,6 +7844,7 @@ async function checkDriverAuthState(){
   applyRealDriverProfileToUI(driverRow);
   loadRealListings();
   loadRealBookings();
+  loadRealInbox();
 }
 
 // Traegt das echte Fahrerprofil in die vorhandene Dashboard-Oberflaeche ein
