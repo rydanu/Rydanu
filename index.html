@@ -8453,17 +8453,22 @@ async function approveRealDriver(id){
   if(!confirm('Diesen Fahrer wirklich freischalten?')) return;
   const { data, error } = await supabaseClient.from('drivers').update({ status:'approved' }).eq('id', id).select();
   if(error){ console.error('Freischalten fehlgeschlagen:', error); alert('Freischalten fehlgeschlagen: ' + error.message); return; }
-  if(!data || data.length === 0){
-    console.error('Freischalten hatte keine Wirkung (0 Zeilen geändert) — evtl. Admin-Sitzung abgelaufen.');
-    alert('Freischalten hat nicht geklappt — vermutlich ist deine Admin-Sitzung abgelaufen. Bitte einmal ab- und wieder anmelden und erneut versuchen.');
+  // Zusaetzliche Sicherheitspruefung: eine abgelaufene Admin-Sitzung liefert zwar eine Zeile zurueck,
+  // der Schutz-Trigger macht die Statusaenderung dann aber im Hintergrund unbemerkt rueckgaengig.
+  // Deshalb wirklich pruefen, ob status jetzt auch 'approved' ist, statt der Antwort blind zu vertrauen.
+  if(!data || data.length === 0 || data[0].status !== 'approved'){
+    console.error('Freischalten hatte keine Wirkung — evtl. Admin-Sitzung abgelaufen.', data);
+    alert('Freischalten hat nicht geklappt — vermutlich ist deine Admin-Sitzung abgelaufen. Bitte einmal ab- und wieder anmelden und dann erneut versuchen.');
+    loadAdminPendingDrivers();
     return;
   }
-  await supabaseClient.from('driver_messages').insert({
+  const { error: msgError } = await supabaseClient.from('driver_messages').insert({
     driver_id: id, type:'system', subject: t('approved_inbox_title'), body: t('approved_inbox_body')
   });
+  if(msgError){ console.error('Willkommens-Nachricht konnte nicht gesendet werden:', msgError); }
   loadAdminPendingDrivers();
   loadRealPublicListings(); // damit ein frisch freigeschalteter Fahrer sofort in der Suche erscheint
-  alert('Fahrer freigeschaltet ✓');
+  alert(msgError ? 'Fahrer freigeschaltet ✓ (die Willkommens-Nachricht konnte allerdings nicht gesendet werden)' : 'Fahrer freigeschaltet ✓');
 }
 async function rejectRealDriver(id){
   const reasonEl = document.getElementById('reject-reason-real-'+id);
@@ -8472,16 +8477,18 @@ async function rejectRealDriver(id){
   if(!confirm('Diesen Fahrer wirklich ablehnen?')) return;
   const { data, error } = await supabaseClient.from('drivers').update({ status:'rejected' }).eq('id', id).select();
   if(error){ console.error('Ablehnen fehlgeschlagen:', error); alert('Ablehnen fehlgeschlagen: ' + error.message); return; }
-  if(!data || data.length === 0){
-    console.error('Ablehnen hatte keine Wirkung (0 Zeilen geändert) — evtl. Admin-Sitzung abgelaufen.');
-    alert('Ablehnen hat nicht geklappt — vermutlich ist deine Admin-Sitzung abgelaufen. Bitte einmal ab- und wieder anmelden und erneut versuchen.');
+  if(!data || data.length === 0 || data[0].status !== 'rejected'){
+    console.error('Ablehnen hatte keine Wirkung — evtl. Admin-Sitzung abgelaufen.', data);
+    alert('Ablehnen hat nicht geklappt — vermutlich ist deine Admin-Sitzung abgelaufen. Bitte einmal ab- und wieder anmelden und dann erneut versuchen.');
+    loadAdminPendingDrivers();
     return;
   }
-  await supabaseClient.from('driver_messages').insert({
+  const { error: msgError } = await supabaseClient.from('driver_messages').insert({
     driver_id: id, type:'system', subject: t('rejected_inbox_title'), body: t('rejected_inbox_body').replace('{reason}', reason)
   });
+  if(msgError){ console.error('Ablehnungs-Nachricht konnte nicht gesendet werden:', msgError); }
   loadAdminPendingDrivers();
-  alert('Fahrer abgelehnt ✓');
+  alert(msgError ? 'Fahrer abgelehnt ✓ (die Benachrichtigung konnte allerdings nicht gesendet werden)' : 'Fahrer abgelehnt ✓');
 }
 function renderAdminList(){
   renderAdminStats();
