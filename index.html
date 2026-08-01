@@ -8556,6 +8556,9 @@ async function sendAdminComposeMsg(){
     const { error } = await supabaseClient.from('support_thread_messages').insert({ driver_id: driverId, sender:'admin', body });
     if(error){ console.error('Nachricht konnte nicht gesendet werden:', error); document.getElementById('admin-compose-error').textContent = 'Etwas ist schiefgelaufen.'; return; }
     await supabaseClient.from('support_threads').update({ subject }).eq('driver_id', driverId);
+    // Kopie zusaetzlich in den normalen Posteingang des Fahrers legen (wie in der Demo)
+    const { error: msgErr } = await supabaseClient.from('driver_messages').insert({ driver_id: driverId, type:'admin', subject, body });
+    if(msgErr) console.error('Kopie im Posteingang konnte nicht angelegt werden:', msgErr);
     closeAdminComposeMsg();
     await loadRealAdminMessages();
     openAdminMsgDetail(driverId);
@@ -8703,6 +8706,9 @@ async function sendAdminMsgReply(){
   if(realDriverProfile){
     const { error } = await supabaseClient.from('support_thread_messages').insert({ driver_id: currentAdminThreadDriverId, sender:'admin', body: reply });
     if(error){ console.error('Antwort konnte nicht gesendet werden:', error); document.getElementById('admin-msg-reply-status').textContent = 'Etwas ist schiefgelaufen.'; return; }
+    // Kopie zusaetzlich in den normalen Posteingang des Fahrers legen (wie in der Demo)
+    const { error: msgErr } = await supabaseClient.from('driver_messages').insert({ driver_id: currentAdminThreadDriverId, type:'admin', subject: t('admin_msg_reply_subject'), body: reply });
+    if(msgErr) console.error('Kopie im Posteingang konnte nicht angelegt werden:', msgErr);
     await loadRealAdminMessages();
     closeAdminMsgDetail();
     return;
