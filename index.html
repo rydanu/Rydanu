@@ -1201,9 +1201,10 @@
           <div class="stat-card"><div class="num" id="stat-views">312</div><div class="lbl" data-i18n="stat_views">Profile views</div></div>
           <div class="stat-card"><div class="num" id="stat-requests">18</div><div class="lbl" data-i18n="stat_requests">Booking requests</div></div>
           <div class="stat-card"><div class="num" id="stat-rating">4.9</div><div class="lbl" data-i18n="stat_rating">Avg. rating</div></div>
-          <div class="stat-card stat-card-clickable" onclick="payFees()"><div class="num" id="stat-fees">IDR 0</div><div class="lbl" data-i18n="stat_fees">Fees this month</div><div class="pay-fees-hint" id="pay-fees-hint">Tap to pay</div>
+          <div class="stat-card stat-card-clickable" id="fees-stat-card" onclick="payFees()"><div class="num" id="stat-fees">IDR 0</div><div class="lbl" data-i18n="stat_fees">Fees this month</div><div class="pay-fees-hint" id="pay-fees-hint">Tap to pay</div>
             <div class="referral-credit-row" id="referral-credit-row" style="display:none;">🎁 <span data-i18n="referral_credit_lbl">Referral credit</span> <span id="referral-credit-amount">− IDR 0</span></div>
             <div class="referral-credit-row" id="admin-credit-row" style="display:none;">💚 <span data-i18n="admin_credit_lbl">Credit</span> <span id="admin-credit-amount">− IDR 0</span></div>
+            <div class="referral-credit-row" id="real-balance-row" style="display:none;">💰 <span id="real-balance-label">Guthaben</span> <span id="real-balance-amount"></span></div>
           </div>
         </div>
 
@@ -3917,14 +3918,20 @@ function renderRealReviewsList(revs){
       }).join('')
     : `<div class="empty-state">${t('dp_reviews_empty')}</div>`;
 }
-// echte Übersicht (Bewertungen + Punkte) fuer einen eingeloggten, echten Fahrer laden und anzeigen
+// echte Übersicht (Bewertungen + Punkte + Gebühren/Guthaben) fuer einen eingeloggten, echten Fahrer laden und anzeigen
 async function renderRealOverviewStats(){
   if(!realDriverProfile) return;
-  const [{ data: freshDriver }, { data: reviews, error: revErr }] = await Promise.all([
-    supabaseClient.from('drivers').select('rank_points').eq('id', realDriverProfile.id).single(),
-    supabaseClient.from('reviews').select('stars, comment, created_at').eq('driver_id', realDriverProfile.id).order('created_at', { ascending:false })
+  const today = new Date().toISOString().slice(0,10);
+  const [{ data: freshDriver }, { data: reviews, error: revErr }, { data: overrides }, { data: credits }] = await Promise.all([
+    supabaseClient.from('drivers').select('rank_points, fees_due_idr, balance_idr, is_locked').eq('id', realDriverProfile.id).single(),
+    supabaseClient.from('reviews').select('stars, comment, created_at').eq('driver_id', realDriverProfile.id).order('created_at', { ascending:false }),
+    supabaseClient.from('fee_overrides').select('*').eq('driver_id', realDriverProfile.id).lte('starts_at', today).or(`ends_at.is.null,ends_at.gte.${today}`).order('created_at', { ascending:false }).limit(1),
+    supabaseClient.from('fee_credits').select('amount_idr, source').eq('driver_id', realDriverProfile.id).eq('applied', false)
   ]);
   const points = (freshDriver && typeof freshDriver.rank_points === 'number') ? freshDriver.rank_points : (realDriverProfile.rank_points || 0);
+  const feesDue = (freshDriver && typeof freshDriver.fees_due_idr === 'number') ? freshDriver.fees_due_idr : 0;
+  const balance = (freshDriver && typeof freshDriver.balance_idr === 'number') ? freshDriver.balance_idr : 0;
+  const isLocked = !!(freshDriver && freshDriver.is_locked);
   realDriverProfile.rank_points = points;
   const revs = revErr ? [] : (reviews || []);
   const avg = revs.length ? (revs.reduce((s,r)=>s+r.stars,0) / revs.length) : null;
@@ -3935,16 +3942,72 @@ async function renderRealOverviewStats(){
   if(viewsEl) viewsEl.textContent = '–'; // Profilaufrufe werden noch nicht gezaehlt
   const requestsEl = document.getElementById('stat-requests');
   if(requestsEl) requestsEl.textContent = String((driverBookings.length||0) + (completedBookings.length||0));
+
+  // Gebühren + Guthaben
   const feesEl = document.getElementById('stat-fees');
-  if(feesEl) feesEl.textContent = '–'; // Gebuehren-Anzeige kommt mit Baustein 6
+  if(feesEl) feesEl.textContent = formatIDR(feesDue);
+  const feesCard = document.getElementById('fees-stat-card');
+  if(feesCard){ feesCard.onclick = null; feesCard.classList.remove('stat-card-clickable'); } // echte Zahlung noch nicht angebunden
   const feesHint = document.getElementById('pay-fees-hint');
-  if(feesHint) feesHint.textContent = '';
+  if(feesHint) feesHint.textContent = feesDue > 0 ? '' : ('✓ ' + t('st_paid'));
   const cancelFeeRow = document.getElementById('cancellation-fee-row');
   if(cancelFeeRow) cancelFeeRow.style.display = 'none';
+
+  const balanceRow = document.getElementById('real-balance-row');
+  const balanceLabel = document.getElementById('real-balance-label');
+  const balanceAmount = document.getElementById('real-balance-amount');
+  if(balanceRow && balanceAmount){
+    balanceLabel.textContent = currentLang==='de' ? 'Guthaben' : currentLang==='id' ? 'Saldo' : 'Balance';
+    balanceAmount.textContent = formatIDR(balance);
+    balanceRow.style.display = 'flex';
+  }
+
+  // Gutschriften (Empfehlung / Admin+VIP) aus fee_credits, nur die noch nicht verrechneten
+  let referralCredit = 0, adminCredit = 0;
+  (credits||[]).forEach(c=>{
+    if(c.source === 'referral') referralCredit += Number(c.amount_idr||0);
+    else adminCredit += Number(c.amount_idr||0);
+  });
   const creditRow = document.getElementById('referral-credit-row');
-  if(creditRow) creditRow.style.display = 'none';
+  if(creditRow){
+    creditRow.style.display = referralCredit > 0 ? 'flex' : 'none';
+    if(referralCredit > 0) document.getElementById('referral-credit-amount').textContent = formatIDR(referralCredit) + ' ' + t('referral_credit_pending_note');
+  }
   const adminCreditRow = document.getElementById('admin-credit-row');
-  if(adminCreditRow) adminCreditRow.style.display = 'none';
+  if(adminCreditRow){
+    adminCreditRow.style.display = adminCredit > 0 ? 'flex' : 'none';
+    if(adminCredit > 0) document.getElementById('admin-credit-amount').textContent = formatIDR(adminCredit) + ' ' + t('referral_credit_pending_note');
+  }
+
+  // Gesperrt-Banner (echtes Konto) — dasselbe Banner-Element wie im Demo-Modus, hier ohne "Jetzt zahlen"-Knopf
+  const banner = document.getElementById('pending-banner');
+  if(banner){
+    if(isLocked){
+      banner.style.display = 'block';
+      banner.classList.add('rejected');
+      banner.innerHTML = '🚫 ' + t('payment_suspended_banner').replace('{amount}', formatIDR(feesDue));
+    } else {
+      banner.style.display = 'none';
+      banner.classList.remove('rejected');
+    }
+  }
+
+  // aktueller Gebührensatz (Standard oder Sonderkondition)
+  const rateEl = document.getElementById('current-fee-rate-display');
+  if(rateEl){
+    const ov = (overrides && overrides[0]) || null;
+    if(ov && Number(ov.fee_percent) === 0){
+      const untilStr = ov.ends_at ? t('fee_rate_valid_until').replace('{date}', formatDateDisplay(ov.ends_at)) : t('fee_rate_valid_unlimited');
+      rateEl.innerHTML = `<span style="font-weight:800;">${t('fee_rate_vip_bonus')}</span><br><span style="font-weight:600;">${t('fee_rate_zero_fees')}</span> · ${untilStr}`;
+    } else if(ov){
+      const range = (ov.starts_at || ov.ends_at)
+        ? `${ov.starts_at ? formatDateDisplay(ov.starts_at) : '…'} – ${ov.ends_at ? formatDateDisplay(ov.ends_at) : t('fee_rate_unlimited_short')}`
+        : t('fee_rate_unlimited_short');
+      rateEl.textContent = `${t('fee_rate_current')} ${ov.fee_percent}% (${t('fee_rate_special_condition')}, ${range})`;
+    } else {
+      rateEl.textContent = `${t('fee_rate_current')} ${DEFAULT_FEE_PERCENT}% (${t('fee_rate_standard')})`;
+    }
+  }
   const codeEl = document.getElementById('referral-code-display');
   if(codeEl){ codeEl.textContent = realDriverProfile.lw_number || '—'; codeEl.dataset.rawNumber = realDriverProfile.lw_number || ''; }
 
@@ -3957,7 +4020,7 @@ async function renderRealOverviewStats(){
     `;
   }
   const perfRow = document.getElementById('driver-perf-row');
-  if(perfRow) perfRow.innerHTML = ''; // Umsatz-/Buchungs-Auswertung kommt mit Baustein 6
+  if(perfRow) perfRow.innerHTML = ''; // Umsatz-/Buchungs-Auswertung nach Zeitraum folgt spaeter
 
   renderRealReviewsList(revs);
 }
