@@ -445,10 +445,10 @@
   .admin-driver-row{ cursor:pointer; background:#fff; border:1px solid var(--line); border-radius:8px; margin-bottom:8px; }
   /* Baustein 10: Hamburger-Menü fuer SEO-Ratgeber-Unterseiten */
   .hamburger-btn{
-    background:none; border:1px solid rgba(242,236,216,0.35); color:var(--paper); font-size:1.1rem;
-    width:38px; height:38px; border-radius:6px; cursor:pointer; margin-right:6px;
+    background:var(--paper); border:1px solid var(--line); color:var(--ink); font-size:1.1rem;
+    width:38px; height:38px; border-radius:20px; cursor:pointer; margin-right:6px;
   }
-  .hamburger-btn:hover{ border-color:var(--gold); color:var(--gold); }
+  .hamburger-btn:hover{ border-color:var(--teal); color:var(--teal); background:var(--teal-soft); }
   .seo-menu-overlay{
     display:none; position:fixed; inset:0; background:rgba(11,61,34,0.45); z-index:400;
   }
@@ -8695,7 +8695,19 @@ function populateAdminDriverStatsSelect(){
   }).join('');
   if(current && driverProfiles[current]) sel.value = current;
 }
+// echte Fahrerliste fuer die Fahrer-Statistik laden (Baustein 10-Nachbesserung)
+async function populateAdminDriverStatsSelectReal(){
+  const sel = document.getElementById('admin-driver-stats-select');
+  if(!sel) return;
+  const current = sel.value;
+  const { data, error } = await supabaseClient.from('drivers').select('id, name, lw_number').eq('status','approved').order('name');
+  if(error){ console.error('Fahrerliste für Fahrer-Statistik konnte nicht geladen werden:', error); return; }
+  sel.innerHTML = (data||[]).map(d => `<option value="${d.id}">${escapeHtml(d.name)} (${d.lw_number||'—'})</option>`).join('');
+  if(current && sel.querySelector(`option[value="${current}"]`)) sel.value = current;
+  renderAdminDriverStatsReal();
+}
 function renderAdminDriverStats(){
+  if(realDriverProfile){ populateAdminDriverStatsSelectReal(); return; }
   const el = document.getElementById('admin-driver-stats-row');
   if(!el) return;
   populateAdminDriverStatsSelect();
@@ -8718,6 +8730,32 @@ function renderAdminDriverStats(){
     const feeStr = listing ? listing.fee : 'IDR 40,000';
     return sum + parseIDR(feeStr);
   }, 0);
+  el.innerHTML = `
+    <div class="stat-card"><div class="num">${completedCount}</div><div class="lbl">${t('admin_stat_driver_completed')}</div></div>
+    <div class="stat-card"><div class="num">${cancelledByDriver}</div><div class="lbl">${t('admin_stat_driver_cancelled_driver')}</div></div>
+    <div class="stat-card"><div class="num">${cancelledByCustomer}</div><div class="lbl">${t('admin_stat_driver_cancelled_customer')}</div></div>
+    <div class="stat-card"><div class="num">${total}</div><div class="lbl">${t('admin_stat_driver_total')}</div></div>
+    <div class="stat-card"><div class="num">${formatIDR(revenue)}</div><div class="lbl">${t('admin_stat_driver_revenue')}</div></div>
+    <div class="stat-card"><div class="num">${formatIDR(feeRevenue)}</div><div class="lbl">${t('admin_stat_driver_fee_revenue')}</div></div>
+  `;
+}
+// echte Fahrer-Statistik: nutzt price_idr/fee_idr, die direkt an jeder Buchung gespeichert sind
+async function renderAdminDriverStatsReal(){
+  const el = document.getElementById('admin-driver-stats-row');
+  if(!el) return;
+  const sel = document.getElementById('admin-driver-stats-select');
+  const driverId = sel ? sel.value : '';
+  if(!driverId){ el.innerHTML = ''; return; }
+  const { data: bookings, error } = await supabaseClient.from('bookings').select('status, price_idr, fee_idr').eq('driver_id', driverId);
+  if(error){ console.error('Fahrer-Statistik konnte nicht geladen werden:', error); return; }
+  const bkg = bookings || [];
+  const completedOnly = bkg.filter(b=>b.status==='completed');
+  const completedCount = completedOnly.length;
+  const cancelledByDriver = bkg.filter(b=>b.status==='cancelled_by_driver').length;
+  const cancelledByCustomer = bkg.filter(b=>b.status==='cancelled_by_customer' || b.status==='no_show').length;
+  const total = bkg.length;
+  const revenue = completedOnly.reduce((s,b)=>s+(b.price_idr||0), 0);
+  const feeRevenue = completedOnly.reduce((s,b)=>s+(b.fee_idr||0), 0);
   el.innerHTML = `
     <div class="stat-card"><div class="num">${completedCount}</div><div class="lbl">${t('admin_stat_driver_completed')}</div></div>
     <div class="stat-card"><div class="num">${cancelledByDriver}</div><div class="lbl">${t('admin_stat_driver_cancelled_driver')}</div></div>
