@@ -1147,6 +1147,7 @@
         <input type="text" id="auth-signup-name" placeholder="Dein Name" class="auth-input">
         <input type="email" id="auth-signup-email" placeholder="E-Mail" class="auth-input">
         <input type="password" id="auth-signup-password" placeholder="Passwort (mind. 6 Zeichen)" class="auth-input">
+        <input type="text" id="auth-signup-referral" placeholder="Empfehlungs-Code (optional) — z.B. RY-104" class="auth-input">
         <button type="button" class="btn-primary auth-submit-btn" onclick="handleDriverSignup()">Registrieren</button>
         <p class="note" style="text-align:center;">Schon ein Konto? <a href="#" onclick="toggleAuthForm('login'); return false;">Anmelden</a></p>
       </div>
@@ -3092,7 +3093,6 @@ async function bookRealTourFromPage(tourTitle){
     pub = drivers.find(dd => dd.isReal && dd.ownerId===dpDriverId && dd.tour===tourTitle);
   }
   if(!pub) return;
-  closeDriverPage();
   openModal(pub);
 }
 function toggleAboutEdit(show){
@@ -3216,7 +3216,6 @@ function handlePageMediaUpload(event){
 function bookTourFromPage(tourName){
   const pub = drivers.find(d => d.ownerId===dpDriverId && d.tour===tourName);
   if(!pub) return;
-  closeDriverPage();
   openModal(pub);
 }
 function openVideoLightbox(i){
@@ -8159,6 +8158,7 @@ async function handleDriverSignup(){
   const name = document.getElementById('auth-signup-name').value.trim();
   const email = document.getElementById('auth-signup-email').value.trim();
   const password = document.getElementById('auth-signup-password').value;
+  const referralInput = document.getElementById('auth-signup-referral').value.trim();
   document.getElementById('auth-error').textContent = '';
   if(!name || !email || !password){ showAuthError({message:'Bitte alle Felder ausfüllen.'}); return; }
   setAuthLoading(true);
@@ -8169,6 +8169,28 @@ async function handleDriverSignup(){
   setAuthLoading(false);
   if(error){ showAuthError(error); return; }
   await checkDriverAuthState();
+  if(referralInput && realDriverProfile){
+    await resolveReferralCode(referralInput);
+  }
+}
+// ordnet einen beim Registrieren eingegebenen Empfehlungs-Code dem werbenden Fahrer zu (Baustein 10).
+// Ungueltige Codes oder Selbst-Empfehlung werden stillschweigend ignoriert, damit die Registrierung nicht blockiert wird.
+async function resolveReferralCode(code){
+  const normalized = code.trim().toUpperCase();
+  if(!normalized) return;
+  const { data: referrer, error } = await supabaseClient
+    .from('drivers')
+    .select('id')
+    .eq('referral_code', normalized)
+    .maybeSingle();
+  if(error || !referrer || referrer.id === realDriverProfile.id) return;
+  const { data } = await supabaseClient
+    .from('drivers')
+    .update({ referred_by_driver_id: referrer.id })
+    .eq('id', realDriverProfile.id)
+    .select()
+    .single();
+  if(data) realDriverProfile = data;
 }
 
 async function handleDriverLogin(){
