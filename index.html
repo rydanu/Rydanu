@@ -43,6 +43,9 @@
   }
   .mono{ font-family:'JetBrains Mono', monospace; letter-spacing:0.02em; }
   h1,h2,h3,.display{ font-family:'Fraunces', serif; font-weight:600; letter-spacing:-0.01em; }
+  /* Echte Fahrernamen werden nie in der verspielten Fraunces-Schrift gezeigt — bei manchen
+     Buchstaben (z.B. "J") sieht diese Zierschrift sonst schief/verzerrt aus. */
+  #dash-greeting, #modal-name, #dp-name, .driver-card-header h3, .admin-driver-name{ font-family:'Public Sans', sans-serif; }
 
   /* ---------- topbar ---------- */
   .topbar{
@@ -8246,6 +8249,14 @@ async function checkDriverAuthState(){
   loadRealInbox();
   refreshSupportBadgeForDriver();
 }
+// Fragt den Fahrer-Status automatisch neu ab, wenn die Seite wieder aktiv wird (z.B. nach
+// Tab-Wechsel) - so verschwindet der "wartet auf Freischaltung"-Hinweis von selbst, sobald
+// der Admin (in einem anderen Tab/Sitzung) freigeschaltet hat, ohne dass neu geladen werden muss.
+document.addEventListener('visibilitychange', () => {
+  if(!document.hidden && realDriverProfile && document.getElementById('view-driver').classList.contains('active')){
+    checkDriverAuthState();
+  }
+});
 
 // Traegt das echte Fahrerprofil in die vorhandene Dashboard-Oberflaeche ein
 function applyRealDriverProfileToUI(d){
@@ -8423,7 +8434,7 @@ function renderRealAdminPendingDrivers(list){
   }
   el.innerHTML = list.map(p=>`
     <div class="panel" style="margin-bottom:16px;">
-      <div class="panel-head"><h3>${escapeHtml(p.name||'—')}</h3><span class="status-pill pending">Pending</span></div>
+      <div class="panel-head"><h3 class="admin-driver-name">${escapeHtml(p.name||'—')}</h3><span class="status-pill pending">Pending</span></div>
       <div class="booking-row"><div><div class="who">Region</div></div><span>${p.region==='lombok' ? 'Lombok' : 'Bali'}</span></div>
       <div class="booking-row"><div><div class="who">E-Mail</div></div><span>${escapeHtml(p.email||'—')}</span></div>
       <div class="booking-row"><div><div class="who">Telefon</div></div><span>${escapeHtml(p.phone||'—')}</span></div>
@@ -8440,8 +8451,13 @@ function renderRealAdminPendingDrivers(list){
 }
 async function approveRealDriver(id){
   if(!confirm('Diesen Fahrer wirklich freischalten?')) return;
-  const { error } = await supabaseClient.from('drivers').update({ status:'approved' }).eq('id', id);
+  const { data, error } = await supabaseClient.from('drivers').update({ status:'approved' }).eq('id', id).select();
   if(error){ console.error('Freischalten fehlgeschlagen:', error); alert('Freischalten fehlgeschlagen: ' + error.message); return; }
+  if(!data || data.length === 0){
+    console.error('Freischalten hatte keine Wirkung (0 Zeilen geändert) — evtl. Admin-Sitzung abgelaufen.');
+    alert('Freischalten hat nicht geklappt — vermutlich ist deine Admin-Sitzung abgelaufen. Bitte einmal ab- und wieder anmelden und erneut versuchen.');
+    return;
+  }
   await supabaseClient.from('driver_messages').insert({
     driver_id: id, type:'system', subject: t('approved_inbox_title'), body: t('approved_inbox_body')
   });
@@ -8454,8 +8470,13 @@ async function rejectRealDriver(id){
   const reason = reasonEl ? reasonEl.value.trim() : '';
   if(!reason){ alert(t('admin_err_rejection_reason')); return; }
   if(!confirm('Diesen Fahrer wirklich ablehnen?')) return;
-  const { error } = await supabaseClient.from('drivers').update({ status:'rejected' }).eq('id', id);
+  const { data, error } = await supabaseClient.from('drivers').update({ status:'rejected' }).eq('id', id).select();
   if(error){ console.error('Ablehnen fehlgeschlagen:', error); alert('Ablehnen fehlgeschlagen: ' + error.message); return; }
+  if(!data || data.length === 0){
+    console.error('Ablehnen hatte keine Wirkung (0 Zeilen geändert) — evtl. Admin-Sitzung abgelaufen.');
+    alert('Ablehnen hat nicht geklappt — vermutlich ist deine Admin-Sitzung abgelaufen. Bitte einmal ab- und wieder anmelden und erneut versuchen.');
+    return;
+  }
   await supabaseClient.from('driver_messages').insert({
     driver_id: id, type:'system', subject: t('rejected_inbox_title'), body: t('rejected_inbox_body').replace('{reason}', reason)
   });
