@@ -8327,22 +8327,35 @@ function setAdminPeriod(p){
 }
 // demo factors so daily/monthly/yearly show plausible different figures
 const periodFactor = { day: 1, month: 22, year: 240 };
+// liefert den Start-/End-Zeitraum (als 'YYYY-MM-DD') fuer den gewaehlten Zeitraum-Tab
+function periodDateRange(period){
+  const now = new Date();
+  const y = now.getFullYear(), m = now.getMonth(), d = now.getDate();
+  let start, end;
+  if(period==='day'){ start = new Date(y,m,d); end = new Date(y,m,d+1); }
+  else if(period==='month'){ start = new Date(y,m,1); end = new Date(y,m+1,1); }
+  else { start = new Date(y,0,1); end = new Date(y+1,0,1); }
+  const fmt = dt => dt.toISOString().slice(0,10);
+  return { start: fmt(start), end: fmt(end) };
+}
 async function loadRealAdminStats(){
+  const { start, end } = periodDateRange(adminPeriod);
   const [{ data: driversAgg, error: dErr }, { data: bookingsAgg, error: bErr }] = await Promise.all([
-    supabaseClient.from('drivers').select('fees_due_idr, status'),
-    supabaseClient.from('bookings').select('status')
+    supabaseClient.from('drivers').select('status'),
+    supabaseClient.from('bookings').select('status, fee_idr').gte('booking_date', start).lt('booking_date', end)
   ]);
   if(dErr || bErr){ console.error('Geschäftsbericht konnte nicht geladen werden (evtl. nicht als Admin eingeloggt):', dErr||bErr); return; }
   const drv = driversAgg || [];
   const bkg = bookingsAgg || [];
-  const feesDueTotal = drv.reduce((s,d)=>s + (d.fees_due_idr||0), 0);
-  const approvedCount = drv.filter(d=>d.status==='approved').length;
+  // "Erhaltene Gebühren" = Summe der Gebühren aus in diesem Zeitraum abgeschlossenen Touren
+  const feesTotal = bkg.filter(b=>b.status==='completed').reduce((s,b)=>s + (b.fee_idr||0), 0);
+  const approvedCount = drv.filter(d=>d.status==='approved').length; // aktueller Gesamtstand, nicht auf den Zeitraum begrenzt
   const bookedCount = bkg.length;
   const cancelledCount = bkg.filter(b=>b.status==='cancelled_by_driver' || b.status==='cancelled_by_customer' || b.status==='no_show').length;
   const el = document.getElementById('admin-stats-row');
   if(el){
     el.innerHTML = `
-      <div class="stat-card"><div class="num" style="font-size:1.05rem;">${formatIDR(feesDueTotal)}</div><div class="lbl">Offene Gebühren gesamt</div></div>
+      <div class="stat-card"><div class="num" style="font-size:1.05rem;">${formatIDR(feesTotal)}</div><div class="lbl">${t('admin_stat_fees')}</div></div>
       <div class="stat-card"><div class="num">${bookedCount}</div><div class="lbl">${t('admin_stat_booked')}</div></div>
       <div class="stat-card"><div class="num">${cancelledCount}</div><div class="lbl">${t('admin_stat_cancelled')}</div></div>
       <div class="stat-card"><div class="num">${approvedCount}</div><div class="lbl">${t('admin_stat_drivers')}</div></div>
@@ -8352,7 +8365,7 @@ async function loadRealAdminStats(){
 function renderAdminStats(){
   const tabs = document.getElementById('admin-period-tabs');
   if(realDriverProfile){
-    if(tabs) tabs.style.display = 'none'; // Aufschlüsselung nach Tag/Monat/Jahr folgt später für echte Zahlen
+    if(tabs) tabs.style.display = ''; // Tag/Monat/Jahr-Aufschlüsselung jetzt auch mit echten Zahlen verfügbar
     loadRealAdminStats();
     return;
   }
