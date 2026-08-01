@@ -4556,13 +4556,18 @@ const DRIVER_MSG_TYPE_ICON = { fee_reminder:'💳', lock_notice:'🚫', unlock_n
 function renderRealInbox(){
   const el = document.getElementById('inbox-list');
   if(!el) return;
-  const msgs = realMessages.filter(m => inboxViewTab==='archive' ? m.archived : !m.archived);
+  // Ungelesenes gehört immer ins Postfach, egal ob der Archiv-Status zufällig schon gesetzt ist
+  const msgs = realMessages.filter(m => {
+    const isSettled = m.archived && m.is_read;
+    return inboxViewTab==='archive' ? isSettled : !isSettled;
+  });
   if(msgs.length === 0){
     el.innerHTML = `<div class="empty-state">${inboxViewTab==='archive' ? t('empty_archive') : t('empty_inbox')}</div>`;
     return;
   }
   el.innerHTML = msgs.map(m=>{
     const idx = realMessages.indexOf(m);
+    const isSettled = m.archived && m.is_read;
     const clickAction = m.type==='admin' ? `openMyThreadFromInbox(${idx})` : `openRealMsgDetail(${idx})`;
     const archiveAction = m.type==='admin' ? `archiveMyThread()` : `archiveRealMessage(${idx})`;
     return `
@@ -4570,7 +4575,7 @@ function renderRealInbox(){
       <div class="inbox-title">${!m.is_read?'● ':''}${DRIVER_MSG_TYPE_ICON[m.type]||''} ${escapeHtml(m.subject)}</div>
       <div class="inbox-body">${escapeHtml(m.body)}</div>
       <div class="inbox-date">${formatDateDisplay((m.created_at||'').slice(0,10))} · Ryvio</div>
-      ${!m.archived ? `<button type="button" class="accept-btn" style="margin-top:8px;" onclick="event.stopPropagation(); ${archiveAction}">✓ ${t('mark_done_btn')}</button>` : `<span class="mailbox-replied-tag">${t('archived_tag')}</span>`}
+      ${!isSettled ? `<button type="button" class="accept-btn" style="margin-top:8px;" onclick="event.stopPropagation(); ${archiveAction}">✓ ${t('mark_done_btn')}</button>` : `<span class="mailbox-replied-tag">${t('archived_tag')}</span>`}
     </div>
   `;}).join('');
 }
@@ -4616,7 +4621,9 @@ async function archiveRealMessage(idx){
   if(error) console.error('Nachricht konnte nicht archiviert werden:', error);
 }
 function updateRealInboxDot(){
-  const unreadCount = realMessages.filter(m=>!m.is_read && !m.archived).length + (mySupportThreadUnread ? 1 : 0);
+  // Chat-Antworten landen seit dem letzten Fix ohnehin als eigene Nachricht im Posteingang (realMessages) —
+  // der separate Chat-Status würde dieselbe Nachricht sonst ein zweites Mal mitzählen.
+  const unreadCount = realMessages.filter(m=>!m.is_read && !m.archived).length;
   const dot = document.getElementById('inbox-dot');
   if(dot){
     dot.style.display = unreadCount > 0 ? 'inline-block' : 'none';
@@ -8634,12 +8641,19 @@ function renderAdminMessages(){
   updateAdminMailBadge();
   if(!el) return;
   if(realDriverProfile){
-    const threads = realAdminThreads.filter(t => adminMsgViewTab==='archive' ? t.archived : !t.archived);
+    // Ungelesenes gehört immer ins Postfach, egal ob der Archiv-Status zufällig schon gesetzt ist
+    // (kann passieren, wenn ein Fahrer direkt nach dem Antworten auch "erledigt" antippt)
+    const threads = realAdminThreads.filter(t => {
+      const isSettled = t.archived && !t.unread_for_admin;
+      return adminMsgViewTab==='archive' ? isSettled : !isSettled;
+    });
     if(threads.length === 0){
       el.innerHTML = `<div class="empty-state">${adminMsgViewTab==='archive' ? t('empty_archive') : t('empty_inbox')}</div>`;
       return;
     }
-    el.innerHTML = threads.map(th=>`
+    el.innerHTML = threads.map(th=>{
+      const isSettled = th.archived && !th.unread_for_admin;
+      return `
       <div class="mailbox-row ${th.unread_for_admin?'unread':''}" onclick="openAdminMsgDetail('${th.driver_id}')">
         <div class="mailbox-row-main">
           <div class="mailbox-subject">${th.unread_for_admin?'● ':''}${escapeHtml(th.subject)}</div>
@@ -8647,10 +8661,10 @@ function renderAdminMessages(){
         </div>
         <div class="mailbox-meta">
           <div class="mailbox-date">${th.lastMessage ? formatDateDisplay((th.lastMessage.created_at||'').slice(0,10)) : ''}</div>
-          ${!th.archived ? `<button type="button" class="accept-btn" style="margin-top:6px;" onclick="event.stopPropagation(); archiveAdminMessage('${th.driver_id}')">✓ ${t('mark_done_btn')}</button>` : `<span class="mailbox-replied-tag">${t('archived_tag')}</span>`}
+          ${!isSettled ? `<button type="button" class="accept-btn" style="margin-top:6px;" onclick="event.stopPropagation(); archiveAdminMessage('${th.driver_id}')">✓ ${t('mark_done_btn')}</button>` : `<span class="mailbox-replied-tag">${t('archived_tag')}</span>`}
         </div>
       </div>
-    `).join('');
+    `;}).join('');
     return;
   }
   const threads = Object.values(supportThreads).filter(th => adminMsgViewTab==='archive' ? th.archived : !th.archived);
@@ -8701,7 +8715,7 @@ async function openAdminMsgDetail(driverId){
     renderThreadEntries('admin-msg-entries', (msgs||[]).map(m=>({from:m.sender, body:m.body, date: formatDateDisplay((m.created_at||'').slice(0,10))})));
     document.getElementById('admin-msg-reply-text').value = '';
     document.getElementById('admin-msg-reply-status').textContent = '';
-    document.getElementById('admin-msg-archive-btn').style.display = th.archived ? 'none' : 'block';
+    document.getElementById('admin-msg-archive-btn').style.display = (th.archived && !th.unread_for_admin) ? 'none' : 'block';
     document.getElementById('admin-msg-detail-modal-bg').classList.add('active');
     if(th.unread_for_admin){
       const { error: uErr } = await supabaseClient.from('support_threads').update({ unread_for_admin:false }).eq('driver_id', driverId);
