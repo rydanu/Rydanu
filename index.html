@@ -1982,7 +1982,7 @@
           <div class="form-field">
             <textarea id="mb-review-text" rows="3" data-i18n-placeholder="mb_review_placeholder" placeholder="Tell other travelers about your experience..."></textarea>
           </div>
-          <div class="form-field">
+          <div class="form-field" id="mb-review-photo-row">
             <label class="review-photo-label" for="mb-review-photo">📷 <span data-i18n="mb_review_photo">Add a photo (optional)</span></label>
             <input type="file" id="mb-review-photo" accept="image/*" style="display:none;" onchange="handleReviewPhoto(event)">
             <img id="mb-review-photo-preview" style="display:none; max-width:120px; border-radius:8px; margin-top:8px;">
@@ -3103,7 +3103,7 @@ function findBookingByRef(ref, phone){
   });
   return found;
 }
-function findMyBooking(){
+async function findMyBooking(){
   const ref = document.getElementById('mb-ref').value.trim().toUpperCase();
   const phone = normalizePhone(document.getElementById('mb-phone').value);
   if(!ref){
@@ -3114,6 +3114,15 @@ function findMyBooking(){
   if(found){
     showMyBooking(found.driverId, found.source, found.index);
     return;
+  }
+  // echte Buchung? sichere Datenbank-Funktion fragen (findet nur exakte Referenz-Treffer)
+  if(ref.length >= 8){
+    const { data: realRows, error: realErr } = await supabaseClient.rpc('get_booking_by_ref', { p_ref: ref });
+    if(realErr){ console.error('Buchungssuche fehlgeschlagen:', realErr); }
+    else if(realRows && realRows.length){
+      showMyBookingReal(realRows[0]);
+      return;
+    }
   }
   // not a booking — maybe it's a custom tour request reference
   let foundReq = null;
@@ -3171,6 +3180,60 @@ function openMyBookingByRef(ref){
   document.getElementById('mb-find-step').style.display = 'none';
   document.getElementById('my-booking-modal-bg').classList.add('active');
   showMyBooking(found.driverId, found.source, found.index);
+}
+// zeigt eine ECHTE Buchung (aus Supabase, via get_booking_by_ref) im selben Fenster an
+function showMyBookingReal(row){
+  mbFound = { isReal:true, id: row.id, driverId: row.driver_id };
+  document.getElementById('mb-find-step').style.display = 'none';
+  document.getElementById('mb-request-step').style.display = 'none';
+  document.getElementById('mb-detail-step').style.display = 'block';
+  document.getElementById('mb-tour').textContent = row.tour_title || '—';
+  document.getElementById('mb-driver').textContent = row.driver_name || '—';
+  document.getElementById('mb-when').textContent = formatDateDisplay(row.booking_date);
+  // Abholort/Fahrzeug stehen in dieser schlanken Abfrage nicht zur Verfuegung -> Zeilen ausblenden
+  document.getElementById('mb-row-pickup').style.display = 'none';
+  document.getElementById('mb-row-vehicle').style.display = 'none';
+  const depositRow = document.getElementById('mb-row-deposit');
+  const balanceRow = document.getElementById('mb-row-balance');
+  if(row.deposit_idr){
+    document.getElementById('mb-deposit').textContent = formatIDR(row.deposit_idr);
+    document.getElementById('mb-balance').textContent = formatIDR((row.price_idr||0) - (row.deposit_idr||0));
+    depositRow.style.display = 'flex';
+    balanceRow.style.display = 'flex';
+  } else {
+    depositRow.style.display = 'none';
+    balanceRow.style.display = 'none';
+  }
+  document.getElementById('mb-refshow').textContent = row.id.slice(0,8).toUpperCase();
+  const isCancelled = row.status === 'cancelled_by_driver' || row.status === 'cancelled_by_customer' || row.status === 'no_show';
+  const isCompleted = row.status === 'completed';
+  const isConfirmed = row.status === 'confirmed';
+  const statusEl = document.getElementById('mb-status');
+  statusEl.textContent = isCompleted ? t('st_completed') : isCancelled ? t('st_cancelled') : isConfirmed ? t('st_confirmed') : t('st_awaiting');
+  statusEl.className = 'status-pill ' + ((isCompleted || isConfirmed) ? 'confirmed' : isCancelled ? 'cancelled' : 'pending');
+  document.getElementById('mb-status-note').textContent = isCompleted ? t('mb_note_completed')
+    : isCancelled ? t('mb_note_cancelled')
+    : isConfirmed ? t('mb_note_confirmed') : t('mb_note_pending');
+  // Kunden-Storno fuer echte Buchungen ist noch nicht gebaut -> Button hier immer verstecken
+  document.getElementById('mb-cancel-btn').style.display = 'none';
+  const reviewSection = document.getElementById('mb-review-section');
+  const reviewDone = document.getElementById('mb-review-done');
+  const photoRow = document.getElementById('mb-review-photo-row');
+  if((isConfirmed || isCompleted) && !row.already_reviewed){
+    reviewSection.style.display = 'block';
+    reviewDone.style.display = 'none';
+    mbStarRating = 0;
+    updateStarPicker();
+    document.getElementById('mb-review-text').value = '';
+    document.getElementById('mb-review-error').textContent = '';
+    if(photoRow) photoRow.style.display = 'none'; // Fotos bei echten Bewertungen noch nicht unterstuetzt
+  } else if(row.already_reviewed){
+    reviewSection.style.display = 'none';
+    reviewDone.style.display = 'block';
+  } else {
+    reviewSection.style.display = 'none';
+    reviewDone.style.display = 'none';
+  }
 }
 function showMyBooking(driverId, source, index){
   const b = driverDataStore[driverId][source][index];
@@ -3231,6 +3294,8 @@ function showMyBooking(driverId, source, index){
     document.getElementById('mb-review-error').textContent = '';
     document.getElementById('mb-review-photo-preview').style.display = 'none';
     mbReviewPhoto = null;
+    const photoRow = document.getElementById('mb-review-photo-row');
+    if(photoRow) photoRow.style.display = 'block';
   } else if(b.reviewed){
     reviewSection.style.display = 'none';
     reviewDone.style.display = 'block';
@@ -3273,13 +3338,35 @@ function handleReviewPhoto(event){
   };
   reader.readAsDataURL(file);
 }
-function submitMyReview(){
+async function submitMyReview(){
   if(!mbFound) return;
   if(mbStarRating === 0){
     document.getElementById('mb-review-error').textContent = t('mb_review_err_stars');
     return;
   }
   const text = document.getElementById('mb-review-text').value.trim();
+
+  // echte Buchung -> echte Bewertung in die Datenbank schreiben
+  if(mbFound.isReal){
+    const submitBtn = document.querySelector('#mb-review-section button.book-btn');
+    if(submitBtn) submitBtn.disabled = true;
+    const { error } = await supabaseClient.from('reviews').insert({
+      booking_id: mbFound.id,
+      driver_id: mbFound.driverId,
+      stars: mbStarRating,
+      comment: text || null
+    });
+    if(submitBtn) submitBtn.disabled = false;
+    if(error){
+      console.error('Bewertung konnte nicht gespeichert werden:', error);
+      document.getElementById('mb-review-error').textContent = 'Etwas ist schiefgelaufen. Bitte nochmal versuchen.';
+      return;
+    }
+    document.getElementById('mb-review-section').style.display = 'none';
+    document.getElementById('mb-review-done').style.display = 'block';
+    return;
+  }
+
   const b = driverDataStore[mbFound.driverId][mbFound.source][mbFound.index];
   const store = driverDataStore[mbFound.driverId];
   if(!Array.isArray(store.reviews)) store.reviews = [];
