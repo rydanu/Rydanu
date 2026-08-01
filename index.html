@@ -4544,8 +4544,6 @@ let realMessages = [];
 let currentRealMsgIndex = null;
 async function loadRealInbox(){
   if(!realDriverProfile) return;
-  const tabs = document.getElementById('inbox-view-tabs');
-  if(tabs) tabs.style.display = 'none'; // kein Archiv-Konzept im echten Posteingang
   const { data, error } = await supabaseClient.from('driver_messages')
     .select('*').eq('driver_id', realDriverProfile.id).order('created_at', { ascending:false });
   if(error){ console.error('Nachrichten konnten nicht geladen werden:', error); return; }
@@ -4557,17 +4555,21 @@ const DRIVER_MSG_TYPE_ICON = { fee_reminder:'💳', lock_notice:'🚫', unlock_n
 function renderRealInbox(){
   const el = document.getElementById('inbox-list');
   if(!el) return;
-  if(realMessages.length === 0){
-    el.innerHTML = `<div class="empty-state">${t('empty_inbox')}</div>`;
+  const msgs = realMessages.filter(m => inboxViewTab==='archive' ? m.archived : !m.archived);
+  if(msgs.length === 0){
+    el.innerHTML = `<div class="empty-state">${inboxViewTab==='archive' ? t('empty_archive') : t('empty_inbox')}</div>`;
     return;
   }
-  el.innerHTML = realMessages.map((m,idx)=>`
+  el.innerHTML = msgs.map(m=>{
+    const idx = realMessages.indexOf(m);
+    return `
     <div class="inbox-row ${!m.is_read?'unread':''}" style="cursor:pointer;" onclick="openRealMsgDetail(${idx})">
       <div class="inbox-title">${!m.is_read?'● ':''}${DRIVER_MSG_TYPE_ICON[m.type]||''} ${escapeHtml(m.subject)}</div>
       <div class="inbox-body">${escapeHtml(m.body)}</div>
       <div class="inbox-date">${formatDateDisplay((m.created_at||'').slice(0,10))} · Ryvio</div>
+      ${!m.archived ? `<button type="button" class="accept-btn" style="margin-top:8px;" onclick="event.stopPropagation(); archiveRealMessage(${idx})">✓ ${t('mark_done_btn')}</button>` : `<span class="mailbox-replied-tag">${t('archived_tag')}</span>`}
     </div>
-  `).join('');
+  `;}).join('');
 }
 async function openRealMsgDetail(idx){
   currentRealMsgIndex = idx;
@@ -4579,7 +4581,9 @@ async function openRealMsgDetail(idx){
   // Antworten auf System-Nachrichten ist noch nicht angebunden (kommt ggf. spaeter über den Support-Bereich)
   const replySection = document.getElementById('driver-msg-reply-section');
   if(replySection) replySection.style.display = 'none';
-  document.getElementById('driver-msg-archive-btn').style.display = 'none';
+  const archiveBtn = document.getElementById('driver-msg-archive-btn');
+  archiveBtn.style.display = m.archived ? 'none' : 'block';
+  archiveBtn.onclick = () => { archiveRealMessage(currentRealMsgIndex); closeDriverMsgDetail(); };
   document.getElementById('driver-msg-detail-modal-bg').classList.add('active');
   if(!m.is_read){
     m.is_read = true;
@@ -4589,8 +4593,16 @@ async function openRealMsgDetail(idx){
     if(error) console.error('Nachricht konnte nicht als gelesen markiert werden:', error);
   }
 }
+async function archiveRealMessage(idx){
+  const m = realMessages[idx];
+  if(!m) return;
+  m.archived = true;
+  renderRealInbox();
+  const { error } = await supabaseClient.from('driver_messages').update({ archived:true }).eq('id', m.id);
+  if(error) console.error('Nachricht konnte nicht archiviert werden:', error);
+}
 function updateRealInboxDot(){
-  const unreadCount = realMessages.filter(m=>!m.is_read).length;
+  const unreadCount = realMessages.filter(m=>!m.is_read && !m.archived).length;
   const dot = document.getElementById('inbox-dot');
   if(dot){
     dot.style.display = unreadCount > 0 ? 'inline-block' : 'none';
@@ -4598,6 +4610,8 @@ function updateRealInboxDot(){
   }
   const navItem = dot ? dot.closest('.dash-nav-item') : null;
   if(navItem) navItem.classList.toggle('has-unread', unreadCount > 0);
+  const tabMail = document.getElementById('tab-driver-mail');
+  if(tabMail) tabMail.style.display = unreadCount > 0 ? 'inline-flex' : 'none';
 }
 function pushInboxMessage(driverId, title, body, link){
   const store = driverDataStore[driverId];
@@ -4609,7 +4623,7 @@ let inboxViewTab = 'inbox';
 function setInboxViewTab(view){
   inboxViewTab = view;
   document.querySelectorAll('#inbox-view-tabs .period-btn').forEach(b=>b.classList.toggle('active', b.dataset.view===view));
-  renderInbox();
+  if(realDriverProfile) renderRealInbox(); else renderInbox();
 }
 function renderInbox(){
   const tabs = document.getElementById('inbox-view-tabs');
