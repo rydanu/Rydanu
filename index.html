@@ -1238,6 +1238,14 @@
           <div class="panel-head"><h3 data-i18n="upcoming_bookings">Upcoming bookings</h3><button class="add-btn" onclick="openCalendar()" data-i18n="view_calendar_btn">View calendar</button></div>
           <div id="driver-bookings-list"></div>
         </div>
+
+        <div class="panel" id="real-reviews-panel" style="display:none; margin-top:18px;">
+          <div class="panel-head"><h3 data-i18n="dp_reviews_title">What guests say</h3></div>
+          <div style="padding:14px 20px;">
+            <div id="real-reviews-summary" class="dp-reviews-summary"></div>
+            <div id="real-reviews-list"></div>
+          </div>
+        </div>
       </div>
 
       <div class="dash-section" id="sec-listings" style="display:none;">
@@ -3880,7 +3888,81 @@ function renderCurrentFeeRate(){
     el.textContent = `${t('fee_rate_current')} ${DEFAULT_FEE_PERCENT}% (${t('fee_rate_standard')})`;
   }
 }
+function escapeHtml(str){
+  return String(str||'').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+}
+// zeigt die echten Bewertungen eines echten Fahrers im "What guests say"-Panel
+function renderRealReviewsList(revs){
+  const panel = document.getElementById('real-reviews-panel');
+  const summaryEl = document.getElementById('real-reviews-summary');
+  const listEl = document.getElementById('real-reviews-list');
+  if(!panel || !summaryEl || !listEl) return;
+  panel.style.display = 'block';
+  if(revs.length){
+    const avg = revs.reduce((s,r)=>s+r.stars,0) / revs.length;
+    const avgRounded = Math.round(avg);
+    const starsHTML = '★'.repeat(avgRounded) + '☆'.repeat(5-avgRounded);
+    summaryEl.innerHTML = `<span class="dp-reviews-avg-stars">${starsHTML}</span> <span class="dp-reviews-avg-num">${avg.toFixed(1)}</span> <span class="dp-reviews-avg-count">(${revs.length} ${revs.length===1 ? t('dp_review_singular') : t('dp_review_plural')})</span>`;
+  } else {
+    summaryEl.innerHTML = '';
+  }
+  listEl.innerHTML = revs.length
+    ? revs.map(r=>{
+        const starsHTML = '★'.repeat(r.stars) + '☆'.repeat(5-r.stars);
+        return `
+        <div class="dp-review">
+          <div class="r-head"><span class="r-stars">${starsHTML}</span></div>
+          ${r.comment ? `<div class="r-text">${escapeHtml(r.comment)}</div>` : ''}
+        </div>`;
+      }).join('')
+    : `<div class="empty-state">${t('dp_reviews_empty')}</div>`;
+}
+// echte Übersicht (Bewertungen + Punkte) fuer einen eingeloggten, echten Fahrer laden und anzeigen
+async function renderRealOverviewStats(){
+  if(!realDriverProfile) return;
+  const [{ data: freshDriver }, { data: reviews, error: revErr }] = await Promise.all([
+    supabaseClient.from('drivers').select('rank_points').eq('id', realDriverProfile.id).single(),
+    supabaseClient.from('reviews').select('stars, comment, created_at').eq('driver_id', realDriverProfile.id).order('created_at', { ascending:false })
+  ]);
+  const points = (freshDriver && typeof freshDriver.rank_points === 'number') ? freshDriver.rank_points : (realDriverProfile.rank_points || 0);
+  realDriverProfile.rank_points = points;
+  const revs = revErr ? [] : (reviews || []);
+  const avg = revs.length ? (revs.reduce((s,r)=>s+r.stars,0) / revs.length) : null;
+
+  const ratingEl = document.getElementById('stat-rating');
+  if(ratingEl) ratingEl.textContent = avg ? avg.toFixed(1) : '–';
+  const viewsEl = document.getElementById('stat-views');
+  if(viewsEl) viewsEl.textContent = '–'; // Profilaufrufe werden noch nicht gezaehlt
+  const requestsEl = document.getElementById('stat-requests');
+  if(requestsEl) requestsEl.textContent = String((driverBookings.length||0) + (completedBookings.length||0));
+  const feesEl = document.getElementById('stat-fees');
+  if(feesEl) feesEl.textContent = '–'; // Gebuehren-Anzeige kommt mit Baustein 6
+  const feesHint = document.getElementById('pay-fees-hint');
+  if(feesHint) feesHint.textContent = '';
+  const cancelFeeRow = document.getElementById('cancellation-fee-row');
+  if(cancelFeeRow) cancelFeeRow.style.display = 'none';
+  const creditRow = document.getElementById('referral-credit-row');
+  if(creditRow) creditRow.style.display = 'none';
+  const adminCreditRow = document.getElementById('admin-credit-row');
+  if(adminCreditRow) adminCreditRow.style.display = 'none';
+  const codeEl = document.getElementById('referral-code-display');
+  if(codeEl){ codeEl.textContent = realDriverProfile.lw_number || '—'; codeEl.dataset.rawNumber = realDriverProfile.lw_number || ''; }
+
+  const rankEl = document.getElementById('rank-panel-body');
+  if(rankEl){
+    const rank = getDriverRank(points);
+    rankEl.innerHTML = `
+      <div style="margin-bottom:10px;"><span class="rank-badge rank-${rank.key}">${rank.emoji} ${t(rank.labelKey)}</span></div>
+      <div class="rank-points-row"><span>${points} pts</span></div>
+    `;
+  }
+  const perfRow = document.getElementById('driver-perf-row');
+  if(perfRow) perfRow.innerHTML = ''; // Umsatz-/Buchungs-Auswertung kommt mit Baustein 6
+
+  renderRealReviewsList(revs);
+}
 function renderOverviewStats(){
+  if(realDriverProfile){ renderRealOverviewStats(); return; }
   const store = driverDataStore[currentDriverId];
   document.getElementById('stat-views').textContent = store.stats.views;
   document.getElementById('stat-rating').textContent = store.stats.rating;
