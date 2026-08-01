@@ -3115,9 +3115,9 @@ async function findMyBooking(){
     showMyBooking(found.driverId, found.source, found.index);
     return;
   }
-  // echte Buchung? sichere Datenbank-Funktion fragen (findet nur exakte Referenz-Treffer)
-  if(ref.length >= 8){
-    const { data: realRows, error: realErr } = await supabaseClient.rpc('get_booking_by_ref', { p_ref: ref });
+  // echte Buchung? sichere Datenbank-Funktion fragen (nur mit passender Ref + Telefonnummer)
+  if(ref.length >= 8 && phone.length >= 4){
+    const { data: realRows, error: realErr } = await supabaseClient.rpc('get_booking_by_ref', { p_ref: ref, p_phone: phone });
     if(realErr){ console.error('Buchungssuche fehlgeschlagen:', realErr); }
     else if(realRows && realRows.length){
       showMyBookingReal(realRows[0]);
