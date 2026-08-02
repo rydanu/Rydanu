@@ -998,8 +998,7 @@
     <button type="button" class="hamburger-btn" onclick="toggleSeoMenu()" aria-label="Menü">☰</button>
     <button class="tab-btn active" id="tab-customer" data-i18n="tab_travelers" onclick="switchView('customer')">For Travelers</button>
     <button class="tab-btn" id="tab-driver" onclick="switchView('driver')"><span data-i18n="tab_driver">Driver Dashboard</span> <span class="tab-mail-badge" id="tab-driver-mail" style="display:none;">✉️</span></button>
-    <button class="tab-btn tab-btn-register" data-i18n="tab_register" onclick="openRealRegisterDriver()">+ Register as Driver</button>
-    <button class="tab-btn tab-btn-admin" id="tab-admin" onclick="switchView('admin')"><span data-i18n="tab_admin">🔐 Admin</span> <span class="tab-mail-badge" id="tab-admin-mail" style="display:none;">✉️</span></button>
+    <button class="tab-btn tab-btn-register" id="tab-register-btn" data-i18n="tab_register" onclick="openRealRegisterDriver()">+ Register as Driver</button>
   </div>
   <div class="lang-switch">
     <button type="button" class="lang-btn active" data-lang="en" onclick="setLanguage('en')">EN</button>
@@ -1638,6 +1637,20 @@
 <div class="view" id="view-admin">
   <div style="max-width:760px; margin:0 auto; padding:32px 20px;">
 
+    <div id="admin-login-gate" style="display:none;">
+      <div class="auth-box" style="max-width:400px; margin:40px auto;">
+        <h2 style="font-family:'Fraunces'; margin-top:0;">🔐 Admin-Bereich</h2>
+        <p class="note" style="margin-top:0;">Mit dem Admin-Konto anmelden.</p>
+        <input type="email" id="admin-login-email" placeholder="E-Mail" class="auth-input">
+        <input type="password" id="admin-login-password" placeholder="Passwort" class="auth-input">
+        <button type="button" class="btn-primary auth-submit-btn" onclick="handleAdminLogin()">Anmelden</button>
+        <p id="admin-login-error" style="color:#C0392B; font-weight:600; min-height:1.2em;"></p>
+        <p id="admin-login-loading" style="display:none;">⏳ Einen Moment...</p>
+      </div>
+    </div>
+
+    <div id="admin-authenticated-wrap" style="display:none;">
+
     <div style="display:flex; justify-content:flex-end; margin-bottom:12px;">
       <button type="button" class="cancel-btn" style="padding:8px 16px; font-size:0.85rem;" onclick="handleDriverLogout()">🚪 Abmelden</button>
     </div>
@@ -1823,6 +1836,8 @@
       <p class="form-error" id="balance-topup-status"></p>
     </div>
     <button type="button" class="link-btn" onclick="openBalanceOverviewModal()">📋 <span data-i18n="admin_view_balances_btn">Alle Guthaben anzeigen</span> (<span id="balance-overview-count">0</span>)</button>
+    </div>
+
     </div>
 
   </div>
@@ -6370,6 +6385,12 @@ function formatRatingHTML(ratingStr){
 let rdSelectedLangs = [];
 // Baustein 11: "+ Register as Driver" führt jetzt zur echten Registrierung (Fahrer-Bereich -> Signup-Formular)
 // statt zum alten, nicht mit der Datenbank verbundenen Demo-Formular weiter unten.
+// Blendet den "+ Register as Driver"-Button aus, sobald schon ein echtes Fahrerkonto eingeloggt
+// ist -- verhindert den verwirrenden "Sprung" ins eigene Dashboard beim Klick auf den Button.
+function updateRegisterButtonVisibility(){
+  const btn = document.getElementById('tab-register-btn');
+  if(btn) btn.style.display = realDriverProfile ? 'none' : '';
+}
 function openRealRegisterDriver(){
   switchView('driver');
   if(!realDriverProfile){ toggleAuthForm('signup'); }
@@ -9244,7 +9265,8 @@ async function handleSetNewPassword(){
 async function handleDriverLogout(){
   await supabaseClient.auth.signOut();
   realDriverProfile = null;
-  await checkDriverAuthState();
+  updateRegisterButtonVisibility();
+  await checkDriverAuthState(true);
   // Baustellen-Tür (Phase 3): nach dem Abmelden wieder sperren, statt die Plattform offen zu lassen
   document.getElementById('site-content').style.display = 'none';
   document.getElementById('site-lock-gate').style.display = 'flex';
@@ -9252,8 +9274,12 @@ async function handleDriverLogout(){
   document.getElementById('lock-password').value = '';
 }
 
-// Prueft, ob jemand eingeloggt ist, und zeigt entweder Login-Maske oder Dashboard
-async function checkDriverAuthState(){
+// Prueft, ob jemand eingeloggt ist, und zeigt entweder Login-Maske oder Dashboard.
+// silent=true (bei passiven Aufrufen wie Tab-Wechsel/Sichtbarkeitswechsel) unterdrueckt die
+// rote Fehlermeldung, wenn eine Sitzung ohne echtes Fahrerprofil vorliegt (z.B. die
+// Baustellen-Tuer-Sitzung von taschner.joerg@gmail.com, die bewusst kein Fahrerprofil hat) -
+// die Meldung soll nur nach einem tatsaechlichen Login-/Registrierungsversuch erscheinen.
+async function checkDriverAuthState(silent){
   const { data: { session } } = await supabaseClient.auth.getSession();
   const gate = document.getElementById('driver-auth-gate');
   const dash = document.getElementById('driver-dash-wrap');
@@ -9262,6 +9288,8 @@ async function checkDriverAuthState(){
     gate.style.display = 'flex';
     dash.style.display = 'none';
     pendingBanner.style.display = 'none';
+    realDriverProfile = null;
+    updateRegisterButtonVisibility();
     return;
   }
   setAuthLoading(true);
@@ -9274,10 +9302,17 @@ async function checkDriverAuthState(){
   if(error || !driverRow){
     gate.style.display = 'flex';
     dash.style.display = 'none';
-    showAuthError({message:'Profil konnte nicht geladen werden. Bitte nochmal versuchen.'});
+    realDriverProfile = null;
+    updateRegisterButtonVisibility();
+    if(!silent){
+      showAuthError({message:'Profil konnte nicht geladen werden. Bitte nochmal versuchen.'});
+    } else {
+      document.getElementById('auth-error').textContent = '';
+    }
     return;
   }
   realDriverProfile = driverRow;
+  updateRegisterButtonVisibility();
   gate.style.display = 'none';
   dash.style.display = 'grid';
   pendingBanner.style.display = driverRow.status === 'pending' ? 'block' : 'none';
@@ -9292,7 +9327,7 @@ async function checkDriverAuthState(){
 // der Admin (in einem anderen Tab/Sitzung) freigeschaltet hat, ohne dass neu geladen werden muss.
 document.addEventListener('visibilitychange', () => {
   if(!document.hidden && realDriverProfile && document.getElementById('view-driver').classList.contains('active')){
-    checkDriverAuthState();
+    checkDriverAuthState(true);
   }
 });
 
@@ -9332,9 +9367,8 @@ function switchView(view){
   document.getElementById('view-admin').classList.toggle('active', view==='admin');
   document.getElementById('tab-customer').classList.toggle('active', view==='customer');
   document.getElementById('tab-driver').classList.toggle('active', view==='driver');
-  document.getElementById('tab-admin').classList.toggle('active', view==='admin');
-  if(view==='driver'){ checkDriverAuthState(); }
-  if(view==='admin'){ renderAdminList(); loadAdminPendingDrivers(); loadRealAdminMessages(); }
+  if(view==='driver'){ checkDriverAuthState(true); }
+  if(view==='admin'){ checkAdminAuthState(); }
 }
 function switchViewProgrammatic(view){
   document.getElementById('view-customer').classList.toggle('active', view==='customer');
@@ -9342,9 +9376,55 @@ function switchViewProgrammatic(view){
   document.getElementById('view-admin').classList.toggle('active', view==='admin');
   document.getElementById('tab-customer').classList.toggle('active', view==='customer');
   document.getElementById('tab-driver').classList.toggle('active', view==='driver');
-  document.getElementById('tab-admin').classList.toggle('active', view==='admin');
-  if(view==='driver'){ checkDriverAuthState(); }
-  if(view==='admin'){ renderAdminList(); loadAdminPendingDrivers(); loadRealAdminMessages(); }
+  if(view==='driver'){ checkDriverAuthState(true); }
+  if(view==='admin'){ checkAdminAuthState(); }
+}
+// Baustein 11: Admin-Bereich ist ueber keinen sichtbaren Tab mehr erreichbar (wirkte
+// unprofessionell auf Kunden). Zugang nur noch ueber einen geheimen Link-Anhang.
+// Beispiel-Aufruf: https://ryviobali.com/#ryvio-backoffice-jt
+// Der geheime Text nach dem # kann jederzeit hier geaendert werden, falls gewuenscht.
+const ADMIN_HASH_KEY = '#ryvio-backoffice-jt';
+function checkAdminHashAccess(){
+  if(location.hash === ADMIN_HASH_KEY){
+    switchViewProgrammatic('admin');
+  }
+}
+window.addEventListener('hashchange', checkAdminHashAccess);
+checkAdminHashAccess();
+// Prueft, ob eine echte Admin-Sitzung vorliegt (role:admin in den JWT-Claims) - unabhaengig
+// vom normalen Fahrer-Login. Ohne gueltige Admin-Sitzung wird nur die Login-Maske gezeigt,
+// nie die Admin-Kacheln/Daten (vorher konnte die Oberflaeche ungeschuetzt aufgerufen werden).
+async function checkAdminAuthState(){
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  const gate = document.getElementById('admin-login-gate');
+  const wrap = document.getElementById('admin-authenticated-wrap');
+  const isAdmin = !!(session && session.user && session.user.user_metadata && session.user.user_metadata.role === 'admin');
+  if(!isAdmin){
+    gate.style.display = 'block';
+    wrap.style.display = 'none';
+    return;
+  }
+  gate.style.display = 'none';
+  wrap.style.display = 'block';
+  renderAdminList();
+  loadAdminPendingDrivers();
+  loadRealAdminMessages();
+}
+async function handleAdminLogin(){
+  const email = document.getElementById('admin-login-email').value.trim();
+  const password = document.getElementById('admin-login-password').value;
+  const errorEl = document.getElementById('admin-login-error');
+  errorEl.textContent = '';
+  if(!email || !password){ errorEl.textContent = 'Bitte E-Mail und Passwort eingeben.'; return; }
+  document.getElementById('admin-login-loading').style.display = 'block';
+  const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+  document.getElementById('admin-login-loading').style.display = 'none';
+  if(error){ errorEl.textContent = translateAuthError(error.message); return; }
+  await checkAdminAuthState();
+  if(document.getElementById('admin-login-gate').style.display !== 'none'){
+    errorEl.textContent = 'Dieses Konto hat keine Admin-Rechte.';
+    await supabaseClient.auth.signOut();
+  }
 }
 function populateDemoDriverSwitcher(){
   const sel = document.getElementById('demo-driver-select');
