@@ -693,6 +693,7 @@
      bewusst NICHT in .trust-badges-line (die hat feste Höhe + overflow:hidden
      und würde Symbole abschneiden, wenn schon 2 Trust-Badges vorhanden sind) */
   .service-icons-line{ margin:2px 0 8px; display:flex; flex-wrap:wrap; gap:6px; }
+  .service-icon{ font-size:1.05rem; line-height:1; cursor:default; }
   .vtype-tag{ font-family:'Public Sans'; font-size:0.68rem; color:var(--teal); font-weight:600; }
 
   /* driver's own Ryvio page (full screen) */
@@ -997,7 +998,7 @@
     <button type="button" class="hamburger-btn" onclick="toggleSeoMenu()" aria-label="Menü">☰</button>
     <button class="tab-btn active" id="tab-customer" data-i18n="tab_travelers" onclick="switchView('customer')">For Travelers</button>
     <button class="tab-btn" id="tab-driver" onclick="switchView('driver')"><span data-i18n="tab_driver">Driver Dashboard</span> <span class="tab-mail-badge" id="tab-driver-mail" style="display:none;">✉️</span></button>
-    <button class="tab-btn tab-btn-register" data-i18n="tab_register" onclick="openRegisterDriver()">+ Register as Driver</button>
+    <button class="tab-btn tab-btn-register" data-i18n="tab_register" onclick="openRealRegisterDriver()">+ Register as Driver</button>
     <button class="tab-btn tab-btn-admin" id="tab-admin" onclick="switchView('admin')"><span data-i18n="tab_admin">🔐 Admin</span> <span class="tab-mail-badge" id="tab-admin-mail" style="display:none;">✉️</span></button>
   </div>
   <div class="lang-switch">
@@ -1314,7 +1315,61 @@
         <input type="text" id="auth-signup-name" placeholder="Dein Name" class="auth-input">
         <input type="email" id="auth-signup-email" placeholder="E-Mail" class="auth-input">
         <input type="password" id="auth-signup-password" placeholder="Passwort (mind. 6 Zeichen)" class="auth-input">
+        <input type="text" id="auth-signup-phone" placeholder="Telefon / WhatsApp (optional)" class="auth-input">
+        <div class="form-field" style="margin-top:8px;">
+          <label data-i18n="rd_region_label">Region</label>
+          <select id="auth-signup-region" class="auth-input">
+            <option value="bali">Bali</option>
+            <option value="lombok">Lombok</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label data-i18n="rd_vtype_label">Fahrzeugtyp *</label>
+          <select id="auth-signup-vtype" class="auth-input">
+            <option value="Standard Car" data-i18n="vt_standard">Standard Car</option>
+            <option value="Family Car" data-i18n="vt_family">Family Car</option>
+            <option value="Minivan" data-i18n="vt_minivan">Minivan</option>
+            <option value="Luxury Car" data-i18n="vt_luxury">Luxury Car</option>
+            <option value="Large Vehicle" data-i18n="vt_large">More than 5 seats</option>
+          </select>
+        </div>
+        <input type="text" id="auth-signup-car" placeholder="Modell (optional) — z.B. Toyota Avanza" class="auth-input">
+        <input type="text" id="auth-signup-seats" inputmode="numeric" placeholder="Sitzplätze (optional)" class="auth-input">
+        <input type="text" id="auth-signup-plate" placeholder="Kennzeichen *" class="auth-input">
+        <input type="text" id="auth-signup-color" placeholder="Fahrzeugfarbe *" class="auth-input">
         <input type="text" id="auth-signup-referral" placeholder="Empfehlungs-Code (optional) — z.B. RY-104" class="auth-input">
+
+        <div class="doc-upload-section">
+          <div class="filter-group-title">Dokumente hochladen — alle 4 sind Pflicht</div>
+          <div class="doc-upload-row">
+            <label class="doc-upload-item">
+              <input type="file" id="auth-signup-doc-license" accept="image/*,.pdf" onchange="updateSignupDocStatus()">
+              <span class="doc-icon">🪪</span>
+              <span>Führerschein *</span>
+              <span class="doc-status" id="auth-signup-doc-license-status">—</span>
+            </label>
+            <label class="doc-upload-item">
+              <input type="file" id="auth-signup-doc-insurance" accept="image/*,.pdf" onchange="updateSignupDocStatus()">
+              <span class="doc-icon">🛡️</span>
+              <span>Versicherung *</span>
+              <span class="doc-status" id="auth-signup-doc-insurance-status">—</span>
+            </label>
+            <label class="doc-upload-item">
+              <input type="file" id="auth-signup-doc-papers" accept="image/*,.pdf" onchange="updateSignupDocStatus()">
+              <span class="doc-icon">📄</span>
+              <span>Fahrzeugpapiere *</span>
+              <span class="doc-status" id="auth-signup-doc-papers-status">—</span>
+            </label>
+            <label class="doc-upload-item">
+              <input type="file" id="auth-signup-doc-selfie" accept="image/*" onchange="updateSignupDocStatus()">
+              <span class="doc-icon">🤳</span>
+              <span>Selfie *</span>
+              <span class="doc-status" id="auth-signup-doc-selfie-status">—</span>
+            </label>
+          </div>
+          <p class="doc-count-hint" id="auth-signup-doc-count-hint">0 / 4 hochgeladen</p>
+        </div>
+
         <button type="button" class="btn-primary auth-submit-btn" onclick="handleDriverSignup()">Registrieren</button>
         <p class="note" style="text-align:center;">Schon ein Konto? <a href="#" onclick="toggleAuthForm('login'); return false;">Anmelden</a></p>
       </div>
@@ -1618,6 +1673,11 @@
         <span class="at-title">Fahrer verwalten</span>
         <span class="at-sub">Sperren, entsperren oder löschen</span>
       </button>
+      <button type="button" class="admin-tile" onclick="showAdminSection('documents')">
+        <span class="at-icon">📄</span>
+        <span class="at-title">Fahrer Dokumente</span>
+        <span class="at-sub">Führerschein, Versicherung, Papiere &amp; Selfie ansehen</span>
+      </button>
       <button type="button" class="admin-tile" onclick="showAdminSection('money')" style="grid-column:1 / -1;">
         <span class="at-icon">💰</span>
         <span class="at-title">Geld — Gebühren &amp; Gutschriften</span>
@@ -1683,6 +1743,16 @@
     <h2 style="margin-top:0;" data-i18n="admin_block_title">All drivers — block / unblock</h2>
     <p class="dash-head" style="display:block; margin-bottom:20px;" data-i18n="admin_block_sub">Tap a driver to block them — blocked drivers and all their tours disappear from the traveler view immediately.</p>
     <button type="button" class="link-btn" onclick="openDriversBlockModal()">📋 <span data-i18n="admin_view_drivers_btn">Alle Fahrer anzeigen</span> (<span id="admin-drivers-count">0</span>)</button>
+
+    </div>
+
+    <div id="admin-sec-documents" style="display:none;">
+    <h2 style="margin-top:0;">📄 Fahrer Dokumente</h2>
+    <p class="dash-head" style="display:block; margin-bottom:14px;">Fahrer auswählen, um die bei der Registrierung hochgeladenen Dokumente anzusehen. Die Links sind zeitlich begrenzt gültig (1 Stunde).</p>
+    <div class="form-field" style="max-width:340px;">
+      <select id="admin-documents-driver-select" onchange="renderAdminDocuments()"></select>
+    </div>
+    <div class="panel" id="admin-documents-list" style="margin-top:14px;"></div>
 
     </div>
 
@@ -6298,6 +6368,19 @@ function formatRatingHTML(ratingStr){
 
 // ---- register new driver (profile-only; tours are added afterwards via "My listings") ----
 let rdSelectedLangs = [];
+// Baustein 11: "+ Register as Driver" führt jetzt zur echten Registrierung (Fahrer-Bereich -> Signup-Formular)
+// statt zum alten, nicht mit der Datenbank verbundenen Demo-Formular weiter unten.
+function openRealRegisterDriver(){
+  switchView('driver');
+  if(!realDriverProfile){ toggleAuthForm('signup'); }
+  window.scrollTo({ top:0, behavior:'instant' });
+}
+// ================= LEGACY — nicht mehr erreichbar (seit Baustein 11) =================
+// Das folgende Demo-Registrierungsformular (Modal weiter unten im HTML: #register-modal-bg)
+// speichert nur lokal im Browser (driverProfiles) und legt NIE einen echten Datenbank-Eintrag an.
+// Es wird seit Baustein 11 nirgends mehr aufgerufen (der Nav-Button nutzt jetzt openRealRegisterDriver()).
+// Bewusst noch nicht gelöscht, um nichts an anderer Stelle zu riskieren — kann bei der
+// Endkontrolle (End-to-End-Check) komplett entfernt werden.
 function openRegisterDriver(){
   document.getElementById('register-modal-bg').classList.add('active');
 }
@@ -7741,13 +7824,13 @@ function trustBadgesHTML(d){
   if(d.firstAidTrained) badges.push(`<span class="trust-badge"><span class="tb-emoji">🩹</span>${t('badge_firstaid')}</span>`);
   return `<div class="trust-badges-line">${badges.join('')}</div>`;
 }
-// Phase 6: Drohnen-/Fotoservice auf der Suchkarte selbst sichtbar machen (bisher erst nach Klick in die Tour).
+// Phase 6 / Nachbesserung: Drohnen-/Fotoservice auf der Suchkarte als reines Emoji zeigen (kein Textlabel, keine Pille).
 function serviceIconsHTML(d){
   if(!d.services || !d.services.length) return '';
-  const badges = [];
-  if(d.services.includes('Photo')) badges.push(`<span class="trust-badge"><span class="tb-emoji">📸</span>${t('svc_photo')}</span>`);
-  if(d.services.includes('Drone')) badges.push(`<span class="trust-badge"><span class="tb-emoji">🚁</span>${t('svc_drone')}</span>`);
-  return badges.length ? `<div class="service-icons-line">${badges.join('')}</div>` : '';
+  const icons = [];
+  if(d.services.includes('Photo')) icons.push(`<span class="service-icon" title="${t('svc_photo')}">📸</span>`);
+  if(d.services.includes('Drone')) icons.push(`<span class="service-icon" title="${t('svc_drone')}">🚁</span>`);
+  return icons.length ? `<div class="service-icons-line">${icons.join('')}</div>` : '';
 }
 // Keeps the customer-facing rating/tour-count in sync with what actually happened —
 // without this, completed trips and reviews never show up on the driver's public card.
@@ -8964,6 +9047,28 @@ async function handleLockLogin(){
 }
 document.getElementById('lock-login-form').addEventListener('submit', (e)=>{ e.preventDefault(); handleLockLogin(); });
 
+// ---- Dokument-Upload-Status im echten Registrierungsformular (Baustein 11) ----
+const SIGNUP_DOC_FIELDS = ['license','insurance','papers','selfie'];
+function updateSignupDocStatus(){
+  let count = 0;
+  SIGNUP_DOC_FIELDS.forEach(f=>{
+    const input = document.getElementById('auth-signup-doc-'+f);
+    if(!input) return;
+    const item = input.closest('.doc-upload-item');
+    const statusEl = document.getElementById('auth-signup-doc-'+f+'-status');
+    const has = input.files && input.files.length > 0;
+    if(has) count++;
+    item.classList.toggle('uploaded', has);
+    statusEl.textContent = has ? '✓ ' + input.files[0].name.slice(0,14) : '—';
+  });
+  const hint = document.getElementById('auth-signup-doc-count-hint');
+  if(hint){
+    hint.textContent = count + ' / 4 hochgeladen' + (count===4 ? '' : ' — alle 4 nötig');
+    hint.classList.toggle('enough', count===4);
+  }
+  return count;
+}
+
 function toggleAuthForm(which){
   document.getElementById('auth-login-form').style.display = which==='login' ? 'block' : 'none';
   document.getElementById('auth-signup-form').style.display = which==='signup' ? 'block' : 'none';
@@ -8992,17 +9097,68 @@ async function handleDriverSignup(){
   const name = document.getElementById('auth-signup-name').value.trim();
   const email = document.getElementById('auth-signup-email').value.trim();
   const password = document.getElementById('auth-signup-password').value;
+  const phone = document.getElementById('auth-signup-phone').value.trim();
+  const region = document.getElementById('auth-signup-region').value;
+  const vtype = document.getElementById('auth-signup-vtype').value;
+  const car = document.getElementById('auth-signup-car').value.trim();
+  const seats = document.getElementById('auth-signup-seats').value.trim();
+  const plate = document.getElementById('auth-signup-plate').value.trim();
+  const color = document.getElementById('auth-signup-color').value.trim();
   const referralInput = document.getElementById('auth-signup-referral').value.trim();
   document.getElementById('auth-error').textContent = '';
   if(!name || !email || !password){ showAuthError({message:'Bitte alle Felder ausfüllen.'}); return; }
+  if(!plate || !color){ showAuthError({message:'Bitte Kennzeichen und Fahrzeugfarbe angeben.'}); return; }
+  const missingDocs = updateSignupDocStatus() < 4;
+  if(missingDocs){ showAuthError({message:'Bitte alle 4 Dokumente hochladen (Führerschein, Versicherung, Fahrzeugpapiere, Selfie).'}); return; }
+
   setAuthLoading(true);
   const { data, error } = await supabaseClient.auth.signUp({
     email, password,
     options: { data: { name } }
   });
-  setAuthLoading(false);
-  if(error){ showAuthError(error); return; }
+  if(error){ setAuthLoading(false); showAuthError(error); return; }
+
   await checkDriverAuthState();
+  if(!realDriverProfile){ setAuthLoading(false); return; }
+
+  // Fahrzeugdaten + Telefon + Region auf dem frisch angelegten Profil speichern
+  const vehicle = { vtype, car, seats, plate, color };
+  const { data: updatedDriver, error: vehicleErr } = await supabaseClient
+    .from('drivers')
+    .update({ vehicle, phone: phone || null, region })
+    .eq('id', realDriverProfile.id)
+    .select()
+    .single();
+  if(vehicleErr){ console.error('Fahrzeugdaten konnten nicht gespeichert werden:', vehicleErr); }
+  else if(updatedDriver){ realDriverProfile = updatedDriver; }
+
+  // Dokumente einzeln in den privaten Speicherbereich hochladen
+  const documents = {};
+  for(const f of SIGNUP_DOC_FIELDS){
+    const input = document.getElementById('auth-signup-doc-'+f);
+    if(input && input.files && input.files.length){
+      const file = input.files[0];
+      const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+      const path = `${realDriverProfile.id}/${f}.${ext}`;
+      const { error: upErr } = await supabaseClient.storage.from('driver-documents').upload(path, file, { upsert:true });
+      if(upErr){ console.error('Dokument "'+f+'" konnte nicht hochgeladen werden:', upErr); }
+      else { documents[f] = path; }
+    }
+  }
+  if(Object.keys(documents).length){
+    const { data: docDriver, error: docErr } = await supabaseClient
+      .from('drivers')
+      .update({ documents })
+      .eq('id', realDriverProfile.id)
+      .select()
+      .single();
+    if(docErr){ console.error('Dokument-Pfade konnten nicht gespeichert werden:', docErr); }
+    else if(docDriver){ realDriverProfile = docDriver; }
+  }
+
+  setAuthLoading(false);
+  applyRealDriverProfileToUI(realDriverProfile);
+
   if(referralInput && realDriverProfile){
     await resolveReferralCode(referralInput);
   }
@@ -9383,6 +9539,55 @@ async function renderAdminDriverStatsReal(){
     <div class="stat-card"><div class="num">${formatIDR(feeRevenue)}</div><div class="lbl">${t('admin_stat_driver_fee_revenue')}</div></div>
   `;
 }
+// ---- echter Admin-Bereich (Baustein 11): Fahrer-Dokumente ansehen ----
+const DRIVER_DOC_FIELDS = [
+  { key:'license', label:'Führerschein', icon:'🪪' },
+  { key:'insurance', label:'Versicherung', icon:'🛡️' },
+  { key:'papers', label:'Fahrzeugpapiere', icon:'📄' },
+  { key:'selfie', label:'Selfie', icon:'🤳' }
+];
+async function jumpToAdminDocuments(driverId){
+  showAdminSection('documents');
+  await populateAdminDocumentsSelect();
+  const sel = document.getElementById('admin-documents-driver-select');
+  if(sel && sel.querySelector(`option[value="${driverId}"]`)){ sel.value = driverId; renderAdminDocuments(); }
+}
+async function populateAdminDocumentsSelect(){
+  const sel = document.getElementById('admin-documents-driver-select');
+  if(!sel) return;
+  const current = sel.value;
+  const { data, error } = await supabaseClient.from('drivers').select('id, name, lw_number, status').order('status').order('name');
+  if(error){ console.error('Fahrerliste für Dokumente konnte nicht geladen werden:', error); return; }
+  sel.innerHTML = (data||[]).map(d => {
+    const statusLabel = d.status==='pending' ? '⏳ Pending' : (d.status==='approved' ? '✓ Approved' : '✕ Rejected');
+    return `<option value="${d.id}">${escapeHtml(d.name)} (${d.lw_number||'—'}) — ${statusLabel}</option>`;
+  }).join('');
+  if(current && sel.querySelector(`option[value="${current}"]`)) sel.value = current;
+  renderAdminDocuments();
+}
+async function renderAdminDocuments(){
+  const el = document.getElementById('admin-documents-list');
+  if(!el) return;
+  const sel = document.getElementById('admin-documents-driver-select');
+  const driverId = sel ? sel.value : '';
+  if(!driverId){ el.innerHTML = `<div class="empty-state">Kein Fahrer vorhanden.</div>`; return; }
+  el.innerHTML = '<p class="note" style="padding:14px 20px;">⏳ Lade Dokumente...</p>';
+  const { data: driver, error } = await supabaseClient.from('drivers').select('documents').eq('id', driverId).single();
+  if(error){ el.innerHTML = '<p class="note" style="padding:14px 20px;">Dokumente konnten nicht geladen werden.</p>'; return; }
+  const docs = driver.documents || {};
+  const rows = await Promise.all(DRIVER_DOC_FIELDS.map(async (f) => {
+    const path = docs[f.key];
+    if(!path){
+      return `<div class="booking-row"><div><div class="who">${f.icon} ${f.label}</div></div><span class="note">Nicht hochgeladen</span></div>`;
+    }
+    const { data: signed, error: signErr } = await supabaseClient.storage.from('driver-documents').createSignedUrl(path, 3600);
+    if(signErr || !signed){
+      return `<div class="booking-row"><div><div class="who">${f.icon} ${f.label}</div></div><span class="note">Link konnte nicht erzeugt werden</span></div>`;
+    }
+    return `<div class="booking-row"><div><div class="who">${f.icon} ${f.label}</div></div><a href="${signed.signedUrl}" target="_blank" rel="noopener">Ansehen ↗</a></div>`;
+  }));
+  el.innerHTML = rows.join('');
+}
 // ---- echter Admin-Bereich (Baustein 9a): ausstehende Fahrer freischalten/ablehnen ----
 async function loadAdminPendingDrivers(){
   const { data, error } = await supabaseClient.from('drivers').select('*').eq('status', 'pending').order('created_at', { ascending:true });
@@ -9403,8 +9608,8 @@ function renderRealAdminPendingDrivers(list){
       <div class="booking-row"><div><div class="who">E-Mail</div></div><span>${escapeHtml(p.email||'—')}</span></div>
       <div class="booking-row"><div><div class="who">Telefon</div></div><span>${escapeHtml(p.phone||'—')}</span></div>
       <div class="booking-row"><div><div class="who">Ryvio-Nummer</div></div><span>${p.lw_number||'—'}</span></div>
-      <p class="note" style="padding:0 20px;">ℹ️ Der Dokumenten-Upload bei der Registrierung ist noch nicht angebunden — Prüfung aktuell nur anhand dieser Basisdaten möglich.</p>
       <div style="padding:0 20px 16px;">
+        <button type="button" class="link-btn" style="padding:0; margin-bottom:12px;" onclick="jumpToAdminDocuments('${p.id}')">📄 Dokumente ansehen</button>
         <button class="book-btn" onclick="approveRealDriver('${p.id}')">✓ Approve driver</button>
         <div class="reject-box">
           <textarea id="reject-reason-real-${p.id}" rows="2" placeholder="Reason for rejection (required to reject)..."></textarea>
@@ -9455,7 +9660,7 @@ async function rejectRealDriver(id){
   alert(msgError ? 'Fahrer abgelehnt ✓ (die Benachrichtigung konnte allerdings nicht gesendet werden)' : 'Fahrer abgelehnt ✓');
 }
 // ---- Admin: Kachelmenü <-> einzelne Abschnitte (weniger Scrollen) ----
-const ADMIN_SECTIONS = ['pending','openpay','stats','driverstats','messages','block','money'];
+const ADMIN_SECTIONS = ['pending','openpay','stats','driverstats','messages','block','documents','money'];
 function showAdminSection(id){
   const menu = document.getElementById('admin-tile-menu');
   if(menu) menu.style.display = 'none';
@@ -9485,6 +9690,7 @@ function renderAdminList(){
   renderAdminMessages();
   renderAdminBlockList();
   renderFeeOverridePanel();
+  populateAdminDocumentsSelect();
   const el = document.getElementById('admin-pending-list');
   const pending = Object.values(driverProfiles).filter(p => p.status==='pending');
   if(pending.length === 0){
