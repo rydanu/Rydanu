@@ -1579,6 +1579,10 @@
 <div class="view" id="view-admin">
   <div style="max-width:760px; margin:0 auto; padding:32px 20px;">
 
+    <div style="display:flex; justify-content:flex-end; margin-bottom:12px;">
+      <button type="button" class="cancel-btn" style="padding:8px 16px; font-size:0.85rem;" onclick="handleDriverLogout()">🚪 Abmelden</button>
+    </div>
+
     <div class="admin-tile-grid" id="admin-tile-menu">
       <button type="button" class="admin-tile" onclick="showAdminSection('pending')">
         <span class="at-icon">🆕</span>
@@ -8895,8 +8899,11 @@ let realDriverProfile = null; // vom Server geladenes echtes Fahrerprofil (erset
 
 // ============================================
 // BAUSTELLEN-TÜR (Phase 3) — Login-Sperre vor der ganzen Plattform.
-// Nur ein Konto mit user_metadata.role === 'admin' (RY-100) kommt durch.
-// Absichtlich unabhängig vom normalen Fahrer-Login weiter unten.
+// Prüft ein eigenes Merkmal (user_metadata.door_access === true), NICHT die
+// allgemeine role:'admin'-Kennung — dadurch bleibt der Fahrer-/Admin-Login
+// (info@ryviobali.com) für den echten Admin-Bereich nutzbar, kommt aber NICHT
+// automatisch durch die Baustellen-Tür. Nur das separate Konto mit
+// door_access:true (taschner.joerg@gmail.com) öffnet die Tür.
 // ============================================
 function unlockSite(){
   document.getElementById('site-lock-gate').style.display = 'none';
@@ -8906,8 +8913,8 @@ function unlockSite(){
 
 async function checkSiteLock(){
   const { data: { session } } = await supabaseClient.auth.getSession();
-  const isAdmin = !!(session && session.user && session.user.user_metadata && session.user.user_metadata.role === 'admin');
-  if(isAdmin){
+  const hasDoorAccess = !!(session && session.user && session.user.user_metadata && session.user.user_metadata.door_access === true);
+  if(hasDoorAccess){
     unlockSite();
   }
   // sonst: Sperrseite bleibt sichtbar (Standardzustand), nichts weiter tun
@@ -8932,8 +8939,8 @@ async function handleLockLogin(){
     errEl.textContent = /Invalid login credentials/i.test(error.message) ? 'E-Mail oder Passwort ist falsch.' : 'Etwas ist schiefgelaufen. Bitte nochmal versuchen.';
     return;
   }
-  const isAdmin = !!(data.user && data.user.user_metadata && data.user.user_metadata.role === 'admin');
-  if(!isAdmin){
+  const hasDoorAccess = !!(data.user && data.user.user_metadata && data.user.user_metadata.door_access === true);
+  if(!hasDoorAccess){
     await supabaseClient.auth.signOut();
     setLockLoading(false);
     errEl.textContent = 'Zugang nicht erlaubt.';
