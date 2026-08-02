@@ -7623,7 +7623,6 @@ function renderDriverGrid(list){
       </div>
       <div class="driver-body">
         <div class="tour">${d.tour}</div>
-        ${serviceIconsHTML(d)}
         ${d.spots && d.spots.length ? `<div class="spots-line" style="margin-bottom:6px;">✦ ${d.spots.join(' · ')}</div>` : ''}
         ${!matrixPrice && d.airportRegions && Object.keys(d.airportRegions).length ? `<div class="spots-line airport-price-lines" style="margin-bottom:6px;">${Object.entries(d.airportRegions).map(([r,p])=>`✈️ ${r}: <strong>${p}</strong>`).join('<br>')}</div>` : ''}
         ${!matrixPrice && d.transferRegions && Object.keys(d.transferRegions).length ? `<div class="spots-line airport-price-lines" style="margin-bottom:6px;">${Object.entries(d.transferRegions).map(([r,p])=>`🚐 ${r}: <strong>${p}</strong>`).join('<br>')}</div>` : ''}
@@ -7830,14 +7829,9 @@ function trustBadgesHTML(d){
   if(d.firstAidTrained) badges.push(`<span class="trust-badge"><span class="tb-emoji">🩹</span>${t('badge_firstaid')}</span>`);
   return `<div class="trust-badges-line">${badges.join('')}</div>`;
 }
-// Phase 6 / Nachbesserung: Drohnen-/Fotoservice auf der Suchkarte als reines Emoji zeigen (kein Textlabel, keine Pille).
-function serviceIconsHTML(d){
-  if(!d.services || !d.services.length) return '';
-  const icons = [];
-  if(d.services.includes('Photo')) icons.push(`<span class="service-icon" title="${t('svc_photo')}">📸</span>`);
-  if(d.services.includes('Drone')) icons.push(`<span class="service-icon" title="${t('svc_drone')}">🚁</span>`);
-  return icons.length ? `<div class="service-icons-line">${icons.join('')}</div>` : '';
-}
+// Nachbesserung (3. August): Drohnen-/Fotoservice-Icons auf der Suchkarte selbst wurden
+// bewusst wieder entfernt (Jörg-Wunsch) — bleiben aber im Tour-Detail nach dem Klick sichtbar
+// (siehe service-btn weiter unten in der Tour-Detailanzeige, unverändert).
 // Keeps the customer-facing rating/tour-count in sync with what actually happened —
 // without this, completed trips and reviews never show up on the driver's public card.
 function syncDriverRating(driverId){
