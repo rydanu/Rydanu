@@ -9369,7 +9369,7 @@ function switchView(view){
   const regBtn = document.getElementById('tab-register-btn');
   if(regBtn) regBtn.classList.remove('active');
   if(view==='driver'){ checkDriverAuthState(true); }
-  if(view==='admin'){ renderAdminCurrentAccount(); renderAdminList(); loadAdminPendingDrivers(); loadRealAdminMessages(); }
+  if(view==='admin'){ updateIsAdminSession().then(()=>{ renderAdminList(); loadAdminPendingDrivers(); loadRealAdminMessages(); }); }
 }
 function switchViewProgrammatic(view){
   document.getElementById('view-customer').classList.toggle('active', view==='customer');
@@ -9381,7 +9381,7 @@ function switchViewProgrammatic(view){
   const regBtn2 = document.getElementById('tab-register-btn');
   if(regBtn2) regBtn2.classList.remove('active');
   if(view==='driver'){ checkDriverAuthState(true); }
-  if(view==='admin'){ renderAdminCurrentAccount(); renderAdminList(); loadAdminPendingDrivers(); loadRealAdminMessages(); }
+  if(view==='admin'){ updateIsAdminSession().then(()=>{ renderAdminList(); loadAdminPendingDrivers(); loadRealAdminMessages(); }); }
 }
 function populateDemoDriverSwitcher(){
   const sel = document.getElementById('demo-driver-select');
@@ -9470,7 +9470,7 @@ async function loadRealAdminStats(){
 }
 function renderAdminStats(){
   const tabs = document.getElementById('admin-period-tabs');
-  if(realDriverProfile){
+  if(realDriverProfile || isAdminSession){
     if(tabs) tabs.style.display = ''; // Tag/Monat/Jahr-Aufschlüsselung jetzt auch mit echten Zahlen verfügbar
     loadRealAdminStats();
     return;
@@ -9518,7 +9518,7 @@ async function populateAdminDriverStatsSelectReal(){
   renderAdminDriverStatsReal();
 }
 function renderAdminDriverStats(){
-  if(realDriverProfile){ populateAdminDriverStatsSelectReal(); return; }
+  if(realDriverProfile || isAdminSession){ populateAdminDriverStatsSelectReal(); return; }
   const el = document.getElementById('admin-driver-stats-row');
   if(!el) return;
   populateAdminDriverStatsSelect();
@@ -9626,18 +9626,23 @@ async function renderAdminDocuments(){
   el.innerHTML = rows.join('');
 }
 // ---- echter Admin-Bereich (Baustein 9a): ausstehende Fahrer freischalten/ablehnen ----
-// Nachbesserung (3. August): zeigt im Admin-Bereich sichtbar, mit welchem Konto man gerade
-// eingeloggt ist -- verhindert Verwirrung, wenn aus Versehen ein Test-Fahrer-Konto statt des
-// echten Admin-Kontos (info@ryviobali.com) aktiv ist (Admin-Aktionen schlagen dann fehl).
-async function renderAdminCurrentAccount(){
-  const el = document.getElementById('admin-current-account');
-  if(!el) return;
+// Nachbesserung (3. August): Root-Cause-Fix — viele Admin-Funktionen prüften bisher
+// "if(realDriverProfile)" um zwischen echten und Demo-Daten zu unterscheiden. Das ist falsch,
+// wenn ein Admin-Konto (z.B. die Baustellen-Tür taschner.joerg@gmail.com) bewusst KEIN eigenes
+// Fahrerprofil hat: realDriverProfile bleibt dann null, obwohl die Person echter Admin ist, und
+// die Funktionen zeigten faelschlich die Demo-Daten (nur 1 Fahrer "Wayan Sudiartha") statt der
+// echten Fahrerliste. isAdminSession prueft die Admin-Rolle direkt und unabhaengig davon.
+let isAdminSession = false;
+async function updateIsAdminSession(){
   const { data: { session } } = await supabaseClient.auth.getSession();
-  if(!session){ el.textContent = '⚠️ Nicht eingeloggt.'; return; }
-  const isAdmin = session.user.user_metadata && session.user.user_metadata.role === 'admin';
-  el.innerHTML = isAdmin
-    ? `Eingeloggt als: <strong>${escapeHtml(session.user.email)}</strong>`
-    : `⚠️ Eingeloggt als <strong>${escapeHtml(session.user.email)}</strong> — das ist <u>kein</u> Admin-Konto. Admin-Aktionen (Nachrichten senden, freischalten...) werden fehlschlagen. Bitte mit info@ryviobali.com anmelden.`;
+  isAdminSession = !!(session && session.user && session.user.user_metadata && session.user.user_metadata.role === 'admin');
+  const el = document.getElementById('admin-current-account');
+  if(el){
+    if(!session){ el.textContent = '⚠️ Nicht eingeloggt.'; }
+    else if(isAdminSession){ el.innerHTML = `Eingeloggt als: <strong>${escapeHtml(session.user.email)}</strong>`; }
+    else { el.innerHTML = `⚠️ Eingeloggt als <strong>${escapeHtml(session.user.email)}</strong> — das ist <u>kein</u> Admin-Konto. Admin-Aktionen (Nachrichten senden, freischalten...) werden fehlschlagen. Bitte mit info@ryviobali.com anmelden.`; }
+  }
+  return isAdminSession;
 }
 async function loadAdminPendingDrivers(){
   const { data, error } = await supabaseClient.from('drivers').select('*').eq('status', 'pending').order('created_at', { ascending:true });
@@ -9819,7 +9824,7 @@ function rejectDriver(id){
   alert(t('rejected_alert').replace('{name}', p.fullName));
 }
 function renderAdminBlockList(){
-  if(realDriverProfile){ renderRealAdminBlockList(); return; }
+  if(realDriverProfile || isAdminSession){ renderRealAdminBlockList(); return; }
   const el = document.getElementById('admin-drivers-list');
   if(!el) return;
   const searchInput = document.getElementById('drivers-block-search');
@@ -9862,7 +9867,7 @@ async function renderFeeOverridePanel(){
   const driverSel = document.getElementById('fee-override-driver-select');
   const creditSel = document.getElementById('fee-credit-driver-select');
   if(!driverSel || !creditSel) return; // not on this view
-  if(realDriverProfile){
+  if(realDriverProfile || isAdminSession){
     await loadRealAllDriversCache();
     const optsHTML = realDriverOptionsHTML();
     driverSel.innerHTML = optsHTML;
@@ -9902,7 +9907,7 @@ function openFeeCreditsModal(){ document.getElementById('fee-credits-modal-bg').
 function closeFeeCreditsModal(){ document.getElementById('fee-credits-modal-bg').classList.remove('active'); }
 document.getElementById('fee-credits-modal-bg').addEventListener('click', e=>{ if(e.target.id==='fee-credits-modal-bg') closeFeeCreditsModal(); });
 function createFeeOverride(){
-  if(realDriverProfile){ createRealFeeOverride(); return; }
+  if(realDriverProfile || isAdminSession){ createRealFeeOverride(); return; }
   const driverId = document.getElementById('fee-override-driver-select').value;
   const percent = document.getElementById('fee-override-percent').value;
   const start = document.getElementById('fee-override-start').value;
@@ -9954,7 +9959,7 @@ function deleteFeeOverride(id){
   saveState();
 }
 function renderFeeOverridesList(){
-  if(realDriverProfile){ renderRealFeeOverridesList(); return; }
+  if(realDriverProfile || isAdminSession){ renderRealFeeOverridesList(); return; }
   const el = document.getElementById('admin-fee-overrides-list');
   if(!el) return;
   const filterSel = document.getElementById('fee-overrides-filter-select');
@@ -9978,7 +9983,7 @@ function renderFeeOverridesList(){
   }).join('');
 }
 function createFeeCredit(){
-  if(realDriverProfile){ createRealFeeCredit(); return; }
+  if(realDriverProfile || isAdminSession){ createRealFeeCredit(); return; }
   const driverId = document.getElementById('fee-credit-driver-select').value;
   const amount = document.getElementById('fee-credit-amount').value;
   const note = document.getElementById('fee-credit-note').value;
@@ -10033,7 +10038,7 @@ function deleteFeeCredit(id){
   saveState();
 }
 function renderFeeCreditsList(){
-  if(realDriverProfile){ renderRealFeeCreditsList(); return; }
+  if(realDriverProfile || isAdminSession){ renderRealFeeCreditsList(); return; }
   const el = document.getElementById('admin-fee-credits-list');
   if(!el) return;
   const filterSel = document.getElementById('fee-credits-filter-select');
@@ -10481,7 +10486,7 @@ async function sendDriverThreadReply(){
 }
 
 async function openAdminComposeMsg(){
-  if(realDriverProfile){
+  if(realDriverProfile || isAdminSession){
     const { data: drv, error } = await supabaseClient.from('drivers').select('id, name, lw_number').order('name');
     if(error) console.error('Fahrerliste konnte nicht geladen werden:', error);
     const sel = document.getElementById('admin-compose-driver-select');
@@ -10523,7 +10528,7 @@ async function sendAdminComposeMsg(){
     document.getElementById('admin-compose-error').textContent = t('support_error');
     return;
   }
-  if(realDriverProfile){
+  if(realDriverProfile || isAdminSession){
     const { error } = await supabaseClient.from('support_thread_messages').insert({ driver_id: driverId, sender:'admin', body });
     if(error){ console.error('Nachricht konnte nicht gesendet werden:', error); document.getElementById('admin-compose-error').textContent = describeAdminActionError(error); return; }
     await supabaseClient.from('support_threads').update({ subject }).eq('driver_id', driverId);
@@ -10577,7 +10582,7 @@ function renderAdminMessages(){
   const el = document.getElementById('admin-messages-list');
   updateAdminMailBadge();
   if(!el) return;
-  if(realDriverProfile){
+  if(realDriverProfile || isAdminSession){
     // Ungelesenes gehört immer ins Postfach, egal ob der Archiv-Status zufällig schon gesetzt ist
     // (kann passieren, wenn ein Fahrer direkt nach dem Antworten auch "erledigt" antippt)
     const threads = realAdminThreads.filter(t => {
@@ -10629,7 +10634,7 @@ function renderAdminMessages(){
   `;}).join('');
 }
 async function archiveAdminMessage(driverId){
-  if(realDriverProfile){
+  if(realDriverProfile || isAdminSession){
     const { error } = await supabaseClient.from('support_threads').update({ archived:true }).eq('driver_id', driverId);
     if(error){ console.error('Konnte nicht archiviert werden:', error); return; }
     await loadRealAdminMessages();
@@ -10642,7 +10647,7 @@ async function archiveAdminMessage(driverId){
 let currentAdminThreadDriverId = null;
 async function openAdminMsgDetail(driverId){
   currentAdminThreadDriverId = driverId;
-  if(realDriverProfile){
+  if(realDriverProfile || isAdminSession){
     const th = realAdminThreads.find(t=>t.driver_id===driverId);
     if(!th) return;
     document.getElementById('admin-msg-subject').textContent = th.subject;
@@ -10681,7 +10686,7 @@ async function sendAdminMsgReply(){
     document.getElementById('admin-msg-reply-status').textContent = t('admin_msg_reply_empty');
     return;
   }
-  if(realDriverProfile){
+  if(realDriverProfile || isAdminSession){
     const { error } = await supabaseClient.from('support_thread_messages').insert({ driver_id: currentAdminThreadDriverId, sender:'admin', body: reply });
     if(error){ console.error('Antwort konnte nicht gesendet werden:', error); document.getElementById('admin-msg-reply-status').textContent = describeAdminActionError(error); return; }
     // Kopie zusaetzlich in den normalen Posteingang des Fahrers legen (wie in der Demo)
