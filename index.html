@@ -6211,15 +6211,11 @@ function openBookingDetail(source, idx){
 }
 function closeBookingDetail(){ document.getElementById('booking-detail-modal-bg').classList.remove('active'); }
 
-const drivers = [
-  {name:"Wayan Sudiartha", tour:"East Bali Waterfalls & Temples", spots:["Day tour"], duration:"Full day (10h)", vehicle:"Family Car — Toyota Avanza, A/C", vehicleType:"Family Car", lang:["EN","ID"], rating:"4.9 · 128 tours", price:"IDR 550,000", badge:"Top rated", region:"Amed", services:["Photo"], ownerId:"wayan", active:true, childFriendly:true, tourGuideCertified:true},
-  {name:"Made Kertiyasa", tour:"Ubud Rice Terraces & Jungle Swing", spots:["Half-day tour"], duration:"Half day (6h)", vehicle:"Minivan — Toyota Innova, A/C", vehicleType:"Minivan", lang:["EN","DE","ID"], rating:"4.8 · 94 tours", price:"IDR 400,000", badge:"Speaks German", region:"Ubud", services:["Photo"], childFriendly:true, firstAidTrained:true},
-  {name:"Kadek Astawa", tour:"Uluwatu Sunset & Kecak Dance", spots:["Half-day tour"], duration:"Half day (5h)", vehicle:"Standard Car — Suzuki APV, A/C", vehicleType:"Standard Car", lang:["EN","ID"], rating:"5.0 · 61 tours", price:"IDR 380,000", badge:"New & rising", region:"Uluwatu", services:["Drone","Photo"], tourGuideCertified:true},
-  {name:"Nyoman Suwitra", tour:"Nusa Penida Day Trip (incl. boat)", spots:["Day tour"], duration:"Full day (12h)", vehicle:"Minivan — Speedboat + Van", vehicleType:"Minivan", lang:["EN","ID","FR"], rating:"4.9 · 203 tours", price:"IDR 950,000", badge:"Top rated", region:"Kuta", services:["Drone"], firstAidTrained:true},
-  {name:"Putu Ariawan", tour:"Airport Transfer — South Bali", duration:"Fixed (1h)", vehicle:"Standard Car — Honda Brio, A/C", vehicleType:"Standard Car", lang:["EN","ID"], rating:"4.7 · 340 tours", price:"from IDR 180,000", badge:"Most booked", region:"Kuta", services:[], spots:["Airport Transfer"], airportRegions:{"Kuta":"IDR 180,000","Ubud":"IDR 300,000","Sidemen":"IDR 400,000","Amed":"IDR 500,000","Lovina":"IDR 550,000"}},
-  {name:"Ketut Wirawan", tour:"North Bali Waterfalls & Sekumpul", spots:["Day tour"], duration:"Full day (11h)", vehicle:"Family Car — Toyota Avanza, A/C", vehicleType:"Family Car", lang:["EN","ID"], rating:"4.8 · 47 tours", price:"IDR 600,000", badge:"Hidden gems", region:"Lovina", services:["Photo"], childFriendly:true},
-  {name:"Wayan Merta", tour:"Sidemen Valley & Hidden Waterfall", spots:["Half-day tour"], duration:"Half day (6h)", vehicle:"Minivan — Toyota Innova, A/C", vehicleType:"Minivan", lang:["EN","DE","ID"], rating:"4.9 · 39 tours", price:"IDR 420,000", badge:"Speaks German", region:"Sidemen", services:["Drone","Photo"], femaleDriver:true, childFriendly:true},
-];
+// Baustein/Phase 5: Demo-Fahrer-Karten aus der Startseiten-Suche entfernt.
+// Nur noch echte, freigeschaltete Fahrer (via loadRealPublicListings unten) erscheinen hier.
+// Der Demo-Umschalter im Fahrer-Dashboard ("🎭 Demo — view as driver") ist davon NICHT betroffen,
+// der nutzt driverProfiles/driverDataStore weiter oben im Code.
+const drivers = [];
 
 function initials(name){ return name.split(' ').map(w=>w[0]).slice(0,2).join(''); }
 
