@@ -559,7 +559,7 @@
     background:none; border:none; color:var(--teal); font-family:'Public Sans'; font-size:0.75rem;
     font-weight:600; text-decoration:underline; cursor:pointer; padding:4px 0 0;
   }
-  .profile-links-row{ display:flex; justify-content:space-between; align-items:center; margin-top:2px; }
+  .profile-links-row{ display:flex; justify-content:flex-start; gap:28px; align-items:center; margin-top:6px; }
   .register-driver-btn{
     width:100%; background:var(--gold); color:var(--ink); border:none; font-weight:700; font-size:0.82rem;
     padding:10px; border-radius:5px; cursor:pointer; margin-bottom:20px; font-family:'Public Sans';
@@ -1638,7 +1638,8 @@
 <div class="view" id="view-admin">
   <div style="max-width:760px; margin:0 auto; padding:32px 20px;">
 
-    <div style="display:flex; justify-content:flex-end; margin-bottom:12px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
+      <p class="note" id="admin-current-account" style="margin:0;"></p>
       <button type="button" class="cancel-btn" style="padding:8px 16px; font-size:0.85rem;" onclick="handleDriverLogout()">🚪 Abmelden</button>
     </div>
 
@@ -5566,11 +5567,14 @@ function updateInboxDot(){
   const tabMail = document.getElementById('tab-driver-mail');
   if(tabMail) tabMail.style.display = unreadCount > 0 ? 'inline-block' : 'none';
 }
+// Baustein 11 Nachbesserung: Badge auch bei neuen, noch nicht geprüften Fahrer-Registrierungen zeigen,
+// nicht nur bei ungelesenen Nachrichten -- sonst übersieht man neue Anmeldungen leicht.
+let realPendingDriverCount = 0;
 function updateAdminMailBadge(){
   const tabMail = document.getElementById('tab-admin-mail');
   if(!tabMail) return;
   if(realDriverProfile){
-    const hasUnread = realAdminThreads.some(t=>t.unread_for_admin);
+    const hasUnread = realAdminThreads.some(t=>t.unread_for_admin) || realPendingDriverCount > 0;
     tabMail.style.display = hasUnread ? 'inline-flex' : 'none';
     return;
   }
@@ -6377,7 +6381,14 @@ function updateRegisterButtonVisibility(){
   if(btn) btn.style.display = realDriverProfile ? 'none' : '';
 }
 function openRealRegisterDriver(){
-  switchView('driver');
+  document.getElementById('view-customer').classList.remove('active');
+  document.getElementById('view-driver').classList.add('active');
+  document.getElementById('view-admin').classList.remove('active');
+  document.getElementById('tab-customer').classList.remove('active');
+  document.getElementById('tab-driver').classList.remove('active');
+  const regBtn = document.getElementById('tab-register-btn');
+  if(regBtn) regBtn.classList.add('active');
+  checkDriverAuthState(true);
   if(!realDriverProfile){ toggleAuthForm('signup'); }
   window.scrollTo({ top:0, behavior:'instant' });
 }
@@ -9132,17 +9143,25 @@ async function handleDriverSignup(){
   if(vehicleErr){ console.error('Fahrzeugdaten konnten nicht gespeichert werden:', vehicleErr); }
   else if(updatedDriver){ realDriverProfile = updatedDriver; }
 
-  // Dokumente einzeln in den privaten Speicherbereich hochladen
+  // Dokumente einzeln in den privaten Speicherbereich hochladen.
+  // Jede Datei einzeln in try/catch, damit ein Netzwerk-Aussetzer bei EINER Datei (z.B. Selfie)
+  // nicht dazu führt, dass die bereits erfolgreich hochgeladenen Dokumente nie gespeichert werden.
   const documents = {};
+  let uploadFailed = false;
   for(const f of SIGNUP_DOC_FIELDS){
     const input = document.getElementById('auth-signup-doc-'+f);
     if(input && input.files && input.files.length){
       const file = input.files[0];
       const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
       const path = `${realDriverProfile.id}/${f}.${ext}`;
-      const { error: upErr } = await supabaseClient.storage.from('driver-documents').upload(path, file, { upsert:true });
-      if(upErr){ console.error('Dokument "'+f+'" konnte nicht hochgeladen werden:', upErr); }
-      else { documents[f] = path; }
+      try{
+        const { error: upErr } = await supabaseClient.storage.from('driver-documents').upload(path, file, { upsert:true });
+        if(upErr){ console.error('Dokument "'+f+'" konnte nicht hochgeladen werden:', upErr); uploadFailed = true; }
+        else { documents[f] = path; }
+      } catch(uploadEx){
+        console.error('Dokument "'+f+'" konnte nicht hochgeladen werden (Ausnahme):', uploadEx);
+        uploadFailed = true;
+      }
     }
   }
   if(Object.keys(documents).length){
@@ -9347,8 +9366,10 @@ function switchView(view){
   document.getElementById('tab-customer').classList.toggle('active', view==='customer');
   document.getElementById('tab-driver').classList.toggle('active', view==='driver');
   document.getElementById('tab-admin').classList.toggle('active', view==='admin');
+  const regBtn = document.getElementById('tab-register-btn');
+  if(regBtn) regBtn.classList.remove('active');
   if(view==='driver'){ checkDriverAuthState(true); }
-  if(view==='admin'){ renderAdminList(); loadAdminPendingDrivers(); loadRealAdminMessages(); }
+  if(view==='admin'){ renderAdminCurrentAccount(); renderAdminList(); loadAdminPendingDrivers(); loadRealAdminMessages(); }
 }
 function switchViewProgrammatic(view){
   document.getElementById('view-customer').classList.toggle('active', view==='customer');
@@ -9357,8 +9378,10 @@ function switchViewProgrammatic(view){
   document.getElementById('tab-customer').classList.toggle('active', view==='customer');
   document.getElementById('tab-driver').classList.toggle('active', view==='driver');
   document.getElementById('tab-admin').classList.toggle('active', view==='admin');
+  const regBtn2 = document.getElementById('tab-register-btn');
+  if(regBtn2) regBtn2.classList.remove('active');
   if(view==='driver'){ checkDriverAuthState(true); }
-  if(view==='admin'){ renderAdminList(); loadAdminPendingDrivers(); loadRealAdminMessages(); }
+  if(view==='admin'){ renderAdminCurrentAccount(); renderAdminList(); loadAdminPendingDrivers(); loadRealAdminMessages(); }
 }
 function populateDemoDriverSwitcher(){
   const sel = document.getElementById('demo-driver-select');
@@ -9603,9 +9626,24 @@ async function renderAdminDocuments(){
   el.innerHTML = rows.join('');
 }
 // ---- echter Admin-Bereich (Baustein 9a): ausstehende Fahrer freischalten/ablehnen ----
+// Nachbesserung (3. August): zeigt im Admin-Bereich sichtbar, mit welchem Konto man gerade
+// eingeloggt ist -- verhindert Verwirrung, wenn aus Versehen ein Test-Fahrer-Konto statt des
+// echten Admin-Kontos (info@ryviobali.com) aktiv ist (Admin-Aktionen schlagen dann fehl).
+async function renderAdminCurrentAccount(){
+  const el = document.getElementById('admin-current-account');
+  if(!el) return;
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if(!session){ el.textContent = '⚠️ Nicht eingeloggt.'; return; }
+  const isAdmin = session.user.user_metadata && session.user.user_metadata.role === 'admin';
+  el.innerHTML = isAdmin
+    ? `Eingeloggt als: <strong>${escapeHtml(session.user.email)}</strong>`
+    : `⚠️ Eingeloggt als <strong>${escapeHtml(session.user.email)}</strong> — das ist <u>kein</u> Admin-Konto. Admin-Aktionen (Nachrichten senden, freischalten...) werden fehlschlagen. Bitte mit info@ryviobali.com anmelden.`;
+}
 async function loadAdminPendingDrivers(){
   const { data, error } = await supabaseClient.from('drivers').select('*').eq('status', 'pending').order('created_at', { ascending:true });
   if(error){ console.error('Ausstehende Fahrer konnten nicht geladen werden (evtl. nicht als Admin eingeloggt):', error); return; }
+  realPendingDriverCount = (data || []).length;
+  updateAdminMailBadge();
   renderRealAdminPendingDrivers(data || []);
 }
 function renderRealAdminPendingDrivers(list){
@@ -10465,6 +10503,18 @@ async function openAdminComposeMsg(){
   document.getElementById('admin-compose-modal-bg').classList.add('active');
 }
 function closeAdminComposeMsg(){ document.getElementById('admin-compose-modal-bg').classList.remove('active'); }
+// Nachbesserung (3. August): erkennt, ob ein Supabase-Fehler durch fehlende Admin-Rechte
+// verursacht wurde (RLS blockiert), und gibt dann einen verständlichen Hinweis statt "Etwas
+// ist schiefgelaufen" -- typischerweise weil aus Versehen ein Fahrer- statt das Admin-Konto
+// (info@ryviobali.com) eingeloggt ist.
+function describeAdminActionError(error){
+  const msg = (error && error.message || '').toLowerCase();
+  const isPermissionError = error && (error.code === '42501' || msg.includes('row-level security') || msg.includes('permission denied'));
+  if(isPermissionError){
+    return 'Keine Berechtigung — du bist vermutlich nicht mit dem Admin-Konto (info@ryviobali.com) eingeloggt. Bitte oben im Admin-Bereich prüfen, mit welchem Konto du aktuell angemeldet bist.';
+  }
+  return 'Etwas ist schiefgelaufen.';
+}
 async function sendAdminComposeMsg(){
   const driverId = document.getElementById('admin-compose-driver-select').value;
   const subject = document.getElementById('admin-compose-subject').value.trim();
@@ -10475,7 +10525,7 @@ async function sendAdminComposeMsg(){
   }
   if(realDriverProfile){
     const { error } = await supabaseClient.from('support_thread_messages').insert({ driver_id: driverId, sender:'admin', body });
-    if(error){ console.error('Nachricht konnte nicht gesendet werden:', error); document.getElementById('admin-compose-error').textContent = 'Etwas ist schiefgelaufen.'; return; }
+    if(error){ console.error('Nachricht konnte nicht gesendet werden:', error); document.getElementById('admin-compose-error').textContent = describeAdminActionError(error); return; }
     await supabaseClient.from('support_threads').update({ subject }).eq('driver_id', driverId);
     // Kopie zusaetzlich in den normalen Posteingang des Fahrers legen (wie in der Demo)
     const { error: msgErr } = await supabaseClient.from('driver_messages').insert({ driver_id: driverId, type:'admin', subject, body });
@@ -10633,7 +10683,7 @@ async function sendAdminMsgReply(){
   }
   if(realDriverProfile){
     const { error } = await supabaseClient.from('support_thread_messages').insert({ driver_id: currentAdminThreadDriverId, sender:'admin', body: reply });
-    if(error){ console.error('Antwort konnte nicht gesendet werden:', error); document.getElementById('admin-msg-reply-status').textContent = 'Etwas ist schiefgelaufen.'; return; }
+    if(error){ console.error('Antwort konnte nicht gesendet werden:', error); document.getElementById('admin-msg-reply-status').textContent = describeAdminActionError(error); return; }
     // Kopie zusaetzlich in den normalen Posteingang des Fahrers legen (wie in der Demo)
     const { error: msgErr } = await supabaseClient.from('driver_messages').insert({ driver_id: currentAdminThreadDriverId, type:'admin', subject: t('admin_msg_reply_subject'), body: reply });
     if(msgErr) console.error('Kopie im Posteingang konnte nicht angelegt werden:', msgErr);
