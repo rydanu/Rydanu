@@ -3079,10 +3079,12 @@ function loadSavedState(){
     const state = JSON.parse(raw);
     if(state.driverProfiles) driverProfiles = state.driverProfiles;
     if(state.driverDataStore) driverDataStore = state.driverDataStore;
-    if(state.drivers && Array.isArray(state.drivers)){
-      drivers.length = 0;
-      state.drivers.forEach(d => drivers.push(d));
-    }
+    // Nachbesserung (4. August): state.drivers wird bewusst NICHT mehr wiederhergestellt.
+    // Das ist die eigentliche Ursache, warum Demo-Fahrer-Karten (z.B. "Wayan Sudiartha") trotz
+    // leerem `drivers`-Array im Code (Phase 5) auf Geraeten/Browsern wieder auftauchen konnten,
+    // die die alte Demo-Version vor der Supabase-Umstellung schon mal benutzt hatten: der lokal
+    // gespeicherte Browser-Stand (localStorage) hat die alten Demo-Karten in die echte Suche
+    // zurueckgeschrieben. Die echte Suche laedt Fahrer ausschliesslich ueber loadRealPublicListings().
     if(state.calEvents) calEvents = state.calEvents;
     if(state.supportThreads) supportThreads = state.supportThreads;
     if(state.lastSettlementRunDateISO) lastSettlementRunDateISO = state.lastSettlementRunDateISO;
