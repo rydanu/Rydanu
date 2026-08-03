@@ -1264,7 +1264,7 @@
       <div class="form-row">
         <div class="form-field">
           <label>Date</label>
-          <input type="date" id="f-date" value="2026-07-16">
+          <input type="date" id="f-date">
         </div>
         <div class="form-field">
           <label>Guests</label>
@@ -1485,6 +1485,9 @@
   <div class="new-booking-banner" id="new-booking-banner" style="display:none;" onclick="goToNewBookings()">
     🔔 <span id="new-booking-banner-text"></span>
   </div>
+  <div class="new-booking-banner" id="new-request-banner" style="display:none; background:#1E5C3E;" onclick="goToNewRequests()">
+    ✨ <span id="new-request-banner-text"></span>
+  </div>
 
   <div class="dash-wrap" id="driver-dash-wrap" style="display:none;">
     <div class="dash-nav">
@@ -1690,8 +1693,12 @@
       <div class="dash-section" id="sec-requests" style="display:none;">
         <div class="dash-head"><div><h2 data-i18n="requests_title">Custom tour requests</h2><p data-i18n="requests_sub">Travelers who couldn't find exactly what they wanted asked you directly. Reply by creating a real tour offer through Ryvio.</p></div></div>
         <p class="note" style="margin:-8px 20px 16px; color:var(--danger);" data-i18n="requests_rule_note">⚠️ All requests must be answered with a tour offer created here. Arranging payment or bookings privately, outside Ryvio, is not allowed and may lead to account suspension.</p>
-        <button type="button" class="accept-btn" style="margin:0 20px 16px;" onclick="pendingOfferRequestIndex=null; openCustomOfferModal();" data-i18n="co_open_btn">✨ Create a custom offer</button>
+        <div class="period-tabs" id="requests-view-tabs">
+          <button type="button" class="period-btn active" data-view="open" onclick="setRequestsViewTab('open')" data-i18n="requests_tab_open">Open</button>
+          <button type="button" class="period-btn" data-view="declined" onclick="setRequestsViewTab('declined')" data-i18n="requests_tab_declined">Declined</button>
+        </div>
         <div class="panel" id="requests-list"></div>
+        <button type="button" class="link-btn" style="margin:14px 20px 4px;" onclick="pendingOfferRequestIndex=null; openCustomOfferModal();" data-i18n="co_open_btn_standalone">✨ Or create a custom offer without a request</button>
       </div>
 
       <div class="dash-section" id="sec-subscription" style="display:none;">
@@ -3456,6 +3463,7 @@ function openTourRequest(driverId){
   document.getElementById('tr-confirm-step').style.display = 'none';
   ['tr-name','tr-email','tr-phone','tr-destination','tr-notes'].forEach(id=>document.getElementById(id).value = '');
   document.getElementById('tr-date').value = '';
+  document.getElementById('tr-date').min = new Date().toISOString().slice(0,10);
   document.getElementById('tr-error').textContent = '';
   document.getElementById('tour-request-modal-bg').classList.add('active');
 }
@@ -5661,7 +5669,7 @@ function showDashSection(name){
   });
   if(name==='listings') renderListings();
   if(name==='bookings') renderAllBookings();
-  if(name==='requests') renderTourRequests();
+  if(name==='requests'){ renderTourRequests(); markRequestsSeen(); }
   if(name==='subscription') renderFeeStatements();
   if(name==='inbox'){ if(realDriverProfile) loadRealInbox(); else renderInbox(); }
 }
@@ -6462,17 +6470,30 @@ function getRequestRows(){
   if(realDriverProfile) return realTourInquiries;
   return (driverDataStore[currentDriverId] && driverDataStore[currentDriverId].tourRequests) || [];
 }
+let requestsViewTab = 'open';
+function setRequestsViewTab(view){
+  requestsViewTab = view;
+  document.querySelectorAll('#requests-view-tabs .period-btn').forEach(b=>b.classList.toggle('active', b.dataset.view===view));
+  renderTourRequests();
+}
+// Bugfix (heute): der Klick auf die Zeile oeffnete vorher zusaetzlich ein Detail-Popup mit einem
+// EIGENEN "Tourangebot erstellen"-Button -- zusammen mit dem separaten, allgemeinen Button ganz oben
+// im Bereich sah das wie ein doppelter Button aus und hat schonmal zum falschen (leeren) Formular
+// gefuehrt. Jetzt: genau EIN Button pro Anfrage, direkt in der Zeile, kein Zwischenschritt mehr.
 function renderTourRequests(){
-  const reqs = getRequestRows();
+  const allReqs = getRequestRows();
+  const reqs = allReqs
+    .map((r,i)=>({r,i}))
+    .filter(({r}) => requestsViewTab==='declined' ? r.status==='declined' : r.status!=='declined');
   const el = document.getElementById('requests-list');
   if(reqs.length === 0){
-    el.innerHTML = `<div class="empty-state">${t('requests_empty')}</div>`;
+    el.innerHTML = `<div class="empty-state">${requestsViewTab==='declined' ? t('requests_empty_declined') : t('requests_empty')}</div>`;
   } else {
-    el.innerHTML = reqs.map((r,i)=>{
+    el.innerHTML = reqs.map(({r,i})=>{
       const name = r.name || r.customer_name;
       const dateWanted = r.dateWanted || r.date_wanted;
       return `
-      <div class="booking-row" style="cursor:pointer;" onclick="openRequestDetail(${i})">
+      <div class="booking-row">
         <div>
           <div class="who">${name} — ${r.destination}</div>
           <div class="when">${dateWanted || '—'} · ${r.guests || '2'} ${t('lbl_guests')} · Ref ${r.ref}</div>
@@ -6480,8 +6501,8 @@ function renderTourRequests(){
         </div>
         <div class="row-actions">
           ${r.status==='pending'
-            ? `<button type="button" class="accept-btn" onclick="event.stopPropagation(); createOfferFromRequest(${i})">✨ ${t('tr_create_offer_btn')}</button>
-               <button type="button" class="cancel-btn" onclick="event.stopPropagation(); declineTourRequest(${i})">✕ ${t('tr_decline_btn')}</button>`
+            ? `<button type="button" class="accept-btn" onclick="createOfferFromRequest(${i})">✨ ${t('tr_create_offer_btn')}</button>
+               <button type="button" class="cancel-btn" onclick="declineTourRequest(${i})">✕ ${t('tr_decline_btn')}</button>`
             : (r.status==='declined'
               ? `<span class="mailbox-replied-tag" style="color:var(--danger);">✕ ${t('tr_declined_tag')}</span>`
               : `<span class="mailbox-replied-tag">✓ ${t('tr_offered_tag')}${r.offeredTourName ? ': ' + r.offeredTourName : ''}</span>`)
@@ -6507,38 +6528,48 @@ async function declineTourRequest(i){
   renderTourRequests();
   saveState();
 }
+// Baustein (Anfragen-Alarm): dieselbe Logik wie beim Buchungs-Alarm -- Umschlag oben, roter Punkt
+// am Menuepunkt "Anfragen", und ein auffaelliger Banner, sobald eine neue, noch nicht gesehene
+// Anfrage da ist. Wird als "gesehen" markiert, sobald der Fahrer den Anfragen-Bereich oeffnet.
+let driverUnseenRequestCount = 0;
 function updateRequestsDot(){
-  const pending = getRequestRows().filter(r=>r.status==='pending').length;
+  const rows = getRequestRows();
+  const pendingTotal = rows.filter(r=>r.status==='pending').length;
+  const unseenCount = realDriverProfile ? rows.filter(r=>r.status==='pending' && r.driver_seen===false).length : 0;
   const dot = document.getElementById('requests-dot');
   if(dot){
-    dot.style.display = pending>0 ? 'inline-block' : 'none';
-    dot.textContent = pending>0 ? String(pending) : '';
+    dot.style.display = pendingTotal>0 ? 'inline-block' : 'none';
+    dot.textContent = pendingTotal>0 ? String(pendingTotal) : '';
+  }
+  const navItem = dot ? dot.closest('.dash-nav-item') : null;
+  if(navItem) navItem.classList.toggle('has-unread', unseenCount>0);
+  driverUnseenRequestCount = unseenCount;
+  syncDriverTopbarMail();
+  const banner = document.getElementById('new-request-banner');
+  const bannerText = document.getElementById('new-request-banner-text');
+  if(banner && bannerText){
+    if(unseenCount > 0){
+      bannerText.textContent = unseenCount === 1 ? t('new_request_banner_one') : t('new_request_banner_many').replace('{n}', unseenCount);
+      banner.style.display = 'flex';
+    } else {
+      banner.style.display = 'none';
+    }
   }
 }
-let pendingOfferRequestIndex = null;
-function openRequestDetail(i){
-  const r = getRequestRows()[i];
-  if(!r) return;
-  const name = r.name || r.customer_name;
-  const dateWanted = r.dateWanted || r.date_wanted;
-  document.getElementById('rd-detail-title').textContent = name + ' — ' + r.destination;
-  document.getElementById('rd-detail-meta').textContent = (dateWanted || '—') + ' · ' + (r.guests || '2') + ' ' + t('lbl_guests') + ' · Ref ' + r.ref;
-  document.getElementById('rd-detail-notes').textContent = r.notes ? `"${r.notes}"` : t('rd_detail_no_msg');
-  const actions = document.getElementById('rd-detail-actions');
-  if(r.status === 'pending'){
-    actions.innerHTML = `
-      <button type="button" class="accept-btn" style="flex:1;" onclick="closeRequestDetail(); createOfferFromRequest(${i})">✨ ${t('tr_create_offer_btn')}</button>
-      <button type="button" class="cancel-btn" style="flex:1;" onclick="closeRequestDetail(); declineTourRequest(${i})">✕ ${t('tr_decline_btn')}</button>`;
-  } else if(r.status === 'declined'){
-    actions.innerHTML = `<span class="mailbox-replied-tag" style="color:var(--danger);">✕ ${t('tr_declined_tag')}</span>`;
-  } else {
-    actions.innerHTML = `<span class="mailbox-replied-tag">✓ ${t('tr_offered_tag')}${r.offeredTourName ? ': ' + r.offeredTourName : ''}</span>`;
-  }
-  document.getElementById('request-detail-modal-bg').classList.add('active');
+function goToNewRequests(){ showDashSection('requests'); }
+// wird beim Oeffnen des Anfragen-Bereichs aufgerufen (siehe showDashSection)
+function markRequestsSeen(){
+  if(!realDriverProfile) return;
+  const unseen = realTourInquiries.filter(r=>r.status==='pending' && r.driver_seen===false);
+  if(unseen.length === 0) return;
+  unseen.forEach(r=>{ r.driver_seen = true; });
+  updateRequestsDot();
+  supabaseClient.from('tour_inquiries').update({driver_seen:true}).in('id', unseen.map(r=>r.id)).then(({error})=>{
+    if(error) console.error('Anfragen konnten nicht als gesehen markiert werden:', error);
+  });
 }
-function closeRequestDetail(){ document.getElementById('request-detail-modal-bg').classList.remove('active'); }
-document.getElementById('request-detail-modal-bg').addEventListener('click', e=>{ if(e.target.id==='request-detail-modal-bg') closeRequestDetail(); });
 document.getElementById('custom-offer-modal-bg').addEventListener('click', e=>{ if(e.target.id==='custom-offer-modal-bg') closeCustomOfferModal(); });
+let pendingOfferRequestIndex = null;
 function createOfferFromRequest(i){
   pendingOfferRequestIndex = i;
   const r = getRequestRows()[i];
@@ -6585,6 +6616,8 @@ function openCustomOfferModal(){
     if(el) el.value = '';
   });
   document.getElementById('co-error').textContent = '';
+  const coDate = document.getElementById('co-date');
+  if(coDate) coDate.min = new Date().toISOString().slice(0,10);
   document.getElementById('custom-offer-modal-bg').classList.add('active');
 }
 function closeCustomOfferModal(){ document.getElementById('custom-offer-modal-bg').classList.remove('active'); }
@@ -7544,6 +7577,9 @@ const translations = {
     sort_best: "Best match", sort_rating: "Highest rated", sort_reviews: "Most reviewed", sort_price_low: "Price: low to high", sort_price_high: "Price: high to low", currency_picker_label: "Show prices in",
     sr_open_btn: "Already traveled with this driver? Leave a review", sr_eyebrow: "Leave a review", sr_title: "How was your trip?", mb_review_title2: "Your name", sr_err_name: "Please enter your name.",
     nav_requests: "Requests", requests_title: "Custom tour requests", requests_sub: "Travelers who couldn't find exactly what they wanted asked you directly. Reply by creating a real tour offer through Ryvio.", requests_empty: "No custom tour requests yet.",
+    requests_tab_open: "Open", requests_tab_declined: "Declined", requests_empty_declined: "No declined requests.",
+    co_open_btn_standalone: "✨ Or create a custom offer without a request",
+    new_request_banner_one: "You have a new custom tour request — tap to view it", new_request_banner_many: "You have {n} new custom tour requests — tap to view them",
     tr_open_btn: "Don't see what you want? Request a custom tour", tr_eyebrow: "Custom tour request", tr_title: "Tell us what you'd like",
     tr_hint: "Your driver will review this and, if they can help, prepare a tour offer for you through Ryvio — with a proper price and booking, not a private side deal.",
     tr_destination_label: "What would you like to do / see?", tr_destination_ph: "e.g. 3-day trip to Sidemen & Munduk",
@@ -7839,6 +7875,9 @@ const translations = {
     sort_best: "Beste Übereinstimmung", sort_rating: "Beste Bewertung", sort_reviews: "Meiste Bewertungen", sort_price_low: "Preis aufsteigend", sort_price_high: "Preis absteigend", currency_picker_label: "Preise anzeigen in",
     sr_open_btn: "Schon mal mit diesem Fahrer unterwegs gewesen? Bewertung hinterlassen", sr_eyebrow: "Bewertung hinterlassen", sr_title: "Wie war deine Tour?", mb_review_title2: "Dein Name", sr_err_name: "Bitte gib deinen Namen ein.",
     nav_requests: "Anfragen", requests_title: "Individuelle Touranfragen", requests_sub: "Reisende, die nicht genau das Passende gefunden haben, haben dich direkt angefragt. Antworte, indem du über Ryvio ein echtes Tourangebot erstellst.", requests_empty: "Noch keine individuellen Touranfragen.",
+    requests_tab_open: "Offen", requests_tab_declined: "Abgelehnt", requests_empty_declined: "Keine abgelehnten Anfragen.",
+    co_open_btn_standalone: "✨ Oder individuelles Angebot ohne Anfrage erstellen",
+    new_request_banner_one: "Du hast eine neue individuelle Touranfrage — antippen zum Ansehen", new_request_banner_many: "Du hast {n} neue individuelle Touranfragen — antippen zum Ansehen",
     tr_open_btn: "Nicht das Richtige dabei? Individuelle Tour anfragen", tr_eyebrow: "Individuelle Touranfrage", tr_title: "Sag uns, was du dir wünschst",
     tr_hint: "Dein Fahrer prüft die Anfrage und erstellt, falls möglich, ein Tourangebot über Ryvio für dich — mit richtigem Preis und Buchung, kein privates Nebengeschäft.",
     tr_destination_label: "Was möchtest du unternehmen / sehen?", tr_destination_ph: "z.B. 3-tägige Tour nach Sidemen &amp; Munduk",
@@ -8134,6 +8173,9 @@ const translations = {
     sort_best: "Kecocokan terbaik", sort_rating: "Rating tertinggi", sort_reviews: "Paling banyak diulas", sort_price_low: "Harga: rendah ke tinggi", sort_price_high: "Harga: tinggi ke rendah", currency_picker_label: "Tampilkan harga dalam",
     sr_open_btn: "Pernah bepergian dengan sopir ini? Tinggalkan ulasan", sr_eyebrow: "Tinggalkan ulasan", sr_title: "Bagaimana perjalanan Anda?", mb_review_title2: "Nama Anda", sr_err_name: "Mohon masukkan nama Anda.",
     nav_requests: "Permintaan", requests_title: "Permintaan tur khusus", requests_sub: "Wisatawan yang tidak menemukan yang mereka cari langsung menghubungi Anda. Balas dengan membuat penawaran tur nyata melalui Ryvio.", requests_empty: "Belum ada permintaan tur khusus.",
+    requests_tab_open: "Terbuka", requests_tab_declined: "Ditolak", requests_empty_declined: "Tidak ada permintaan yang ditolak.",
+    co_open_btn_standalone: "✨ Atau buat penawaran khusus tanpa permintaan",
+    new_request_banner_one: "Anda memiliki permintaan tur khusus baru — ketuk untuk melihatnya", new_request_banner_many: "Anda memiliki {n} permintaan tur khusus baru — ketuk untuk melihatnya",
     tr_open_btn: "Tidak menemukan yang Anda cari? Minta tur khusus", tr_eyebrow: "Permintaan tur khusus", tr_title: "Beri tahu kami keinginan Anda",
     tr_hint: "Sopir Anda akan meninjau ini dan, jika bisa membantu, menyiapkan penawaran tur untuk Anda melalui Ryvio — dengan harga dan pemesanan yang tepat, bukan kesepakatan pribadi.",
     tr_destination_label: "Apa yang ingin Anda lakukan / lihat?", tr_destination_ph: "mis. perjalanan 3 hari ke Sidemen &amp; Munduk",
@@ -9137,6 +9179,14 @@ function openModal(d){
   currentDriver = d;
   document.getElementById('modal-bg').classList.add('active');
   goToStep('profile');
+  // Bugfix: das Datumsfeld stand fest auf einem alten Demo-Datum (16. Juli) und erlaubte
+  // Buchungen in der Vergangenheit. Jetzt: Standardwert = heute, fruehester waehlbarer Tag = heute.
+  const todayISO = new Date().toISOString().slice(0,10);
+  const dateInput = document.getElementById('f-date');
+  if(dateInput){
+    dateInput.min = todayISO;
+    if(!dateInput.value || dateInput.value < todayISO) dateInput.value = todayISO;
+  }
   try{
   document.getElementById('modal-name').textContent = d.name;
   const avatar = document.getElementById('modal-avatar');
@@ -11766,7 +11816,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v136</div>
+<div id="version-footer" style="position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v138</div>
 
 </body>
 </html>
