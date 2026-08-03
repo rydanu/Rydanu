@@ -1690,7 +1690,7 @@
       <div class="dash-section" id="sec-requests" style="display:none;">
         <div class="dash-head"><div><h2 data-i18n="requests_title">Custom tour requests</h2><p data-i18n="requests_sub">Travelers who couldn't find exactly what they wanted asked you directly. Reply by creating a real tour offer through Ryvio.</p></div></div>
         <p class="note" style="margin:-8px 20px 16px; color:var(--danger);" data-i18n="requests_rule_note">⚠️ All requests must be answered with a tour offer created here. Arranging payment or bookings privately, outside Ryvio, is not allowed and may lead to account suspension.</p>
-        <button type="button" class="accept-btn" style="margin:0 20px 16px;" onclick="openCustomOfferModal()" data-i18n="co_open_btn">✨ Create a custom offer</button>
+        <button type="button" class="accept-btn" style="margin:0 20px 16px;" onclick="pendingOfferRequestIndex=null; openCustomOfferModal();" data-i18n="co_open_btn">✨ Create a custom offer</button>
         <div class="panel" id="requests-list"></div>
       </div>
 
@@ -3460,7 +3460,7 @@ function openTourRequest(driverId){
   document.getElementById('tour-request-modal-bg').classList.add('active');
 }
 function closeTourRequest(){ document.getElementById('tour-request-modal-bg').classList.remove('active'); }
-function submitTourRequest(){
+async function submitTourRequest(){
   const name = document.getElementById('tr-name').value.trim();
   const email = document.getElementById('tr-email').value.trim();
   const phone = document.getElementById('tr-phone').value.trim();
@@ -3470,18 +3470,39 @@ function submitTourRequest(){
     return;
   }
   document.getElementById('tr-error').textContent = '';
+  const dateWanted = document.getElementById('tr-date').value;
+  const guests = document.getElementById('tr-guests').value;
+  const notes = document.getElementById('tr-notes').value.trim();
+  const ref = 'TR-' + Math.floor(10000 + Math.random()*89999);
+  // Punkt 3 (heute): echte Fahrer haben kein driverProfiles[id] (das ist nur die Demo-Liste) --
+  // dasselbe Erkennungsmuster wie beim Ein-/Ausblenden des Buttons weiter oben im Code.
+  const isRealDriver = !driverProfiles[trRequestDriverId];
+  if(isRealDriver){
+    const { error } = await supabaseClient.from('tour_inquiries').insert({
+      driver_id: trRequestDriverId, customer_name: name, customer_email: email || null,
+      customer_phone: phone || null, destination, date_wanted: dateWanted || null,
+      guests, notes: notes || null, ref
+    });
+    if(error){
+      console.error('Anfrage konnte nicht gespeichert werden:', error);
+      document.getElementById('tr-error').textContent = t('tr_save_err');
+      return;
+    }
+    if(trRequestDriverId === realDriverProfile?.id) loadRealTourInquiries();
+    document.getElementById('tr-confirm-ref').textContent = ref;
+    document.getElementById('tr-form-step').style.display = 'none';
+    document.getElementById('tr-confirm-step').style.display = 'block';
+    return;
+  }
   const store = driverDataStore[trRequestDriverId];
   if(!store) return;
   if(!Array.isArray(store.tourRequests)) store.tourRequests = [];
-  const ref = 'TR-' + Math.floor(10000 + Math.random()*89999);
   store.tourRequests.unshift({
     ref, name, email, phone,
-    destination, dateWanted: document.getElementById('tr-date').value,
-    guests: document.getElementById('tr-guests').value,
-    notes: document.getElementById('tr-notes').value.trim(),
+    destination, dateWanted, guests, notes,
     status: 'pending', offeredTourName: null, date: 'Jul 21, 2026'
   });
-  pushInboxMessage(trRequestDriverId, t('tr_inbox_title'), name + ' — ' + destination + (document.getElementById('tr-date').value ? ' (' + document.getElementById('tr-date').value + ')' : ''), {type:'tourRequest', ref});
+  pushInboxMessage(trRequestDriverId, t('tr_inbox_title'), name + ' — ' + destination + (dateWanted ? ' (' + dateWanted + ')' : ''), {type:'tourRequest', ref});
   if(trRequestDriverId === currentDriverId){ updateInboxDot(); renderTourRequests(); }
   saveState();
   document.getElementById('tr-confirm-ref').textContent = ref;
@@ -3860,10 +3881,11 @@ function renderRealDriverPage(isOwner){
       `).join('')
     : `<div class="empty-state">${t('dp_reviews_empty')}</div>`;
   // Kontaktformular ist noch Demo-only (keine echte Anbindung) -> fuer echte Seiten ausgeblendet.
-  // Die Standalone-Bewertung ist jetzt auch fuer echte Fahrer angebunden (siehe submitStandaloneReview).
+  // Die Standalone-Bewertung und die individuelle Touranfrage sind jetzt auch fuer echte Fahrer
+  // angebunden (siehe submitStandaloneReview / submitTourRequest).
   document.getElementById('dp-message-section').style.display = 'none';
   document.getElementById('dp-leave-review-btn').style.display = isOwner ? 'none' : 'block';
-  document.getElementById('dp-request-tour-btn').style.display = 'none';
+  document.getElementById('dp-request-tour-btn').style.display = isOwner ? 'none' : 'block';
 }
 // ---- echte Foto-/Video-Galerie auf der My Page (Baustein 10) ----
 function renderRealGallery(isOwner){
@@ -6426,18 +6448,34 @@ function openRequestFromInboxMessage(msgIdx){
     createOfferFromRequest(reqIdx);
   }
 }
+// Punkt 3 (heute): echte Anfragen kommen jetzt aus tour_inquiries (Supabase), Demo-Fahrer nutzen
+// weiterhin driverDataStore. getRequestRows() liefert eine einheitliche Liste, egal welche Quelle.
+let realTourInquiries = [];
+async function loadRealTourInquiries(){
+  if(!realDriverProfile) return;
+  const { data, error } = await supabaseClient.from('tour_inquiries').select('*').eq('driver_id', realDriverProfile.id).order('created_at', {ascending:false});
+  if(error){ console.error('Anfragen konnten nicht geladen werden:', error); return; }
+  realTourInquiries = data || [];
+  renderTourRequests();
+}
+function getRequestRows(){
+  if(realDriverProfile) return realTourInquiries;
+  return (driverDataStore[currentDriverId] && driverDataStore[currentDriverId].tourRequests) || [];
+}
 function renderTourRequests(){
-  const store = driverDataStore[currentDriverId];
-  const reqs = store.tourRequests || [];
+  const reqs = getRequestRows();
   const el = document.getElementById('requests-list');
   if(reqs.length === 0){
     el.innerHTML = `<div class="empty-state">${t('requests_empty')}</div>`;
   } else {
-    el.innerHTML = reqs.map((r,i)=>`
+    el.innerHTML = reqs.map((r,i)=>{
+      const name = r.name || r.customer_name;
+      const dateWanted = r.dateWanted || r.date_wanted;
+      return `
       <div class="booking-row" style="cursor:pointer;" onclick="openRequestDetail(${i})">
         <div>
-          <div class="who">${r.name} — ${r.destination}</div>
-          <div class="when">${r.dateWanted || '—'} · ${r.guests || '2'} ${t('lbl_guests')} · Ref ${r.ref}</div>
+          <div class="who">${name} — ${r.destination}</div>
+          <div class="when">${dateWanted || '—'} · ${r.guests || '2'} ${t('lbl_guests')} · Ref ${r.ref}</div>
           ${r.notes ? `<div class="when" style="font-style:italic;">"${r.notes}"</div>` : ''}
         </div>
         <div class="row-actions">
@@ -6446,26 +6484,31 @@ function renderTourRequests(){
                <button type="button" class="cancel-btn" onclick="event.stopPropagation(); declineTourRequest(${i})">✕ ${t('tr_decline_btn')}</button>`
             : (r.status==='declined'
               ? `<span class="mailbox-replied-tag" style="color:var(--danger);">✕ ${t('tr_declined_tag')}</span>`
-              : `<span class="mailbox-replied-tag">✓ ${t('tr_offered_tag')}: ${r.offeredTourName}</span>`)
+              : `<span class="mailbox-replied-tag">✓ ${t('tr_offered_tag')}${r.offeredTourName ? ': ' + r.offeredTourName : ''}</span>`)
           }
         </div>
       </div>
-    `).join('');
+    `;}).join('');
   }
   updateRequestsDot();
 }
-function declineTourRequest(i){
-  const store = driverDataStore[currentDriverId];
-  const r = store.tourRequests[i];
+async function declineTourRequest(i){
+  const r = getRequestRows()[i];
   if(!r) return;
-  if(!confirm(t('confirm_decline_request') + ' ' + r.name + '?')) return;
+  if(!confirm(t('confirm_decline_request') + ' ' + (r.name || r.customer_name) + '?')) return;
+  if(realDriverProfile){
+    const { error } = await supabaseClient.from('tour_inquiries').update({status:'declined'}).eq('id', r.id);
+    if(error){ console.error('Konnte nicht abgelehnt werden:', error); return; }
+    r.status = 'declined';
+    renderTourRequests();
+    return;
+  }
   r.status = 'declined';
   renderTourRequests();
   saveState();
 }
 function updateRequestsDot(){
-  const store = driverDataStore[currentDriverId];
-  const pending = ((store && store.tourRequests) || []).filter(r=>r.status==='pending').length;
+  const pending = getRequestRows().filter(r=>r.status==='pending').length;
   const dot = document.getElementById('requests-dot');
   if(dot){
     dot.style.display = pending>0 ? 'inline-block' : 'none';
@@ -6474,11 +6517,12 @@ function updateRequestsDot(){
 }
 let pendingOfferRequestIndex = null;
 function openRequestDetail(i){
-  const store = driverDataStore[currentDriverId];
-  const r = store.tourRequests[i];
+  const r = getRequestRows()[i];
   if(!r) return;
-  document.getElementById('rd-detail-title').textContent = r.name + ' — ' + r.destination;
-  document.getElementById('rd-detail-meta').textContent = (r.dateWanted || '—') + ' · ' + (r.guests || '2') + ' ' + t('lbl_guests') + ' · Ref ' + r.ref;
+  const name = r.name || r.customer_name;
+  const dateWanted = r.dateWanted || r.date_wanted;
+  document.getElementById('rd-detail-title').textContent = name + ' — ' + r.destination;
+  document.getElementById('rd-detail-meta').textContent = (dateWanted || '—') + ' · ' + (r.guests || '2') + ' ' + t('lbl_guests') + ' · Ref ' + r.ref;
   document.getElementById('rd-detail-notes').textContent = r.notes ? `"${r.notes}"` : t('rd_detail_no_msg');
   const actions = document.getElementById('rd-detail-actions');
   if(r.status === 'pending'){
@@ -6488,7 +6532,7 @@ function openRequestDetail(i){
   } else if(r.status === 'declined'){
     actions.innerHTML = `<span class="mailbox-replied-tag" style="color:var(--danger);">✕ ${t('tr_declined_tag')}</span>`;
   } else {
-    actions.innerHTML = `<span class="mailbox-replied-tag">✓ ${t('tr_offered_tag')}: ${r.offeredTourName}</span>`;
+    actions.innerHTML = `<span class="mailbox-replied-tag">✓ ${t('tr_offered_tag')}${r.offeredTourName ? ': ' + r.offeredTourName : ''}</span>`;
   }
   document.getElementById('request-detail-modal-bg').classList.add('active');
 }
@@ -6497,8 +6541,20 @@ document.getElementById('request-detail-modal-bg').addEventListener('click', e=>
 document.getElementById('custom-offer-modal-bg').addEventListener('click', e=>{ if(e.target.id==='custom-offer-modal-bg') closeCustomOfferModal(); });
 function createOfferFromRequest(i){
   pendingOfferRequestIndex = i;
-  const store = driverDataStore[currentDriverId];
-  const r = store.tourRequests[i];
+  const r = getRequestRows()[i];
+  if(!r) return;
+  if(realDriverProfile){
+    // echte Anfrage -> vorausgefuelltes individuelles Angebot (bestehender Baustein C/D-Flow),
+    // NICHT mehr die alte oeffentliche Angebots-Erstellung wie frueher im Demo-Pfad
+    openCustomOfferModal();
+    document.getElementById('co-name').value = r.customer_name || '';
+    document.getElementById('co-email').value = r.customer_email || '';
+    document.getElementById('co-phone').value = r.customer_phone || '';
+    document.getElementById('co-desc').value = r.destination || '';
+    if(r.date_wanted) document.getElementById('co-date').value = r.date_wanted;
+    document.getElementById('co-notes').value = r.notes ? (t('co_prefill_from_request') + ' "' + r.notes + '"') : '';
+    return;
+  }
   showDashSection('listings');
   if(document.getElementById('add-listing-form').style.display === 'none'){
     toggleAddForm();
@@ -6554,12 +6610,23 @@ async function submitCustomOffer(){
     customer_name: name, customer_email: email, customer_phone: phone || null,
     tour_description: desc, price_idr: priceNum,
     proposed_date: dateVal, pickup: pickupVal, notes: notesVal
-  }).select('token').single();
+  }).select('id, token').single();
   btn.disabled = false;
   if(error){
     console.error('Angebot konnte nicht erstellt werden:', error);
     errEl.textContent = t('co_save_err');
     return;
+  }
+  // Punkt 3 (heute): falls dieses Angebot als Antwort auf eine eingegangene Anfrage erstellt
+  // wurde, die Anfrage jetzt als "beantwortet" markieren und mit dem Angebot verknuepfen
+  if(pendingOfferRequestIndex !== null && realTourInquiries[pendingOfferRequestIndex]){
+    const inquiry = realTourInquiries[pendingOfferRequestIndex];
+    supabaseClient.from('tour_inquiries').update({ status:'offered', offer_request_id: data.id }).eq('id', inquiry.id).then(({error})=>{
+      if(error) console.error('Anfrage konnte nicht verknuepft werden:', error);
+    });
+    inquiry.status = 'offered';
+    pendingOfferRequestIndex = null;
+    renderTourRequests();
   }
   // Baustein D: der Link wird jetzt automatisch per E-Mail ueber Resend an den Kunden verschickt.
   // Schlaegt der Mail-Versand fehl, bleibt das Angebot trotzdem gespeichert -- der Link wird dann
@@ -7483,6 +7550,7 @@ const translations = {
     tr_notes_label: "Notes", tr_notes_ph: "Anything else your driver should know...",
     tr_submit_btn: "Send request", tr_sent_note: "Your request has been sent to your driver.", tr_check_hint: "Keep this reference — use \"Find my booking\" on the homepage anytime to check whether your driver has prepared an offer yet.", tr_done_btn: "Done",
     tr_err: "Please enter your name and what you'd like to do.", tr_inbox_title: "✨ New custom tour request",
+    tr_save_err: "Couldn't send your request — please try again.", co_prefill_from_request: "From the traveler's request:",
     tr_create_offer_btn: "Create tour offer", tr_offered_tag: "Offered", tr_offered_tour_label: "Offered tour", tr_view_book_btn: "View & book this tour",
     rd_detail_eyebrow: "Tour request", rd_detail_msg_label: "Traveler's message", rd_detail_no_msg: "No message provided.",
     tr_status_offered: "Offer ready", tr_status_pending: "Awaiting driver", tr_note_offered: "Good news — your driver has prepared a tour for your request. Tap below to view and book it.", tr_note_pending: "Your driver hasn't prepared an offer yet. Check back later, or contact them directly.", tr_decline_btn: "Decline", tr_declined_tag: "Declined", confirm_decline_request: "Decline this request from", tr_status_declined: "Not available", tr_note_declined: "Unfortunately this driver isn't able to take on your request right now. Please try requesting a custom tour from another driver on Ryvio — many others may be a great fit for what you're looking for.",
@@ -7777,6 +7845,7 @@ const translations = {
     tr_notes_label: "Notizen", tr_notes_ph: "Was dein Fahrer sonst noch wissen sollte...",
     tr_submit_btn: "Anfrage senden", tr_sent_note: "Deine Anfrage wurde an deinen Fahrer gesendet.", tr_check_hint: "Notiere dir diese Referenz — prüfe jederzeit über \"Meine Buchung finden\" auf der Startseite, ob dein Fahrer ein Angebot erstellt hat.", tr_done_btn: "Fertig",
     tr_err: "Bitte gib deinen Namen und dein Wunsch ein.", tr_inbox_title: "✨ Neue individuelle Touranfrage",
+    tr_save_err: "Anfrage konnte nicht gesendet werden — bitte erneut versuchen.", co_prefill_from_request: "Aus der Anfrage des Reisenden:",
     tr_create_offer_btn: "Tourangebot erstellen", tr_offered_tag: "Angeboten", tr_offered_tour_label: "Angebotene Tour", tr_view_book_btn: "Tour ansehen &amp; buchen",
     rd_detail_eyebrow: "Touranfrage", rd_detail_msg_label: "Nachricht des Reisenden", rd_detail_no_msg: "Keine Nachricht angegeben.",
     tr_status_offered: "Angebot bereit", tr_status_pending: "Wartet auf Fahrer", tr_note_offered: "Gute Nachricht — dein Fahrer hat eine Tour für deine Anfrage erstellt. Tippe unten, um sie anzusehen und zu buchen.", tr_note_pending: "Dein Fahrer hat noch kein Angebot erstellt. Schau später nochmal vorbei oder kontaktiere ihn direkt.", tr_decline_btn: "Ablehnen", tr_declined_tag: "Abgelehnt", confirm_decline_request: "Diese Anfrage ablehnen von", tr_status_declined: "Nicht möglich", tr_note_declined: "Dieser Fahrer kann deine Anfrage aktuell leider nicht annehmen. Bitte frag gerne einen anderen Fahrer auf Ryvio nach einer individuellen Tour an — viele andere passen bestimmt gut zu dem, was du suchst.",
@@ -8071,6 +8140,7 @@ const translations = {
     tr_notes_label: "Catatan", tr_notes_ph: "Hal lain yang perlu diketahui sopir Anda...",
     tr_submit_btn: "Kirim permintaan", tr_sent_note: "Permintaan Anda telah dikirim ke sopir Anda.", tr_check_hint: "Simpan referensi ini — gunakan \"Temukan pemesanan saya\" di beranda kapan saja untuk memeriksa apakah sopir Anda sudah menyiapkan penawaran.", tr_done_btn: "Selesai",
     tr_err: "Mohon masukkan nama Anda dan apa yang Anda inginkan.", tr_inbox_title: "✨ Permintaan tur khusus baru",
+    tr_save_err: "Permintaan tidak dapat dikirim — silakan coba lagi.", co_prefill_from_request: "Dari permintaan wisatawan:",
     tr_create_offer_btn: "Buat penawaran tur", tr_offered_tag: "Ditawarkan", tr_offered_tour_label: "Tur yang ditawarkan", tr_view_book_btn: "Lihat &amp; pesan tur ini",
     rd_detail_eyebrow: "Permintaan tur", rd_detail_msg_label: "Pesan wisatawan", rd_detail_no_msg: "Tidak ada pesan.",
     tr_status_offered: "Penawaran siap", tr_status_pending: "Menunggu sopir", tr_note_offered: "Kabar baik — sopir Anda telah menyiapkan tur untuk permintaan Anda. Ketuk di bawah untuk melihat dan memesannya.", tr_note_pending: "Sopir Anda belum menyiapkan penawaran. Periksa lagi nanti, atau hubungi mereka langsung.", tr_decline_btn: "Tolak", tr_declined_tag: "Ditolak", confirm_decline_request: "Tolak permintaan ini dari", tr_status_declined: "Tidak tersedia", tr_note_declined: "Sayangnya sopir ini tidak dapat menerima permintaan Anda saat ini. Silakan coba minta tur khusus dari sopir lain di Ryvio — banyak sopir lain mungkin sangat cocok untuk apa yang Anda cari.",
@@ -9120,7 +9190,7 @@ function openModal(d){
   const pageLink = document.getElementById('modal-page-link');
   if(pageLink) pageLink.style.display = (d.ownerId && (driverProfiles[d.ownerId] || d.isReal)) ? 'inline-block' : 'none';
   const reqTourBtn = document.getElementById('modal-request-tour-btn');
-  if(reqTourBtn) reqTourBtn.style.display = (d.ownerId && driverProfiles[d.ownerId]) ? 'block' : 'none';
+  if(reqTourBtn) reqTourBtn.style.display = d.ownerId ? 'block' : 'none';
   const startRegions = d.serviceRegions==='all' ? t('all_regions')
     : (Array.isArray(d.serviceRegions) && d.serviceRegions.length ? d.serviceRegions.join(', ') : d.region);
   document.getElementById('modal-start-regions').textContent = '🚐 ' + startRegions;
@@ -9463,7 +9533,13 @@ ${bpt('driverFeeLine')}</div>`;
     const feePercent = 10;
     const feeIdr = Math.round(priceNum * feePercent / 100);
     const depositIdr = Math.round(priceNum * 0.2);
+    // Bugfix: die ID wird jetzt im Browser erzeugt statt per .select() zurueckgelesen -- ein
+    // nicht eingeloggter Kunde darf laut Datenbank-Regeln zwar eine Buchung ANLEGEN, aber nicht
+    // wieder AUSLESEN (nur der Fahrer/Admin darf das). Das .select() danach liess deshalb den
+    // ganzen Vorgang mit "row-level security policy"-Fehler fehlschlagen -- keine Buchung kam an.
+    const newBookingId = crypto.randomUUID();
     supabaseClient.from('bookings').insert({
+      id: newBookingId,
       listing_id: currentDriver.dbListingId || null,
       driver_id: currentDriver.ownerId,
       customer_name: name,
@@ -9476,10 +9552,10 @@ ${bpt('driverFeeLine')}</div>`;
       deposit_idr: depositIdr,
       fee_percent_applied: feePercent,
       fee_idr: feeIdr
-    }).select('id').single().then(({ data, error }) => {
+    }).then(({ error }) => {
       if(error){ console.error('Buchung konnte nicht gespeichert werden:', error); return; }
       // Baustein E: bestaetigt dem Kunden per Mail, dass die Buchungsanfrage angekommen ist
-      supabaseClient.functions.invoke('send-tour-offer-email', { body: { type: 'booking_received', bookingId: data.id } })
+      supabaseClient.functions.invoke('send-tour-offer-email', { body: { type: 'booking_received', bookingId: newBookingId } })
         .catch(err=>console.error('Bestaetigungs-Mail (Buchung erhalten) fehlgeschlagen:', err));
     });
     lastBookingRef = ref;
@@ -10114,6 +10190,7 @@ async function checkDriverAuthState(silent){
   applyRealDriverProfileToUI(driverRow);
   loadRealListings();
   loadRealBookings();
+  loadRealTourInquiries();
   loadRealInbox();
   refreshSupportBadgeForDriver();
 }
@@ -11686,6 +11763,10 @@ if ('serviceWorker' in navigator) {
 </script>
 
 </div><!-- /#site-content -->
+
+<!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
+     damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
+<div id="version-footer" style="position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v136</div>
 
 </body>
 </html>
