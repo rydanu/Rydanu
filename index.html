@@ -455,6 +455,25 @@
   .dash-nav-item.has-unread{ color:var(--danger); font-weight:700; }
   .dash-nav-item.has-unread.active{ color:var(--paper); }
   .inbox-row{ padding:14px 20px; border-bottom:1px solid var(--line); }
+  /* Bugbau (5. August): X-Loeschen-Button oben rechts in der Nachrichtenzeile, nur im Archiv sichtbar */
+  .inbox-delete-x{
+    position:absolute; top:10px; right:14px; background:none; border:none; cursor:pointer;
+    font-size:1rem; line-height:1; color:var(--ink-soft); padding:4px 6px; border-radius:4px;
+  }
+  .inbox-delete-x:hover{ color:var(--danger); background:var(--paper-dim); }
+  .mailbox-delete-x{
+    background:none; border:none; cursor:pointer; font-size:1rem; line-height:1;
+    color:var(--ink-soft); padding:4px 6px; border-radius:4px; margin-left:6px;
+  }
+  .mailbox-delete-x:hover{ color:var(--danger); background:var(--paper-dim); }
+  /* Bugbau (5. August): Upload-Bereich in der "Dokument erneut hochladen"-Nachricht */
+  .doc-reupload-section{ margin:16px 0; padding:14px; background:var(--paper-dim); border-radius:8px; }
+  .doc-reupload-row{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    padding:8px 0; border-bottom:1px solid var(--line);
+  }
+  .doc-reupload-row:last-child{ border-bottom:none; }
+  .doc-reupload-status{ font-size:0.8rem; color:var(--ink-soft); margin-left:8px; white-space:nowrap; }
   .mailbox-row{
     display:flex; justify-content:space-between; align-items:center; gap:12px; padding:14px 20px;
     border-bottom:1px solid var(--line); cursor:pointer; transition:background .1s ease;
@@ -619,6 +638,12 @@
   .admin-tile .at-icon{ font-size:1.5rem; margin-bottom:8px; display:block; }
   .admin-tile .at-title{ font-weight:700; font-size:0.92rem; margin-bottom:4px; color:var(--ink); }
   .admin-tile .at-sub{ font-size:0.76rem; color:var(--ink-soft); line-height:1.4; }
+  /* Bugbau (5. August): Kachel faerbt sich rot, solange in diesem Bereich etwas Neues/
+     Unbearbeitetes wartet (neue Registrierung, ungelesene Nachricht, offene Zahlung) -
+     wird automatisch wieder weiss, sobald erledigt (siehe updateAdminTileAlerts()). */
+  .admin-tile.has-alert{ background:#FDECEA; border-color:var(--danger); }
+  .admin-tile.has-alert:hover{ background:#FBDAD6; border-color:var(--danger); }
+  .admin-tile.has-alert .at-title::after{ content:' 🔴'; }
   .admin-back-link{
     display:inline-flex; align-items:center; gap:4px; margin-bottom:18px; cursor:pointer;
     color:var(--teal); font-weight:700; font-family:'Public Sans'; font-size:0.88rem; background:none; border:none; padding:0;
@@ -1644,12 +1669,12 @@
     </div>
 
     <div class="admin-tile-grid" id="admin-tile-menu">
-      <button type="button" class="admin-tile" onclick="showAdminSection('pending')">
+      <button type="button" class="admin-tile" id="admin-tile-pending" onclick="showAdminSection('pending')">
         <span class="at-icon">🆕</span>
         <span class="at-title">Freischaltungen</span>
         <span class="at-sub">Neue Fahrer prüfen und freischalten</span>
       </button>
-      <button type="button" class="admin-tile" onclick="showAdminSection('openpay')">
+      <button type="button" class="admin-tile" id="admin-tile-openpay" onclick="showAdminSection('openpay')">
         <span class="at-icon">💳</span>
         <span class="at-title">Offene Zahlungen</span>
         <span class="at-sub">Fahrer mit fehlgeschlagener Gebührenzahlung</span>
@@ -1664,7 +1689,7 @@
         <span class="at-title">Fahrer-Statistik</span>
         <span class="at-sub">Touren pro Fahrer im Detail ansehen</span>
       </button>
-      <button type="button" class="admin-tile" onclick="showAdminSection('messages')">
+      <button type="button" class="admin-tile" id="admin-tile-messages" onclick="showAdminSection('messages')">
         <span class="at-icon">✉️</span>
         <span class="at-title">Nachrichten</span>
         <span class="at-sub">Nachrichten von Fahrern lesen &amp; beantworten</span>
@@ -1749,7 +1774,7 @@
 
     <div id="admin-sec-documents" style="display:none;">
     <h2 style="margin-top:0;">📄 Fahrer Dokumente</h2>
-    <p class="dash-head" style="display:block; margin-bottom:14px;">Fahrer auswählen, um die bei der Registrierung hochgeladenen Dokumente anzusehen. Die Links sind zeitlich begrenzt gültig (1 Stunde).</p>
+    <p class="dash-head" style="display:block; margin-bottom:14px;">Fahrer auswählen, um die bei der Registrierung hochgeladenen Dokumente anzusehen. Die Dokumente selbst bleiben dauerhaft gespeichert — beim erneuten Öffnen dieser Seite wird automatisch ein frischer Link erzeugt, es geht also nichts verloren.</p>
     <div class="form-field" style="max-width:340px;">
       <select id="admin-documents-driver-select" onchange="renderAdminDocuments()"></select>
     </div>
@@ -2581,6 +2606,7 @@
       <div class="row" id="bd-row-price"><span class="k" data-i18n="lbl_total">Total tour price</span><span class="v mono" id="bd-price"></span></div>
       <div class="row" id="bd-row-deposit"><span class="k" data-i18n="lbl_deposit_paid">Deposit paid</span><span class="v mono" id="bd-deposit"></span></div>
       <div class="row" id="bd-row-balance"><span class="k" data-i18n="lbl_cash_due">Cash due to driver</span><span class="v mono" id="bd-balance"></span></div>
+      <div class="row" id="bd-row-fee"><span class="k" data-i18n="lbl_ryvio_fee">Ryvio fee (10%)</span><span class="v mono" id="bd-fee"></span></div>
       <div class="row" id="bd-row-vehicle"><span class="k" data-i18n="lbl_your_car">Your driver's car</span><span class="v" id="bd-vehicle"></span></div>
       <div class="row" id="bd-row-ref"><span class="k" data-i18n="bd_ref">Reference</span><span class="v mono" id="bd-ref"></span></div>
       <div class="row"><span class="k" data-i18n="bd_status">Status</span><span class="status-pill confirmed" id="bd-status"></span></div>
@@ -2600,6 +2626,8 @@
     <div class="modal-body">
       <div class="mailbox-detail-meta" id="driver-msg-from">Name · RY-000 · Date</div>
       <div class="mailbox-detail-body" id="driver-msg-body">Message body</div>
+
+      <div id="driver-msg-doc-upload-section" style="display:none;"></div>
 
       <div id="driver-msg-reply-section">
         <div class="form-field" style="margin-top:18px;">
@@ -5069,6 +5097,8 @@ function renderAdminOpenPayments(){
     .filter(id => driverDataStore[id].openPayment)
     .map(id => ({id, profile: driverProfiles[id], op: driverDataStore[id].openPayment}))
     .filter(r => r.profile);
+  adminOpenPaymentCount = rows.length;
+  updateAdminTileAlerts();
   if(rows.length === 0){
     el.innerHTML = `<div class="empty-state">${t('admin_openpay_empty')}</div>`;
     return;
@@ -5387,7 +5417,7 @@ async function loadRealInbox(){
   renderRealInbox();
   updateRealInboxDot();
 }
-const DRIVER_MSG_TYPE_ICON = { fee_reminder:'💳', lock_notice:'🚫', unlock_notice:'✓', admin:'👤', system:'ℹ️' };
+const DRIVER_MSG_TYPE_ICON = { fee_reminder:'💳', lock_notice:'🚫', unlock_notice:'✓', admin:'👤', system:'ℹ️', doc_request:'📎' };
 function renderRealInbox(){
   const el = document.getElementById('inbox-list');
   if(!el) return;
@@ -5406,13 +5436,26 @@ function renderRealInbox(){
     const clickAction = m.type==='admin' ? `openMyThreadFromInbox(${idx})` : `openRealMsgDetail(${idx})`;
     const archiveAction = m.type==='admin' ? `archiveMyThread()` : `archiveRealMessage(${idx})`;
     return `
-    <div class="inbox-row ${!m.is_read?'unread':''}" style="cursor:pointer;" onclick="${clickAction}">
+    <div class="inbox-row ${!m.is_read?'unread':''}" style="cursor:pointer; position:relative;" onclick="${clickAction}">
+      ${isSettled ? `<button type="button" class="inbox-delete-x" title="Löschen" onclick="event.stopPropagation(); deleteRealMessage(${idx})">✕</button>` : ''}
       <div class="inbox-title">${!m.is_read?'● ':''}${DRIVER_MSG_TYPE_ICON[m.type]||''} ${escapeHtml(m.subject)}</div>
       <div class="inbox-body">${escapeHtml(m.body)}</div>
       <div class="inbox-date">${formatDateDisplay((m.created_at||'').slice(0,10))} · Ryvio</div>
       ${!isSettled ? `<button type="button" class="accept-btn" style="margin-top:8px;" onclick="event.stopPropagation(); ${archiveAction}">✓ ${t('mark_done_btn')}</button>` : `<span class="mailbox-replied-tag">${t('archived_tag')}</span>`}
     </div>
   `;}).join('');
+}
+// Loescht eine einzelne Nachricht endgueltig aus dem eigenen Posteingang (nur im Archiv moeglich,
+// per X-Button oben rechts in der Nachrichtenzeile — vor dem Oeffnen anklickbar).
+async function deleteRealMessage(idx){
+  const m = realMessages[idx];
+  if(!m) return;
+  if(!confirm('Diese Nachricht endgültig löschen?')) return;
+  const { error } = await supabaseClient.from('driver_messages').delete().eq('id', m.id);
+  if(error){ console.error('Nachricht konnte nicht gelöscht werden:', error); alert('Löschen hat nicht geklappt.'); return; }
+  realMessages.splice(idx, 1);
+  renderRealInbox();
+  updateRealInboxDot();
 }
 // Chat-Nachrichten im Posteingang oeffnen direkt den ganzen Verlauf mit Antwort-Moeglichkeit
 async function openMyThreadFromInbox(idx){
@@ -5438,6 +5481,13 @@ async function openRealMsgDetail(idx){
   const archiveBtn = document.getElementById('driver-msg-archive-btn');
   archiveBtn.style.display = m.archived ? 'none' : 'block';
   archiveBtn.onclick = () => { archiveRealMessage(currentRealMsgIndex); closeDriverMsgDetail(); };
+  // Bugbau (5. August): bei "Dokument erneut hochladen"-Nachrichten die Upload-Felder direkt hier zeigen
+  if(m.type === 'doc_request'){
+    await renderDocReuploadSection();
+  } else {
+    const uploadSection = document.getElementById('driver-msg-doc-upload-section');
+    if(uploadSection){ uploadSection.style.display = 'none'; uploadSection.innerHTML = ''; }
+  }
   document.getElementById('driver-msg-detail-modal-bg').classList.add('active');
   if(!m.is_read){
     m.is_read = true;
@@ -5445,6 +5495,71 @@ async function openRealMsgDetail(idx){
     updateRealInboxDot();
     const { error } = await supabaseClient.from('driver_messages').update({ is_read:true }).eq('id', m.id);
     if(error) console.error('Nachricht konnte nicht als gelesen markiert werden:', error);
+  }
+}
+// Zeigt die Upload-Felder fuer genau die Dokumente, die aktuell (live aus der DB, nicht
+// aus dem evtl. veralteten realDriverProfile) noch angefordert sind.
+async function renderDocReuploadSection(){
+  const el = document.getElementById('driver-msg-doc-upload-section');
+  if(!el || !realDriverProfile) return;
+  const { data, error } = await supabaseClient.from('drivers').select('docs_requested').eq('id', realDriverProfile.id).single();
+  if(error){ console.error('Angeforderte Dokumente konnten nicht geladen werden:', error); el.style.display = 'none'; return; }
+  const requested = data.docs_requested || [];
+  realDriverProfile.docs_requested = requested;
+  if(requested.length === 0){
+    el.innerHTML = '<p class="note" style="padding:8px 0;">✓ Alle angeforderten Dokumente wurden bereits hochgeladen. Danke!</p>';
+    el.style.display = 'block';
+    return;
+  }
+  const fields = DRIVER_DOC_FIELDS.filter(f => requested.includes(f.key));
+  el.innerHTML = `
+    <div class="doc-reupload-section">
+      <div class="filter-group-title">${fields.length===1 ? '1 Dokument wird benötigt' : fields.length + ' Dokumente werden benötigt'}</div>
+      ${fields.map(f => `
+        <div class="doc-reupload-row" id="doc-reupload-row-${f.key}">
+          <label style="flex:1; display:flex; align-items:center; gap:8px; cursor:pointer; margin:0;">
+            <span>${f.icon} ${f.label}</span>
+            <input type="file" accept="image/*,.pdf" style="display:none;" onchange="uploadReRequestedDoc('${f.key}', this)">
+            <span class="link-btn">Datei wählen</span>
+          </label>
+          <span class="doc-reupload-status" id="doc-reupload-status-${f.key}"></span>
+        </div>
+      `).join('')}
+    </div>
+  `;
+  el.style.display = 'block';
+}
+// Laedt ein neu ausgewaehltes Dokument hoch (ueberschreibt das alte am selben Pfad) und
+// entfernt es danach aus docs_requested, damit die Anforderung automatisch verschwindet.
+async function uploadReRequestedDoc(key, inputEl){
+  const file = inputEl.files[0];
+  if(!file || !realDriverProfile) return;
+  const statusEl = document.getElementById('doc-reupload-status-'+key);
+  if(statusEl) statusEl.textContent = '⏳ Wird hochgeladen...';
+  const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+  const path = `${realDriverProfile.id}/${key}.${ext}`;
+  try{
+    const { error: upErr } = await supabaseClient.storage.from('driver-documents').upload(path, file, { upsert:true });
+    if(upErr){ console.error('Dokument konnte nicht hochgeladen werden:', upErr); if(statusEl) statusEl.textContent = '❌ Fehler beim Hochladen'; return; }
+    const newDocuments = { ...(realDriverProfile.documents||{}), [key]: path };
+    const newRequested = (realDriverProfile.docs_requested||[]).filter(k => k!==key);
+    const { data: updated, error: updErr } = await supabaseClient.from('drivers')
+      .update({ documents: newDocuments, docs_requested: newRequested })
+      .eq('id', realDriverProfile.id).select().single();
+    if(updErr){ console.error('Konnte nicht gespeichert werden:', updErr); if(statusEl) statusEl.textContent = '❌ Fehler beim Speichern'; return; }
+    if(updated) realDriverProfile = updated;
+    if(statusEl) statusEl.textContent = '✓ Hochgeladen';
+    const row = document.getElementById('doc-reupload-row-'+key);
+    if(row){ const lbl = row.querySelector('label'); if(lbl) lbl.style.pointerEvents = 'none'; row.style.opacity = '0.6'; }
+    if(newRequested.length === 0){
+      setTimeout(()=>{
+        const sec = document.getElementById('driver-msg-doc-upload-section');
+        if(sec){ sec.innerHTML = '<p class="note" style="padding:8px 0;">✓ Alle angeforderten Dokumente wurden hochgeladen. Danke!</p>'; }
+      }, 900);
+    }
+  }catch(ex){
+    console.error('Ausnahme beim Hochladen:', ex);
+    if(statusEl) statusEl.textContent = '❌ Fehler beim Hochladen';
   }
 }
 async function archiveRealMessage(idx){
@@ -5574,14 +5689,33 @@ function updateInboxDot(){
 let realPendingDriverCount = 0;
 function updateAdminMailBadge(){
   const tabMail = document.getElementById('tab-admin-mail');
-  if(!tabMail) return;
-  if(realDriverProfile){
-    const hasUnread = realAdminThreads.some(t=>t.unread_for_admin) || realPendingDriverCount > 0;
-    tabMail.style.display = hasUnread ? 'inline-flex' : 'none';
-    return;
+  if(tabMail){
+    if(realDriverProfile){
+      const hasUnread = realAdminThreads.some(t=>t.unread_for_admin) || realPendingDriverCount > 0;
+      tabMail.style.display = hasUnread ? 'inline-flex' : 'none';
+    } else {
+      const hasUnread = Object.values(supportThreads).some(th => th.unreadForAdmin);
+      tabMail.style.display = hasUnread ? 'inline-block' : 'none';
+    }
   }
-  const hasUnread = Object.values(supportThreads).some(th => th.unreadForAdmin);
-  tabMail.style.display = hasUnread ? 'inline-block' : 'none';
+  updateAdminTileAlerts();
+}
+// Bugbau (5. August): faerbt jede Admin-Kachel rot, solange dort etwas Neues/Unbearbeitetes
+// wartet, und wieder weiss, sobald erledigt (z.B. Fahrer freigeschaltet, Nachricht gelesen,
+// Zahlung beglichen). Wird ueberall dort aufgerufen, wo sich die zugrundeliegenden Zahlen aendern.
+let adminOpenPaymentCount = 0;
+function updateAdminTileAlerts(){
+  const pendingTile = document.getElementById('admin-tile-pending');
+  if(pendingTile) pendingTile.classList.toggle('has-alert', realPendingDriverCount > 0);
+  const messagesTile = document.getElementById('admin-tile-messages');
+  if(messagesTile){
+    const hasUnread = realDriverProfile
+      ? realAdminThreads.some(t=>t.unread_for_admin)
+      : Object.values(supportThreads).some(th => th.unreadForAdmin);
+    messagesTile.classList.toggle('has-alert', hasUnread);
+  }
+  const openpayTile = document.getElementById('admin-tile-openpay');
+  if(openpayTile) openpayTile.classList.toggle('has-alert', adminOpenPaymentCount > 0);
 }
 
 // ---- driver's own listings (linked to public search once created) ----
@@ -6244,8 +6378,11 @@ function renderAllBookings(){
   }
 }
 function openBookingDetail(source, idx){
-  const store = driverDataStore[currentDriverId];
-  const b = source==='upcoming' ? store.bookings[idx] : store.completed[idx];
+  // Bugfix (5. August): vorher wurde hier immer aus driverDataStore[currentDriverId] gelesen —
+  // bei einem echten eingeloggten Fahrer bleibt currentDriverId aber auf dem alten Demo-Wert stehen,
+  // während die echten Buchungen längst in driverBookings/completedBookings liegen. Jetzt werden
+  // diese beiden (für Demo UND echte Fahrer korrekt gepflegten) Listen direkt verwendet.
+  const b = source==='upcoming' ? driverBookings[idx] : completedBookings[idx];
   if(!b) return;
   document.getElementById('bd-who').textContent = b.who;
   document.getElementById('bd-tour').textContent = b.tour;
@@ -6258,6 +6395,10 @@ function openBookingDetail(source, idx){
     : t('st_completed');
   document.getElementById('bd-status').textContent = statusLabel;
   document.getElementById('bd-status').className = 'status-pill ' + (isCancelReq ? 'cancel_requested' : (b.status || 'confirmed'));
+  // Gebühr: bevorzugt der beim Buchen berechnete/gespeicherte Wert (feeIdrRaw); nur falls der
+  // fehlt (z.B. bei ganz alten Buchungen ohne dieses Feld) wird ersatzweise 10% des Tourenpreises gezeigt.
+  const feeDisplay = b.feeIdrRaw ? formatIDR(b.feeIdrRaw)
+    : (b.priceIdrRaw ? formatIDR(b.priceIdrRaw * 0.1) : '');
   const rows = [
     ['bd-row-email', 'bd-email', b.email],
     ['bd-row-phone', 'bd-phone', b.phone],
@@ -6266,6 +6407,7 @@ function openBookingDetail(source, idx){
     ['bd-row-price', 'bd-price', b.price],
     ['bd-row-deposit', 'bd-deposit', b.deposit],
     ['bd-row-balance', 'bd-balance', b.balance],
+    ['bd-row-fee', 'bd-fee', feeDisplay],
     ['bd-row-vehicle', 'bd-vehicle', b.vehicle],
     ['bd-row-ref', 'bd-ref', b.ref],
   ];
@@ -6772,7 +6914,7 @@ const translations = {
     lbl_tour: "Tour", lbl_duration: "Duration", lbl_vehicle: "Vehicle", lbl_languages: "Languages",
     lbl_rating: "Rating", lbl_price: "Price", lbl_not_included: "Not included", lbl_driver: "Driver",
     lbl_date: "Date", lbl_guests: "Guests", lbl_total: "Total tour price", lbl_pickup: "Pickup", lbl_tour_singular: "tour", lbl_tour_plural: "tours", lbl_rating_new: "New",
-    lbl_deposit_paid: "Deposit paid", lbl_cash_due: "Cash due to driver", lbl_your_car: "Your driver's car",
+    lbl_deposit_paid: "Deposit paid", lbl_cash_due: "Cash due to driver", lbl_ryvio_fee: "Ryvio fee (10%)", lbl_your_car: "Your driver's car",
     lbl_fullname: "Full name", lbl_whatsapp: 'WhatsApp number <span class="optional">(for booking confirmation)</span>', ep_eyebrow: "Your profile", ep_title: "Edit profile",
     lbl_pickup_loc: "Pickup location", lbl_deposit_due: "Deposit due now (20%)", lbl_airport_destination: "Destination region", lbl_transfer_destination: "Destination", lbl_pickup_region: "Your pickup region",
     lbl_balance: "Balance — pay driver in cash on the day",
@@ -7047,7 +7189,7 @@ const translations = {
     lbl_tour: "Tour", lbl_duration: "Dauer", lbl_vehicle: "Fahrzeug", lbl_languages: "Sprachen",
     lbl_rating: "Bewertung", lbl_price: "Preis", lbl_not_included: "Nicht enthalten", lbl_driver: "Fahrer",
     lbl_date: "Datum", lbl_guests: "Gäste", lbl_total: "Gesamtpreis der Tour", lbl_pickup: "Abholung", lbl_tour_singular: "Tour", lbl_tour_plural: "Touren", lbl_rating_new: "Neu",
-    lbl_deposit_paid: "Anzahlung geleistet", lbl_cash_due: "Bar an den Fahrer", lbl_your_car: "Das Auto deines Fahrers",
+    lbl_deposit_paid: "Anzahlung geleistet", lbl_cash_due: "Bar an den Fahrer", lbl_ryvio_fee: "Ryvio-Gebühr (10%)", lbl_your_car: "Das Auto deines Fahrers",
     lbl_fullname: "Vollständiger Name", lbl_whatsapp: 'WhatsApp-Nummer <span class="optional">(für die Buchungsbestätigung)</span>', ep_eyebrow: "Dein Profil", ep_title: "Profil bearbeiten",
     lbl_pickup_loc: "Abholort", lbl_deposit_due: "Anzahlung jetzt fällig (20%)", lbl_airport_destination: "Zielregion", lbl_transfer_destination: "Ziel", lbl_pickup_region: "Deine Abholregion",
     lbl_balance: "Restbetrag — bar an den Fahrer am Tourtag",
@@ -7322,7 +7464,7 @@ const translations = {
     lbl_tour: "Tur", lbl_duration: "Durasi", lbl_vehicle: "Kendaraan", lbl_languages: "Bahasa",
     lbl_rating: "Rating", lbl_price: "Harga", lbl_not_included: "Tidak termasuk", lbl_driver: "Sopir",
     lbl_date: "Tanggal", lbl_guests: "Tamu", lbl_total: "Total harga tur", lbl_pickup: "Penjemputan", lbl_tour_singular: "tur", lbl_tour_plural: "tur", lbl_rating_new: "Baru",
-    lbl_deposit_paid: "Deposit dibayar", lbl_cash_due: "Tunai untuk sopir", lbl_your_car: "Mobil sopir Anda",
+    lbl_deposit_paid: "Deposit dibayar", lbl_cash_due: "Tunai untuk sopir", lbl_ryvio_fee: "Biaya Ryvio (10%)", lbl_your_car: "Mobil sopir Anda",
     lbl_fullname: "Nama lengkap", lbl_whatsapp: 'Nomor WhatsApp <span class="optional">(untuk konfirmasi pemesanan)</span>', ep_eyebrow: "Profil Anda", ep_title: "Edit profil",
     lbl_pickup_loc: "Lokasi penjemputan", lbl_deposit_due: "Deposit jatuh tempo sekarang (20%)", lbl_airport_destination: "Wilayah tujuan", lbl_transfer_destination: "Tujuan", lbl_pickup_region: "Wilayah penjemputan Anda",
     lbl_balance: "Sisa — bayar tunai ke sopir pada hari tur",
@@ -9370,6 +9512,10 @@ function switchView(view){
   document.getElementById('tab-admin').classList.toggle('active', view==='admin');
   const regBtn = document.getElementById('tab-register-btn');
   if(regBtn) regBtn.classList.remove('active');
+  // Bugfix (5. August): Klick auf "Fahrer-Dashboard" soll IMMER mit der Login-Maske starten,
+  // auch wenn zuvor über "+ Als Fahrer registrieren" das Signup-Formular offen war.
+  // Ohne diesen Reset blieb das Signup-Formular beim Tab-Wechsel einfach stehen.
+  if(view==='driver'){ toggleAuthForm('login'); }
   if(view==='driver'){ checkDriverAuthState(true); }
   if(view==='admin'){ updateIsAdminSession().then(()=>{ renderAdminList(); loadAdminPendingDrivers(); loadRealAdminMessages(); }); }
 }
@@ -9382,6 +9528,7 @@ function switchViewProgrammatic(view){
   document.getElementById('tab-admin').classList.toggle('active', view==='admin');
   const regBtn2 = document.getElementById('tab-register-btn');
   if(regBtn2) regBtn2.classList.remove('active');
+  if(view==='driver'){ toggleAuthForm('login'); }
   if(view==='driver'){ checkDriverAuthState(true); }
   if(view==='admin'){ updateIsAdminSession().then(()=>{ renderAdminList(); loadAdminPendingDrivers(); loadRealAdminMessages(); }); }
 }
@@ -9611,21 +9758,75 @@ async function renderAdminDocuments(){
   const driverId = sel ? sel.value : '';
   if(!driverId){ el.innerHTML = `<div class="empty-state">Kein Fahrer vorhanden.</div>`; return; }
   el.innerHTML = '<p class="note" style="padding:14px 20px;">⏳ Lade Dokumente...</p>';
-  const { data: driver, error } = await supabaseClient.from('drivers').select('documents').eq('id', driverId).single();
+  const { data: driver, error } = await supabaseClient.from('drivers').select('name, documents, docs_requested').eq('id', driverId).single();
   if(error){ el.innerHTML = '<p class="note" style="padding:14px 20px;">Dokumente konnten nicht geladen werden.</p>'; return; }
   const docs = driver.documents || {};
+  const requested = driver.docs_requested || [];
+  const driverNameSafe = (driver.name || 'Fahrer').replace(/[^a-z0-9äöüß]+/gi,'_');
+  // Bugbau (5. August): Gültigkeit von 1h auf 24h angehoben (weniger Ärger, wenn ein bereits
+  // geöffneter Tab länger offen bleibt) — die Datei selbst bleibt ohnehin für immer gespeichert,
+  // beim erneuten Aufruf dieser Liste wird sowieso automatisch ein frischer Link erzeugt.
   const rows = await Promise.all(DRIVER_DOC_FIELDS.map(async (f) => {
     const path = docs[f.key];
+    const alreadyRequested = requested.includes(f.key);
+    const reupCol = alreadyRequested
+      ? `<span class="note" style="margin-left:10px; color:var(--teal); font-weight:600;">⏳ Bereits angefordert</span>`
+      : `<button type="button" class="link-btn" style="margin-left:10px;" onclick="requestDocReupload('${driverId}','${f.key}','${escapeHtml(f.label)}')">🔁 Erneut anfordern</button>`;
     if(!path){
-      return `<div class="booking-row"><div><div class="who">${f.icon} ${f.label}</div></div><span class="note">Nicht hochgeladen</span></div>`;
+      return `<div class="booking-row"><div><div class="who">${f.icon} ${f.label}</div></div><span class="note">Nicht hochgeladen</span>${reupCol}</div>`;
     }
-    const { data: signed, error: signErr } = await supabaseClient.storage.from('driver-documents').createSignedUrl(path, 3600);
+    const { data: signed, error: signErr } = await supabaseClient.storage.from('driver-documents').createSignedUrl(path, 86400);
     if(signErr || !signed){
-      return `<div class="booking-row"><div><div class="who">${f.icon} ${f.label}</div></div><span class="note">Link konnte nicht erzeugt werden</span></div>`;
+      return `<div class="booking-row"><div><div class="who">${f.icon} ${f.label}</div></div><span class="note">Link konnte nicht erzeugt werden</span>${reupCol}</div>`;
     }
-    return `<div class="booking-row"><div><div class="who">${f.icon} ${f.label}</div></div><a href="${signed.signedUrl}" target="_blank" rel="noopener">Ansehen ↗</a></div>`;
+    const ext = (path.split('.').pop() || 'dat').toLowerCase();
+    const filename = `${driverNameSafe}_${f.key}.${ext}`;
+    return `<div class="booking-row"><div><div class="who">${f.icon} ${f.label}</div></div>
+      <div style="display:flex; align-items:center;">
+        <a href="${signed.signedUrl}" target="_blank" rel="noopener">Ansehen ↗</a>
+        <button type="button" class="link-btn" style="margin-left:10px;" onclick="downloadDriverDocument('${signed.signedUrl}', '${filename}')">⬇️ Herunterladen</button>
+        ${reupCol}
+      </div>
+    </div>`;
   }));
   el.innerHTML = rows.join('');
+}
+// Laedt das Dokument tatsaechlich herunter (Blob), statt es nur in einem neuen Tab zu oeffnen —
+// so erscheint der normale Browser-"Download"-Dialog ("Wo moechtest du speichern?").
+async function downloadDriverDocument(url, filename){
+  try{
+    const res = await fetch(url);
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    const blob = await res.blob();
+    const blobUrl = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = blobUrl;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(()=>URL.revokeObjectURL(blobUrl), 10000);
+  }catch(e){
+    console.error('Download fehlgeschlagen:', e);
+    alert('Download hat nicht geklappt. Bitte stattdessen auf "Ansehen ↗" klicken und über das Browser-Menü speichern.');
+  }
+}
+// Markiert ein Dokument als "erneut angefordert" (docs_requested auf der Fahrer-Zeile) UND
+// schickt dem Fahrer eine Nachricht mit eingebauter Upload-Funktion (Typ 'doc_request').
+async function requestDocReupload(driverId, docKey, docLabel){
+  if(!confirm(`"${docLabel}" bei diesem Fahrer erneut anfordern? Der Fahrer bekommt dazu eine Nachricht im Posteingang mit einer Upload-Möglichkeit.`)) return;
+  const { data: driverRow, error: fetchErr } = await supabaseClient.from('drivers').select('docs_requested').eq('id', driverId).single();
+  if(fetchErr){ console.error('Fahrer konnte nicht geladen werden:', fetchErr); alert('Fehler beim Laden des Fahrers.'); return; }
+  const current = driverRow.docs_requested || [];
+  const updated = current.includes(docKey) ? current : [...current, docKey];
+  const { error: updErr } = await supabaseClient.from('drivers').update({ docs_requested: updated }).eq('id', driverId);
+  if(updErr){ console.error('docs_requested konnte nicht gesetzt werden:', updErr); alert('Fehler: ' + describeAdminActionError(updErr)); return; }
+  const subject = `Bitte erneut hochladen: ${docLabel}`;
+  const body = `Bitte lade dein Dokument "${docLabel}" noch einmal hoch — das aktuell hinterlegte Dokument konnte nicht akzeptiert werden (z.B. unleserlich oder falsches Dokument). Öffne diese Nachricht in deinem Posteingang, dort kannst du die Datei direkt hochladen.`;
+  const { error: msgErr } = await supabaseClient.from('driver_messages').insert({ driver_id: driverId, type:'doc_request', subject, body });
+  if(msgErr){ console.error('Nachricht konnte nicht gesendet werden:', msgErr); alert('Fehler: Nachricht konnte nicht gesendet werden. ' + describeAdminActionError(msgErr)); return; }
+  await renderAdminDocuments();
+  alert('Nachricht mit Upload-Funktion wurde an den Fahrer geschickt ✓');
 }
 // ---- echter Admin-Bereich (Baustein 9a): ausstehende Fahrer freischalten/ablehnen ----
 // Nachbesserung (3. August): Root-Cause-Fix — viele Admin-Funktionen prüften bisher
@@ -9749,6 +9950,7 @@ function renderAdminList(){
   renderAdminMessages();
   renderAdminBlockList();
   renderFeeOverridePanel();
+  renderAdminOpenPayments();
   populateAdminDocumentsSelect();
   const el = document.getElementById('admin-pending-list');
   const pending = Object.values(driverProfiles).filter(p => p.status==='pending');
@@ -10605,7 +10807,7 @@ function renderAdminMessages(){
         </div>
         <div class="mailbox-meta">
           <div class="mailbox-date">${th.lastMessage ? formatDateDisplay((th.lastMessage.created_at||'').slice(0,10)) : ''}</div>
-          ${!isSettled ? `<button type="button" class="accept-btn" style="margin-top:6px;" onclick="event.stopPropagation(); archiveAdminMessage('${th.driver_id}')">✓ ${t('mark_done_btn')}</button>` : `<span class="mailbox-replied-tag">${t('archived_tag')}</span>`}
+          ${!isSettled ? `<button type="button" class="accept-btn" style="margin-top:6px;" onclick="event.stopPropagation(); archiveAdminMessage('${th.driver_id}')">✓ ${t('mark_done_btn')}</button>` : `<span class="mailbox-replied-tag">${t('archived_tag')}</span> <button type="button" class="mailbox-delete-x" title="Löschen" onclick="event.stopPropagation(); deleteAdminThread('${th.driver_id}')">✕</button>`}
         </div>
       </div>
     `;}).join('');
@@ -10630,10 +10832,26 @@ function renderAdminMessages(){
       </div>
       <div class="mailbox-meta">
         <div class="mailbox-date">${last ? last.date : ''}</div>
-        ${!th.archived ? `<button type="button" class="accept-btn" style="margin-top:6px;" onclick="event.stopPropagation(); archiveAdminMessage('${th.driverId}')">✓ ${t('mark_done_btn')}</button>` : `<span class="mailbox-replied-tag">${t('archived_tag')}</span>`}
+        ${!th.archived ? `<button type="button" class="accept-btn" style="margin-top:6px;" onclick="event.stopPropagation(); archiveAdminMessage('${th.driverId}')">✓ ${t('mark_done_btn')}</button>` : `<span class="mailbox-replied-tag">${t('archived_tag')}</span> <button type="button" class="mailbox-delete-x" title="Löschen" onclick="event.stopPropagation(); deleteAdminThread('${th.driverId}')">✕</button>`}
       </div>
     </div>
   `;}).join('');
+}
+// Loescht einen archivierten Nachrichten-Thread endgueltig (X-Button, nur im Archiv sichtbar) —
+// sowohl fuer echte Fahrer (support_threads/-messages in Supabase) als auch im Demo-Modus.
+async function deleteAdminThread(driverId){
+  if(!confirm('Diesen Nachrichtenverlauf endgültig löschen?')) return;
+  if(realDriverProfile || isAdminSession){
+    const { error: msgErr } = await supabaseClient.from('support_thread_messages').delete().eq('driver_id', driverId);
+    if(msgErr){ console.error('Nachrichten konnten nicht gelöscht werden:', msgErr); alert('Löschen hat nicht geklappt.'); return; }
+    const { error: threadErr } = await supabaseClient.from('support_threads').delete().eq('driver_id', driverId);
+    if(threadErr){ console.error('Thread konnte nicht gelöscht werden:', threadErr); alert('Löschen hat nicht geklappt.'); return; }
+    await loadRealAdminMessages();
+    return;
+  }
+  delete supportThreads[driverId];
+  renderAdminMessages();
+  saveState();
 }
 async function archiveAdminMessage(driverId){
   if(realDriverProfile || isAdminSession){
