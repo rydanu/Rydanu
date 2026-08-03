@@ -1524,11 +1524,11 @@
             <div class="spots-section">
               <div class="filter-group-title" data-i18n="nl_spots_title">Available tours — tap what you offer</div>
               <div class="chip-row" id="nl-spots-row">
-                <button type="button" class="chip" data-value="Day tour">Day tour</button>
-                <button type="button" class="chip" data-value="Half-day tour">Half-day tour</button>
+                <button type="button" class="chip" data-value="Day tour" data-i18n="dur_day_tour">Day tour</button>
+                <button type="button" class="chip" data-value="Half-day tour" data-i18n="dur_half_day_tour">Half-day tour</button>
                 <button type="button" class="chip" data-value="Airport Transfer">Airport Transfer</button>
                 <button type="button" class="chip" data-value="Transfer">Transfer</button>
-                <button type="button" class="chip" data-value="Fixed rate">Fixed rate</button>
+                <button type="button" class="chip" data-value="Fixed rate" data-i18n="dur_fixed_rate">Fixed rate</button>
               </div>
             </div>
             <label class="nl-service-check"><input type="checkbox" id="nl-photo"> <span data-i18n="svc_offer_photo_only">📸 Photo service</span></label>
@@ -2516,11 +2516,11 @@
       <div class="spots-section">
         <div class="filter-group-title" data-i18n="nl_spots_title">Available tours — tap what you offer</div>
         <div class="chip-row" id="el-spots-row">
-          <button type="button" class="chip" data-value="Day tour">Day tour</button>
-          <button type="button" class="chip" data-value="Half-day tour">Half-day tour</button>
+          <button type="button" class="chip" data-value="Day tour" data-i18n="dur_day_tour">Day tour</button>
+          <button type="button" class="chip" data-value="Half-day tour" data-i18n="dur_half_day_tour">Half-day tour</button>
           <button type="button" class="chip" data-value="Airport Transfer">Airport Transfer</button>
           <button type="button" class="chip" data-value="Transfer">Transfer</button>
-          <button type="button" class="chip" data-value="Fixed rate">Fixed rate</button>
+          <button type="button" class="chip" data-value="Fixed rate" data-i18n="dur_fixed_rate">Fixed rate</button>
         </div>
       </div>
       <label class="nl-service-check"><input type="checkbox" id="el-photo"> <span data-i18n="svc_offer_photo_only">📸 Photo service</span></label>
@@ -2942,8 +2942,8 @@
       <div class="filter-group" id="filter-spots-group">
         <div class="filter-group-title" data-i18n="filter_spots_title">Available tours</div>
         <div class="chip-row" data-group="spots">
-          <button type="button" class="chip" data-value="Day tour">Day tour</button>
-          <button type="button" class="chip" data-value="Half-day tour">Half-day tour</button>
+          <button type="button" class="chip" data-value="Day tour" data-i18n="dur_day_tour">Day tour</button>
+          <button type="button" class="chip" data-value="Half-day tour" data-i18n="dur_half_day_tour">Half-day tour</button>
           <button type="button" class="chip" data-value="Transfer">Transfer</button>
         </div>
       </div>
@@ -3495,7 +3495,7 @@ function renderDriverPage(){
         const clickable = !isOwner && pub;
         return `
         <div class="dp-tour-row" ${clickable ? `style="cursor:pointer;" onclick="bookTourFromPage('${l.name.replace(/'/g,"\\'")}')"` : ''}>
-          <div><div class="tname">${l.name}</div><div class="tmeta">${priceBlockHTML(l.price)} · ${l.duration}</div></div>
+          <div><div class="tname">${l.name}</div><div class="tmeta">${priceBlockHTML(l.price)} · ${spotLabel(l.duration)}</div></div>
           ${l.featured ? '<span class="mailbox-replied-tag">⭐</span>' : ''}
           ${clickable ? '<span class="dp-tour-arrow">›</span>' : ''}
         </div>
@@ -3567,7 +3567,7 @@ function renderRealDriverPage(isOwner){
   document.getElementById('dp-tours').innerHTML = tours.length
     ? tours.map(l => `
         <div class="dp-tour-row" style="cursor:pointer;" onclick="bookRealTourFromPage('${(l.title||'').replace(/'/g,"\\'")}')">
-          <div><div class="tname">${l.title}</div><div class="tmeta">${priceBlockHTML(l.price_display)} · ${l.duration || ''}</div></div>
+          <div><div class="tname">${l.title}</div><div class="tmeta">${priceBlockHTML(l.price_display)} · ${l.duration ? spotLabel(l.duration) : ''}</div></div>
           <span class="dp-tour-arrow">›</span>
         </div>
       `).join('')
@@ -5768,9 +5768,9 @@ function renderListings(){
     <div class="listing-row ${l.active?'':'paused'}" style="cursor:pointer;" onclick="openEditListing(${i})">
       <div>
         <div class="lname">${l.name} ${driverRankBadgeHTML(currentDriverId, 'sm')}</div>
-        <div class="lmeta">${l.price} · ${l.duration} · ${l.bookings} bookings <span class="fee-badge">${l.fee} / booking</span></div>
+        <div class="lmeta">${l.price} · ${spotLabel(l.duration)} · ${l.bookings} bookings <span class="fee-badge">${l.fee} / booking</span></div>
         <div class="lmeta">${l.region ? '🚩 '+l.region : '<em>No starting point set</em>'} ${l.services && l.services.length ? '· '+serviceLabel(l.services) : ''}</div>
-        ${l.spots && l.spots.length ? `<div class="spots-line">✦ ${l.spots.join(' · ')}</div>` : ''}
+        ${l.spots && l.spots.length ? `<div class="spots-line">✦ ${l.spots.map(spotLabel).join(' · ')}</div>` : ''}
         ${l.extras && l.extras.length ? `<div class="extras-line">⚠ Not included: ${l.extras.join(', ')}</div>` : ''}
         ${l.serviceRegions ? `<div class="spots-line" style="color:var(--teal);">🚐 Pickup: ${l.serviceRegions==='all' ? 'All regions' : l.serviceRegions.join(', ')}</div>` : ''}
         ${l.airportRegions && Object.keys(l.airportRegions).length ? `<div class="spots-line" style="color:var(--teal);">✈️ ${Object.entries(l.airportRegions).map(([r,p])=>r+': '+p).join(' · ')}</div>` : ''}
@@ -5805,6 +5805,23 @@ document.querySelectorAll('#el-extras-row .chip').forEach(chip=>{
     else { elSelectedExtras.splice(idx,1); chip.classList.remove('chip-active'); }
   });
 });
+// Baustein (Tourenerstellung Umbau): steuert die Preis-je-Abholregion-Sektion (bei "Alle Regionen"
+// wie beim Airport Transfer IMMER alle Abholorte zeigen; bei gezielter Auswahl NUR die ausgewaehlten
+// Regionen zeigen, nicht mehr immer alle 6). Wird sowohl vom "Neues Angebot"- als auch vom
+// "Angebot bearbeiten"-Formular genutzt (prefix 'nl' bzw. 'el').
+function updatePickupPriceRows(prefix, selection){
+  const section = document.getElementById(prefix + '-pickupregions-section');
+  const grid = document.getElementById(prefix + '-pickupregions-grid');
+  if(!section || !grid) return;
+  const isAll = selection === 'all';
+  const show = isAll || selection.length >= 2;
+  section.style.display = show ? 'block' : 'none';
+  grid.querySelectorAll('.pr-price-input').forEach(inp=>{
+    const row = inp.closest('.airport-region-row');
+    if(!row) return;
+    row.style.display = (isAll || selection.includes(inp.dataset.region)) ? 'flex' : 'none';
+  });
+}
 let elSelectedServiceRegions = [];
 document.querySelectorAll('#el-serviceregions-row .chip').forEach(chip=>{
   chip.addEventListener('click', ()=>{
@@ -5815,7 +5832,7 @@ document.querySelectorAll('#el-serviceregions-row .chip').forEach(chip=>{
       row.querySelectorAll('.chip').forEach(ch=>ch.classList.remove('chip-active'));
       elSelectedServiceRegions = [];
       if(!isActive){ chip.classList.add('chip-active'); elSelectedServiceRegions = ['all']; }
-      document.getElementById('el-pickupregions-section').style.display = 'none';
+      updatePickupPriceRows('el', elSelectedServiceRegions.includes('all') ? 'all' : elSelectedServiceRegions);
       return;
     }
     const allChip = row.querySelector('[data-value="all"]');
@@ -5824,7 +5841,7 @@ document.querySelectorAll('#el-serviceregions-row .chip').forEach(chip=>{
     const idx = elSelectedServiceRegions.indexOf(val);
     if(idx===-1){ elSelectedServiceRegions.push(val); chip.classList.add('chip-active'); }
     else { elSelectedServiceRegions.splice(idx,1); chip.classList.remove('chip-active'); }
-    document.getElementById('el-pickupregions-section').style.display = (elSelectedServiceRegions.length >= 2) ? 'block' : 'none';
+    updatePickupPriceRows('el', elSelectedServiceRegions);
   });
 });
 function openEditListing(i){
@@ -5865,7 +5882,7 @@ function openEditListing(i){
   document.querySelectorAll('#el-serviceregions-row .chip').forEach(ch=>{
     ch.classList.toggle('chip-active', ch.dataset.value==='all' ? elSelectedServiceRegions.includes('all') : elSelectedServiceRegions.includes(ch.dataset.value));
   });
-  document.getElementById('el-pickupregions-section').style.display = (elSelectedServiceRegions.length >= 2 && !elSelectedServiceRegions.includes('all')) ? 'block' : 'none';
+  updatePickupPriceRows('el', elSelectedServiceRegions.includes('all') ? 'all' : elSelectedServiceRegions);
 
   document.getElementById('el-name').classList.remove('field-error');
   document.getElementById('el-price').classList.remove('field-error');
@@ -5902,11 +5919,11 @@ function saveEditListing(){
   }
   const serviceRegions = elSelectedServiceRegions.includes('all') ? 'all' : [...elSelectedServiceRegions];
   let pickupRegionPrices = null;
-  if(serviceRegions !== 'all' && serviceRegions.length >= 2){
+  if(serviceRegions === 'all' || serviceRegions.length >= 2){
     const obj = {};
     document.querySelectorAll('#el-pickupregions-grid .pr-price-input').forEach(inp=>{
       const val = inp.value.trim();
-      if(val && serviceRegions.includes(inp.dataset.region)) obj[inp.dataset.region] = val;
+      if(val && (serviceRegions === 'all' || serviceRegions.includes(inp.dataset.region))) obj[inp.dataset.region] = val;
     });
     if(Object.keys(obj).length) pickupRegionPrices = obj;
   }
@@ -5918,9 +5935,13 @@ function saveEditListing(){
     const nums = Object.values(transferRegions).map(p=>parseIDR(p)).filter(n=>n>0);
     if(nums.length) price = 'from ' + formatIDR(Math.min(...nums));
   }
+  if(!isAirport && !isTransfer && !price && pickupRegionPrices){
+    const nums = Object.values(pickupRegionPrices).map(p=>parseIDR(p)).filter(n=>n>0);
+    if(nums.length) price = 'from ' + formatIDR(Math.min(...nums));
+  }
 
   document.getElementById('el-name').classList.toggle('field-error', !name);
-  const priceMissing = !price && !(isAirport && airportRegions) && !(isTransfer && transferRegions);
+  const priceMissing = !price && !(isAirport && airportRegions) && !(isTransfer && transferRegions) && !pickupRegionPrices;
   document.getElementById('el-price').classList.toggle('field-error', priceMissing);
   if(!name || priceMissing){
     document.getElementById('el-error').textContent = t('el_error');
@@ -6154,7 +6175,7 @@ document.querySelectorAll('#nl-serviceregions-row .chip').forEach(chip=>{
       row.querySelectorAll('.chip').forEach(ch=>ch.classList.remove('chip-active'));
       nlSelectedServiceRegions = [];
       if(!isActive){ chip.classList.add('chip-active'); nlSelectedServiceRegions = ['all']; }
-      document.getElementById('nl-pickupregions-section').style.display = 'none';
+      updatePickupPriceRows('nl', nlSelectedServiceRegions.includes('all') ? 'all' : nlSelectedServiceRegions);
       return;
     }
     // selecting a specific region deselects "all"
@@ -6164,7 +6185,7 @@ document.querySelectorAll('#nl-serviceregions-row .chip').forEach(chip=>{
     const idx = nlSelectedServiceRegions.indexOf(val);
     if(idx===-1){ nlSelectedServiceRegions.push(val); chip.classList.add('chip-active'); }
     else { nlSelectedServiceRegions.splice(idx,1); chip.classList.remove('chip-active'); }
-    document.getElementById('nl-pickupregions-section').style.display = (nlSelectedServiceRegions.length >= 2) ? 'block' : 'none';
+    updatePickupPriceRows('nl', nlSelectedServiceRegions);
   });
 });
 function addListing(){
@@ -6202,11 +6223,11 @@ function addListing(){
     if(Object.keys(obj).length) transferRegions = obj;
   }
   let pickupRegionPrices = null;
-  if(serviceRegions !== 'all' && serviceRegions.length >= 2){
+  if(serviceRegions === 'all' || serviceRegions.length >= 2){
     const obj = {};
     document.querySelectorAll('#nl-pickupregions-grid .pr-price-input').forEach(inp=>{
       const val = inp.value.trim();
-      if(val && serviceRegions.includes(inp.dataset.region)) obj[inp.dataset.region] = val;
+      if(val && (serviceRegions === 'all' || serviceRegions.includes(inp.dataset.region))) obj[inp.dataset.region] = val;
     });
     if(Object.keys(obj).length) pickupRegionPrices = obj;
   }
@@ -6226,10 +6247,18 @@ function addListing(){
       price = 'from ' + formatIDR(min);
     }
   }
+  // and the same for day/half-day/fixed tours priced per pickup region instead of one flat price
+  if(!isAirport && !isTransfer && !price && pickupRegionPrices){
+    const nums = Object.values(pickupRegionPrices).map(p=>parseIDR(p)).filter(n=>n>0);
+    if(nums.length){
+      const min = Math.min(...nums);
+      price = 'from ' + formatIDR(min);
+    }
+  }
 
   // validation with red field marking
   document.getElementById('nl-name').classList.toggle('field-error', !name);
-  const priceMissing = !price && !(isAirport && airportRegions) && !(isTransfer && transferRegions);
+  const priceMissing = !price && !(isAirport && airportRegions) && !(isTransfer && transferRegions) && !pickupRegionPrices;
   const airportPricesMissing = isAirport && !airportRegions && !document.getElementById('nl-price').value.trim();
   const transferPricesMissing = isTransfer && !transferRegions && !document.getElementById('nl-price').value.trim();
   document.getElementById('nl-price').classList.toggle('field-error', priceMissing);
@@ -6279,7 +6308,7 @@ function addListing(){
     drivers.unshift({
       name: profile.fullName, tour:name, duration, vehicle:vehicleDisplayString(profile.vehicle), vehicleType:(profile.vehicle && profile.vehicle.vtype) || 'Standard Car',
       lang: profile.langs.length ? profile.langs : ["EN"], rating:"New · 0 tours", price,
-      badge: featured ? "⭐ Top offer" : "New driver", featured, region: region || profile.region, services, spots, extras, serviceRegions, airportRegions, transferRegions,
+      badge: featured ? "⭐ Top offer" : "New driver", featured, region: region || profile.region, services, spots, extras, serviceRegions, airportRegions, transferRegions, pickupRegionPrices,
       photo: profile.photo, ownerId: currentDriverId, active:true,
       femaleDriver: !!profile.femaleDriver, childFriendly: !!profile.childFriendly, tourGuideCertified: !!profile.tourGuideCertified, firstAidTrained: !!profile.firstAidTrained
     });
@@ -7002,6 +7031,7 @@ const translations = {
     dp_video_too_long: "This video is longer than 30 seconds — please trim it first.", dp_video_too_big: "This video file is too large (max 6 MB). Please choose a shorter or lower-resolution clip.",
     dp_video_unreadable: "Couldn't read this video file — please try a different one.", dp_caption_ph: "e.g. Waterfall",
     btn_cancel: "Cancel", btn_deposit_received: "Deposit received", tap_to_pay: "Tap to pay", all_regions: "All regions",
+    dur_day_tour: "Day tour", dur_half_day_tour: "Half-day tour", dur_fixed_rate: "Fixed rate", dur_full_day: "Full day",
     alert_cancel_12h: "Cancellation is only possible up to 12 hours before the tour starts. Please contact the guest directly or Ryvio support.",
     confirm_cancel_1: "Cancel booking with", confirm_cancel_2: "The guest will be notified and refunded their deposit in full.\n\n⚠️ Frequent cancellations can lead to your driver account being deactivated.",
     cancel_reason_eyebrow: "Cancel booking", cancel_reason_prompt: "Why are you cancelling this tour? The guest will be notified.", cancel_reason_customer: "Customer didn't show up", cancel_reason_driver: "I need to cancel the tour",
@@ -7277,6 +7307,7 @@ const translations = {
     dp_video_too_long: "Dieses Video ist länger als 30 Sekunden — bitte erst kürzen.", dp_video_too_big: "Diese Videodatei ist zu groß (max. 6 MB). Bitte wähle einen kürzeren Clip oder eine niedrigere Auflösung.",
     dp_video_unreadable: "Diese Videodatei konnte nicht gelesen werden — bitte eine andere versuchen.", dp_caption_ph: "z.B. Wasserfall",
     btn_cancel: "Stornieren", btn_deposit_received: "Anzahlung erhalten", tap_to_pay: "Zum Bezahlen tippen", all_regions: "Alle Regionen",
+    dur_day_tour: "Tagestour", dur_half_day_tour: "Halbtagestour", dur_fixed_rate: "Festpreis", dur_full_day: "Ganztägig",
     alert_cancel_12h: "Eine Stornierung ist nur bis 12 Stunden vor Tourbeginn möglich. Bitte kontaktiere den Gast direkt oder den Ryvio-Support.",
     confirm_cancel_1: "Buchung stornieren mit", confirm_cancel_2: "Der Gast wird benachrichtigt und erhält seine Anzahlung vollständig zurück.\n\n⚠️ Häufige Stornierungen können zur Deaktivierung deines Fahrerkontos führen.",
     cancel_reason_eyebrow: "Buchung stornieren", cancel_reason_prompt: "Warum stornierst du die Tour? Der Gast wird benachrichtigt.", cancel_reason_customer: "Kunde ist nicht gekommen", cancel_reason_driver: "Ich muss die Tour absagen",
@@ -7552,6 +7583,7 @@ const translations = {
     dp_video_too_long: "Video ini lebih dari 30 detik — mohon potong terlebih dahulu.", dp_video_too_big: "File video ini terlalu besar (maks 6 MB). Mohon pilih klip yang lebih pendek atau resolusi lebih rendah.",
     dp_video_unreadable: "Tidak dapat membaca file video ini — mohon coba yang lain.", dp_caption_ph: "mis. Air Terjun",
     btn_cancel: "Batalkan", btn_deposit_received: "Deposit diterima", tap_to_pay: "Ketuk untuk bayar", all_regions: "Semua wilayah",
+    dur_day_tour: "Tur sehari", dur_half_day_tour: "Tur setengah hari", dur_fixed_rate: "Harga tetap", dur_full_day: "Sehari penuh",
     alert_cancel_12h: "Pembatalan hanya bisa dilakukan hingga 12 jam sebelum tur dimulai. Silakan hubungi tamu langsung atau dukungan Ryvio.",
     confirm_cancel_1: "Batalkan pemesanan dengan", confirm_cancel_2: "Tamu akan diberi tahu dan deposit dikembalikan penuh.\n\n⚠️ Pembatalan yang sering dapat menyebabkan akun sopir dinonaktifkan.",
     cancel_reason_eyebrow: "Batalkan pemesanan", cancel_reason_prompt: "Mengapa Anda membatalkan tur ini? Tamu akan diberi tahu.", cancel_reason_customer: "Pelanggan tidak datang", cancel_reason_driver: "Saya perlu membatalkan tur",
@@ -7703,6 +7735,13 @@ function t(key){
   const d = translations[currentLang] || translations.en;
   return d[key] || translations.en[key] || key;
 }
+// translates the internal tour-type / duration labels ("Day tour", "Half-day tour", "Fixed rate", "Full day")
+// for display to travelers — internal spot values themselves stay in English, only the shown text changes
+const SPOT_LABEL_KEYS = { 'Day tour':'dur_day_tour', 'Half-day tour':'dur_half_day_tour', 'Fixed rate':'dur_fixed_rate', 'Full day':'dur_full_day' };
+function spotLabel(s){
+  const key = SPOT_LABEL_KEYS[s];
+  return key ? t(key) : s;
+}
 function setLanguage(lang){
   currentLang = lang;
   document.querySelectorAll('.lang-btn').forEach(b=>b.classList.toggle('active', b.dataset.lang===lang));
@@ -7757,7 +7796,11 @@ function renderDriverGrid(list){
    try{
     const isAirportTourCard = d.spots && d.spots.includes('Airport Transfer');
     const matrixPrice = cityAirportActive && isAirportTourCard && d.airportRegions && d.airportRegions[cityAirportCity];
-    const cardPrice = matrixPrice || d.price;
+    // Tagestour/Halbtagestour/Fixed Tour mit Preis je Abholregion: wenn der Kunde nach genau
+    // einer Abholregion filtert, zeige (wie beim Airport Transfer) direkt den dafuer hinterlegten Preis
+    const singleRegionFilter = getSingleCityStart();
+    const matrixPickupPrice = !isAirportTourCard && singleRegionFilter && d.pickupRegionPrices && d.pickupRegionPrices[singleRegionFilter];
+    const cardPrice = matrixPrice || matrixPickupPrice || d.price;
     const card = document.createElement('div');
     card.className = 'driver-card' + (d.featured ? ' featured' : '');
     card.addEventListener('click', () => {
@@ -7778,9 +7821,10 @@ function renderDriverGrid(list){
       </div>
       <div class="driver-body">
         <div class="tour">${d.tour}</div>
-        ${d.spots && d.spots.length ? `<div class="spots-line" style="margin-bottom:6px;">✦ ${d.spots.join(' · ')}</div>` : ''}
+        ${d.spots && d.spots.length ? `<div class="spots-line" style="margin-bottom:6px;">✦ ${d.spots.map(spotLabel).join(' · ')}</div>` : ''}
         ${!matrixPrice && d.airportRegions && Object.keys(d.airportRegions).length ? `<div class="spots-line airport-price-lines" style="margin-bottom:6px;">${Object.entries(d.airportRegions).map(([r,p])=>`✈️ ${r}: <strong>${p}</strong>`).join('<br>')}</div>` : ''}
         ${!matrixPrice && d.transferRegions && Object.keys(d.transferRegions).length ? `<div class="spots-line airport-price-lines" style="margin-bottom:6px;">${Object.entries(d.transferRegions).map(([r,p])=>`🚐 ${r}: <strong>${p}</strong>`).join('<br>')}</div>` : ''}
+        ${!matrixPickupPrice && d.pickupRegionPrices && Object.keys(d.pickupRegionPrices).length ? `<div class="spots-line airport-price-lines" style="margin-bottom:6px;">${Object.entries(d.pickupRegionPrices).map(([r,p])=>`🚩 ${r}: <strong>${p}</strong>`).join('<br>')}</div>` : ''}
         ${matrixPrice ? `<div class="spots-line airport-price-lines" style="margin-bottom:6px;">✈️ ${cityAirportCity} ⇄ ${t('map_dropoff_area')}</div>` : ''}
         ${d.extras && d.extras.length ? `<div class="extras-line" style="margin-bottom:8px;">⚠ Not included: ${d.extras.join(', ')}</div>` : ''}
         <div class="region-tag">
@@ -7788,7 +7832,7 @@ function renderDriverGrid(list){
           <button type="button" class="mini-map-btn" onclick="viewTourOnMap(event, ${i})">🗺️ Tour map</button>
         </div>
         <div class="meta-row">
-          <div class="price">${priceBlockHTML(cardPrice)}<br><span>${d.duration}</span>${d.vehicleType ? `<br><span class="vtype-tag">${vtypeLabel(d.vehicleType)}</span>` : ''}</div>
+          <div class="price">${priceBlockHTML(cardPrice)}<br><span>${spotLabel(d.duration)}</span>${d.vehicleType ? `<br><span class="vtype-tag">${vtypeLabel(d.vehicleType)}</span>` : ''}</div>
           <div class="lang-tags">${d.lang.map(l=>`<span>${l}</span>`).join('')}</div>
         </div>
         ${d.ownerId && driverProfiles[d.ownerId] ? `<button type="button" class="edit-profile-link" style="margin-top:auto; padding-top:8px;" onclick="event.stopPropagation(); openTourRequest('${d.ownerId}')">✨ ${t('tr_open_btn')}</button>` : ''}
@@ -8361,12 +8405,12 @@ function openMapModal(mode, driverObj){
   const bbox = `${coords.lng-delta},${coords.lat-delta},${coords.lng+delta},${coords.lat+delta}`;
   const title = t('map_title_tour') + ' — ' + d.tour;
   document.getElementById('map-modal-title').textContent = title;
-  const startLabel = d.serviceRegions==='all' ? 'All regions'
+  const startLabel = d.serviceRegions==='all' ? t('all_regions')
     : (Array.isArray(d.serviceRegions) && d.serviceRegions.length ? d.serviceRegions.join(', ') : d.region);
   const stopsBox = document.getElementById('map-stops');
   let html = `<div class="map-stop-row start"><span class="map-stop-dot">🚐</span><div><strong>${t('map_start_of_tour')}</strong><br><span>${startLabel}</span></div></div>`;
   if(d.spots && d.spots.length){
-    html += d.spots.map((s,idx)=>`<div class="map-stop-row"><span class="map-stop-dot">${idx+1}</span><div>${s}</div></div>`).join('');
+    html += d.spots.map((s,idx)=>`<div class="map-stop-row"><span class="map-stop-dot">${idx+1}</span><div>${spotLabel(s)}</div></div>`).join('');
   }
   stopsBox.innerHTML = html;
   stopsBox.style.display = 'block';
@@ -8490,7 +8534,7 @@ function renderOtherTours(d){
     const isSel = x.tour === d.tour;
     return `
     <div class="other-tour-row ${isSel?'selected':''}" ${isSel?'':`onclick="switchModalTour('${x.tour.replace(/'/g,"\\'")}','${(d.ownerId||d.name).replace(/'/g,"\\'")}')"`}>
-      <div><div class="ot-name">${x.tour}</div><div class="ot-meta">${x.price} · ${x.duration}</div></div>
+      <div><div class="ot-name">${x.tour}</div><div class="ot-meta">${x.price} · ${spotLabel(x.duration)}</div></div>
       ${isSel ? `<span class="your-selection-tag">✓ ${selLabel}</span>` : ''}
     </div>`;
   }).join('');
@@ -8517,7 +8561,7 @@ function openModal(d){
   }
   else { avatar.style.backgroundImage = 'none'; avatar.textContent = initials(d.name); }
   document.getElementById('modal-tour').textContent = d.tour;
-  document.getElementById('modal-duration').textContent = d.duration;
+  document.getElementById('modal-duration').textContent = spotLabel(d.duration);
   document.getElementById('modal-vehicle').textContent = d.vehicle;
   document.getElementById('modal-lang').textContent = d.lang.join(', ');
   document.getElementById('modal-rating').textContent = d.rating;
@@ -8596,9 +8640,12 @@ function openModal(d){
   if(d.pickupRegionPrices && Object.keys(d.pickupRegionPrices).length){
     const sel = document.getElementById('modal-pickupregion-select');
     sel.innerHTML = Object.entries(d.pickupRegionPrices).map(([r,p])=>`<option value="${r}">${r} — ${p}</option>`).join('');
-    // wenn der Kunde vorher schon nach einer Region gesucht hat, die dieser Fahrer bedient, gleich vorauswaehlen
+    // bevorzugt die im Startpunkt-Filter ausgewaehlte Region (wie beim Airport Transfer), sonst
+    // wenn der Kunde vorher schon nach einer Region gesucht hat, die dieser Fahrer bedient, vorauswaehlen
+    const filteredRegion = getSingleCityStart();
     const searched = (document.getElementById('search-input').value || '').trim().toLowerCase();
-    const preferred = Object.keys(d.pickupRegionPrices).find(r => searched && r.toLowerCase().includes(searched));
+    const preferred = (filteredRegion && d.pickupRegionPrices[filteredRegion]) ? filteredRegion
+      : Object.keys(d.pickupRegionPrices).find(r => searched && r.toLowerCase().includes(searched));
     if(preferred) sel.value = preferred;
     pickupRow.style.display = 'flex';
     onPickupRegionChange();
