@@ -399,6 +399,11 @@
   .auth-input{ width:100%; box-sizing:border-box; padding:12px 14px; margin-bottom:12px; border:1px solid var(--line); border-radius:8px; font-size:0.95rem; font-family:inherit; }
   .auth-submit-btn{ width:100%; padding:13px; }
   .driver-pending-banner{ background:#FFF6DD; color:#7A5B00; border-bottom:1px solid #F0DFA0; padding:12px 20px; font-size:0.9rem; text-align:center; }
+  .new-booking-banner{
+    background:var(--danger); color:#fff; padding:12px 20px; font-size:0.9rem; font-weight:700;
+    text-align:center; cursor:pointer; animation: newBookingPulse 1.6s ease-in-out infinite;
+  }
+  @keyframes newBookingPulse{ 0%,100%{ opacity:1; } 50%{ opacity:0.82; } }
   .dash-nav{ border-right:1px solid var(--line); padding:28px 20px; }
   .dash-nav .profile-chip{
     display:flex; flex-direction:column; align-items:center; text-align:center;
@@ -1407,6 +1412,9 @@
   <div class="driver-pending-banner" id="driver-pending-banner" style="display:none;">
     ⏳ Dein Konto wartet noch auf Freischaltung durch das Ryvio-Team. Du kannst dich schon umsehen, aber noch nicht buchen lassen.
   </div>
+  <div class="new-booking-banner" id="new-booking-banner" style="display:none;" onclick="goToNewBookings()">
+    🔔 <span id="new-booking-banner-text"></span>
+  </div>
 
   <div class="dash-wrap" id="driver-dash-wrap" style="display:none;">
     <div class="dash-nav">
@@ -1433,9 +1441,9 @@
       </div>
       <div class="dash-nav-item active" data-section="overview" data-i18n="nav_overview" onclick="showDashSection('overview')">Overview</div>
       <div class="dash-nav-item" data-section="listings" data-i18n="nav_listings" onclick="showDashSection('listings')">My listings</div>
-      <div class="dash-nav-item" data-section="bookings" data-i18n="nav_bookings" onclick="showDashSection('bookings')">Bookings</div>
+      <div class="dash-nav-item" data-section="bookings" onclick="showDashSection('bookings')"><span data-i18n="nav_bookings">Bookings</span> <span class="inbox-dot" id="bookings-dot" style="display:none;"></span></div>
       <div class="dash-nav-item" data-section="requests" onclick="showDashSection('requests')"><span data-i18n="nav_requests">Requests</span> <span class="inbox-dot" id="requests-dot" style="display:none;"></span></div>
-      <div class="dash-nav-item" data-i18n="nav_calendar" onclick="openCalendar()">Calendar</div>
+      <div class="dash-nav-item" id="nav-calendar-item" data-i18n="nav_calendar" onclick="openCalendar()">Calendar</div>
       <div class="dash-nav-item" data-section="subscription" data-i18n="nav_subscription" onclick="showDashSection('subscription')">Fees &amp; billing</div>
       <div class="dash-nav-item" data-section="inbox" onclick="showDashSection('inbox')"><span data-i18n="nav_inbox">Inbox</span> <span class="inbox-dot" id="inbox-dot" style="display:none;"></span></div>
       <button type="button" class="wa-support-btn" onclick="openSupportMsg()" data-i18n="support_btn">✉️ Message to Ryvio Support</button>
@@ -1601,6 +1609,7 @@
         <div class="period-tabs" id="bookings-view-tabs">
           <button type="button" class="period-btn active" data-view="open" onclick="setBookingsViewTab('open')" data-i18n="bookings_tab_open">Open</button>
           <button type="button" class="period-btn" data-view="completed" onclick="setBookingsViewTab('completed')" data-i18n="bookings_tab_completed">Completed</button>
+          <button type="button" class="period-btn" data-view="cancelled" onclick="setBookingsViewTab('cancelled')" data-i18n="bookings_tab_cancelled">Cancelled</button>
         </div>
         <div class="panel">
           <div class="panel-head"><h3 data-i18n="booking_history_title">Booking history</h3></div>
@@ -1651,6 +1660,7 @@
         <div class="period-tabs" id="inbox-view-tabs">
           <button type="button" class="period-btn active" data-view="inbox" onclick="setInboxViewTab('inbox')" data-i18n="mailbox_tab_inbox">Inbox</button>
           <button type="button" class="period-btn" data-view="archive" onclick="setInboxViewTab('archive')" data-i18n="mailbox_tab_archive">Archive</button>
+          <button type="button" class="period-btn" data-view="deleted" onclick="setInboxViewTab('deleted')" data-i18n="mailbox_tab_deleted">Deleted</button>
         </div>
         <div class="panel" id="inbox-list"></div>
       </div>
@@ -1760,6 +1770,7 @@
     <div class="period-tabs" id="admin-msg-view-tabs">
       <button type="button" class="period-btn active" data-view="inbox" onclick="setAdminMsgViewTab('inbox')" data-i18n="mailbox_tab_inbox">Inbox</button>
       <button type="button" class="period-btn" data-view="archive" onclick="setAdminMsgViewTab('archive')" data-i18n="mailbox_tab_archive">Archive</button>
+      <button type="button" class="period-btn" data-view="deleted" onclick="setAdminMsgViewTab('deleted')" data-i18n="mailbox_tab_deleted">Deleted</button>
     </div>
     <div class="panel" id="admin-messages-list" style="margin-bottom:8px;"></div>
 
@@ -3190,6 +3201,7 @@ function normalizeLoadedState(){
       const th = supportThreads[id];
       if(th && !Array.isArray(th.entries)) th.entries = [];
     });
+    purgeOldDeletedMessages();
     if(!driverProfiles[currentDriverId]) currentDriverId = Object.keys(driverProfiles)[0] || 'wayan';
     Object.keys(driverProfiles).forEach(id=>{ syncDriverRating(id); });
     // old versions keyed blocked calendar days by plain day-number within a fixed "July 2026" — migrate to dated keys
@@ -3202,6 +3214,26 @@ function normalizeLoadedState(){
       });
     }
   }catch(e){ console.warn('Ryvio demo: state normalization skipped a field', e); }
+}
+// Demo-Gegenstueck zum taeglichen Supabase-Cronjob: entfernt Nachrichten/Chat-Verlaeufe, die seit
+// 30+ Tagen im Ordner "Gelöscht" liegen, endgueltig. Wird bei jedem Start geprueft (localStorage
+// kennt keinen eigenen Cronjob), betrifft also nur die Demo-Daten — echte Fahrer/Admin laufen ueber
+// die Supabase-Funktion purge_deleted_messages().
+function purgeOldDeletedMessages(){
+  try{
+    const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+    const cutoff = Date.now() - THIRTY_DAYS_MS;
+    Object.values(driverDataStore || {}).forEach(s=>{
+      if(!s || !Array.isArray(s.messages)) return;
+      s.messages = s.messages.filter(m => !(m.deleted && m.deletedAt && new Date(m.deletedAt).getTime() < cutoff));
+    });
+    Object.keys(supportThreads || {}).forEach(id=>{
+      const th = supportThreads[id];
+      if(th && th.deleted && th.deletedAt && new Date(th.deletedAt).getTime() < cutoff){
+        delete supportThreads[id];
+      }
+    });
+  }catch(e){ console.warn('Ryvio demo: purge of old deleted messages skipped', e); }
 }
 let srStarRating = 0;
 let srReviewPhoto = null;
@@ -5144,7 +5176,8 @@ function mapBookingRowToUI(row){
     feeIdrRaw: row.fee_idr || 0,
     cancellationFeeIdrRaw: row.cancellation_fee_idr || 0,
     ref: row.id.slice(0,8).toUpperCase(),
-    cancelReason: row.status === 'cancelled_by_driver' ? 'driver' : (row.status === 'cancelled_by_customer' ? 'customer' : null)
+    cancelReason: row.status === 'cancelled_by_driver' ? 'driver' : (row.status === 'cancelled_by_customer' ? 'customer' : null),
+    driverSeen: !!row.driver_seen
   };
 }
 async function loadRealBookings(){
@@ -5167,6 +5200,7 @@ function renderDriverBookings(){
   const el = document.getElementById('driver-bookings-list');
   if(driverBookings.length === 0){
     el.innerHTML = `<div class="empty-state">${t('empty_bookings')}</div>`;
+    updateBookingsAlert();
     return;
   }
   el.innerHTML = driverBookings.map((b,i) => {
@@ -5186,6 +5220,7 @@ function renderDriverBookings(){
       </div>
     </div>
   `;}).join('');
+  updateBookingsAlert();
 }
 function parseBookingDateTime(str){
   const months = {Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
@@ -5423,37 +5458,54 @@ function renderRealInbox(){
   if(!el) return;
   // Ungelesenes gehört immer ins Postfach, egal ob der Archiv-Status zufällig schon gesetzt ist
   const msgs = realMessages.filter(m => {
+    if(inboxViewTab==='deleted') return !!m.deleted;
+    if(m.deleted) return false;
     const isSettled = m.archived && m.is_read;
     return inboxViewTab==='archive' ? isSettled : !isSettled;
   });
   if(msgs.length === 0){
-    el.innerHTML = `<div class="empty-state">${inboxViewTab==='archive' ? t('empty_archive') : t('empty_inbox')}</div>`;
+    el.innerHTML = `<div class="empty-state">${inboxViewTab==='deleted' ? t('empty_deleted') : (inboxViewTab==='archive' ? t('empty_archive') : t('empty_inbox'))}</div>`;
     return;
   }
   el.innerHTML = msgs.map(m=>{
     const idx = realMessages.indexOf(m);
     const isSettled = m.archived && m.is_read;
+    const isDeletedView = inboxViewTab==='deleted';
     const clickAction = m.type==='admin' ? `openMyThreadFromInbox(${idx})` : `openRealMsgDetail(${idx})`;
     const archiveAction = m.type==='admin' ? `archiveMyThread()` : `archiveRealMessage(${idx})`;
     return `
-    <div class="inbox-row ${!m.is_read?'unread':''}" style="cursor:pointer; position:relative;" onclick="${clickAction}">
-      ${isSettled ? `<button type="button" class="inbox-delete-x" title="Löschen" onclick="event.stopPropagation(); deleteRealMessage(${idx})">✕</button>` : ''}
+    <div class="inbox-row ${!m.is_read?'unread':''}" style="cursor:${isDeletedView?'default':'pointer'}; position:relative;" ${isDeletedView ? '' : `onclick="${clickAction}"`}>
+      ${isSettled && !isDeletedView ? `<button type="button" class="inbox-delete-x" title="Löschen" onclick="event.stopPropagation(); deleteRealMessage(${idx})">✕</button>` : ''}
       <div class="inbox-title">${!m.is_read?'● ':''}${DRIVER_MSG_TYPE_ICON[m.type]||''} ${escapeHtml(m.subject)}</div>
       <div class="inbox-body">${escapeHtml(m.body)}</div>
       <div class="inbox-date">${formatDateDisplay((m.created_at||'').slice(0,10))} · Ryvio</div>
-      ${!isSettled ? `<button type="button" class="accept-btn" style="margin-top:8px;" onclick="event.stopPropagation(); ${archiveAction}">✓ ${t('mark_done_btn')}</button>` : `<span class="mailbox-replied-tag">${t('archived_tag')}</span>`}
+      ${isDeletedView
+        ? `<button type="button" class="accept-btn" style="margin-top:8px;" onclick="event.stopPropagation(); restoreRealMessage(${idx})">${t('restore_btn')}</button>`
+        : (!isSettled ? `<button type="button" class="accept-btn" style="margin-top:8px;" onclick="event.stopPropagation(); ${archiveAction}">✓ ${t('mark_done_btn')}</button>` : `<span class="mailbox-replied-tag">${t('archived_tag')}</span>`)
+      }
     </div>
   `;}).join('');
 }
-// Loescht eine einzelne Nachricht endgueltig aus dem eigenen Posteingang (nur im Archiv moeglich,
-// per X-Button oben rechts in der Nachrichtenzeile — vor dem Oeffnen anklickbar).
+// Loescht eine Nachricht aus dem eigenen Posteingang in den "Gelöscht"-Ordner (nur im Archiv
+// moeglich, per X-Button oben rechts in der Nachrichtenzeile). Endgueltig geloescht wird sie erst
+// automatisch nach 30 Tagen (taeglicher Supabase-Cronjob), vorher kann sie wiederhergestellt werden.
 async function deleteRealMessage(idx){
   const m = realMessages[idx];
   if(!m) return;
-  if(!confirm('Diese Nachricht endgültig löschen?')) return;
-  const { error } = await supabaseClient.from('driver_messages').delete().eq('id', m.id);
+  if(!confirm(t('confirm_move_to_deleted'))) return;
+  const nowIso = new Date().toISOString();
+  const { error } = await supabaseClient.from('driver_messages').update({ deleted:true, deleted_at: nowIso }).eq('id', m.id);
   if(error){ console.error('Nachricht konnte nicht gelöscht werden:', error); alert('Löschen hat nicht geklappt.'); return; }
-  realMessages.splice(idx, 1);
+  m.deleted = true; m.deleted_at = nowIso;
+  renderRealInbox();
+  updateRealInboxDot();
+}
+async function restoreRealMessage(idx){
+  const m = realMessages[idx];
+  if(!m) return;
+  const { error } = await supabaseClient.from('driver_messages').update({ deleted:false, deleted_at:null }).eq('id', m.id);
+  if(error){ console.error('Nachricht konnte nicht wiederhergestellt werden:', error); alert('Wiederherstellen hat nicht geklappt.'); return; }
+  m.deleted = false; m.deleted_at = null;
   renderRealInbox();
   updateRealInboxDot();
 }
@@ -5570,10 +5622,19 @@ async function archiveRealMessage(idx){
   const { error } = await supabaseClient.from('driver_messages').update({ archived:true }).eq('id', m.id);
   if(error) console.error('Nachricht konnte nicht archiviert werden:', error);
 }
+// Baustein (Buchungs-Alarm): das Umschlag-Symbol oben in der Leiste soll aufleuchten,
+// sobald ENTWEDER eine ungelesene Nachricht ODER eine neue, noch nicht gesehene Buchungsanfrage da ist —
+// dieselbe Logik wie beim Posteingang, nur zusammengeführt.
+let driverUnreadMsgCount = 0;
+let driverUnseenBookingCount = 0;
+function syncDriverTopbarMail(){
+  const tabMail = document.getElementById('tab-driver-mail');
+  if(tabMail) tabMail.style.display = (driverUnreadMsgCount > 0 || driverUnseenBookingCount > 0) ? 'inline-flex' : 'none';
+}
 function updateRealInboxDot(){
   // Chat-Antworten landen seit dem letzten Fix ohnehin als eigene Nachricht im Posteingang (realMessages) —
   // der separate Chat-Status würde dieselbe Nachricht sonst ein zweites Mal mitzählen.
-  const unreadCount = realMessages.filter(m=>!m.is_read && !m.archived).length;
+  const unreadCount = realMessages.filter(m=>!m.is_read && !m.archived && !m.deleted).length;
   const dot = document.getElementById('inbox-dot');
   if(dot){
     dot.style.display = unreadCount > 0 ? 'inline-block' : 'none';
@@ -5581,8 +5642,8 @@ function updateRealInboxDot(){
   }
   const navItem = dot ? dot.closest('.dash-nav-item') : null;
   if(navItem) navItem.classList.toggle('has-unread', unreadCount > 0);
-  const tabMail = document.getElementById('tab-driver-mail');
-  if(tabMail) tabMail.style.display = unreadCount > 0 ? 'inline-flex' : 'none';
+  driverUnreadMsgCount = unreadCount;
+  syncDriverTopbarMail();
 }
 function pushInboxMessage(driverId, title, body, link){
   const store = driverDataStore[driverId];
@@ -5601,9 +5662,14 @@ function renderInbox(){
   if(tabs) tabs.style.display = '';
   const el = document.getElementById('inbox-list');
   const all = getStore().messages || [];
-  const msgs = all.filter(m => inboxViewTab==='archive' ? m.archived : !m.archived);
+  const isDeletedView = inboxViewTab==='deleted';
+  const msgs = all.filter(m => {
+    if(isDeletedView) return !!m.deleted;
+    if(m.deleted) return false;
+    return inboxViewTab==='archive' ? m.archived : !m.archived;
+  });
   if(msgs.length === 0){
-    el.innerHTML = `<div class="empty-state">${inboxViewTab==='archive' ? t('empty_archive') : t('empty_inbox')}</div>`;
+    el.innerHTML = `<div class="empty-state">${isDeletedView ? t('empty_deleted') : (inboxViewTab==='archive' ? t('empty_archive') : t('empty_inbox'))}</div>`;
     return;
   }
   el.innerHTML = msgs.map(m=>{
@@ -5611,13 +5677,16 @@ function renderInbox(){
     const isRequestLink = m.link && m.link.type === 'tourRequest';
     const clickAction = isRequestLink ? `openRequestFromInboxMessage(${idx})` : `openDriverMsgDetail(${idx})`;
     return `
-    <div class="inbox-row ${m.unread?'unread':''}" style="cursor:pointer;" onclick="${clickAction}">
+    <div class="inbox-row ${m.unread?'unread':''}" style="cursor:${isDeletedView?'default':'pointer'};" ${isDeletedView ? '' : `onclick="${clickAction}"`}>
       <div class="inbox-title">${m.unread?'● ':''}${isRequestLink ? '✨ ' : ''}${m.title}</div>
       <div class="inbox-body">${m.body}</div>
       <div class="inbox-date">${m.date} · Ryvio</div>
       ${m.replied ? `<span class="mailbox-replied-tag">✓ ${t('admin_msg_replied')}</span>` : ''}
-      ${isRequestLink ? `<button type="button" class="accept-btn" style="margin-top:8px;" onclick="event.stopPropagation(); openRequestFromInboxMessage(${idx})">✨ ${t('tr_go_to_request_btn')}</button>` : ''}
-      ${!m.archived ? `<button type="button" class="accept-btn" style="margin-top:8px;" onclick="event.stopPropagation(); archiveInboxMessage(${idx})">✓ ${t('mark_done_btn')}</button>` : `<span class="mailbox-replied-tag">${t('archived_tag')}</span>`}
+      ${isDeletedView
+        ? `<button type="button" class="accept-btn" style="margin-top:8px;" onclick="event.stopPropagation(); restoreInboxMessage(${idx})">${t('restore_btn')}</button>`
+        : `${isRequestLink ? `<button type="button" class="accept-btn" style="margin-top:8px;" onclick="event.stopPropagation(); openRequestFromInboxMessage(${idx})">✨ ${t('tr_go_to_request_btn')}</button>` : ''}
+           ${!m.archived ? `<button type="button" class="accept-btn" style="margin-top:8px;" onclick="event.stopPropagation(); archiveInboxMessage(${idx})">✓ ${t('mark_done_btn')}</button>` : `<span class="mailbox-replied-tag">${t('archived_tag')}</span> <button type="button" class="mailbox-delete-x" title="Löschen" onclick="event.stopPropagation(); deleteInboxMessage(${idx})">✕</button>`}`
+      }
     </div>
   `;}).join('');
   updateInboxDot();
@@ -5670,10 +5739,27 @@ function archiveInboxMessage(idx){
   renderInbox();
   saveState();
 }
+// verschiebt eine Nachricht in den Ordner "Gelöscht" statt sie sofort zu entfernen — endgültig
+// gelöscht wird sie erst automatisch nach 30 Tagen (siehe purgeOldDeletedMessages)
+function deleteInboxMessage(idx){
+  if(!confirm(t('confirm_move_to_deleted'))) return;
+  const all = getStore().messages || [];
+  if(all[idx]){ all[idx].deleted = true; all[idx].deletedAt = new Date().toISOString(); }
+  renderInbox();
+  updateInboxDot();
+  saveState();
+}
+function restoreInboxMessage(idx){
+  const all = getStore().messages || [];
+  if(all[idx]){ all[idx].deleted = false; all[idx].deletedAt = null; }
+  renderInbox();
+  updateInboxDot();
+  saveState();
+}
 function updateInboxDot(){
   if(realDriverProfile){ updateRealInboxDot(); return; }
   const msgs = (driverDataStore[currentDriverId] && driverDataStore[currentDriverId].messages) || [];
-  const unreadCount = msgs.filter(m=>m.unread && !m.archived).length;
+  const unreadCount = msgs.filter(m=>m.unread && !m.archived && !m.deleted).length;
   const dot = document.getElementById('inbox-dot');
   if(dot){
     dot.style.display = unreadCount > 0 ? 'inline-block' : 'none';
@@ -5681,8 +5767,50 @@ function updateInboxDot(){
   }
   const navItem = dot ? dot.closest('.dash-nav-item') : null;
   if(navItem) navItem.classList.toggle('has-unread', unreadCount > 0);
-  const tabMail = document.getElementById('tab-driver-mail');
-  if(tabMail) tabMail.style.display = unreadCount > 0 ? 'inline-block' : 'none';
+  driverUnreadMsgCount = unreadCount;
+  syncDriverTopbarMail();
+}
+// Baustein (Buchungs-Alarm): neue, noch nicht angesehene Buchungsanfragen bekommen dieselbe
+// Aufmerksamkeit wie ungelesene Nachrichten — Umschlag oben, roter Punkt am Menüpunkt "Bookings",
+// und zusätzlich ein auffälliger Banner in der Mitte, der zu den Buchungen springt.
+function updateBookingsAlert(){
+  const unseenCount = (driverBookings || []).filter(b => b.driverSeen === false).length;
+  const dot = document.getElementById('bookings-dot');
+  if(dot){
+    dot.style.display = unseenCount > 0 ? 'inline-block' : 'none';
+    dot.textContent = unseenCount > 0 ? String(unseenCount) : '';
+  }
+  const navItem = dot ? dot.closest('.dash-nav-item') : null;
+  if(navItem) navItem.classList.toggle('has-unread', unseenCount > 0);
+  driverUnseenBookingCount = unseenCount;
+  syncDriverTopbarMail();
+  const banner = document.getElementById('new-booking-banner');
+  const bannerText = document.getElementById('new-booking-banner-text');
+  if(banner && bannerText){
+    if(unseenCount > 0){
+      bannerText.textContent = unseenCount === 1 ? t('new_booking_banner_one') : t('new_booking_banner_many').replace('{n}', unseenCount);
+      banner.style.display = 'flex';
+    } else {
+      banner.style.display = 'none';
+    }
+  }
+}
+function goToNewBookings(){
+  showDashSection('bookings');
+}
+// markiert eine Buchung als gesehen, sobald der Fahrer ihre Detailansicht öffnet (upcoming-Liste) —
+// genau wie eine Nachricht beim Öffnen als gelesen markiert wird
+function markBookingSeen(b){
+  if(!b || b.driverSeen) return;
+  b.driverSeen = true;
+  updateBookingsAlert();
+  if(realDriverProfile && b.dbId){
+    supabaseClient.from('bookings').update({ driver_seen:true }).eq('id', b.dbId).then(({error})=>{
+      if(error) console.error('Buchung konnte nicht als gesehen markiert werden:', error);
+    });
+  } else {
+    saveState();
+  }
 }
 // Baustein 11 Nachbesserung: Badge auch bei neuen, noch nicht geprüften Fahrer-Registrierungen zeigen,
 // nicht nur bei ungelesenen Nachrichten -- sonst übersieht man neue Anmeldungen leicht.
@@ -6362,6 +6490,11 @@ function setBookingsViewTab(view){
   document.querySelectorAll('#bookings-view-tabs .period-btn').forEach(b=>b.classList.toggle('active', b.dataset.view===view));
   renderAllBookings();
 }
+// eine Buchung gilt als "storniert" unabhaengig davon, ob es ein Demo- oder ein echter Fahrer ist —
+// Demo nutzt den einfachen Status 'cancelled', echte Fahrer die drei genaueren Supabase-Status
+function isCancelledBookingStatus(status){
+  return status === 'cancelled' || status === 'cancelled_by_driver' || status === 'cancelled_by_customer' || status === 'no_show';
+}
 function renderAllBookings(){
   const el = document.getElementById('all-bookings-list');
   if(bookingsViewTab === 'open'){
@@ -6386,12 +6519,18 @@ function renderAllBookings(){
       </div>
     `;}).join('');
   } else {
-    if(completedBookings.length === 0){
-      el.innerHTML = `<div class="empty-state">${t('empty_history')}</div>`;
+    // "completed" zeigt standardmaessig nur wirklich abgeschlossene Touren; stornierte
+    // (egal aus welchem Grund) landen jetzt in ihrem eigenen Reiter "Storniert"
+    const wantCancelled = bookingsViewTab === 'cancelled';
+    const rows = completedBookings
+      .map((b, idx) => ({ b, idx }))
+      .filter(({b}) => isCancelledBookingStatus(b.status) === wantCancelled);
+    if(rows.length === 0){
+      el.innerHTML = `<div class="empty-state">${wantCancelled ? t('empty_cancelled') : t('empty_history')}</div>`;
       return;
     }
-    el.innerHTML = completedBookings.map((b,idx)=>{
-      const isCancelled = b.status === 'cancelled';
+    el.innerHTML = rows.map(({b, idx})=>{
+      const isCancelled = isCancelledBookingStatus(b.status);
       let reasonNote = '';
       if(isCancelled){
         reasonNote = b.cancelReason === 'driver'
@@ -6413,6 +6552,7 @@ function openBookingDetail(source, idx){
   // diese beiden (für Demo UND echte Fahrer korrekt gepflegten) Listen direkt verwendet.
   const b = source==='upcoming' ? driverBookings[idx] : completedBookings[idx];
   if(!b) return;
+  if(source==='upcoming') markBookingSeen(b);
   document.getElementById('bd-who').textContent = b.who;
   document.getElementById('bd-tour').textContent = b.tour;
   document.getElementById('bd-when').textContent = b.when;
@@ -7032,6 +7172,9 @@ const translations = {
     dp_video_unreadable: "Couldn't read this video file — please try a different one.", dp_caption_ph: "e.g. Waterfall",
     btn_cancel: "Cancel", btn_deposit_received: "Deposit received", tap_to_pay: "Tap to pay", all_regions: "All regions",
     dur_day_tour: "Day tour", dur_half_day_tour: "Half-day tour", dur_fixed_rate: "Fixed rate", dur_full_day: "Full day",
+    new_booking_banner_one: "You have a new booking request — tap to view it", new_booking_banner_many: "You have {n} new booking requests — tap to view them",
+    bookings_tab_cancelled: "Cancelled", empty_cancelled: "No cancelled bookings.",
+    mailbox_tab_deleted: "Deleted", empty_deleted: "Nothing in Deleted.", restore_btn: "↩ Restore", confirm_move_to_deleted: "Move this message to Deleted? It will be permanently removed after 30 days.",
     alert_cancel_12h: "Cancellation is only possible up to 12 hours before the tour starts. Please contact the guest directly or Ryvio support.",
     confirm_cancel_1: "Cancel booking with", confirm_cancel_2: "The guest will be notified and refunded their deposit in full.\n\n⚠️ Frequent cancellations can lead to your driver account being deactivated.",
     cancel_reason_eyebrow: "Cancel booking", cancel_reason_prompt: "Why are you cancelling this tour? The guest will be notified.", cancel_reason_customer: "Customer didn't show up", cancel_reason_driver: "I need to cancel the tour",
@@ -7308,6 +7451,9 @@ const translations = {
     dp_video_unreadable: "Diese Videodatei konnte nicht gelesen werden — bitte eine andere versuchen.", dp_caption_ph: "z.B. Wasserfall",
     btn_cancel: "Stornieren", btn_deposit_received: "Anzahlung erhalten", tap_to_pay: "Zum Bezahlen tippen", all_regions: "Alle Regionen",
     dur_day_tour: "Tagestour", dur_half_day_tour: "Halbtagestour", dur_fixed_rate: "Festpreis", dur_full_day: "Ganztägig",
+    new_booking_banner_one: "Du hast eine neue Buchungsanfrage — antippen zum Ansehen", new_booking_banner_many: "Du hast {n} neue Buchungsanfragen — antippen zum Ansehen",
+    bookings_tab_cancelled: "Storniert", empty_cancelled: "Keine stornierten Buchungen.",
+    mailbox_tab_deleted: "Gelöscht", empty_deleted: "Nichts im Ordner Gelöscht.", restore_btn: "↩ Wiederherstellen", confirm_move_to_deleted: "Diese Nachricht in den Ordner Gelöscht verschieben? Sie wird nach 30 Tagen endgültig gelöscht.",
     alert_cancel_12h: "Eine Stornierung ist nur bis 12 Stunden vor Tourbeginn möglich. Bitte kontaktiere den Gast direkt oder den Ryvio-Support.",
     confirm_cancel_1: "Buchung stornieren mit", confirm_cancel_2: "Der Gast wird benachrichtigt und erhält seine Anzahlung vollständig zurück.\n\n⚠️ Häufige Stornierungen können zur Deaktivierung deines Fahrerkontos führen.",
     cancel_reason_eyebrow: "Buchung stornieren", cancel_reason_prompt: "Warum stornierst du die Tour? Der Gast wird benachrichtigt.", cancel_reason_customer: "Kunde ist nicht gekommen", cancel_reason_driver: "Ich muss die Tour absagen",
@@ -7584,6 +7730,9 @@ const translations = {
     dp_video_unreadable: "Tidak dapat membaca file video ini — mohon coba yang lain.", dp_caption_ph: "mis. Air Terjun",
     btn_cancel: "Batalkan", btn_deposit_received: "Deposit diterima", tap_to_pay: "Ketuk untuk bayar", all_regions: "Semua wilayah",
     dur_day_tour: "Tur sehari", dur_half_day_tour: "Tur setengah hari", dur_fixed_rate: "Harga tetap", dur_full_day: "Sehari penuh",
+    new_booking_banner_one: "Anda memiliki permintaan pemesanan baru — ketuk untuk melihatnya", new_booking_banner_many: "Anda memiliki {n} permintaan pemesanan baru — ketuk untuk melihatnya",
+    bookings_tab_cancelled: "Dibatalkan", empty_cancelled: "Tidak ada pemesanan yang dibatalkan.",
+    mailbox_tab_deleted: "Dihapus", empty_deleted: "Tidak ada apa pun di folder Dihapus.", restore_btn: "↩ Pulihkan", confirm_move_to_deleted: "Pindahkan pesan ini ke folder Dihapus? Akan dihapus permanen setelah 30 hari.",
     alert_cancel_12h: "Pembatalan hanya bisa dilakukan hingga 12 jam sebelum tur dimulai. Silakan hubungi tamu langsung atau dukungan Ryvio.",
     confirm_cancel_1: "Batalkan pemesanan dengan", confirm_cancel_2: "Tamu akan diberi tahu dan deposit dikembalikan penuh.\n\n⚠️ Pembatalan yang sering dapat menyebabkan akun sopir dinonaktifkan.",
     cancel_reason_eyebrow: "Batalkan pemesanan", cancel_reason_prompt: "Mengapa Anda membatalkan tur ini? Tamu akan diberi tahu.", cancel_reason_customer: "Pelanggan tidak datang", cancel_reason_driver: "Saya perlu membatalkan tur",
@@ -8967,7 +9116,7 @@ ${bpt('driverFeeLine')}</div>`;
   // push into the correct driver's booking list (their registered profile, if any)
   const targetId = currentDriver.ownerId && driverDataStore[currentDriver.ownerId] ? currentDriver.ownerId : 'wayan';
   driverDataStore[targetId].bookings.unshift({
-    who:name, tour:currentDriver.tour, when:date, status:'pending', isNew:true,
+    who:name, tour:currentDriver.tour, when:date, status:'pending', isNew:true, driverSeen:false,
     email, phone, pickup, price:currentDriver.price, deposit:depositStr, balance:balanceStr,
     vehicle:vehicleStr, ref, destination: currentDriver.airportDestination || currentDriver.transferDestination || null,
     dateISO: document.getElementById('f-date').value || null
@@ -9168,15 +9317,33 @@ async function loadRealBlockedDays(){
   if(error){ console.error('Blockierte Tage konnten nicht geladen werden:', error); return; }
   realBlockedDays = new Set((data||[]).map(r=>r.blocked_date));
 }
+let dashSectionBeforeCalendar = null;
 async function openCalendar(){
   const now = new Date();
   calViewYear = now.getFullYear();
   calViewMonth = now.getMonth();
+  // Bugfix: der schwarze Navigations-Balken sprang vorher nicht auf "Kalender" um, weil
+  // der Menüpunkt kein data-section hat (kein eigener Dashboard-Abschnitt, sondern ein Modal) —
+  // jetzt gezielt markieren und den vorherigen Stand fürs Schliessen merken.
+  const activeItem = document.querySelector('.dash-nav-item[data-section].active');
+  dashSectionBeforeCalendar = activeItem ? activeItem.dataset.section : null;
+  document.querySelectorAll('.dash-nav-item[data-section]').forEach(el=>el.classList.remove('active'));
+  const calNavItem = document.getElementById('nav-calendar-item');
+  if(calNavItem) calNavItem.classList.add('active');
   if(realDriverProfile){ await Promise.all([loadRealBlockedDays(), loadRealBookings()]); }
   renderCalendar();
   document.getElementById('cal-modal-bg').classList.add('active');
 }
-function closeCalendar(){ document.getElementById('cal-modal-bg').classList.remove('active'); }
+function closeCalendar(){
+  document.getElementById('cal-modal-bg').classList.remove('active');
+  const calNavItem = document.getElementById('nav-calendar-item');
+  if(calNavItem) calNavItem.classList.remove('active');
+  if(dashSectionBeforeCalendar){
+    document.querySelectorAll('.dash-nav-item[data-section]').forEach(el=>{
+      el.classList.toggle('active', el.dataset.section===dashSectionBeforeCalendar);
+    });
+  }
+}
 document.getElementById('cal-modal-bg').addEventListener('click', e=>{ if(e.target.id==='cal-modal-bg') closeCalendar(); });
 
 function goHome(){
@@ -10833,36 +11000,46 @@ function renderAdminMessages(){
   const el = document.getElementById('admin-messages-list');
   updateAdminMailBadge();
   if(!el) return;
+  const isDeletedView = adminMsgViewTab==='deleted';
   if(realDriverProfile || isAdminSession){
     // Ungelesenes gehört immer ins Postfach, egal ob der Archiv-Status zufällig schon gesetzt ist
     // (kann passieren, wenn ein Fahrer direkt nach dem Antworten auch "erledigt" antippt)
     const threads = realAdminThreads.filter(t => {
+      if(isDeletedView) return !!t.deleted;
+      if(t.deleted) return false;
       const isSettled = t.archived && !t.unread_for_admin;
       return adminMsgViewTab==='archive' ? isSettled : !isSettled;
     });
     if(threads.length === 0){
-      el.innerHTML = `<div class="empty-state">${adminMsgViewTab==='archive' ? t('empty_archive') : t('empty_inbox')}</div>`;
+      el.innerHTML = `<div class="empty-state">${isDeletedView ? t('empty_deleted') : (adminMsgViewTab==='archive' ? t('empty_archive') : t('empty_inbox'))}</div>`;
       return;
     }
     el.innerHTML = threads.map(th=>{
       const isSettled = th.archived && !th.unread_for_admin;
       return `
-      <div class="mailbox-row ${th.unread_for_admin?'unread':''}" onclick="openAdminMsgDetail('${th.driver_id}')">
+      <div class="mailbox-row ${th.unread_for_admin?'unread':''}" onclick="${isDeletedView ? '' : `openAdminMsgDetail('${th.driver_id}')`}" style="${isDeletedView?'cursor:default;':''}">
         <div class="mailbox-row-main">
           <div class="mailbox-subject">${th.unread_for_admin?'● ':''}${escapeHtml(th.subject)}</div>
           <div class="mailbox-preview">${escapeHtml(th.driverName)} · ${th.lwNumber} — ${th.lastMessage ? escapeHtml(th.lastMessage.body) : ''}</div>
         </div>
         <div class="mailbox-meta">
           <div class="mailbox-date">${th.lastMessage ? formatDateDisplay((th.lastMessage.created_at||'').slice(0,10)) : ''}</div>
-          ${!isSettled ? `<button type="button" class="accept-btn" style="margin-top:6px;" onclick="event.stopPropagation(); archiveAdminMessage('${th.driver_id}')">✓ ${t('mark_done_btn')}</button>` : `<span class="mailbox-replied-tag">${t('archived_tag')}</span> <button type="button" class="mailbox-delete-x" title="Löschen" onclick="event.stopPropagation(); deleteAdminThread('${th.driver_id}')">✕</button>`}
+          ${isDeletedView
+            ? `<button type="button" class="accept-btn" style="margin-top:6px;" onclick="event.stopPropagation(); restoreAdminThread('${th.driver_id}')">${t('restore_btn')}</button>`
+            : (!isSettled ? `<button type="button" class="accept-btn" style="margin-top:6px;" onclick="event.stopPropagation(); archiveAdminMessage('${th.driver_id}')">✓ ${t('mark_done_btn')}</button>` : `<span class="mailbox-replied-tag">${t('archived_tag')}</span> <button type="button" class="mailbox-delete-x" title="Löschen" onclick="event.stopPropagation(); deleteAdminThread('${th.driver_id}')">✕</button>`)
+          }
         </div>
       </div>
     `;}).join('');
     return;
   }
-  const threads = Object.values(supportThreads).filter(th => adminMsgViewTab==='archive' ? th.archived : !th.archived);
+  const threads = Object.values(supportThreads).filter(th => {
+    if(isDeletedView) return !!th.deleted;
+    if(th.deleted) return false;
+    return adminMsgViewTab==='archive' ? th.archived : !th.archived;
+  });
   if(threads.length === 0){
-    el.innerHTML = `<div class="empty-state">${adminMsgViewTab==='archive' ? t('empty_archive') : t('empty_inbox')}</div>`;
+    el.innerHTML = `<div class="empty-state">${isDeletedView ? t('empty_deleted') : (adminMsgViewTab==='archive' ? t('empty_archive') : t('empty_inbox'))}</div>`;
     return;
   }
   threads.sort((a,b)=>{
@@ -10872,31 +11049,45 @@ function renderAdminMessages(){
   el.innerHTML = threads.map(th=>{
     const last = th.entries[th.entries.length-1];
     return `
-    <div class="mailbox-row ${th.unreadForAdmin?'unread':''}" onclick="openAdminMsgDetail('${th.driverId}')">
+    <div class="mailbox-row ${th.unreadForAdmin?'unread':''}" onclick="${isDeletedView ? '' : `openAdminMsgDetail('${th.driverId}')`}" style="${isDeletedView?'cursor:default;':''}">
       <div class="mailbox-row-main">
         <div class="mailbox-subject">${th.unreadForAdmin?'● ':''}${th.subject}</div>
         <div class="mailbox-preview">${th.driverName} · ${th.lwNumber} — ${last ? last.body : ''}</div>
       </div>
       <div class="mailbox-meta">
         <div class="mailbox-date">${last ? last.date : ''}</div>
-        ${!th.archived ? `<button type="button" class="accept-btn" style="margin-top:6px;" onclick="event.stopPropagation(); archiveAdminMessage('${th.driverId}')">✓ ${t('mark_done_btn')}</button>` : `<span class="mailbox-replied-tag">${t('archived_tag')}</span> <button type="button" class="mailbox-delete-x" title="Löschen" onclick="event.stopPropagation(); deleteAdminThread('${th.driverId}')">✕</button>`}
+        ${isDeletedView
+          ? `<button type="button" class="accept-btn" style="margin-top:6px;" onclick="event.stopPropagation(); restoreAdminThread('${th.driverId}')">${t('restore_btn')}</button>`
+          : (!th.archived ? `<button type="button" class="accept-btn" style="margin-top:6px;" onclick="event.stopPropagation(); archiveAdminMessage('${th.driverId}')">✓ ${t('mark_done_btn')}</button>` : `<span class="mailbox-replied-tag">${t('archived_tag')}</span> <button type="button" class="mailbox-delete-x" title="Löschen" onclick="event.stopPropagation(); deleteAdminThread('${th.driverId}')">✕</button>`)
+        }
       </div>
     </div>
   `;}).join('');
 }
-// Loescht einen archivierten Nachrichten-Thread endgueltig (X-Button, nur im Archiv sichtbar) —
-// sowohl fuer echte Fahrer (support_threads/-messages in Supabase) als auch im Demo-Modus.
+// Verschiebt einen archivierten Nachrichten-Thread in den Ordner "Gelöscht" (X-Button, nur im
+// Archiv sichtbar) — sowohl fuer echte Fahrer (support_threads in Supabase) als auch im Demo-Modus.
+// Endgueltig geloescht wird erst automatisch nach 30 Tagen.
 async function deleteAdminThread(driverId){
-  if(!confirm('Diesen Nachrichtenverlauf endgültig löschen?')) return;
+  if(!confirm(t('confirm_move_to_deleted'))) return;
   if(realDriverProfile || isAdminSession){
-    const { error: msgErr } = await supabaseClient.from('support_thread_messages').delete().eq('driver_id', driverId);
-    if(msgErr){ console.error('Nachrichten konnten nicht gelöscht werden:', msgErr); alert('Löschen hat nicht geklappt.'); return; }
-    const { error: threadErr } = await supabaseClient.from('support_threads').delete().eq('driver_id', driverId);
-    if(threadErr){ console.error('Thread konnte nicht gelöscht werden:', threadErr); alert('Löschen hat nicht geklappt.'); return; }
+    const nowIso = new Date().toISOString();
+    const { error } = await supabaseClient.from('support_threads').update({ deleted:true, deleted_at: nowIso }).eq('driver_id', driverId);
+    if(error){ console.error('Konnte nicht in Gelöscht verschoben werden:', error); alert('Löschen hat nicht geklappt.'); return; }
     await loadRealAdminMessages();
     return;
   }
-  delete supportThreads[driverId];
+  if(supportThreads[driverId]){ supportThreads[driverId].deleted = true; supportThreads[driverId].deletedAt = new Date().toISOString(); }
+  renderAdminMessages();
+  saveState();
+}
+async function restoreAdminThread(driverId){
+  if(realDriverProfile || isAdminSession){
+    const { error } = await supabaseClient.from('support_threads').update({ deleted:false, deleted_at:null }).eq('driver_id', driverId);
+    if(error){ console.error('Konnte nicht wiederhergestellt werden:', error); alert('Wiederherstellen hat nicht geklappt.'); return; }
+    await loadRealAdminMessages();
+    return;
+  }
+  if(supportThreads[driverId]){ supportThreads[driverId].deleted = false; supportThreads[driverId].deletedAt = null; }
   renderAdminMessages();
   saveState();
 }
