@@ -136,7 +136,7 @@
   }
   .tab-btn.active{ background:var(--ink); color:var(--paper); }
   .tab-btn-register{ color:var(--teal); }
-  .tab-btn-admin{ color:var(--ink-soft); font-size:0.78rem; }
+  .tab-btn-admin{ color:var(--ink-soft); font-size:0.78rem; display:none; }
   .lang-switch{ display:flex; gap:2px; background:var(--paper-dim); border-radius:14px; padding:3px; margin-left:8px; }
   .lang-btn{
     border:none; background:transparent; padding:5px 10px; border-radius:12px; cursor:pointer;
@@ -10330,6 +10330,7 @@ if(_offerToken){
   document.getElementById('ratings-page').style.display = 'block';
 } else {
   checkSiteLock();
+  updateIsAdminSession();
   // Punkt 2 (5. August): der Alternative-Link aus der "Fahrer kann leider nicht"-Mail traegt die
   // Region des urspruenglichen Fahrers mit -- wird hier automatisch als Suchfilter vorausgewaehlt,
   // damit der Kunde direkt passende Alternativen sieht statt wieder bei null anzufangen.
@@ -10598,6 +10599,7 @@ async function handleDriverLogout(){
 // die Meldung soll nur nach einem tatsaechlichen Login-/Registrierungsversuch erscheinen.
 async function checkDriverAuthState(silent){
   const { data: { session } } = await supabaseClient.auth.getSession();
+  updateIsAdminSession();
   const gate = document.getElementById('driver-auth-gate');
   const dash = document.getElementById('driver-dash-wrap');
   const pendingBanner = document.getElementById('driver-pending-banner');
@@ -11027,6 +11029,11 @@ let isAdminSession = false;
 async function updateIsAdminSession(){
   const { data: { session } } = await supabaseClient.auth.getSession();
   isAdminSession = !!(session && session.user && session.user.user_metadata && session.user.user_metadata.role === 'admin');
+  // Punkt 5 (5. August): Admin-Tab war bisher fuer JEDEN Besucher in der Navigation sichtbar
+  // (die Daten dahinter waren zwar per RLS geschuetzt, aber der Tab selbst nicht). Jetzt taucht
+  // er nur noch auf, wenn die aktuelle Sitzung wirklich role:admin hat.
+  const tabEl = document.getElementById('tab-admin');
+  if(tabEl) tabEl.style.display = isAdminSession ? '' : 'none';
   const el = document.getElementById('admin-current-account');
   if(el){
     if(!session){ el.textContent = '⚠️ Nicht eingeloggt.'; }
@@ -12243,7 +12250,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v145</div>
+<div id="version-footer" style="position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v146</div>
 
 </body>
 </html>
