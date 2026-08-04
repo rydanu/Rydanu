@@ -5627,8 +5627,11 @@ async function loadRealBookings(){
     .order('created_at', { ascending: false });
   if(error){ console.error('Buchungen konnten nicht geladen werden:', error); return; }
   const all = (data || []).map(mapBookingRowToUI);
-  driverBookings = all.filter(b => b.status === 'pending' || b.status === 'confirmed');
-  completedBookings = all.filter(b => !(b.status === 'pending' || b.status === 'confirmed'));
+  // Punkt 2 (5. August): abgelehnte Anfragen bleiben in der DB (fuer die Admin-Qualitaetsstatistik),
+  // duerfen aber nirgends mehr in der eigenen Fahrer-Ansicht auftauchen -- weder offen noch abgeschlossen.
+  const visible = all.filter(b => b.status !== 'declined_by_driver');
+  driverBookings = visible.filter(b => b.status === 'pending' || b.status === 'confirmed');
+  completedBookings = visible.filter(b => !(b.status === 'pending' || b.status === 'confirmed'));
   renderDriverBookings();
   if(typeof renderAllBookings === 'function') renderAllBookings();
   if(typeof renderOverviewStats === 'function') renderOverviewStats();
@@ -5649,11 +5652,13 @@ function renderDriverBookings(){
       <div class="row-actions">
         ${isCancelReq ? `
           <button type="button" class="accept-btn" onclick="event.stopPropagation(); confirmCancellation(${i})">✓ ${t('btn_confirm_cancel')}</button>
+        ` : (b.status==='pending' ? `
+          <button type="button" class="cancel-btn" onclick="event.stopPropagation(); declineBooking(${i})">${t('btn_decline_booking')}</button>
+          <button type="button" class="accept-btn" onclick="event.stopPropagation(); acceptBooking(${i})">✓ ${t('btn_deposit_received')}</button>
         ` : `
           <button type="button" class="cancel-btn" onclick="event.stopPropagation(); cancelBooking(${i})">${t('btn_cancel')}</button>
-          ${b.status==='pending' ? `<button type="button" class="accept-btn" onclick="event.stopPropagation(); acceptBooking(${i})">✓ ${t('btn_deposit_received')}</button>` : ''}
           ${b.status==='confirmed' ? `<button type="button" class="accept-btn" onclick="event.stopPropagation(); completeBooking(${i})">✓ ${t('btn_mark_completed')}</button>` : ''}
-        `}
+        `)}
         <span class="status-pill ${b.status}">${isCancelReq ? t('st_cancel_requested') : (b.status==='confirmed'?t('st_confirmed'):t('st_awaiting'))}</span>
       </div>
     </div>
@@ -5827,6 +5832,31 @@ function acceptBooking(i){
   renderOverviewStats();
   saveState();
   alert(t('alert_deposit_confirmed_1') + ' ' + b.who + ' ✓\n\n' + t('alert_deposit_confirmed_2'));
+}
+// Punkt 2 (5. August): der Fahrer kann eine noch offene Anfrage komplett ablehnen (z.B. keine Zeit,
+// passt nicht). Anders als bei "Stornieren" gibt es dabei keine Gebuehr -- die Tour wurde ja nie
+// angenommen. Die Buchung bleibt in der DB fuer die Admin-Qualitaetsstatistik erhalten, verschwindet
+// aber sofort aus der Fahrer-eigenen Ansicht. Der Kunde bekommt automatisch eine Absage-Mail mit
+// einem Link zurueck zu Ryvio, der passende alternative Fahrer vorschlaegt.
+function declineBooking(i){
+  const b = driverBookings[i];
+  if(!b) return;
+  if(!confirm(t('confirm_decline_booking') + ' ' + b.who + '?')) return;
+  if(realDriverProfile && b.dbId){
+    supabaseClient.from('bookings').update({ status: 'declined_by_driver' }).eq('id', b.dbId).then(({error})=>{
+      if(error){ console.error('Buchung konnte nicht abgelehnt werden:', error); return; }
+      loadRealBookings();
+      supabaseClient.functions.invoke('send-tour-offer-email', { body: { type: 'booking_declined', bookingId: b.dbId, origin: location.origin } })
+        .catch(err=>console.error('Absage-Mail fehlgeschlagen:', err));
+    });
+    alert(t('decline_outcome_note') + ' ' + b.who + '.');
+    return;
+  }
+  driverBookings.splice(i, 1);
+  renderDriverBookings();
+  renderAllBookings();
+  renderOverviewStats();
+  saveState();
 }
 
 // ---- dashboard section switching ----
@@ -7288,9 +7318,13 @@ function openBookingDetail(source, idx){
     if(isCancelReq){
       actions.innerHTML = `<button type="button" class="accept-btn" onclick="closeBookingDetail(); confirmCancellation(${idx})">✓ ${t('btn_confirm_cancel')}</button>`;
     } else {
-      actions.innerHTML = `
+      // Punkt 2 (5. August): eine noch offene Anfrage (pending) bekommt "Ablehnen" statt
+      // "Stornieren" -- keine Stornogebuehr, da die Tour ja noch nie angenommen wurde.
+      actions.innerHTML = b.status==='pending' ? `
+        <button type="button" class="cancel-btn" onclick="closeBookingDetail(); declineBooking(${idx})">${t('btn_decline_booking')}</button>
+        <button type="button" class="accept-btn" onclick="closeBookingDetail(); acceptBooking(${idx})">✓ ${t('btn_deposit_received')}</button>
+      ` : `
         <button type="button" class="cancel-btn" onclick="closeBookingDetail(); cancelBooking(${idx})">${t('btn_cancel')}</button>
-        ${b.status==='pending' ? `<button type="button" class="accept-btn" onclick="closeBookingDetail(); acceptBooking(${idx})">✓ ${t('btn_deposit_received')}</button>` : ''}
         ${b.status==='confirmed' ? `<button type="button" class="accept-btn" onclick="closeBookingDetail(); completeBooking(${idx})">✓ ${t('btn_mark_completed')}</button>` : ''}
       `;
     }
@@ -7773,7 +7807,7 @@ const translations = {
     admin_msg_from_driver: "Message from driver", admin_msg_replied: "Replied", admin_msg_replied_note: "You already replied to this message.", admin_msg_reply_label: "Your reply (sent to the driver's inbox)", admin_msg_reply_btn: "Send reply", admin_msg_reply_empty: "Please write a reply before sending.", admin_msg_reply_sent: "Reply sent ✓ — the driver will see it in their inbox.", admin_msg_reply_subject: "Reply from Ryvio Support",
     mailbox_tab_inbox: "Inbox", mailbox_tab_archive: "Archive", mark_done_btn: "Mark as done", archived_tag: "Archived", empty_archive: "Nothing archived yet.",
     thread_label_driver: "You", thread_label_admin: "Ryvio Support",
-    admin_stat_fees: "Fees received", admin_stat_booked: "Bookings made", admin_stat_cancelled: "Cancelled",
+    admin_stat_fees: "Fees received", admin_stat_booked: "Bookings made", admin_stat_cancelled: "Cancelled", admin_declined_count_label: "declined",
     admin_stat_drivers: "Active drivers",
     driver_perf_title: "Your bookings & revenue",
     driver_stat_bookings: "Bookings", driver_stat_revenue: "Revenue", driver_stat_fees: "Fees", driver_stat_cancelled: "Cancelled",
@@ -7828,7 +7862,7 @@ const translations = {
     admin_empty_pending: "No pending driver registrations right now.", admin_empty_approved: "No approved drivers yet.", email_greeting: "Hi",
     cal_hint: "Tap a booked or pending day to open the trip. Tap a free day to block it — blocked days never show up in traveler search.",
     tier_transfer_row: "Transfer (no airport, flat rate)", tier_ten_percent: "10% of tour price",
-    btn_confirm_cancel: "Confirm cancellation", confirm_ack_cancel: "Confirm the cancellation requested by", btn_mark_completed: "Mark trip completed", confirm_complete_booking: "Confirm this trip is completed for",
+    btn_confirm_cancel: "Confirm cancellation", confirm_ack_cancel: "Confirm the cancellation requested by", btn_mark_completed: "Mark trip completed", confirm_complete_booking: "Confirm this trip is completed for", btn_decline_booking: "Decline", confirm_decline_booking: "Decline this booking request from", decline_outcome_note: "Declined. The customer will get an email letting them know and pointing them to other drivers for",
     bookings_tab_open: "Open", bookings_tab_completed: "Completed",
     mb_cancel_already_requested: "You already requested a cancellation for this booking — your driver has been notified and needs to confirm it.",
     mb_cancel_requested_note: "Your cancellation request has been sent to your driver. Once confirmed, your deposit will be refunded.",
@@ -8073,7 +8107,7 @@ const translations = {
     admin_msg_from_driver: "Nachricht von Fahrer", admin_msg_replied: "Beantwortet", admin_msg_replied_note: "Du hast auf diese Nachricht bereits geantwortet.", admin_msg_reply_label: "Deine Antwort (geht in den Posteingang des Fahrers)", admin_msg_reply_btn: "Antwort senden", admin_msg_reply_empty: "Bitte schreibe eine Antwort, bevor du sendest.", admin_msg_reply_sent: "Antwort gesendet ✓ — der Fahrer sieht sie in seinem Posteingang.", admin_msg_reply_subject: "Antwort vom Ryvio Support",
     mailbox_tab_inbox: "Posteingang", mailbox_tab_archive: "Archiv", mark_done_btn: "Erledigt", archived_tag: "Archiviert", empty_archive: "Noch nichts archiviert.",
     thread_label_driver: "Du", thread_label_admin: "Ryvio Support",
-    admin_stat_fees: "Erhaltene Gebühren", admin_stat_booked: "Gebuchte Fahrten", admin_stat_cancelled: "Storniert",
+    admin_stat_fees: "Erhaltene Gebühren", admin_stat_booked: "Gebuchte Fahrten", admin_stat_cancelled: "Storniert", admin_declined_count_label: "abgelehnt",
     admin_stat_drivers: "Aktive Fahrer",
     driver_perf_title: "Deine Buchungen & Umsatz",
     driver_stat_bookings: "Buchungen", driver_stat_revenue: "Umsatz", driver_stat_fees: "Gebühren", driver_stat_cancelled: "Storniert",
@@ -8128,7 +8162,7 @@ const translations = {
     admin_empty_pending: "Aktuell keine ausstehenden Fahrer-Registrierungen.", admin_empty_approved: "Noch keine freigeschalteten Fahrer.", email_greeting: "Hallo",
     cal_hint: "Tippe auf einen gebuchten oder wartenden Tag, um die Fahrt zu öffnen. Tippe auf einen freien Tag, um ihn zu blockieren — blockierte Tage erscheinen nie in der Kundensuche.",
     tier_transfer_row: "Transfer (ohne Flughafen, Pauschale)", tier_ten_percent: "10% des Tourpreises",
-    btn_confirm_cancel: "Stornierung bestätigen", confirm_ack_cancel: "Die von folgender Person angefragte Stornierung bestätigen:", btn_mark_completed: "Tour als abgeschlossen markieren", confirm_complete_booking: "Bestätige, dass diese Tour abgeschlossen wurde für",
+    btn_confirm_cancel: "Stornierung bestätigen", confirm_ack_cancel: "Die von folgender Person angefragte Stornierung bestätigen:", btn_mark_completed: "Tour als abgeschlossen markieren", confirm_complete_booking: "Bestätige, dass diese Tour abgeschlossen wurde für", btn_decline_booking: "Ablehnen", confirm_decline_booking: "Diese Buchungsanfrage ablehnen von", decline_outcome_note: "Abgelehnt. Der Kunde bekommt eine E-Mail mit Bescheid und einem Hinweis auf andere Fahrer für",
     bookings_tab_open: "Offen", bookings_tab_completed: "Abgeschlossen",
     mb_cancel_already_requested: "Du hast für diese Buchung bereits eine Stornierung angefragt — dein Fahrer wurde benachrichtigt und muss sie bestätigen.",
     mb_cancel_requested_note: "Deine Stornierungsanfrage wurde an deinen Fahrer gesendet. Nach seiner Bestätigung wird deine Anzahlung erstattet.",
@@ -8373,7 +8407,7 @@ const translations = {
     admin_msg_from_driver: "Pesan dari sopir", admin_msg_replied: "Dibalas", admin_msg_replied_note: "Anda sudah membalas pesan ini.", admin_msg_reply_label: "Balasan Anda (dikirim ke kotak masuk sopir)", admin_msg_reply_btn: "Kirim balasan", admin_msg_reply_empty: "Mohon tulis balasan sebelum mengirim.", admin_msg_reply_sent: "Balasan terkirim ✓ — sopir akan melihatnya di kotak masuknya.", admin_msg_reply_subject: "Balasan dari Dukungan Ryvio",
     mailbox_tab_inbox: "Kotak masuk", mailbox_tab_archive: "Arsip", mark_done_btn: "Tandai selesai", archived_tag: "Diarsipkan", empty_archive: "Belum ada yang diarsipkan.",
     thread_label_driver: "Anda", thread_label_admin: "Dukungan Ryvio",
-    admin_stat_fees: "Biaya diterima", admin_stat_booked: "Pemesanan dibuat", admin_stat_cancelled: "Dibatalkan",
+    admin_stat_fees: "Biaya diterima", admin_stat_booked: "Pemesanan dibuat", admin_stat_cancelled: "Dibatalkan", admin_declined_count_label: "ditolak",
     admin_stat_drivers: "Sopir aktif",
     driver_perf_title: "Pemesanan & pendapatan Anda",
     driver_stat_bookings: "Pemesanan", driver_stat_revenue: "Pendapatan", driver_stat_fees: "Biaya", driver_stat_cancelled: "Dibatalkan",
@@ -8428,7 +8462,7 @@ const translations = {
     admin_empty_pending: "Tidak ada pendaftaran sopir yang tertunda saat ini.", admin_empty_approved: "Belum ada sopir yang disetujui.", email_greeting: "Hai",
     cal_hint: "Ketuk hari yang dipesan atau menunggu untuk membuka perjalanan. Ketuk hari kosong untuk memblokirnya — hari yang diblokir tidak pernah muncul dalam pencarian wisatawan.",
     tier_transfer_row: "Transfer (tanpa bandara, tarif tetap)", tier_ten_percent: "10% dari harga tur",
-    btn_confirm_cancel: "Konfirmasi pembatalan", confirm_ack_cancel: "Konfirmasi pembatalan yang diminta oleh", btn_mark_completed: "Tandai perjalanan selesai", confirm_complete_booking: "Konfirmasi perjalanan ini telah selesai untuk",
+    btn_confirm_cancel: "Konfirmasi pembatalan", confirm_ack_cancel: "Konfirmasi pembatalan yang diminta oleh", btn_mark_completed: "Tandai perjalanan selesai", confirm_complete_booking: "Konfirmasi perjalanan ini telah selesai untuk", btn_decline_booking: "Tolak", confirm_decline_booking: "Tolak permintaan pemesanan ini dari", decline_outcome_note: "Ditolak. Pelanggan akan menerima email pemberitahuan dan diarahkan ke sopir lain untuk",
     bookings_tab_open: "Terbuka", bookings_tab_completed: "Selesai",
     mb_cancel_already_requested: "Anda sudah meminta pembatalan untuk pemesanan ini — sopir Anda telah diberi tahu dan perlu mengonfirmasinya.",
     mb_cancel_requested_note: "Permintaan pembatalan Anda telah dikirim ke sopir Anda. Setelah dikonfirmasi, deposit Anda akan dikembalikan.",
@@ -9987,7 +10021,11 @@ function checkDateConflict(dateISO, excludeDbId){
   if(!dateISO) return;
   const isBlocked = realDriverProfile ? realBlockedDays.has(dateISO) : !!calEvents[dateISO];
   const bookingsByDate = collectCalendarBookings();
-  const sameDayBookings = (bookingsByDate[dateISO] || []).filter(b => b.dbId !== excludeDbId && (b.status==='confirmed' || b.status==='pending'));
+  // Bugfix (4. August): vorher zaehlten nur 'confirmed'/'pending' als Konflikt -- eine bereits
+  // abgeschlossene Tour (status 'completed') am selben Tag wurde faelschlich NICHT erkannt.
+  // Jetzt zaehlt jede Buchung an dem Tag als "belegt", ausser sie ist storniert/abgelehnt.
+  const NOT_OCCUPYING = ['cancelled_by_driver','cancelled_by_customer','declined_by_driver'];
+  const sameDayBookings = (bookingsByDate[dateISO] || []).filter(b => b.dbId !== excludeDbId && !NOT_OCCUPYING.includes(b.status));
   if(isBlocked || sameDayBookings.length > 0){
     alert('⚠️ ' + t('cal_conflict_alert').split('{date}').join(formatDateDisplay(dateISO)));
   }
@@ -10174,14 +10212,26 @@ async function checkSiteLock(){
   }
   // sonst: Sperrseite bleibt sichtbar (Standardzustand), nichts weiter tun
 }
+const EXTRAS_EMOJI = { 'Entrance fees':'🎟️', 'Parking':'🅿️', 'Fuel':'⛽', 'Other':'➕' };
+function emojiForHighlight(value){
+  const found = HIGHLIGHT_OPTIONS.find(o => o.value === value);
+  return found ? found.emoji : '📍';
+}
+function highlightListHTML(items, emojiLookupFn){
+  return `<div style="display:flex; flex-direction:column; gap:4px; margin-top:4px;">
+    ${items.map(v => `<div style="display:flex; align-items:center; gap:8px;"><span>${emojiLookupFn(v)}</span><span>${escapeHtml(v)}</span></div>`).join('')}
+  </div>`;
+}
 function offerDetailsHTML(row){
   const priceLine = (row.currency && row.currency !== 'IDR' && row.price_original)
     ? `${row.currency} ${row.price_original.toLocaleString('en-US')} (≈ ${formatIDR(row.price_idr)})`
     : formatIDR(row.price_idr);
+  // Punkt 1 (5. August): Highlights/Extras jetzt als Liste untereinander mit Emoji statt einer
+  // einzelnen Komma-getrennten Zeile -- deutlich besser lesbar auf einen Blick.
   const highlightsLine = (row.highlights && row.highlights.length)
-    ? `<p style="margin:6px 0;"><strong>Highlights:</strong> ${row.highlights.map(h=>escapeHtml(h)).join(', ')}</p>` : '';
+    ? `<div style="margin:10px 0;"><strong>Highlights:</strong>${highlightListHTML(row.highlights, emojiForHighlight)}</div>` : '';
   const extrasLine = (row.extras && row.extras.length)
-    ? `<p style="margin:6px 0;"><strong>Not included:</strong> ${row.extras.map(h=>escapeHtml(h)).join(', ')}</p>` : '';
+    ? `<div style="margin:10px 0;"><strong>Not included:</strong>${highlightListHTML(row.extras, v => EXTRAS_EMOJI[v] || '➕')}</div>` : '';
   return `
     <div class="panel" style="padding:16px; margin:16px 0; text-align:left;">
       <p style="white-space:pre-wrap; margin:0 0 10px;">${escapeHtml(row.tour_description)}</p>
@@ -10253,6 +10303,21 @@ if(_offerToken){
   document.getElementById('ratings-page').style.display = 'block';
 } else {
   checkSiteLock();
+  // Punkt 2 (5. August): der Alternative-Link aus der "Fahrer kann leider nicht"-Mail traegt die
+  // Region des urspruenglichen Fahrers mit -- wird hier automatisch als Suchfilter vorausgewaehlt,
+  // damit der Kunde direkt passende Alternativen sieht statt wieder bei null anzufangen.
+  const _preferredRegion = new URLSearchParams(location.search).get('region');
+  if(_preferredRegion){
+    setTimeout(()=>{
+      const chip = document.querySelector('#filter-modal-bg [data-group="regions"] [data-value="' + CSS.escape(_preferredRegion) + '"]');
+      if(chip && typeof selectedFilters !== 'undefined' && !selectedFilters.regions.includes(_preferredRegion)){
+        selectedFilters.regions.push(_preferredRegion);
+        chip.classList.add('chip-active');
+        if(typeof updateAllFilterVisibility === 'function') updateAllFilterVisibility();
+        if(typeof updateFilterCount === 'function') updateFilterCount();
+      }
+    }, 300);
+  }
 }
 
 function setLockLoading(isLoading){
@@ -11374,6 +11439,17 @@ async function loadRealAllDriversCache(){
     .order('name');
   if(error){ console.error('Fahrerliste konnte nicht geladen werden (evtl. nicht als Admin eingeloggt):', error); realAllDriversCache = []; return; }
   realAllDriversCache = data || [];
+  // Punkt 2 (5. August): abgelehnte Buchungsanfragen pro Fahrer zaehlen -- reiner Qualitaetshinweis
+  // fuer den Admin, taucht sonst nirgends mehr auf (nicht in der Fahrer-eigenen Ansicht).
+  const { data: declinedRows, error: declinedErr } = await supabaseClient
+    .from('bookings').select('driver_id').eq('status', 'declined_by_driver');
+  if(declinedErr){
+    console.error('Abgelehnte Buchungen konnten nicht gezaehlt werden:', declinedErr);
+  } else {
+    const counts = {};
+    (declinedRows||[]).forEach(r => { counts[r.driver_id] = (counts[r.driver_id]||0) + 1; });
+    realAllDriversCache.forEach(d => { d.declinedCount = counts[d.id] || 0; });
+  }
 }
 function realDriverOptionsHTML(){
   return realAllDriversCache.map(d => `<option value="${d.id}">${escapeHtml(d.name)} (${d.lw_number||'—'})</option>`).join('');
@@ -11406,7 +11482,7 @@ async function renderRealAdminBlockList(){
     return `
     <div class="booking-row admin-driver-row ${d.is_locked?'blocked-row':''}">
       <div style="cursor:pointer; flex:1;" onclick="toggleRealDriverLock('${d.id}', ${d.is_locked ? 'true':'false'}, '${safeName}')">
-        <div class="who">${escapeHtml(d.name)}</div><div class="when">${d.region==='lombok'?'Lombok':'Bali'} · ${t('admin_stat_fees')||'Gebühren'}: ${formatIDR(d.fees_due_idr||0)}</div>
+        <div class="who">${escapeHtml(d.name)}</div><div class="when">${d.region==='lombok'?'Lombok':'Bali'} · ${t('admin_stat_fees')||'Gebühren'}: ${formatIDR(d.fees_due_idr||0)}${d.declinedCount ? ` · ⚠️ ${d.declinedCount} ${t('admin_declined_count_label')}` : ''}</div>
       </div>
       <span class="status-pill ${d.is_locked?'pending':'confirmed'}">${d.is_locked ? t('admin_status_blocked') : t('admin_status_active')}</span>
       <button type="button" class="cancel-btn" style="margin-left:8px; padding:6px 10px; border-radius:5px; white-space:nowrap;" onclick="event.stopPropagation(); deleteRealDriver('${d.id}', '${safeName}')">🗑️ Löschen</button>
@@ -12127,7 +12203,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v143</div>
+<div id="version-footer" style="position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v144</div>
 
 </body>
 </html>
