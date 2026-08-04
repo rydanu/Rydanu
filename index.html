@@ -529,7 +529,7 @@
   .inbox-body{ font-size:0.83rem; color:var(--ink-soft); line-height:1.5; margin-bottom:4px; }
   .inbox-date{ font-family:'JetBrains Mono'; font-size:0.66rem; color:var(--ink-soft); }
   .field-error{ border-color:#C0392B !important; box-shadow:0 0 0 2px rgba(192,57,43,0.18) !important; }
-  .admin-driver-row{ cursor:pointer; background:#fff; border:1px solid var(--line); border-radius:8px; margin-bottom:8px; }
+  .admin-driver-row{ background:#fff; border:1px solid var(--line); border-radius:8px; margin-bottom:8px; }
   /* Baustein 10: Hamburger-Menü fuer SEO-Ratgeber-Unterseiten */
   .hamburger-btn{
     background:var(--paper); border:1px solid var(--line); color:var(--ink); font-size:1.1rem;
@@ -891,6 +891,11 @@
     background:var(--teal); border:1px solid var(--teal); color:#fff; font-family:'Public Sans'; font-weight:700;
     font-size:0.72rem; padding:5px 12px; border-radius:14px; cursor:pointer; white-space:nowrap;
   }
+  .lock-btn{
+    background:var(--gold-deep); border:1px solid var(--gold-deep); color:#fff; font-family:'Public Sans'; font-weight:700;
+    font-size:0.72rem; padding:5px 12px; border-radius:14px; cursor:pointer; white-space:nowrap;
+  }
+  .lock-btn:hover{ background:#a67f00; border-color:#a67f00; }
 
   .review-row{ padding:16px 20px; border-bottom:1px solid var(--line); }
   .review-row:last-child{ border-bottom:none; }
@@ -1278,7 +1283,7 @@
         </div>
       </div>
       <div class="form-field autocomplete-wrap">
-        <label data-i18n="lbl_pickup_loc">Pickup location</label>
+        <label id="f-pickup-label" data-i18n="lbl_pickup_loc">Pickup location</label>
         <div class="map-input">
           <svg class="map-pin" viewBox="0 0 24 24" width="16" height="16"><path fill="var(--teal)" d="M12 2C7.6 2 4 5.6 4 10c0 6 8 12 8 12s8-6 8-12c0-4.4-3.6-8-8-8zm0 11a3 3 0 110-6 3 3 0 010 6z"/></svg>
           <input type="text" id="f-pickup" placeholder="Search hotel, villa or landmark in Bali..." autocomplete="off" oninput="filterPickup()" onfocus="filterPickup()">
@@ -1793,7 +1798,7 @@
         <span class="at-title">Fahrer verwalten</span>
         <span class="at-sub">Sperren, entsperren oder löschen</span>
       </button>
-      <button type="button" class="admin-tile" onclick="showAdminSection('documents')">
+      <button type="button" class="admin-tile" id="admin-tile-documents" onclick="showAdminSection('documents')">
         <span class="at-icon">📄</span>
         <span class="at-title">Fahrer Dokumente</span>
         <span class="at-sub">Führerschein, Versicherung, Papiere &amp; Selfie ansehen</span>
@@ -3561,7 +3566,7 @@ async function submitTourRequest(){
     document.getElementById('tr-confirm-step').style.display = 'block';
     // Punkt 4: Popup schliesst sich nach kurzer Anzeigezeit von selbst, statt dass der Kunde
     // manuell auf X/Fertig klicken muss -- die Referenznummer bleibt trotzdem kurz sichtbar.
-    setTimeout(()=>{ closeTourRequest(); }, 2500);
+    setTimeout(()=>{ closeTourRequest(); }, 1400);
     return;
   }
   const store = driverDataStore[trRequestDriverId];
@@ -3578,7 +3583,7 @@ async function submitTourRequest(){
   document.getElementById('tr-confirm-ref').textContent = ref;
   document.getElementById('tr-form-step').style.display = 'none';
   document.getElementById('tr-confirm-step').style.display = 'block';
-  setTimeout(()=>{ closeTourRequest(); }, 2500);
+  setTimeout(()=>{ closeTourRequest(); }, 1400);
 }
 document.getElementById('tour-request-modal-bg').addEventListener('click', e=>{ if(e.target.id==='tour-request-modal-bg') closeTourRequest(); });
 
@@ -5602,7 +5607,7 @@ function mapBookingRowToUI(row){
   return {
     dbId: row.id,
     who: row.customer_name,
-    tour: (row.listing && row.listing.title) || '(Angebot gelöscht)',
+    tour: (row.listing && row.listing.title) || row.custom_tour_description || '(Angebot gelöscht)',
     when: formatDateDisplay(row.booking_date),
     dateISO: row.booking_date,
     status: row.status,
@@ -6069,8 +6074,12 @@ async function uploadReRequestedDoc(key, inputEl){
     if(upErr){ console.error('Dokument konnte nicht hochgeladen werden:', upErr); if(statusEl) statusEl.textContent = '❌ Fehler beim Hochladen'; return; }
     const newDocuments = { ...(realDriverProfile.documents||{}), [key]: path };
     const newRequested = (realDriverProfile.docs_requested||[]).filter(k => k!==key);
+    // Punkt 3 (5. August): Admin bekommt jetzt eine Benachrichtigung (Umschlag + rote Kachel),
+    // wenn ein Fahrer ein erneut angefordertes Dokument hochlaedt -- vorher gab es dafuer gar
+    // keine Meldung. Wird geleert, sobald der Admin sich die Dokumente dieses Fahrers ansieht.
+    const newResubmitted = (realDriverProfile.docs_resubmitted||[]).includes(key) ? realDriverProfile.docs_resubmitted : [...(realDriverProfile.docs_resubmitted||[]), key];
     const { data: updated, error: updErr } = await supabaseClient.from('drivers')
-      .update({ documents: newDocuments, docs_requested: newRequested })
+      .update({ documents: newDocuments, docs_requested: newRequested, docs_resubmitted: newResubmitted })
       .eq('id', realDriverProfile.id).select().single();
     if(updErr){ console.error('Konnte nicht gespeichert werden:', updErr); if(statusEl) statusEl.textContent = '❌ Fehler beim Speichern'; return; }
     if(updated) realDriverProfile = updated;
@@ -6293,7 +6302,7 @@ function updateAdminMailBadge(){
   const tabMail = document.getElementById('tab-admin-mail');
   if(tabMail){
     if(realDriverProfile){
-      const hasUnread = realAdminThreads.some(t=>t.unread_for_admin) || realPendingDriverCount > 0;
+      const hasUnread = realAdminThreads.some(t=>t.unread_for_admin) || realPendingDriverCount > 0 || realDocsResubmittedCount > 0;
       tabMail.style.display = hasUnread ? 'inline-flex' : 'none';
     } else {
       const hasUnread = Object.values(supportThreads).some(th => th.unreadForAdmin);
@@ -6306,6 +6315,7 @@ function updateAdminMailBadge(){
 // wartet, und wieder weiss, sobald erledigt (z.B. Fahrer freigeschaltet, Nachricht gelesen,
 // Zahlung beglichen). Wird ueberall dort aufgerufen, wo sich die zugrundeliegenden Zahlen aendern.
 let adminOpenPaymentCount = 0;
+let realDocsResubmittedCount = 0;
 function updateAdminTileAlerts(){
   const pendingTile = document.getElementById('admin-tile-pending');
   if(pendingTile) pendingTile.classList.toggle('has-alert', realPendingDriverCount > 0);
@@ -6318,6 +6328,17 @@ function updateAdminTileAlerts(){
   }
   const openpayTile = document.getElementById('admin-tile-openpay');
   if(openpayTile) openpayTile.classList.toggle('has-alert', adminOpenPaymentCount > 0);
+  // Punkt 3 (5. August): Dokumente-Kachel wird rot, solange irgendein Fahrer ein erneut
+  // angefordertes Dokument hochgeladen hat, das der Admin noch nicht angesehen hat.
+  const documentsTile = document.getElementById('admin-tile-documents');
+  if(documentsTile) documentsTile.classList.toggle('has-alert', realDocsResubmittedCount > 0);
+}
+// Zaehlt, bei wie vielen Fahrern gerade ein frisch hochgeladenes Dokument auf Ansicht wartet.
+async function loadAdminDocsResubmittedCount(){
+  const { data, error } = await supabaseClient.from('drivers').select('id, docs_resubmitted');
+  if(error){ console.error('docs_resubmitted konnte nicht gezaehlt werden:', error); return; }
+  realDocsResubmittedCount = (data || []).filter(d => d.docs_resubmitted && d.docs_resubmitted.length > 0).length;
+  updateAdminMailBadge();
 }
 
 // ---- driver's own listings (linked to public search once created) ----
@@ -7816,7 +7837,7 @@ const translations = {
     lbl_date: "Date", lbl_guests: "Guests", lbl_total: "Total tour price", lbl_pickup: "Pickup", lbl_tour_singular: "tour", lbl_tour_plural: "tours", lbl_rating_new: "New",
     lbl_deposit_paid: "Deposit paid", lbl_cash_due: "Cash due to driver", lbl_ryvio_fee: "Ryvio fee (10%)", lbl_your_car: "Your driver's car",
     lbl_fullname: "Full name", lbl_whatsapp: 'WhatsApp number <span class="optional">(for booking confirmation)</span>', ep_eyebrow: "Your profile", ep_title: "Edit profile",
-    lbl_pickup_loc: "Pickup location", lbl_deposit_due: "Deposit due now (20%)", lbl_airport_destination: "Destination region", lbl_transfer_destination: "Destination", lbl_pickup_region: "Your pickup region",
+    lbl_pickup_loc: "Pickup location", lbl_pickup_dropoff_loc: "Pickup / drop-off location", lbl_deposit_due: "Deposit due now (20%)", lbl_airport_destination: "Destination region", lbl_transfer_destination: "Destination", lbl_pickup_region: "Your pickup region",
     lbl_balance: "Balance — pay driver in cash on the day",
     deposit_hint: "⚠️ Only the 20% deposit is due now to secure your booking — and it goes straight to your driver, just like the remaining 80%. Ryvio never receives or holds any of your money, at any point.",
     confirm_title: "Booking requested",
@@ -8062,7 +8083,7 @@ const translations = {
     admin_fc_notify_body: "You've been credited {amount}{note} — it will automatically be applied to your next Ryvio fees.",
     admin_fc_confirm_delete: "Really delete this credit? The already-credited amount will be deducted from the driver again, if not yet used.",
     admin_fc_empty_default: "No credits created yet.", admin_fc_empty_filtered: "No credits created for this driver yet.",
-    admin_all_drivers_option: "All drivers", admin_drivers_search_placeholder: "Search driver…", admin_delete_btn: "✕ Delete", admin_status_suspended: "🚫 Suspended (unpaid fees) — tap to unblock", admin_status_blocked: "🚫 Blocked — tap to unblock", admin_status_active: "Active — tap to block", payment_received_title: "Payment received — receipt {ref}", payment_received_body_credit: "We received your fee payment of {amount} (an {credit} referral credit was applied). The receipt is available under \"Fees & billing\" and was emailed to you.", payment_received_body_plain: "We received your fee payment of {amount}. The receipt is available under \"Fees & billing\" and was emailed to you.", welcome_inbox_title: "Welcome to Ryvio! 🌴", welcome_inbox_body: "Your registration was received and is under review. Your Ryvio number is {number} — keep it handy for all support requests.", approved_inbox_title: "Your account is approved ✓", approved_inbox_body: "Congratulations! Your profile and all your tours are now live and bookable for travelers.", approved_alert: "{name} has been approved and is now live on Ryvio.", rejected_inbox_title: "Your registration was rejected", rejected_inbox_body: "Reason: {reason} — you can register again with corrected documents or contact support.", rejected_alert: "{name} has been rejected and notified with your reason.", account_blocked_banner: "🚫 Your account has been blocked by Ryvio. Your tours are not visible to travelers. Please contact support via the WhatsApp button below.", rejected_banner: "✕ Your registration was rejected. Reason: {reason}<br>Please contact Ryvio support or register again with corrected documents.",
+    admin_all_drivers_option: "All drivers", admin_drivers_search_placeholder: "Search driver…", admin_delete_btn: "✕ Delete", admin_status_suspended: "🚫 Suspended (unpaid fees)", admin_status_blocked: "🚫 Blocked", admin_status_active: "Active", admin_lock_btn: "Block", admin_unlock_btn: "Unblock", payment_received_title: "Payment received — receipt {ref}", payment_received_body_credit: "We received your fee payment of {amount} (an {credit} referral credit was applied). The receipt is available under \"Fees & billing\" and was emailed to you.", payment_received_body_plain: "We received your fee payment of {amount}. The receipt is available under \"Fees & billing\" and was emailed to you.", welcome_inbox_title: "Welcome to Ryvio! 🌴", welcome_inbox_body: "Your registration was received and is under review. Your Ryvio number is {number} — keep it handy for all support requests.", approved_inbox_title: "Your account is approved ✓", approved_inbox_body: "Congratulations! Your profile and all your tours are now live and bookable for travelers.", approved_alert: "{name} has been approved and is now live on Ryvio.", rejected_inbox_title: "Your registration was rejected", rejected_inbox_body: "Reason: {reason} — you can register again with corrected documents or contact support.", rejected_alert: "{name} has been rejected and notified with your reason.", account_blocked_banner: "🚫 Your account has been blocked by Ryvio. Your tours are not visible to travelers. Please contact support via the WhatsApp button below.", rejected_banner: "✕ Your registration was rejected. Reason: {reason}<br>Please contact Ryvio support or register again with corrected documents.",
     modal_services_label: "Service (on request)",
     modal_start_label: "Start of tour",
     surcharge_note: "against surcharge",
@@ -8116,7 +8137,7 @@ const translations = {
     lbl_date: "Datum", lbl_guests: "Gäste", lbl_total: "Gesamtpreis der Tour", lbl_pickup: "Abholung", lbl_tour_singular: "Tour", lbl_tour_plural: "Touren", lbl_rating_new: "Neu",
     lbl_deposit_paid: "Anzahlung geleistet", lbl_cash_due: "Bar an den Fahrer", lbl_ryvio_fee: "Ryvio-Gebühr (10%)", lbl_your_car: "Das Auto deines Fahrers",
     lbl_fullname: "Vollständiger Name", lbl_whatsapp: 'WhatsApp-Nummer <span class="optional">(für die Buchungsbestätigung)</span>', ep_eyebrow: "Dein Profil", ep_title: "Profil bearbeiten",
-    lbl_pickup_loc: "Abholort", lbl_deposit_due: "Anzahlung jetzt fällig (20%)", lbl_airport_destination: "Zielregion", lbl_transfer_destination: "Ziel", lbl_pickup_region: "Deine Abholregion",
+    lbl_pickup_loc: "Abholort", lbl_pickup_dropoff_loc: "Abhol-/Zielort", lbl_deposit_due: "Anzahlung jetzt fällig (20%)", lbl_airport_destination: "Zielregion", lbl_transfer_destination: "Ziel", lbl_pickup_region: "Deine Abholregion",
     lbl_balance: "Restbetrag — bar an den Fahrer am Tourtag",
     deposit_hint: "⚠️ Nur die 20% Anzahlung ist jetzt fällig, um deine Buchung zu sichern — und sie geht direkt an deinen Fahrer, genau wie die restlichen 80%. Ryvio erhält oder verwaltet zu keinem Zeitpunkt dein Geld.",
     confirm_title: "Buchung angefragt",
@@ -8362,7 +8383,7 @@ const translations = {
     admin_fc_notify_body: "Dir wurde eine Gutschrift von {amount}{note} gutgeschrieben — sie wird automatisch mit deinen nächsten Ryvio-Gebühren verrechnet.",
     admin_fc_confirm_delete: "Diese Gutschrift wirklich löschen? Der bereits gutgeschriebene Betrag wird dem Fahrer wieder abgezogen, sofern er noch nicht verbraucht wurde.",
     admin_fc_empty_default: "Noch keine Gutschriften erstellt.", admin_fc_empty_filtered: "Für diesen Fahrer wurden noch keine Gutschriften erstellt.",
-    admin_all_drivers_option: "Alle Fahrer", admin_drivers_search_placeholder: "Fahrer suchen…", admin_delete_btn: "✕ Löschen", admin_status_suspended: "🚫 Gesperrt (unbezahlte Gebühren) — tippen zum Entsperren", admin_status_blocked: "🚫 Gesperrt — tippen zum Entsperren", admin_status_active: "Aktiv — tippen zum Sperren", payment_received_title: "Zahlung erhalten — Beleg {ref}", payment_received_body_credit: "Wir haben deine Gebührenzahlung von {amount} erhalten (eine Empfehlungs-Gutschrift von {credit} wurde angerechnet). Der Beleg ist unter \"Gebühren & Abrechnung\" verfügbar und wurde dir per Mail geschickt.", payment_received_body_plain: "Wir haben deine Gebührenzahlung von {amount} erhalten. Der Beleg ist unter \"Gebühren & Abrechnung\" verfügbar und wurde dir per Mail geschickt.", welcome_inbox_title: "Willkommen bei Ryvio! 🌴", welcome_inbox_body: "Deine Registrierung ist eingegangen und wird geprüft. Deine Ryvio-Nummer ist {number} — halte sie für alle Support-Anfragen bereit.", approved_inbox_title: "Dein Konto ist freigeschaltet ✓", approved_inbox_body: "Glückwunsch! Dein Profil und alle deine Touren sind jetzt live und für Reisende buchbar.", approved_alert: "{name} wurde freigeschaltet und ist jetzt live auf Ryvio.", rejected_inbox_title: "Deine Registrierung wurde abgelehnt", rejected_inbox_body: "Grund: {reason} — du kannst dich mit korrigierten Dokumenten erneut registrieren oder den Support kontaktieren.", rejected_alert: "{name} wurde abgelehnt und über deinen Grund benachrichtigt.", account_blocked_banner: "🚫 Dein Konto wurde von Ryvio gesperrt. Deine Touren sind für Reisende nicht sichtbar. Bitte kontaktiere den Support über den WhatsApp-Button unten.", rejected_banner: "✕ Deine Registrierung wurde abgelehnt. Grund: {reason}<br>Bitte kontaktiere den Ryvio-Support oder registriere dich mit korrigierten Dokumenten erneut.",
+    admin_all_drivers_option: "Alle Fahrer", admin_drivers_search_placeholder: "Fahrer suchen…", admin_delete_btn: "✕ Löschen", admin_status_suspended: "🚫 Gesperrt (unbezahlte Gebühren)", admin_status_blocked: "🚫 Gesperrt", admin_status_active: "Aktiv", admin_lock_btn: "Sperren", admin_unlock_btn: "Entsperren", payment_received_title: "Zahlung erhalten — Beleg {ref}", payment_received_body_credit: "Wir haben deine Gebührenzahlung von {amount} erhalten (eine Empfehlungs-Gutschrift von {credit} wurde angerechnet). Der Beleg ist unter \"Gebühren & Abrechnung\" verfügbar und wurde dir per Mail geschickt.", payment_received_body_plain: "Wir haben deine Gebührenzahlung von {amount} erhalten. Der Beleg ist unter \"Gebühren & Abrechnung\" verfügbar und wurde dir per Mail geschickt.", welcome_inbox_title: "Willkommen bei Ryvio! 🌴", welcome_inbox_body: "Deine Registrierung ist eingegangen und wird geprüft. Deine Ryvio-Nummer ist {number} — halte sie für alle Support-Anfragen bereit.", approved_inbox_title: "Dein Konto ist freigeschaltet ✓", approved_inbox_body: "Glückwunsch! Dein Profil und alle deine Touren sind jetzt live und für Reisende buchbar.", approved_alert: "{name} wurde freigeschaltet und ist jetzt live auf Ryvio.", rejected_inbox_title: "Deine Registrierung wurde abgelehnt", rejected_inbox_body: "Grund: {reason} — du kannst dich mit korrigierten Dokumenten erneut registrieren oder den Support kontaktieren.", rejected_alert: "{name} wurde abgelehnt und über deinen Grund benachrichtigt.", account_blocked_banner: "🚫 Dein Konto wurde von Ryvio gesperrt. Deine Touren sind für Reisende nicht sichtbar. Bitte kontaktiere den Support über den WhatsApp-Button unten.", rejected_banner: "✕ Deine Registrierung wurde abgelehnt. Grund: {reason}<br>Bitte kontaktiere den Ryvio-Support oder registriere dich mit korrigierten Dokumenten erneut.",
     modal_services_label: "Service (auf Anfrage)",
     modal_start_label: "Start der Tour",
     surcharge_note: "gegen Aufpreis",
@@ -8416,7 +8437,7 @@ const translations = {
     lbl_date: "Tanggal", lbl_guests: "Tamu", lbl_total: "Total harga tur", lbl_pickup: "Penjemputan", lbl_tour_singular: "tur", lbl_tour_plural: "tur", lbl_rating_new: "Baru",
     lbl_deposit_paid: "Deposit dibayar", lbl_cash_due: "Tunai untuk sopir", lbl_ryvio_fee: "Biaya Ryvio (10%)", lbl_your_car: "Mobil sopir Anda",
     lbl_fullname: "Nama lengkap", lbl_whatsapp: 'Nomor WhatsApp <span class="optional">(untuk konfirmasi pemesanan)</span>', ep_eyebrow: "Profil Anda", ep_title: "Edit profil",
-    lbl_pickup_loc: "Lokasi penjemputan", lbl_deposit_due: "Deposit jatuh tempo sekarang (20%)", lbl_airport_destination: "Wilayah tujuan", lbl_transfer_destination: "Tujuan", lbl_pickup_region: "Wilayah penjemputan Anda",
+    lbl_pickup_loc: "Lokasi penjemputan", lbl_pickup_dropoff_loc: "Lokasi jemput/antar", lbl_deposit_due: "Deposit jatuh tempo sekarang (20%)", lbl_airport_destination: "Wilayah tujuan", lbl_transfer_destination: "Tujuan", lbl_pickup_region: "Wilayah penjemputan Anda",
     lbl_balance: "Sisa — bayar tunai ke sopir pada hari tur",
     deposit_hint: "⚠️ Hanya deposit 20% yang harus dibayar sekarang untuk mengamankan pemesanan Anda — dan langsung masuk ke sopir Anda, sama seperti sisa 80%. Ryvio tidak pernah menerima atau menyimpan uang Anda, kapan pun.",
     confirm_title: "Pemesanan diajukan",
@@ -8662,7 +8683,7 @@ const translations = {
     admin_fc_notify_body: "Anda telah dikreditkan {amount}{note} — ini akan otomatis diterapkan pada biaya Ryvio Anda berikutnya.",
     admin_fc_confirm_delete: "Yakin ingin menghapus kredit ini? Jumlah yang sudah dikreditkan akan dikurangi kembali dari sopir, jika belum digunakan.",
     admin_fc_empty_default: "Belum ada kredit yang dibuat.", admin_fc_empty_filtered: "Belum ada kredit yang dibuat untuk sopir ini.",
-    admin_all_drivers_option: "Semua sopir", admin_drivers_search_placeholder: "Cari sopir…", admin_delete_btn: "✕ Hapus", admin_status_suspended: "🚫 Ditangguhkan (biaya belum dibayar) — ketuk untuk membuka blokir", admin_status_blocked: "🚫 Diblokir — ketuk untuk membuka blokir", admin_status_active: "Aktif — ketuk untuk memblokir", payment_received_title: "Pembayaran diterima — kwitansi {ref}", payment_received_body_credit: "Kami telah menerima pembayaran biaya Anda sebesar {amount} (kredit referral sebesar {credit} telah diterapkan). Kwitansi tersedia di \"Biaya & tagihan\" dan telah dikirim melalui email.", payment_received_body_plain: "Kami telah menerima pembayaran biaya Anda sebesar {amount}. Kwitansi tersedia di \"Biaya & tagihan\" dan telah dikirim melalui email.", welcome_inbox_title: "Selamat datang di Ryvio! 🌴", welcome_inbox_body: "Pendaftaran Anda telah diterima dan sedang ditinjau. Nomor Ryvio Anda adalah {number} — simpan baik-baik untuk semua permintaan dukungan.", approved_inbox_title: "Akun Anda telah disetujui ✓", approved_inbox_body: "Selamat! Profil dan semua tur Anda sekarang aktif dan dapat dipesan oleh wisatawan.", approved_alert: "{name} telah disetujui dan sekarang aktif di Ryvio.", rejected_inbox_title: "Pendaftaran Anda ditolak", rejected_inbox_body: "Alasan: {reason} — Anda dapat mendaftar lagi dengan dokumen yang telah diperbaiki atau menghubungi dukungan.", rejected_alert: "{name} telah ditolak dan diberi tahu dengan alasan Anda.", account_blocked_banner: "🚫 Akun Anda telah diblokir oleh Ryvio. Tur Anda tidak terlihat oleh wisatawan. Silakan hubungi dukungan melalui tombol WhatsApp di bawah.", rejected_banner: "✕ Pendaftaran Anda ditolak. Alasan: {reason}<br>Silakan hubungi dukungan Ryvio atau daftar lagi dengan dokumen yang telah diperbaiki.",
+    admin_all_drivers_option: "Semua sopir", admin_drivers_search_placeholder: "Cari sopir…", admin_delete_btn: "✕ Hapus", admin_status_suspended: "🚫 Ditangguhkan (biaya belum dibayar)", admin_status_blocked: "🚫 Diblokir", admin_status_active: "Aktif", admin_lock_btn: "Blokir", admin_unlock_btn: "Buka blokir", payment_received_title: "Pembayaran diterima — kwitansi {ref}", payment_received_body_credit: "Kami telah menerima pembayaran biaya Anda sebesar {amount} (kredit referral sebesar {credit} telah diterapkan). Kwitansi tersedia di \"Biaya & tagihan\" dan telah dikirim melalui email.", payment_received_body_plain: "Kami telah menerima pembayaran biaya Anda sebesar {amount}. Kwitansi tersedia di \"Biaya & tagihan\" dan telah dikirim melalui email.", welcome_inbox_title: "Selamat datang di Ryvio! 🌴", welcome_inbox_body: "Pendaftaran Anda telah diterima dan sedang ditinjau. Nomor Ryvio Anda adalah {number} — simpan baik-baik untuk semua permintaan dukungan.", approved_inbox_title: "Akun Anda telah disetujui ✓", approved_inbox_body: "Selamat! Profil dan semua tur Anda sekarang aktif dan dapat dipesan oleh wisatawan.", approved_alert: "{name} telah disetujui dan sekarang aktif di Ryvio.", rejected_inbox_title: "Pendaftaran Anda ditolak", rejected_inbox_body: "Alasan: {reason} — Anda dapat mendaftar lagi dengan dokumen yang telah diperbaiki atau menghubungi dukungan.", rejected_alert: "{name} telah ditolak dan diberi tahu dengan alasan Anda.", account_blocked_banner: "🚫 Akun Anda telah diblokir oleh Ryvio. Tur Anda tidak terlihat oleh wisatawan. Silakan hubungi dukungan melalui tombol WhatsApp di bawah.", rejected_banner: "✕ Pendaftaran Anda ditolak. Alasan: {reason}<br>Silakan hubungi dukungan Ryvio atau daftar lagi dengan dokumen yang telah diperbaiki.",
     modal_services_label: "Layanan (atas permintaan)",
     modal_start_label: "Awal tur",
     surcharge_note: "dengan biaya tambahan",
@@ -9560,6 +9581,12 @@ function openModal(d){
   document.getElementById('modal-start-regions').textContent = '🚐 ' + startRegions;
   const airportRow = document.getElementById('modal-airport-region-row');
   const airportMapBox = document.getElementById('modal-airport-map');
+  const isAirportBooking = !!(d.spots && d.spots.includes('Airport Transfer'));
+  const pickupLabelEl = document.getElementById('f-pickup-label');
+  if(pickupLabelEl){
+    pickupLabelEl.setAttribute('data-i18n', isAirportBooking ? 'lbl_pickup_dropoff_loc' : 'lbl_pickup_loc');
+    pickupLabelEl.textContent = t(isAirportBooking ? 'lbl_pickup_dropoff_loc' : 'lbl_pickup_loc');
+  }
   if(d.spots && d.spots.includes('Airport Transfer') && d.airportRegions && Object.keys(d.airportRegions).length){
     const sel = document.getElementById('modal-airport-region-select');
     sel.innerHTML = Object.entries(d.airportRegions).map(([r,p])=>`<option value="${r}">${r} — ${p}</option>`).join('');
@@ -10666,7 +10693,7 @@ function switchView(view){
   // Ohne diesen Reset blieb das Signup-Formular beim Tab-Wechsel einfach stehen.
   if(view==='driver'){ toggleAuthForm('login'); }
   if(view==='driver'){ checkDriverAuthState(true); }
-  if(view==='admin'){ updateIsAdminSession().then(()=>{ renderAdminList(); loadAdminPendingDrivers(); loadRealAdminMessages(); }); }
+  if(view==='admin'){ updateIsAdminSession().then(()=>{ renderAdminList(); loadAdminPendingDrivers(); loadRealAdminMessages(); loadAdminDocsResubmittedCount(); }); }
 }
 function switchViewProgrammatic(view){
   document.getElementById('view-customer').classList.toggle('active', view==='customer');
@@ -10679,7 +10706,7 @@ function switchViewProgrammatic(view){
   if(regBtn2) regBtn2.classList.remove('active');
   if(view==='driver'){ toggleAuthForm('login'); }
   if(view==='driver'){ checkDriverAuthState(true); }
-  if(view==='admin'){ updateIsAdminSession().then(()=>{ renderAdminList(); loadAdminPendingDrivers(); loadRealAdminMessages(); }); }
+  if(view==='admin'){ updateIsAdminSession().then(()=>{ renderAdminList(); loadAdminPendingDrivers(); loadRealAdminMessages(); loadAdminDocsResubmittedCount(); }); }
 }
 function populateDemoDriverSwitcher(){
   const sel = document.getElementById('demo-driver-select');
@@ -10907,30 +10934,42 @@ async function renderAdminDocuments(){
   const driverId = sel ? sel.value : '';
   if(!driverId){ el.innerHTML = `<div class="empty-state">Kein Fahrer vorhanden.</div>`; return; }
   el.innerHTML = '<p class="note" style="padding:14px 20px;">⏳ Lade Dokumente...</p>';
-  const { data: driver, error } = await supabaseClient.from('drivers').select('name, documents, docs_requested').eq('id', driverId).single();
+  const { data: driver, error } = await supabaseClient.from('drivers').select('name, documents, docs_requested, docs_resubmitted').eq('id', driverId).single();
   if(error){ el.innerHTML = '<p class="note" style="padding:14px 20px;">Dokumente konnten nicht geladen werden.</p>'; return; }
   const docs = driver.documents || {};
   const requested = driver.docs_requested || [];
+  const resubmitted = driver.docs_resubmitted || [];
   const driverNameSafe = (driver.name || 'Fahrer').replace(/[^a-z0-9äöüß]+/gi,'_');
-  // Bugbau (5. August): Gültigkeit von 1h auf 24h angehoben (weniger Ärger, wenn ein bereits
+  // Punkt 3 (5. August): "angesehen" reicht als Bestaetigung -- sobald die Liste hier fuer diesen
+  // Fahrer angezeigt wird, gilt jedes frisch hochgeladene Dokument als gesehen und die Markierung
+  // verschwindet wieder (Status geht zurueck auf normal, "Erneut anfordern" bleibt weiterhin moeglich).
+  if(resubmitted.length > 0){
+    supabaseClient.from('drivers').update({ docs_resubmitted: [] }).eq('id', driverId).then(({error})=>{
+      if(error) console.error('docs_resubmitted konnte nicht geleert werden:', error);
+    });
+    loadAdminDocsResubmittedCount();
+  }
+  // Punkt 1h Gueltigkeit von 24h angehoben (weniger Ärger, wenn ein bereits
   // geöffneter Tab länger offen bleibt) — die Datei selbst bleibt ohnehin für immer gespeichert,
   // beim erneuten Aufruf dieser Liste wird sowieso automatisch ein frischer Link erzeugt.
   const rows = await Promise.all(DRIVER_DOC_FIELDS.map(async (f) => {
     const path = docs[f.key];
     const alreadyRequested = requested.includes(f.key);
+    const isFresh = resubmitted.includes(f.key);
+    const freshBadge = isFresh ? `<span class="note" style="margin-left:6px; color:#C0392B; font-weight:700;">🆕 Neu hochgeladen</span>` : '';
     const reupCol = alreadyRequested
       ? `<span class="note" style="margin-left:10px; color:var(--teal); font-weight:600;">⏳ Bereits angefordert</span>`
       : `<button type="button" class="link-btn" style="margin-left:10px;" onclick="requestDocReupload('${driverId}','${f.key}','${escapeHtml(f.label)}')">🔁 Erneut anfordern</button>`;
     if(!path){
-      return `<div class="booking-row"><div><div class="who">${f.icon} ${f.label}</div></div><span class="note">Nicht hochgeladen</span>${reupCol}</div>`;
+      return `<div class="booking-row"><div><div class="who">${f.icon} ${f.label}${freshBadge}</div></div><span class="note">Nicht hochgeladen</span>${reupCol}</div>`;
     }
     const { data: signed, error: signErr } = await supabaseClient.storage.from('driver-documents').createSignedUrl(path, 86400);
     if(signErr || !signed){
-      return `<div class="booking-row"><div><div class="who">${f.icon} ${f.label}</div></div><span class="note">Link konnte nicht erzeugt werden</span>${reupCol}</div>`;
+      return `<div class="booking-row"><div><div class="who">${f.icon} ${f.label}${freshBadge}</div></div><span class="note">Link konnte nicht erzeugt werden</span>${reupCol}</div>`;
     }
     const ext = (path.split('.').pop() || 'dat').toLowerCase();
     const filename = `${driverNameSafe}_${f.key}.${ext}`;
-    return `<div class="booking-row"><div><div class="who">${f.icon} ${f.label}</div></div>
+    return `<div class="booking-row"><div><div class="who">${f.icon} ${f.label}${freshBadge}</div></div>
       <div style="display:flex; align-items:center;">
         <a href="${signed.signedUrl}" target="_blank" rel="noopener">Ansehen ↗</a>
         <button type="button" class="link-btn" style="margin-left:10px;" onclick="downloadDriverDocument('${signed.signedUrl}', '${filename}')">⬇️ Herunterladen</button>
@@ -11481,10 +11520,11 @@ async function renderRealAdminBlockList(){
     const safeName = escapeHtml(d.name).replace(/'/g, "\\'");
     return `
     <div class="booking-row admin-driver-row ${d.is_locked?'blocked-row':''}">
-      <div style="cursor:pointer; flex:1;" onclick="toggleRealDriverLock('${d.id}', ${d.is_locked ? 'true':'false'}, '${safeName}')">
+      <div style="flex:1;">
         <div class="who">${escapeHtml(d.name)}</div><div class="when">${d.region==='lombok'?'Lombok':'Bali'} · ${t('admin_stat_fees')||'Gebühren'}: ${formatIDR(d.fees_due_idr||0)}${d.declinedCount ? ` · ⚠️ ${d.declinedCount} ${t('admin_declined_count_label')}` : ''}</div>
       </div>
       <span class="status-pill ${d.is_locked?'pending':'confirmed'}">${d.is_locked ? t('admin_status_blocked') : t('admin_status_active')}</span>
+      <button type="button" class="${d.is_locked ? 'accept-btn' : 'lock-btn'}" style="margin-left:8px; white-space:nowrap;" onclick="event.stopPropagation(); toggleRealDriverLock('${d.id}', ${d.is_locked ? 'true':'false'}, '${safeName}')">${d.is_locked ? '🔓 ' + t('admin_unlock_btn') : '🔒 ' + t('admin_lock_btn')}</button>
       <button type="button" class="cancel-btn" style="margin-left:8px; padding:6px 10px; border-radius:5px; white-space:nowrap;" onclick="event.stopPropagation(); deleteRealDriver('${d.id}', '${safeName}')">🗑️ Löschen</button>
     </div>`;
   }).join('');
@@ -12203,7 +12243,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v144</div>
+<div id="version-footer" style="position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v145</div>
 
 </body>
 </html>
