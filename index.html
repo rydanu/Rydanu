@@ -603,6 +603,12 @@
     background:none; border:none; color:var(--teal); font-family:'Public Sans'; font-size:0.75rem;
     font-weight:600; text-decoration:underline; cursor:pointer; padding:4px 0 0;
   }
+  .request-tour-link-btn{
+    display:block; width:100%; text-align:center; background:var(--paper-dim); border:1.5px solid var(--teal);
+    color:var(--teal); font-family:'Public Sans'; font-weight:700; font-size:0.9rem;
+    padding:13px; border-radius:8px; cursor:pointer; margin-top:14px; -webkit-tap-highlight-color:transparent;
+  }
+  .request-tour-link-btn:hover{ background:var(--teal); color:#fff; }
   .profile-links-row{ display:flex; justify-content:flex-start; gap:28px; align-items:center; margin-top:6px; }
   .register-driver-btn{
     width:100%; background:var(--gold); color:var(--ink); border:none; font-weight:700; font-size:0.82rem;
@@ -1242,7 +1248,7 @@
         <div class="filter-group-title" data-i18n="other_tours_title">All tours by this driver</div>
         <div id="other-tours-list"></div>
       </div>
-      <button type="button" class="edit-profile-link" id="modal-request-tour-btn" style="display:none; margin-bottom:10px;" onclick="openTourRequest(currentDriver.ownerId)">✨ <span data-i18n="tr_open_btn">Don't see what you want? Request a custom tour</span></button>
+      <button type="button" class="request-tour-link-btn" id="modal-request-tour-btn" style="display:none;" onclick="openTourRequest(currentDriver.ownerId)">✨ <span data-i18n="tr_open_btn">Don't see what you want? Request a custom tour</span></button>
       <button class="book-btn" onclick="goToStep('form')" data-i18n="request_booking_btn">Request booking</button>
       <p class="note" data-i18n="pay_secure_note">You'll pay your driver directly via secure payment link. Ryvio does not process tour payments.</p>
     </div>
@@ -1485,7 +1491,7 @@
   <div class="new-booking-banner" id="new-booking-banner" style="display:none;" onclick="goToNewBookings()">
     🔔 <span id="new-booking-banner-text"></span>
   </div>
-  <div class="new-booking-banner" id="new-request-banner" style="display:none; background:#1E5C3E;" onclick="goToNewRequests()">
+  <div class="new-booking-banner" id="new-request-banner" style="display:none;" onclick="goToNewRequests()">
     ✨ <span id="new-request-banner-text"></span>
   </div>
 
@@ -1695,6 +1701,7 @@
         <p class="note" style="margin:-8px 20px 16px; color:var(--danger);" data-i18n="requests_rule_note">⚠️ All requests must be answered with a tour offer created here. Arranging payment or bookings privately, outside Ryvio, is not allowed and may lead to account suspension.</p>
         <div class="period-tabs" id="requests-view-tabs">
           <button type="button" class="period-btn active" data-view="open" onclick="setRequestsViewTab('open')" data-i18n="requests_tab_open">Open</button>
+          <button type="button" class="period-btn" data-view="offered" onclick="setRequestsViewTab('offered')" data-i18n="requests_tab_offered">Completed</button>
           <button type="button" class="period-btn" data-view="declined" onclick="setRequestsViewTab('declined')" data-i18n="requests_tab_declined">Declined</button>
         </div>
         <div class="panel" id="requests-list"></div>
@@ -2359,7 +2366,7 @@
   <div class="dp-section">
     <h3 data-i18n="dp_tours_title">My tours on Ryvio</h3>
     <div id="dp-tours"></div>
-    <button type="button" class="edit-profile-link" id="dp-request-tour-btn" style="display:none; margin-top:8px;" onclick="openTourRequest(dpDriverId)">✨ <span data-i18n="tr_open_btn">Don't see what you want? Request a custom tour</span></button>
+    <button type="button" class="request-tour-link-btn" id="dp-request-tour-btn" style="display:none;" onclick="openTourRequest(dpDriverId)">✨ <span data-i18n="tr_open_btn">Don't see what you want? Request a custom tour</span></button>
   </div>
 
   <div class="dp-section">
@@ -2446,6 +2453,10 @@
       <div class="form-field">
         <label data-i18n="tr_destination_label">What would you like to do / see?</label>
         <input type="text" id="tr-destination" data-i18n-placeholder="tr_destination_ph" placeholder="e.g. 3-day trip to Sidemen &amp; Munduk">
+      </div>
+      <div class="form-field">
+        <label data-i18n="lbl_pickup">Pickup location</label>
+        <input type="text" id="tr-pickup" data-i18n-placeholder="tr_pickup_ph" placeholder="e.g. your hotel or villa name">
       </div>
       <div class="form-row">
         <div class="form-field">
@@ -3461,7 +3472,7 @@ function openTourRequest(driverId){
   trRequestDriverId = driverId || dpDriverId;
   document.getElementById('tr-form-step').style.display = 'block';
   document.getElementById('tr-confirm-step').style.display = 'none';
-  ['tr-name','tr-email','tr-phone','tr-destination','tr-notes'].forEach(id=>document.getElementById(id).value = '');
+  ['tr-name','tr-email','tr-phone','tr-destination','tr-pickup','tr-notes'].forEach(id=>document.getElementById(id).value = '');
   document.getElementById('tr-date').value = '';
   document.getElementById('tr-date').min = new Date().toISOString().slice(0,10);
   document.getElementById('tr-error').textContent = '';
@@ -3479,6 +3490,7 @@ async function submitTourRequest(){
   }
   document.getElementById('tr-error').textContent = '';
   const dateWanted = document.getElementById('tr-date').value;
+  const pickup = document.getElementById('tr-pickup').value.trim();
   const guests = document.getElementById('tr-guests').value;
   const notes = document.getElementById('tr-notes').value.trim();
   const ref = 'TR-' + Math.floor(10000 + Math.random()*89999);
@@ -3486,9 +3498,13 @@ async function submitTourRequest(){
   // dasselbe Erkennungsmuster wie beim Ein-/Ausblenden des Buttons weiter oben im Code.
   const isRealDriver = !driverProfiles[trRequestDriverId];
   if(isRealDriver){
+    // ID im Browser erzeugen statt per .select() zurueckzulesen -- der Kunde ist nicht eingeloggt
+    // und darf laut Datenbank-Regeln keine tour_inquiries-Zeilen auslesen, nur anlegen (derselbe
+    // Fehler wie bei den Buchungen letzte Woche, diesmal gleich richtig gemacht).
+    const newId = crypto.randomUUID();
     const { error } = await supabaseClient.from('tour_inquiries').insert({
-      driver_id: trRequestDriverId, customer_name: name, customer_email: email || null,
-      customer_phone: phone || null, destination, date_wanted: dateWanted || null,
+      id: newId, driver_id: trRequestDriverId, customer_name: name, customer_email: email || null,
+      customer_phone: phone || null, destination, date_wanted: dateWanted || null, pickup: pickup || null,
       guests, notes: notes || null, ref
     });
     if(error){
@@ -3497,6 +3513,12 @@ async function submitTourRequest(){
       return;
     }
     if(trRequestDriverId === realDriverProfile?.id) loadRealTourInquiries();
+    // Punkt 1 (heute): Kunde bekommt zusaetzlich zur Bestaetigung auf dieser Seite auch eine Mail,
+    // falls er/sie das Fenster schliesst, bevor die Seite hier gesehen wird
+    if(email){
+      supabaseClient.functions.invoke('send-tour-offer-email', { body: { type: 'inquiry_received', inquiryId: newId } })
+        .catch(err=>console.error('Bestaetigungs-Mail (Anfrage erhalten) fehlgeschlagen:', err));
+    }
     document.getElementById('tr-confirm-ref').textContent = ref;
     document.getElementById('tr-form-step').style.display = 'none';
     document.getElementById('tr-confirm-step').style.display = 'block';
@@ -3507,7 +3529,7 @@ async function submitTourRequest(){
   if(!Array.isArray(store.tourRequests)) store.tourRequests = [];
   store.tourRequests.unshift({
     ref, name, email, phone,
-    destination, dateWanted, guests, notes,
+    destination, dateWanted, pickup, guests, notes,
     status: 'pending', offeredTourName: null, date: 'Jul 21, 2026'
   });
   pushInboxMessage(trRequestDriverId, t('tr_inbox_title'), name + ' — ' + destination + (dateWanted ? ' (' + dateWanted + ')' : ''), {type:'tourRequest', ref});
@@ -3538,7 +3560,11 @@ async function shareQrViaWhatsapp(){
   window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
 }
 function openQrModal(){
-  dpShareLink = location.origin + location.pathname + '?driver=' + encodeURIComponent(currentDriverId);
+  // Bugfix: currentDriverId bleibt bei einem echten eingeloggten Fahrer auf dem alten Demo-Wert
+  // stehen (bekanntes Muster, siehe andere Bugfixes im Code) -- der QR-Code zeigte deshalb auf den
+  // zuletzt geladenen Demo-Fahrer statt auf das eigene, echte Profil.
+  const shareId = realDriverProfile ? realDriverProfile.id : currentDriverId;
+  dpShareLink = location.origin + location.pathname + '?driver=' + encodeURIComponent(shareId);
   document.getElementById('dash-qr-img').src = 'https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=' + encodeURIComponent(dpShareLink);
   document.getElementById('qr-modal-bg').classList.add('active');
 }
@@ -3888,10 +3914,9 @@ function renderRealDriverPage(isOwner){
         </div>
       `).join('')
     : `<div class="empty-state">${t('dp_reviews_empty')}</div>`;
-  // Kontaktformular ist noch Demo-only (keine echte Anbindung) -> fuer echte Seiten ausgeblendet.
-  // Die Standalone-Bewertung und die individuelle Touranfrage sind jetzt auch fuer echte Fahrer
-  // angebunden (siehe submitStandaloneReview / submitTourRequest).
-  document.getElementById('dp-message-section').style.display = 'none';
+  // Kontaktformular, Standalone-Bewertung und individuelle Touranfrage sind jetzt alle auch fuer
+  // echte Fahrer angebunden (siehe sendPageMessage / submitStandaloneReview / submitTourRequest).
+  document.getElementById('dp-message-section').style.display = isOwner ? 'none' : 'block';
   document.getElementById('dp-leave-review-btn').style.display = isOwner ? 'none' : 'block';
   document.getElementById('dp-request-tour-btn').style.display = isOwner ? 'none' : 'block';
 }
@@ -4222,12 +4247,29 @@ function deletePageMedia(i){
   saveState();
   renderDriverPage();
 }
-function sendPageMessage(){
+async function sendPageMessage(){
   const name = document.getElementById('dp-msg-name').value.trim();
   const text = document.getElementById('dp-msg-text').value.trim();
   if(!name || !text){
     document.getElementById('dp-msg-status').textContent = t('dp_msg_err');
     document.getElementById('dp-msg-status').style.color = 'var(--danger)';
+    return;
+  }
+  if(dpIsReal){
+    const { error } = await supabaseClient.from('driver_messages').insert({
+      driver_id: dpDriverId, type: 'customer_message',
+      subject: t('dp_msg_inbox_title') + ' ' + name, body: text
+    });
+    if(error){
+      console.error('Nachricht konnte nicht gesendet werden:', error);
+      document.getElementById('dp-msg-status').style.color = 'var(--danger)';
+      document.getElementById('dp-msg-status').textContent = t('dp_msg_save_err');
+      return;
+    }
+    document.getElementById('dp-msg-name').value = '';
+    document.getElementById('dp-msg-text').value = '';
+    document.getElementById('dp-msg-status').style.color = 'var(--teal)';
+    document.getElementById('dp-msg-status').textContent = t('dp_msg_sent');
     return;
   }
   pushInboxMessage(dpDriverId, t('dp_msg_inbox_title') + ' ' + name, text);
@@ -4286,6 +4328,14 @@ async function findMyBooking(){
     }
   }
   // not a booking — maybe it's a custom tour request reference
+  if(ref.length >= 4){
+    const { data: reqRows, error: reqErr } = await supabaseClient.rpc('get_tour_inquiry_by_ref', { p_ref: ref });
+    if(reqErr){ console.error('Anfragen-Suche fehlgeschlagen:', reqErr); }
+    else if(reqRows && reqRows.length){
+      showMyTourRequestReal(reqRows[0]);
+      return;
+    }
+  }
   let foundReq = null;
   Object.keys(driverDataStore).forEach(driverId=>{
     (driverDataStore[driverId].tourRequests||[]).forEach((r,index)=>{
@@ -4299,6 +4349,37 @@ async function findMyBooking(){
     return;
   }
   showMyTourRequest(foundReq.driverId, foundReq.index);
+}
+function showMyTourRequestReal(r){
+  document.getElementById('mb-find-step').style.display = 'none';
+  document.getElementById('mb-detail-step').style.display = 'none';
+  document.getElementById('mb-request-step').style.display = 'block';
+  document.getElementById('mbr-destination').textContent = r.destination;
+  document.getElementById('mbr-date').textContent = r.date_wanted || '—';
+  document.getElementById('mbr-ref').textContent = r.ref;
+  const offered = r.status === 'offered';
+  const declined = r.status === 'declined';
+  const statusEl = document.getElementById('mbr-status');
+  if(declined){
+    statusEl.textContent = t('tr_status_declined');
+    statusEl.className = 'status-pill cancel_requested';
+  } else {
+    statusEl.textContent = offered ? t('tr_status_offered') : t('tr_status_pending');
+    statusEl.className = 'status-pill ' + (offered ? 'confirmed' : 'pending');
+  }
+  document.getElementById('mbr-note').textContent = declined ? t('tr_note_declined') : (offered ? t('tr_note_offered') : t('tr_note_pending'));
+  // wenn der Fahrer bereits ein Angebot erstellt hat, direkt den Bestaetigungs-Link anbieten
+  const offerBox = document.getElementById('mbr-offer-box');
+  if(offerBox){
+    if(offered && r.offer_token){
+      offerBox.style.display = 'block';
+      document.getElementById('mbr-offer-name').textContent = r.destination;
+      const btn = offerBox.querySelector('button');
+      if(btn) btn.onclick = () => { location.href = location.origin + location.pathname + '?offer=' + r.offer_token; };
+    } else {
+      offerBox.style.display = 'none';
+    }
+  }
 }
 let mbrFound = null;
 function showMyTourRequest(driverId, index){
@@ -5726,7 +5807,7 @@ async function loadRealInbox(){
   renderRealInbox();
   updateRealInboxDot();
 }
-const DRIVER_MSG_TYPE_ICON = { fee_reminder:'💳', lock_notice:'🚫', unlock_notice:'✓', admin:'👤', system:'ℹ️', doc_request:'📎' };
+const DRIVER_MSG_TYPE_ICON = { fee_reminder:'💳', lock_notice:'🚫', unlock_notice:'✓', admin:'👤', system:'ℹ️', doc_request:'📎', customer_message:'✉️' };
 function renderRealInbox(){
   const el = document.getElementById('inbox-list');
   if(!el) return;
@@ -6484,10 +6565,15 @@ function renderTourRequests(){
   const allReqs = getRequestRows();
   const reqs = allReqs
     .map((r,i)=>({r,i}))
-    .filter(({r}) => requestsViewTab==='declined' ? r.status==='declined' : r.status!=='declined');
+    .filter(({r}) => {
+      if(requestsViewTab==='declined') return r.status==='declined';
+      if(requestsViewTab==='offered') return r.status==='offered';
+      return r.status==='pending';
+    });
   const el = document.getElementById('requests-list');
   if(reqs.length === 0){
-    el.innerHTML = `<div class="empty-state">${requestsViewTab==='declined' ? t('requests_empty_declined') : t('requests_empty')}</div>`;
+    const emptyKey = requestsViewTab==='declined' ? 'requests_empty_declined' : (requestsViewTab==='offered' ? 'requests_empty_offered' : 'requests_empty');
+    el.innerHTML = `<div class="empty-state">${t(emptyKey)}</div>`;
   } else {
     el.innerHTML = reqs.map(({r,i})=>{
       const name = r.name || r.customer_name;
@@ -6497,6 +6583,7 @@ function renderTourRequests(){
         <div>
           <div class="who">${name} — ${r.destination}</div>
           <div class="when">${dateWanted || '—'} · ${r.guests || '2'} ${t('lbl_guests')} · Ref ${r.ref}</div>
+          ${r.pickup ? `<div class="when">📍 ${escapeHtml(r.pickup)}</div>` : ''}
           ${r.notes ? `<div class="when" style="font-style:italic;">"${r.notes}"</div>` : ''}
         </div>
         <div class="row-actions">
@@ -6583,6 +6670,7 @@ function createOfferFromRequest(i){
     document.getElementById('co-phone').value = r.customer_phone || '';
     document.getElementById('co-desc').value = r.destination || '';
     if(r.date_wanted) document.getElementById('co-date').value = r.date_wanted;
+    document.getElementById('co-pickup').value = r.pickup || '';
     document.getElementById('co-notes').value = r.notes ? (t('co_prefill_from_request') + ' "' + r.notes + '"') : '';
     return;
   }
@@ -7569,7 +7657,7 @@ const translations = {
     dp_tours_title: "My tours on Ryvio", dp_tours_empty: "No active tours right now.",
     dp_reviews_title: "What guests say", dp_reviews_empty: "No reviews yet.", dp_review_singular: "review", dp_review_plural: "reviews",
     dp_msg_title: "Send me a message", dp_msg_name_ph: "Your name", dp_msg_text_ph: "Your message to the driver...", dp_msg_send: "✉️ Send message",
-    dp_msg_err: "Please enter your name and a message.", dp_msg_sent: "✓ Message sent — the driver will get back to you.", dp_msg_inbox_title: "New message via your Ryvio page — from",
+    dp_msg_err: "Please enter your name and a message.", dp_msg_sent: "✓ Message sent — the driver will get back to you.", dp_msg_inbox_title: "New message via your Ryvio page — from", dp_msg_save_err: "Couldn't send your message — please try again.",
     rd_vtype_label: "Vehicle type *", lbl_optional_inline: "(optional)", rd_seats_label: "Number of seats", trust_badges_label: "Trust badges (shown on your profile)", rd_referral_label: "Referral code", rd_referral_ph: "e.g. RY-104 — the Ryvio number of the driver who invited you", rd_referral_hint: "Were you invited by another driver? Enter their Ryvio number — they'll receive an IDR 100,000 fee credit once your account is approved and you complete your first booking.",
     vt_standard: "Standard Car", vt_family: "Family Car", vt_minivan: "Minivan", vt_luxury: "Luxury Car", vt_large: "More than 5 seats",
     badge_female: "Female", badge_child: "Child-friendly", badge_guide: "Tour guide", badge_firstaid: "First aid",
@@ -7577,12 +7665,12 @@ const translations = {
     sort_best: "Best match", sort_rating: "Highest rated", sort_reviews: "Most reviewed", sort_price_low: "Price: low to high", sort_price_high: "Price: high to low", currency_picker_label: "Show prices in",
     sr_open_btn: "Already traveled with this driver? Leave a review", sr_eyebrow: "Leave a review", sr_title: "How was your trip?", mb_review_title2: "Your name", sr_err_name: "Please enter your name.",
     nav_requests: "Requests", requests_title: "Custom tour requests", requests_sub: "Travelers who couldn't find exactly what they wanted asked you directly. Reply by creating a real tour offer through Ryvio.", requests_empty: "No custom tour requests yet.",
-    requests_tab_open: "Open", requests_tab_declined: "Declined", requests_empty_declined: "No declined requests.",
+    requests_tab_open: "Open", requests_tab_offered: "Completed", requests_empty_offered: "No completed requests yet.", requests_tab_declined: "Declined", requests_empty_declined: "No declined requests.",
     co_open_btn_standalone: "✨ Or create a custom offer without a request",
     new_request_banner_one: "You have a new custom tour request — tap to view it", new_request_banner_many: "You have {n} new custom tour requests — tap to view them",
     tr_open_btn: "Don't see what you want? Request a custom tour", tr_eyebrow: "Custom tour request", tr_title: "Tell us what you'd like",
     tr_hint: "Your driver will review this and, if they can help, prepare a tour offer for you through Ryvio — with a proper price and booking, not a private side deal.",
-    tr_destination_label: "What would you like to do / see?", tr_destination_ph: "e.g. 3-day trip to Sidemen & Munduk",
+    tr_destination_label: "What would you like to do / see?", tr_destination_ph: "e.g. 3-day trip to Sidemen & Munduk", tr_pickup_ph: "e.g. your hotel or villa name",
     tr_notes_label: "Notes", tr_notes_ph: "Anything else your driver should know...",
     tr_submit_btn: "Send request", tr_sent_note: "Your request has been sent to your driver.", tr_check_hint: "Keep this reference — use \"Find my booking\" on the homepage anytime to check whether your driver has prepared an offer yet.", tr_done_btn: "Done",
     tr_err: "Please enter your name and what you'd like to do.", tr_inbox_title: "✨ New custom tour request",
@@ -7867,7 +7955,7 @@ const translations = {
     dp_tours_title: "Meine Touren auf Ryvio", dp_tours_empty: "Aktuell keine aktiven Touren.",
     dp_reviews_title: "Das sagen Gäste", dp_reviews_empty: "Noch keine Bewertungen.", dp_review_singular: "Bewertung", dp_review_plural: "Bewertungen",
     dp_msg_title: "Schreib mir eine Nachricht", dp_msg_name_ph: "Dein Name", dp_msg_text_ph: "Deine Nachricht an den Fahrer...", dp_msg_send: "✉️ Nachricht senden",
-    dp_msg_err: "Bitte gib deinen Namen und eine Nachricht ein.", dp_msg_sent: "✓ Nachricht gesendet — der Fahrer meldet sich bei dir.", dp_msg_inbox_title: "Neue Nachricht über deine Ryvio-Seite — von",
+    dp_msg_err: "Bitte gib deinen Namen und eine Nachricht ein.", dp_msg_sent: "✓ Nachricht gesendet — der Fahrer meldet sich bei dir.", dp_msg_inbox_title: "Neue Nachricht über deine Ryvio-Seite — von", dp_msg_save_err: "Nachricht konnte nicht gesendet werden — bitte erneut versuchen.",
     rd_vtype_label: "Fahrzeugtyp *", lbl_optional_inline: "(optional)", rd_seats_label: "Anzahl Sitzplätze", trust_badges_label: "Vertrauens-Merkmale (auf deinem Profil sichtbar)", rd_referral_label: "Empfehlungs-Code", rd_referral_ph: "z.B. RY-104 — die Ryvio-Nummer des werbenden Fahrers", rd_referral_hint: "Wurdest du von einem anderen Fahrer geworben? Gib seine Ryvio-Nummer ein — er bekommt eine Gutschrift von IDR 100.000, sobald dein Konto freigeschaltet ist und du deine erste Buchung abgeschlossen hast.",
     vt_standard: "Standardauto", vt_family: "Familienauto", vt_minivan: "Minivan", vt_luxury: "Luxusauto", vt_large: "Mehr als 5 Sitzplätze",
     badge_female: "Weiblich", badge_child: "Kinderfreundlich", badge_guide: "Reiseleiter", badge_firstaid: "Erste Hilfe",
@@ -7875,12 +7963,12 @@ const translations = {
     sort_best: "Beste Übereinstimmung", sort_rating: "Beste Bewertung", sort_reviews: "Meiste Bewertungen", sort_price_low: "Preis aufsteigend", sort_price_high: "Preis absteigend", currency_picker_label: "Preise anzeigen in",
     sr_open_btn: "Schon mal mit diesem Fahrer unterwegs gewesen? Bewertung hinterlassen", sr_eyebrow: "Bewertung hinterlassen", sr_title: "Wie war deine Tour?", mb_review_title2: "Dein Name", sr_err_name: "Bitte gib deinen Namen ein.",
     nav_requests: "Anfragen", requests_title: "Individuelle Touranfragen", requests_sub: "Reisende, die nicht genau das Passende gefunden haben, haben dich direkt angefragt. Antworte, indem du über Ryvio ein echtes Tourangebot erstellst.", requests_empty: "Noch keine individuellen Touranfragen.",
-    requests_tab_open: "Offen", requests_tab_declined: "Abgelehnt", requests_empty_declined: "Keine abgelehnten Anfragen.",
+    requests_tab_open: "Offen", requests_tab_offered: "Abgeschlossen", requests_empty_offered: "Noch keine abgeschlossenen Anfragen.", requests_tab_declined: "Abgelehnt", requests_empty_declined: "Keine abgelehnten Anfragen.",
     co_open_btn_standalone: "✨ Oder individuelles Angebot ohne Anfrage erstellen",
     new_request_banner_one: "Du hast eine neue individuelle Touranfrage — antippen zum Ansehen", new_request_banner_many: "Du hast {n} neue individuelle Touranfragen — antippen zum Ansehen",
     tr_open_btn: "Nicht das Richtige dabei? Individuelle Tour anfragen", tr_eyebrow: "Individuelle Touranfrage", tr_title: "Sag uns, was du dir wünschst",
     tr_hint: "Dein Fahrer prüft die Anfrage und erstellt, falls möglich, ein Tourangebot über Ryvio für dich — mit richtigem Preis und Buchung, kein privates Nebengeschäft.",
-    tr_destination_label: "Was möchtest du unternehmen / sehen?", tr_destination_ph: "z.B. 3-tägige Tour nach Sidemen &amp; Munduk",
+    tr_destination_label: "Was möchtest du unternehmen / sehen?", tr_destination_ph: "z.B. 3-tägige Tour nach Sidemen &amp; Munduk", tr_pickup_ph: "z.B. dein Hotel oder Villa-Name",
     tr_notes_label: "Notizen", tr_notes_ph: "Was dein Fahrer sonst noch wissen sollte...",
     tr_submit_btn: "Anfrage senden", tr_sent_note: "Deine Anfrage wurde an deinen Fahrer gesendet.", tr_check_hint: "Notiere dir diese Referenz — prüfe jederzeit über \"Meine Buchung finden\" auf der Startseite, ob dein Fahrer ein Angebot erstellt hat.", tr_done_btn: "Fertig",
     tr_err: "Bitte gib deinen Namen und dein Wunsch ein.", tr_inbox_title: "✨ Neue individuelle Touranfrage",
@@ -8165,7 +8253,7 @@ const translations = {
     dp_tours_title: "Tur saya di Ryvio", dp_tours_empty: "Tidak ada tur aktif saat ini.",
     dp_reviews_title: "Kata para tamu", dp_reviews_empty: "Belum ada ulasan.", dp_review_singular: "ulasan", dp_review_plural: "ulasan",
     dp_msg_title: "Kirim saya pesan", dp_msg_name_ph: "Nama Anda", dp_msg_text_ph: "Pesan Anda untuk sopir...", dp_msg_send: "✉️ Kirim pesan",
-    dp_msg_err: "Mohon isi nama dan pesan Anda.", dp_msg_sent: "✓ Pesan terkirim — sopir akan menghubungi Anda.", dp_msg_inbox_title: "Pesan baru melalui halaman Ryvio Anda — dari",
+    dp_msg_err: "Mohon isi nama dan pesan Anda.", dp_msg_sent: "✓ Pesan terkirim — sopir akan menghubungi Anda.", dp_msg_inbox_title: "Pesan baru melalui halaman Ryvio Anda — dari", dp_msg_save_err: "Pesan tidak dapat dikirim — silakan coba lagi.",
     rd_vtype_label: "Jenis kendaraan *", lbl_optional_inline: "(opsional)", rd_seats_label: "Jumlah kursi", trust_badges_label: "Lencana kepercayaan (ditampilkan di profil Anda)", rd_referral_label: "Kode referral", rd_referral_ph: "mis. RY-104 — nomor Ryvio sopir yang mengundang Anda", rd_referral_hint: "Diundang oleh sopir lain? Masukkan nomor Ryvio mereka — mereka akan menerima kredit biaya IDR 100.000 setelah akun Anda disetujui dan Anda menyelesaikan pemesanan pertama.",
     vt_standard: "Mobil Standar", vt_family: "Mobil Keluarga", vt_minivan: "Minivan", vt_luxury: "Mobil Mewah", vt_large: "Lebih dari 5 kursi",
     badge_female: "Wanita", badge_child: "Ramah anak", badge_guide: "Pemandu wisata", badge_firstaid: "P3K",
@@ -8173,12 +8261,12 @@ const translations = {
     sort_best: "Kecocokan terbaik", sort_rating: "Rating tertinggi", sort_reviews: "Paling banyak diulas", sort_price_low: "Harga: rendah ke tinggi", sort_price_high: "Harga: tinggi ke rendah", currency_picker_label: "Tampilkan harga dalam",
     sr_open_btn: "Pernah bepergian dengan sopir ini? Tinggalkan ulasan", sr_eyebrow: "Tinggalkan ulasan", sr_title: "Bagaimana perjalanan Anda?", mb_review_title2: "Nama Anda", sr_err_name: "Mohon masukkan nama Anda.",
     nav_requests: "Permintaan", requests_title: "Permintaan tur khusus", requests_sub: "Wisatawan yang tidak menemukan yang mereka cari langsung menghubungi Anda. Balas dengan membuat penawaran tur nyata melalui Ryvio.", requests_empty: "Belum ada permintaan tur khusus.",
-    requests_tab_open: "Terbuka", requests_tab_declined: "Ditolak", requests_empty_declined: "Tidak ada permintaan yang ditolak.",
+    requests_tab_open: "Terbuka", requests_tab_offered: "Selesai", requests_empty_offered: "Belum ada permintaan yang selesai.", requests_tab_declined: "Ditolak", requests_empty_declined: "Tidak ada permintaan yang ditolak.",
     co_open_btn_standalone: "✨ Atau buat penawaran khusus tanpa permintaan",
     new_request_banner_one: "Anda memiliki permintaan tur khusus baru — ketuk untuk melihatnya", new_request_banner_many: "Anda memiliki {n} permintaan tur khusus baru — ketuk untuk melihatnya",
     tr_open_btn: "Tidak menemukan yang Anda cari? Minta tur khusus", tr_eyebrow: "Permintaan tur khusus", tr_title: "Beri tahu kami keinginan Anda",
     tr_hint: "Sopir Anda akan meninjau ini dan, jika bisa membantu, menyiapkan penawaran tur untuk Anda melalui Ryvio — dengan harga dan pemesanan yang tepat, bukan kesepakatan pribadi.",
-    tr_destination_label: "Apa yang ingin Anda lakukan / lihat?", tr_destination_ph: "mis. perjalanan 3 hari ke Sidemen &amp; Munduk",
+    tr_destination_label: "Apa yang ingin Anda lakukan / lihat?", tr_destination_ph: "mis. perjalanan 3 hari ke Sidemen &amp; Munduk", tr_pickup_ph: "mis. nama hotel atau vila Anda",
     tr_notes_label: "Catatan", tr_notes_ph: "Hal lain yang perlu diketahui sopir Anda...",
     tr_submit_btn: "Kirim permintaan", tr_sent_note: "Permintaan Anda telah dikirim ke sopir Anda.", tr_check_hint: "Simpan referensi ini — gunakan \"Temukan pemesanan saya\" di beranda kapan saja untuk memeriksa apakah sopir Anda sudah menyiapkan penawaran.", tr_done_btn: "Selesai",
     tr_err: "Mohon masukkan nama Anda dan apa yang Anda inginkan.", tr_inbox_title: "✨ Permintaan tur khusus baru",
@@ -9913,7 +10001,7 @@ async function initOfferConfirmPage(token){
     return;
   }
   body.innerHTML = `
-    <h2>Your tour offer from ${escapeHtml(row.driver_name)}</h2>
+    <h2 style="font-family:'Public Sans', sans-serif;">Your tour offer from ${escapeHtml(row.driver_name)}</h2>
     ${offerDetailsHTML(row)}
     <button type="button" class="book-btn" id="offer-confirm-btn" onclick="confirmCustomOfferPublic('${token}')">Confirm this booking</button>
     <p class="note" style="margin-top:10px; font-size:0.8rem;">By confirming, you agree to arrange payment directly with your driver, as usual on Ryvio.</p>
@@ -9944,7 +10032,11 @@ if(_offerToken){
   document.getElementById('site-lock-gate').style.display = 'none';
   initOfferConfirmPage(_offerToken);
 } else if(_wantsRatingsPage){
+  // Bugfix: die Bewertungsseite liegt (anders als die Angebots-Bestaetigungsseite) INNERHALB von
+  // #site-content -- das musste hier zusaetzlich sichtbar gemacht werden, sonst blieb alles leer/weiss,
+  // obwohl ratings-page selbst schon auf "block" stand.
   document.getElementById('site-lock-gate').style.display = 'none';
+  document.getElementById('site-content').style.display = 'block';
   loadPlatformReviews();
   document.getElementById('ratings-page').style.display = 'block';
 } else {
@@ -11771,8 +11863,15 @@ try{
   updateInboxDot();
   updateAdminMailBadge();
   loadPlatformReviews();
+  // Bugfix: fuehrte bisher nur fuer Demo-Fahrer (driverProfiles[id]) zur Fahrerseite -- bei einer
+  // echten Fahrer-ID (z.B. aus dem QR-Code oder der Bewertungs-Erinnerungsmail) landete man einfach
+  // auf der normalen Startseite, weil diese Pruefung schon vorher fehlschlug. openDriverPage() kann
+  // beides laengst selbst unterscheiden, die Demo-only-Pruefung hier war schlicht falsch. Zusaetzlich
+  // muss die Baustellen-Tuer fuer diesen Link uebersprungen werden, wie beim Angebots-/Bewertungslink.
   const qrDriverId = new URLSearchParams(location.search).get('driver');
-  if(qrDriverId && driverProfiles[qrDriverId]){
+  if(qrDriverId){
+    document.getElementById('site-lock-gate').style.display = 'none';
+    document.getElementById('site-content').style.display = 'block';
     openDriverPage(qrDriverId, 'visitor');
   }
 }catch(err){
@@ -11816,7 +11915,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v138</div>
+<div id="version-footer" style="position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v142</div>
 
 </body>
 </html>
