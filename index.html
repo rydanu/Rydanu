@@ -604,11 +604,11 @@
     font-weight:600; text-decoration:underline; cursor:pointer; padding:4px 0 0;
   }
   .request-tour-link-btn{
-    display:block; width:100%; text-align:center; background:var(--paper-dim); border:1.5px solid var(--teal);
-    color:var(--teal); font-family:'Public Sans'; font-weight:700; font-size:0.9rem;
+    display:block; width:100%; text-align:center; background:var(--gold); border:1.5px solid var(--gold-deep);
+    color:var(--ink); font-family:'Public Sans'; font-weight:700; font-size:0.9rem;
     padding:13px; border-radius:8px; cursor:pointer; margin-top:14px; -webkit-tap-highlight-color:transparent;
   }
-  .request-tour-link-btn:hover{ background:var(--teal); color:#fff; }
+  .request-tour-link-btn:hover{ background:var(--gold-deep); color:var(--ink); }
   .profile-links-row{ display:flex; justify-content:flex-start; gap:28px; align-items:center; margin-top:6px; }
   .register-driver-btn{
     width:100%; background:var(--gold); color:var(--ink); border:none; font-weight:700; font-size:0.82rem;
@@ -1394,7 +1394,6 @@
         <div class="preview-card" id="preview-driver" style="display:none;"></div>
       </div>
 
-      <button class="book-btn" onclick="viewAsDriver()" data-i18n="view_as_driver_btn">See this booking as the driver</button>
       <button class="link-btn" onclick="closeModal()" data-i18n="done_btn">Done</button>
     </div>
 
@@ -2454,9 +2453,18 @@
         <label data-i18n="tr_destination_label">What would you like to do / see?</label>
         <input type="text" id="tr-destination" data-i18n-placeholder="tr_destination_ph" placeholder="e.g. 3-day trip to Sidemen &amp; Munduk">
       </div>
-      <div class="form-field">
+      <div class="spots-section">
+        <div class="filter-group-title" data-i18n="highlights_title">Fancy something specific? Tap all that interest you — your driver will plan the exact spots with you</div>
+        <div class="chip-row" id="tr-highlights-row"></div>
+      </div>
+      <div class="form-field autocomplete-wrap">
         <label data-i18n="lbl_pickup">Pickup location</label>
-        <input type="text" id="tr-pickup" data-i18n-placeholder="tr_pickup_ph" placeholder="e.g. your hotel or villa name">
+        <div class="map-input">
+          <svg class="map-pin" viewBox="0 0 24 24" width="16" height="16"><path fill="var(--teal)" d="M12 2C7.6 2 4 5.6 4 10c0 6 8 12 8 12s8-6 8-12c0-4.4-3.6-8-8-8zm0 11a3 3 0 110-6 3 3 0 010 6z"/></svg>
+          <input type="text" id="tr-pickup" data-i18n-placeholder="tr_pickup_ph" placeholder="e.g. your hotel or villa name" autocomplete="off" oninput="filterTrPickup()" onfocus="filterTrPickup()">
+        </div>
+        <div class="pickup-suggestions" id="tr-pickup-suggestions"></div>
+        <p class="map-hint" id="tr-pickup-confirmed"></p>
       </div>
       <div class="form-row">
         <div class="form-field">
@@ -2853,14 +2861,39 @@
           <label data-i18n="co_desc_label">Tour description *</label>
           <textarea id="co-desc" rows="3" maxlength="400"></textarea>
         </div>
-        <input type="text" id="co-price" placeholder="Price, e.g. IDR 450,000">
+        <div class="spots-section">
+          <div class="filter-group-title" data-i18n="highlights_title">Fancy something specific? Tap all that interest you — your driver will plan the exact spots with you</div>
+          <div class="chip-row" id="co-highlights-row"></div>
+        </div>
+        <div class="spots-section">
+          <div class="filter-group-title" data-i18n="nl_extras_title">Extra costs not included — tap all that apply</div>
+          <div class="chip-row" id="co-extras-row">
+            <button type="button" class="chip" data-value="Entrance fees">Entrance fees</button>
+            <button type="button" class="chip" data-value="Parking">Parking</button>
+            <button type="button" class="chip" data-value="Fuel">Fuel</button>
+            <button type="button" class="chip" data-value="Other">Other</button>
+          </div>
+        </div>
+        <div class="form-field">
+          <label data-i18n="co_price_label">Price *</label>
+          <div class="form-row" style="grid-template-columns:1fr 110px;">
+            <input type="text" id="co-price" placeholder="e.g. 450,000">
+            <select id="co-currency">
+              <option value="IDR" selected>IDR</option>
+              <option value="USD">USD</option>
+              <option value="EUR">EUR</option>
+            </select>
+          </div>
+          <p class="note" id="co-price-fx" style="margin-top:6px; text-align:left;"></p>
+        </div>
         <div class="form-field">
           <label data-i18n="co_date_label">Proposed date (optional)</label>
           <input type="date" id="co-date">
         </div>
         <div class="form-field">
-          <label data-i18n="co_pickup_label">Pickup (optional)</label>
+          <label data-i18n="co_pickup_label">Pickup</label>
           <input type="text" id="co-pickup">
+          <p class="note" id="co-pickup-hint" style="display:none; margin-top:6px;" data-i18n="co_pickup_fixed_hint">Set by the customer in their request. Need to note a change? Add it below in your note to the customer.</p>
         </div>
         <div class="form-field">
           <label data-i18n="co_notes_label">Note to customer (optional)</label>
@@ -3473,6 +3506,10 @@ function openTourRequest(driverId){
   document.getElementById('tr-form-step').style.display = 'block';
   document.getElementById('tr-confirm-step').style.display = 'none';
   ['tr-name','tr-email','tr-phone','tr-destination','tr-pickup','tr-notes'].forEach(id=>document.getElementById(id).value = '');
+  document.getElementById('tr-pickup-confirmed').textContent = '';
+  document.getElementById('tr-pickup-suggestions').classList.remove('open');
+  trSelectedHighlights = [];
+  renderHighlightChips('tr-highlights-row');
   document.getElementById('tr-date').value = '';
   document.getElementById('tr-date').min = new Date().toISOString().slice(0,10);
   document.getElementById('tr-error').textContent = '';
@@ -3505,7 +3542,7 @@ async function submitTourRequest(){
     const { error } = await supabaseClient.from('tour_inquiries').insert({
       id: newId, driver_id: trRequestDriverId, customer_name: name, customer_email: email || null,
       customer_phone: phone || null, destination, date_wanted: dateWanted || null, pickup: pickup || null,
-      guests, notes: notes || null, ref
+      guests, notes: notes || null, ref, highlights: trSelectedHighlights
     });
     if(error){
       console.error('Anfrage konnte nicht gespeichert werden:', error);
@@ -3522,6 +3559,9 @@ async function submitTourRequest(){
     document.getElementById('tr-confirm-ref').textContent = ref;
     document.getElementById('tr-form-step').style.display = 'none';
     document.getElementById('tr-confirm-step').style.display = 'block';
+    // Punkt 4: Popup schliesst sich nach kurzer Anzeigezeit von selbst, statt dass der Kunde
+    // manuell auf X/Fertig klicken muss -- die Referenznummer bleibt trotzdem kurz sichtbar.
+    setTimeout(()=>{ closeTourRequest(); }, 2500);
     return;
   }
   const store = driverDataStore[trRequestDriverId];
@@ -3529,7 +3569,7 @@ async function submitTourRequest(){
   if(!Array.isArray(store.tourRequests)) store.tourRequests = [];
   store.tourRequests.unshift({
     ref, name, email, phone,
-    destination, dateWanted, pickup, guests, notes,
+    destination, dateWanted, pickup, guests, notes, highlights: trSelectedHighlights.slice(),
     status: 'pending', offeredTourName: null, date: 'Jul 21, 2026'
   });
   pushInboxMessage(trRequestDriverId, t('tr_inbox_title'), name + ' — ' + destination + (dateWanted ? ' (' + dateWanted + ')' : ''), {type:'tourRequest', ref});
@@ -3538,6 +3578,7 @@ async function submitTourRequest(){
   document.getElementById('tr-confirm-ref').textContent = ref;
   document.getElementById('tr-form-step').style.display = 'none';
   document.getElementById('tr-confirm-step').style.display = 'block';
+  setTimeout(()=>{ closeTourRequest(); }, 2500);
 }
 document.getElementById('tour-request-modal-bg').addEventListener('click', e=>{ if(e.target.id==='tour-request-modal-bg') closeTourRequest(); });
 
@@ -4815,33 +4856,81 @@ const baliPlaces = [
   {name:"Munduk Mountain Lodge", area:"Munduk"},
 ];
 
-function filterPickup(){
-  const box = document.getElementById('pickup-suggestions');
-  const q = document.getElementById('f-pickup').value.trim().toLowerCase();
-  if(!q){ box.classList.remove('open'); box.innerHTML=''; document.getElementById('pickup-confirmed').textContent=''; return; }
-  const matches = baliPlaces.filter(p => p.name.toLowerCase().includes(q) || p.area.toLowerCase().includes(q)).slice(0,5);
+function filterPickup(){ runPickupSearch('f-pickup','pickup-suggestions','pickup-confirmed'); }
+function filterTrPickup(){ runPickupSearch('tr-pickup','tr-pickup-suggestions','tr-pickup-confirmed'); }
+
+// Punkt 2 (5. August): Abholort-Suche zeigt jetzt zusaetzlich zu unserer kuratierten Liste
+// bekannter Hotels auch echte Adressen -- ueber OpenStreetMap/Nominatim, komplett kostenlos,
+// ohne API-Key und ohne Kreditkarte/Google-Konto. Etwas weniger praezise als Google Places,
+// aber fuer Bali/Lombok gut nutzbar. Debounce (450ms) + Token-Check verhindert veraltete
+// Antworten, wenn schnell weitergetippt wird, und haelt uns innerhalb der fairen Nutzung von
+// Nominatim (max. 1 Anfrage/Sekunde).
+let pickupSearchDebounce = null;
+let pickupSearchToken = 0;
+function runPickupSearch(inputId, boxId, confirmedId){
+  const box = document.getElementById(boxId);
+  const input = document.getElementById(inputId);
+  const q = input.value.trim();
+  const confirmedEl = document.getElementById(confirmedId);
+  if(!q){ box.classList.remove('open'); box.innerHTML=''; if(confirmedEl) confirmedEl.textContent=''; return; }
+  const qLower = q.toLowerCase();
+  const curated = baliPlaces.filter(p => p.name.toLowerCase().includes(qLower) || p.area.toLowerCase().includes(qLower)).slice(0,4);
+  renderPickupBox(inputId, boxId, confirmedId, curated, curated.length===0);
+  clearTimeout(pickupSearchDebounce);
+  if(q.length < 3) return;
+  const myToken = ++pickupSearchToken;
+  pickupSearchDebounce = setTimeout(async ()=>{
+    const live = await searchNominatimBali(q);
+    if(myToken !== pickupSearchToken) return; // inzwischen weitergetippt -- veraltete Antwort verwerfen
+    if(input.value.trim() !== q) return;
+    const combined = curated.concat(live.filter(l => !curated.some(c => c.name.toLowerCase()===l.name.toLowerCase())));
+    renderPickupBox(inputId, boxId, confirmedId, combined.slice(0,6), true);
+  }, 450);
+}
+async function searchNominatimBali(query){
+  try{
+    const url = 'https://nominatim.openstreetmap.org/search?format=json&countrycodes=id&viewbox=114.3,-8.0,115.9,-9.2&bounded=0&addressdetails=1&limit=5&q=' + encodeURIComponent(query);
+    const res = await fetch(url);
+    if(!res.ok) return [];
+    const data = await res.json();
+    return data.map(d=>{
+      const addr = d.address || {};
+      const areaPart = addr.village || addr.suburb || addr.town || addr.city_district || addr.city || addr.county || '';
+      const parts = (d.display_name||'').split(',').map(s=>s.trim());
+      const namePart = parts[0] || query;
+      return { name: namePart, area: areaPart || (parts[1]||'') };
+    });
+  }catch(e){ console.error('Adress-Suche (OpenStreetMap) fehlgeschlagen:', e); return []; }
+}
+function renderPickupBox(inputId, boxId, confirmedId, matches, showEmptyHint){
+  const box = document.getElementById(boxId);
   if(matches.length===0){
-    box.innerHTML = `<div class="suggestion-item" style="cursor:default;color:var(--ink-soft);">No matches — you can still type a custom address</div>`;
-    box.classList.add('open');
+    if(showEmptyHint){
+      box.innerHTML = `<div class="suggestion-item" style="cursor:default;color:var(--ink-soft);">No matches — you can still type a custom address</div>`;
+      box.classList.add('open');
+    }
     return;
   }
   box.innerHTML = matches.map(p => `
-    <div class="suggestion-item" onclick="selectPickup('${p.name.replace(/'/g,"\\'")}','${p.area.replace(/'/g,"\\'")}')">
+    <div class="suggestion-item" onclick="selectPickupGeneric('${inputId}','${boxId}','${confirmedId}','${p.name.replace(/'/g,"\\'")}','${(p.area||'').replace(/'/g,"\\'")}')">
       <svg width="14" height="14" viewBox="0 0 24 24"><path fill="var(--teal)" d="M12 2C7.6 2 4 5.6 4 10c0 6 8 12 8 12s8-6 8-12c0-4.4-3.6-8-8-8zm0 11a3 3 0 110-6 3 3 0 010 6z"/></svg>
-      <div><div class="s-name">${p.name}</div><div class="s-area">${p.area}, Bali</div></div>
+      <div><div class="s-name">${p.name}</div><div class="s-area">${p.area ? p.area + ', ' : ''}Bali</div></div>
     </div>
   `).join('');
   box.classList.add('open');
 }
-function selectPickup(name, area){
-  document.getElementById('f-pickup').value = name + ', ' + area;
-  document.getElementById('pickup-suggestions').classList.remove('open');
-  document.getElementById('pickup-confirmed').textContent = '✓ Matched to ' + area + ' on the map';
+function selectPickupGeneric(inputId, boxId, confirmedId, name, area){
+  document.getElementById(inputId).value = area ? (name + ', ' + area) : name;
+  document.getElementById(boxId).classList.remove('open');
+  const confirmedEl = document.getElementById(confirmedId);
+  if(confirmedEl) confirmedEl.textContent = '✓ Matched to ' + (area || name) + ' on the map';
 }
 document.addEventListener('click', e=>{
   if(!e.target.closest('.autocomplete-wrap')){
-    const box = document.getElementById('pickup-suggestions');
-    if(box) box.classList.remove('open');
+    ['pickup-suggestions','tr-pickup-suggestions'].forEach(id=>{
+      const box = document.getElementById(id);
+      if(box) box.classList.remove('open');
+    });
   }
 });
 
@@ -6664,14 +6753,29 @@ function createOfferFromRequest(i){
   if(realDriverProfile){
     // echte Anfrage -> vorausgefuelltes individuelles Angebot (bestehender Baustein C/D-Flow),
     // NICHT mehr die alte oeffentliche Angebots-Erstellung wie frueher im Demo-Pfad
+    if(r.date_wanted) checkDateConflict(r.date_wanted, null);
     openCustomOfferModal();
     document.getElementById('co-name').value = r.customer_name || '';
     document.getElementById('co-email').value = r.customer_email || '';
     document.getElementById('co-phone').value = r.customer_phone || '';
     document.getElementById('co-desc').value = r.destination || '';
     if(r.date_wanted) document.getElementById('co-date').value = r.date_wanted;
-    document.getElementById('co-pickup').value = r.pickup || '';
+    // Punkt 8 (5. August): Abholort wurde vom Kunden bereits bei der Anfrage festgelegt --
+    // deshalb hier fixiert (nicht mehr editierbar) statt als "(optional)"-Feld. Aenderungen
+    // dazu traegt der Fahrer stattdessen in "Notiz an den Kunden" ein.
+    const coPickup = document.getElementById('co-pickup');
+    if(r.pickup){
+      coPickup.value = r.pickup;
+      coPickup.readOnly = true;
+      document.getElementById('co-pickup-hint').style.display = 'block';
+    } else {
+      coPickup.value = '';
+      coPickup.readOnly = false;
+      document.getElementById('co-pickup-hint').style.display = 'none';
+    }
     document.getElementById('co-notes').value = r.notes ? (t('co_prefill_from_request') + ' "' + r.notes + '"') : '';
+    coSelectedHighlights = Array.isArray(r.highlights) ? r.highlights.slice() : [];
+    renderHighlightChips('co-highlights-row');
     return;
   }
   showDashSection('listings');
@@ -6706,15 +6810,46 @@ function openCustomOfferModal(){
   document.getElementById('co-error').textContent = '';
   const coDate = document.getElementById('co-date');
   if(coDate) coDate.min = new Date().toISOString().slice(0,10);
+  // Punkt 8: standardmaessig (kein Bezug zu einer Anfrage) bleibt Abholort frei editierbar
+  const coPickup = document.getElementById('co-pickup');
+  coPickup.readOnly = false;
+  document.getElementById('co-pickup-hint').style.display = 'none';
+  // Punkt 9: Highlight-Chips zuruecksetzen und neu anzeigen
+  coSelectedHighlights = [];
+  renderHighlightChips('co-highlights-row');
+  // Punkt 7: Extras-Chips zuruecksetzen
+  coSelectedExtras = [];
+  document.querySelectorAll('#co-extras-row .chip').forEach(c=>c.classList.remove('chip-active'));
+  // Punkt 10: Waehrung immer auf IDR zuruecksetzen
+  document.getElementById('co-currency').value = 'IDR';
+  document.getElementById('co-price-fx').textContent = '';
   document.getElementById('custom-offer-modal-bg').classList.add('active');
 }
 function closeCustomOfferModal(){ document.getElementById('custom-offer-modal-bg').classList.remove('active'); }
+// Punkt 10 (5. August): Waehrungsauswahl beim individuellen Angebot -- der Fahrer kann in
+// IDR, USD oder EUR eintippen, gespeichert wird trotzdem immer der IDR-Betrag (Grundlage der
+// 10%-Gebuehrenberechnung). Die Umrechnungskurse sind bewusst grobe Naeherungswerte -- Ryvio
+// wickelt ja nie selbst Zahlungen ab, der Kunde zahlt dem Fahrer sowieso direkt.
+const CO_EXCHANGE_RATES = { IDR: 1, USD: 16300, EUR: 17700 };
+function parseAmount(str){ return parseFloat(String(str).replace(/[^\d.]/g,'')) || 0; }
+function updateCoPriceFx(){
+  const currency = document.getElementById('co-currency').value;
+  const amount = parseAmount(document.getElementById('co-price').value);
+  const fxEl = document.getElementById('co-price-fx');
+  if(currency === 'IDR' || !amount){ fxEl.textContent = ''; return; }
+  const idr = Math.round(amount * CO_EXCHANGE_RATES[currency]);
+  fxEl.textContent = '≈ ' + formatIDR(idr) + ' (' + t('co_price_fx_note') + ')';
+}
+document.getElementById('co-price').addEventListener('input', updateCoPriceFx);
+document.getElementById('co-currency').addEventListener('change', updateCoPriceFx);
 async function submitCustomOffer(){
   const name = document.getElementById('co-name').value.trim();
   const email = document.getElementById('co-email').value.trim();
   const phone = document.getElementById('co-phone').value.trim();
   const desc = document.getElementById('co-desc').value.trim();
-  const priceNum = parseIDR(document.getElementById('co-price').value);
+  const currency = document.getElementById('co-currency').value;
+  const amountEntered = parseAmount(document.getElementById('co-price').value);
+  const priceNum = Math.round(amountEntered * CO_EXCHANGE_RATES[currency]);
   const dateVal = document.getElementById('co-date').value || null;
   const pickupVal = document.getElementById('co-pickup').value.trim() || null;
   const notesVal = document.getElementById('co-notes').value.trim() || null;
@@ -6729,8 +6864,9 @@ async function submitCustomOffer(){
   const { data, error } = await supabaseClient.from('custom_tour_requests').insert({
     driver_id: realDriverProfile.id,
     customer_name: name, customer_email: email, customer_phone: phone || null,
-    tour_description: desc, price_idr: priceNum,
-    proposed_date: dateVal, pickup: pickupVal, notes: notesVal
+    tour_description: desc, price_idr: priceNum, currency, price_original: currency==='IDR' ? null : amountEntered,
+    proposed_date: dateVal, pickup: pickupVal, notes: notesVal,
+    highlights: coSelectedHighlights, extras: coSelectedExtras
   }).select('id, token').single();
   btn.disabled = false;
   if(error){
@@ -6801,6 +6937,53 @@ document.querySelectorAll('#nl-extras-row .chip').forEach(chip=>{
     const idx = nlSelectedExtras.indexOf(val);
     if(idx===-1){ nlSelectedExtras.push(val); chip.classList.add('chip-active'); }
     else { nlSelectedExtras.splice(idx,1); chip.classList.remove('chip-active'); }
+  });
+});
+// Punkt 9 (5. August): die 10 meistgebuchten Highlight-Attraktionen als Klick-Chips mit Emoji --
+// sowohl fuer den Kunden (individuelle Anfrage) als auch fuer den Fahrer (individuelles Angebot),
+// damit beide Seiten sich auf dieselbe kurze Liste beziehen koennen, statt alles auszuschreiben.
+const HIGHLIGHT_OPTIONS = [
+  { value:'ATV', emoji:'🏍️', en:'ATV', de:'ATV', id:'ATV' },
+  { value:'Rice terraces', emoji:'🌾', en:'Rice terraces', de:'Reisterrassen', id:'Sawah berundak' },
+  { value:'Shopping', emoji:'🛍️', en:'Shopping', de:'Shopping', id:'Belanja' },
+  { value:'Swings', emoji:'🛝', en:'Swings', de:'Schaukeln', id:'Ayunan' },
+  { value:'Waterfalls', emoji:'💦', en:'Waterfalls', de:'Wasserfälle', id:'Air terjun' },
+  { value:'Beaches', emoji:'🏖️', en:'Beaches', de:'Strände', id:'Pantai' },
+  { value:'Traditional show', emoji:'🎭', en:'Traditional show', de:'Traditionelle Show', id:'Pertunjukan tradisional' },
+  { value:'Zoo / Bird park', emoji:'🦜', en:'Zoo / Bird park', de:'Zoo / Vogelpark', id:'Kebun binatang / Taman burung' },
+  { value:'Top sights', emoji:'🏛️', en:'Top sights', de:'Top Sehenswürdigkeiten', id:'Tempat wisata utama' },
+  { value:'Nusa Penida island hopping', emoji:'🚤', en:'Nusa Penida island hopping', de:'Insel-Hopping Nusa Penida', id:'Island hopping Nusa Penida' },
+  { value:'Monkey forest', emoji:'🐒', en:'Monkey forest', de:'Affenwald', id:'Hutan monyet' },
+];
+let trSelectedHighlights = [];
+let coSelectedHighlights = [];
+function highlightsArrayFor(rowId){ return rowId==='tr-highlights-row' ? trSelectedHighlights : coSelectedHighlights; }
+function renderHighlightChips(rowId){
+  const row = document.getElementById(rowId);
+  if(!row) return;
+  const selected = highlightsArrayFor(rowId);
+  row.innerHTML = HIGHLIGHT_OPTIONS.map(o => `
+    <button type="button" class="chip${selected.includes(o.value) ? ' chip-active' : ''}" data-value="${o.value.replace(/"/g,'&quot;')}">${o.emoji} ${o[currentLang] || o.en}</button>
+  `).join('');
+  row.querySelectorAll('.chip').forEach(chip=>{
+    chip.addEventListener('click', ()=>{
+      const val = chip.dataset.value;
+      const arr = highlightsArrayFor(rowId);
+      const idx = arr.indexOf(val);
+      if(idx===-1){ arr.push(val); chip.classList.add('chip-active'); }
+      else { arr.splice(idx,1); chip.classList.remove('chip-active'); }
+    });
+  });
+}
+// Punkt 7 (5. August): "Nicht enthalten"-Extras auch beim individuellen Angebot per Klick,
+// identisch zur Liste aus der normalen Tourenerstellung (statt frei Text zu tippen).
+let coSelectedExtras = [];
+document.querySelectorAll('#co-extras-row .chip').forEach(chip=>{
+  chip.addEventListener('click', ()=>{
+    const val = chip.dataset.value;
+    const idx = coSelectedExtras.indexOf(val);
+    if(idx===-1){ coSelectedExtras.push(val); chip.classList.add('chip-active'); }
+    else { coSelectedExtras.splice(idx,1); chip.classList.remove('chip-active'); }
   });
 });
 let nlSelectedServiceRegions = [];
@@ -7064,6 +7247,9 @@ function openBookingDetail(source, idx){
   const b = source==='upcoming' ? driverBookings[idx] : completedBookings[idx];
   if(!b) return;
   if(source==='upcoming') markBookingSeen(b);
+  // Punkt 3 (5. August): nur bei einer noch offenen Buchungsanfrage (status pending) checken --
+  // bei bereits bestaetigten Buchungen waere der Hinweis jedes Mal beim Ansehen nur stoerend.
+  if(source==='upcoming' && b.status==='pending') checkDateConflict(b.dateISO, b.dbId);
   document.getElementById('bd-who').textContent = b.who;
   document.getElementById('bd-tour').textContent = b.tour;
   document.getElementById('bd-when').textContent = b.when;
@@ -7598,7 +7784,7 @@ const translations = {
     lbl_fullname: "Full name", lbl_whatsapp: 'WhatsApp number <span class="optional">(for booking confirmation)</span>', ep_eyebrow: "Your profile", ep_title: "Edit profile",
     lbl_pickup_loc: "Pickup location", lbl_deposit_due: "Deposit due now (20%)", lbl_airport_destination: "Destination region", lbl_transfer_destination: "Destination", lbl_pickup_region: "Your pickup region",
     lbl_balance: "Balance — pay driver in cash on the day",
-    deposit_hint: "⚠️ Only the 20% deposit is due now to secure your booking. The remaining 80% is paid to your driver in cash at the start of the tour.",
+    deposit_hint: "⚠️ Only the 20% deposit is due now to secure your booking — and it goes straight to your driver, just like the remaining 80%. Ryvio never receives or holds any of your money, at any point.",
     confirm_title: "Booking requested",
     confirm_sub: "Your deposit is on its way directly to your driver. The booking becomes final once he confirms it arrived — you'll be notified by email & WhatsApp.",
     st_confirmed: "Confirmed", st_awaiting: "Awaiting confirmation", st_completed: "Completed", st_paid: "Paid",
@@ -7677,7 +7863,7 @@ const translations = {
     tr_save_err: "Couldn't send your request — please try again.", co_prefill_from_request: "From the traveler's request:",
     tr_create_offer_btn: "Create tour offer", tr_offered_tag: "Offered", tr_offered_tour_label: "Offered tour", tr_view_book_btn: "View & book this tour",
     rd_detail_eyebrow: "Tour request", rd_detail_msg_label: "Traveler's message", rd_detail_no_msg: "No message provided.",
-    tr_status_offered: "Offer ready", tr_status_pending: "Awaiting driver", tr_note_offered: "Good news — your driver has prepared a tour for your request. Tap below to view and book it.", tr_note_pending: "Your driver hasn't prepared an offer yet. Check back later, or contact them directly.", tr_decline_btn: "Decline", tr_declined_tag: "Declined", confirm_decline_request: "Decline this request from", tr_status_declined: "Not available", tr_note_declined: "Unfortunately this driver isn't able to take on your request right now. Please try requesting a custom tour from another driver on Ryvio — many others may be a great fit for what you're looking for.",
+    tr_status_offered: "Offer ready", tr_status_pending: "Awaiting driver", tr_note_offered: "Good news — your driver has prepared a tour for your request. Tap below to view and book it.", tr_note_pending: "Your driver hasn't prepared an offer yet. Check back later, or contact them directly.", tr_decline_btn: "Decline", tr_declined_tag: "Declined", confirm_decline_request: "Decline this request from", cal_conflict_alert: "Heads up — you already have a tour scheduled on {date}!", tr_status_declined: "Not available", tr_note_declined: "Unfortunately this driver isn't able to take on your request right now. Please try requesting a custom tour from another driver on Ryvio — many others may be a great fit for what you're looking for.",
     tr_go_to_request_btn: "Go to request &amp; create offer",
     nl_request_context_note: "You are creating this tour for {name}\u2019s request (Ref: {ref}). Once published it will also appear publicly in Ryvio search \u2014 any traveler will be able to book it, not only {name}.",
     requests_rule_note: "⚠️ All requests must be answered with a tour offer created here. Arranging payment or bookings privately, outside Ryvio, is not allowed and may lead to account suspension.",
@@ -7693,7 +7879,9 @@ const translations = {
     co_open_btn: "✨ Create a custom offer", co_title: "Create custom offer",
     co_intro: "Create a one-off offer for a specific traveler. They'll get a link to review and confirm it — no Ryvio account needed for them.",
     co_name_label: "Customer name *", co_email_label: "Customer email *", co_phone_label: "Customer phone (optional)",
-    co_desc_label: "Tour description *", co_date_label: "Proposed date (optional)", co_pickup_label: "Pickup (optional)",
+    co_desc_label: "Tour description *", co_date_label: "Proposed date (optional)", co_pickup_label: "Pickup", co_price_label: "Price *",
+    co_pickup_fixed_hint: "Set by the customer in their request. Need to note a change? Add it below in your note to the customer.",
+    co_price_fx_note: "approximate, for your reference", highlights_title: "Fancy something specific? Tap all that interest you — your driver will plan the exact spots with you",
     co_notes_label: "Note to customer (optional)", co_submit_btn: "Create offer & generate link",
     co_result_note: "Offer created and emailed to the customer! You can also copy the link below, e.g. to send it via WhatsApp:",
     co_mail_sent_note: "Offer created and emailed to the customer! You can also copy the link below, e.g. to send it via WhatsApp:",
@@ -7896,7 +8084,7 @@ const translations = {
     lbl_fullname: "Vollständiger Name", lbl_whatsapp: 'WhatsApp-Nummer <span class="optional">(für die Buchungsbestätigung)</span>', ep_eyebrow: "Dein Profil", ep_title: "Profil bearbeiten",
     lbl_pickup_loc: "Abholort", lbl_deposit_due: "Anzahlung jetzt fällig (20%)", lbl_airport_destination: "Zielregion", lbl_transfer_destination: "Ziel", lbl_pickup_region: "Deine Abholregion",
     lbl_balance: "Restbetrag — bar an den Fahrer am Tourtag",
-    deposit_hint: "⚠️ Nur die 20% Anzahlung ist jetzt fällig, um deine Buchung zu sichern. Die restlichen 80% zahlst du deinem Fahrer bar zu Beginn der Tour.",
+    deposit_hint: "⚠️ Nur die 20% Anzahlung ist jetzt fällig, um deine Buchung zu sichern — und sie geht direkt an deinen Fahrer, genau wie die restlichen 80%. Ryvio erhält oder verwaltet zu keinem Zeitpunkt dein Geld.",
     confirm_title: "Buchung angefragt",
     confirm_sub: "Deine Anzahlung ist direkt auf dem Weg zu deinem Fahrer. Die Buchung wird final, sobald er den Eingang bestätigt — du wirst per E-Mail & WhatsApp benachrichtigt.",
     st_confirmed: "Bestätigt", st_awaiting: "Wartet auf Bestätigung", st_completed: "Abgeschlossen", st_paid: "Bezahlt",
@@ -7975,7 +8163,7 @@ const translations = {
     tr_save_err: "Anfrage konnte nicht gesendet werden — bitte erneut versuchen.", co_prefill_from_request: "Aus der Anfrage des Reisenden:",
     tr_create_offer_btn: "Tourangebot erstellen", tr_offered_tag: "Angeboten", tr_offered_tour_label: "Angebotene Tour", tr_view_book_btn: "Tour ansehen &amp; buchen",
     rd_detail_eyebrow: "Touranfrage", rd_detail_msg_label: "Nachricht des Reisenden", rd_detail_no_msg: "Keine Nachricht angegeben.",
-    tr_status_offered: "Angebot bereit", tr_status_pending: "Wartet auf Fahrer", tr_note_offered: "Gute Nachricht — dein Fahrer hat eine Tour für deine Anfrage erstellt. Tippe unten, um sie anzusehen und zu buchen.", tr_note_pending: "Dein Fahrer hat noch kein Angebot erstellt. Schau später nochmal vorbei oder kontaktiere ihn direkt.", tr_decline_btn: "Ablehnen", tr_declined_tag: "Abgelehnt", confirm_decline_request: "Diese Anfrage ablehnen von", tr_status_declined: "Nicht möglich", tr_note_declined: "Dieser Fahrer kann deine Anfrage aktuell leider nicht annehmen. Bitte frag gerne einen anderen Fahrer auf Ryvio nach einer individuellen Tour an — viele andere passen bestimmt gut zu dem, was du suchst.",
+    tr_status_offered: "Angebot bereit", tr_status_pending: "Wartet auf Fahrer", tr_note_offered: "Gute Nachricht — dein Fahrer hat eine Tour für deine Anfrage erstellt. Tippe unten, um sie anzusehen und zu buchen.", tr_note_pending: "Dein Fahrer hat noch kein Angebot erstellt. Schau später nochmal vorbei oder kontaktiere ihn direkt.", tr_decline_btn: "Ablehnen", tr_declined_tag: "Abgelehnt", confirm_decline_request: "Diese Anfrage ablehnen von", cal_conflict_alert: "Achtung — du hast am {date} schon eine Tour geplant!", tr_status_declined: "Nicht möglich", tr_note_declined: "Dieser Fahrer kann deine Anfrage aktuell leider nicht annehmen. Bitte frag gerne einen anderen Fahrer auf Ryvio nach einer individuellen Tour an — viele andere passen bestimmt gut zu dem, was du suchst.",
     tr_go_to_request_btn: "Zur Anfrage &amp; Angebot erstellen",
     nl_request_context_note: "Du erstellst diese Tour f\u00fcr die Anfrage von {name} (Ref: {ref}). Sobald ver\u00f6ffentlicht, erscheint sie auch \u00f6ffentlich in der Ryvio-Suche \u2014 jeder Reisende kann sie buchen, nicht nur {name}.",
     requests_rule_note: "⚠️ Alle Anfragen müssen mit einem hier erstellten Tourangebot beantwortet werden. Zahlungen oder Buchungen privat außerhalb von Ryvio zu vereinbaren ist nicht erlaubt und kann zur Kontosperrung führen.",
@@ -7991,7 +8179,9 @@ const translations = {
     co_open_btn: "✨ Individuelles Angebot erstellen", co_title: "Individuelles Angebot erstellen",
     co_intro: "Erstelle ein einmaliges Angebot für einen bestimmten Reisenden. Er bekommt einen Link zum Ansehen und Bestätigen — kein Ryvio-Konto nötig.",
     co_name_label: "Name des Kunden *", co_email_label: "E-Mail des Kunden *", co_phone_label: "Telefon des Kunden (optional)",
-    co_desc_label: "Tour-Beschreibung *", co_date_label: "Vorgeschlagenes Datum (optional)", co_pickup_label: "Abholort (optional)",
+    co_desc_label: "Tour-Beschreibung *", co_date_label: "Vorgeschlagenes Datum (optional)", co_pickup_label: "Abholort", co_price_label: "Preis *",
+    co_pickup_fixed_hint: "Vom Kunden bei der Anfrage festgelegt. Muss sich etwas ändern? Bitte unten in der Notiz an den Kunden vermerken.",
+    co_price_fx_note: "ungefähr, nur zur Orientierung", highlights_title: "Was Bestimmtes im Kopf? Antippen, was interessiert — die genauen Stopps plant ihr gemeinsam mit dem Fahrer",
     co_notes_label: "Notiz an den Kunden (optional)", co_submit_btn: "Angebot erstellen & Link generieren",
     co_result_note: "Angebot erstellt und per E-Mail an den Kunden verschickt! Du kannst den Link unten auch kopieren, z.B. für WhatsApp:",
     co_mail_sent_note: "Angebot erstellt und per E-Mail an den Kunden verschickt! Du kannst den Link unten auch kopieren, z.B. für WhatsApp:",
@@ -8194,7 +8384,7 @@ const translations = {
     lbl_fullname: "Nama lengkap", lbl_whatsapp: 'Nomor WhatsApp <span class="optional">(untuk konfirmasi pemesanan)</span>', ep_eyebrow: "Profil Anda", ep_title: "Edit profil",
     lbl_pickup_loc: "Lokasi penjemputan", lbl_deposit_due: "Deposit jatuh tempo sekarang (20%)", lbl_airport_destination: "Wilayah tujuan", lbl_transfer_destination: "Tujuan", lbl_pickup_region: "Wilayah penjemputan Anda",
     lbl_balance: "Sisa — bayar tunai ke sopir pada hari tur",
-    deposit_hint: "⚠️ Hanya deposit 20% yang harus dibayar sekarang. Sisa 80% dibayar tunai ke sopir Anda saat tur dimulai.",
+    deposit_hint: "⚠️ Hanya deposit 20% yang harus dibayar sekarang untuk mengamankan pemesanan Anda — dan langsung masuk ke sopir Anda, sama seperti sisa 80%. Ryvio tidak pernah menerima atau menyimpan uang Anda, kapan pun.",
     confirm_title: "Pemesanan diajukan",
     confirm_sub: "Deposit Anda sedang menuju langsung ke sopir. Pemesanan menjadi final setelah dia mengonfirmasi penerimaan — Anda akan diberi tahu via email & WhatsApp.",
     st_confirmed: "Dikonfirmasi", st_awaiting: "Menunggu konfirmasi", st_completed: "Selesai", st_paid: "Lunas",
@@ -8273,7 +8463,7 @@ const translations = {
     tr_save_err: "Permintaan tidak dapat dikirim — silakan coba lagi.", co_prefill_from_request: "Dari permintaan wisatawan:",
     tr_create_offer_btn: "Buat penawaran tur", tr_offered_tag: "Ditawarkan", tr_offered_tour_label: "Tur yang ditawarkan", tr_view_book_btn: "Lihat &amp; pesan tur ini",
     rd_detail_eyebrow: "Permintaan tur", rd_detail_msg_label: "Pesan wisatawan", rd_detail_no_msg: "Tidak ada pesan.",
-    tr_status_offered: "Penawaran siap", tr_status_pending: "Menunggu sopir", tr_note_offered: "Kabar baik — sopir Anda telah menyiapkan tur untuk permintaan Anda. Ketuk di bawah untuk melihat dan memesannya.", tr_note_pending: "Sopir Anda belum menyiapkan penawaran. Periksa lagi nanti, atau hubungi mereka langsung.", tr_decline_btn: "Tolak", tr_declined_tag: "Ditolak", confirm_decline_request: "Tolak permintaan ini dari", tr_status_declined: "Tidak tersedia", tr_note_declined: "Sayangnya sopir ini tidak dapat menerima permintaan Anda saat ini. Silakan coba minta tur khusus dari sopir lain di Ryvio — banyak sopir lain mungkin sangat cocok untuk apa yang Anda cari.",
+    tr_status_offered: "Penawaran siap", tr_status_pending: "Menunggu sopir", tr_note_offered: "Kabar baik — sopir Anda telah menyiapkan tur untuk permintaan Anda. Ketuk di bawah untuk melihat dan memesannya.", tr_note_pending: "Sopir Anda belum menyiapkan penawaran. Periksa lagi nanti, atau hubungi mereka langsung.", tr_decline_btn: "Tolak", tr_declined_tag: "Ditolak", confirm_decline_request: "Tolak permintaan ini dari", cal_conflict_alert: "Perhatian — Anda sudah punya tur pada {date}!", tr_status_declined: "Tidak tersedia", tr_note_declined: "Sayangnya sopir ini tidak dapat menerima permintaan Anda saat ini. Silakan coba minta tur khusus dari sopir lain di Ryvio — banyak sopir lain mungkin sangat cocok untuk apa yang Anda cari.",
     tr_go_to_request_btn: "Ke permintaan &amp; buat penawaran",
     nl_request_context_note: "Anda membuat tur ini untuk permintaan {name} (Ref: {ref}). Setelah dipublikasikan, tur ini juga akan muncul secara publik di pencarian Ryvio \u2014 wisatawan mana pun dapat memesannya, bukan hanya {name}.",
     requests_rule_note: "⚠️ Semua permintaan harus dijawab dengan penawaran tur yang dibuat di sini. Mengatur pembayaran atau pemesanan secara pribadi di luar Ryvio tidak diizinkan dan dapat menyebabkan penangguhan akun.",
@@ -8289,7 +8479,9 @@ const translations = {
     co_open_btn: "✨ Buat penawaran khusus", co_title: "Buat penawaran khusus",
     co_intro: "Buat penawaran satu kali untuk wisatawan tertentu. Mereka akan mendapatkan tautan untuk melihat dan mengonfirmasi — tidak perlu akun Ryvio.",
     co_name_label: "Nama pelanggan *", co_email_label: "Email pelanggan *", co_phone_label: "Telepon pelanggan (opsional)",
-    co_desc_label: "Deskripsi tur *", co_date_label: "Tanggal yang diusulkan (opsional)", co_pickup_label: "Titik jemput (opsional)",
+    co_desc_label: "Deskripsi tur *", co_date_label: "Tanggal yang diusulkan (opsional)", co_pickup_label: "Titik jemput", co_price_label: "Harga *",
+    co_pickup_fixed_hint: "Ditentukan oleh pelanggan saat mengajukan permintaan. Ada perubahan? Tambahkan di catatan untuk pelanggan di bawah.",
+    co_price_fx_note: "perkiraan, hanya sebagai referensi", highlights_title: "Ada yang ingin dilihat secara spesifik? Ketuk yang menarik — sopir Anda akan merencanakan lokasi persisnya bersama Anda",
     co_notes_label: "Catatan untuk pelanggan (opsional)", co_submit_btn: "Buat penawaran & buat tautan",
     co_result_note: "Penawaran dibuat dan dikirim ke pelanggan lewat email! Anda juga bisa menyalin tautan di bawah, misalnya untuk WhatsApp:",
     co_mail_sent_note: "Penawaran dibuat dan dikirim ke pelanggan lewat email! Anda juga bisa menyalin tautan di bawah, misalnya untuk WhatsApp:",
@@ -9789,6 +9981,17 @@ function collectCalendarBookings(){
   });
   return map;
 }
+// Punkt 3 (5. August): kurzer Hinweis fuer den Fahrer, wenn er eine neue Anfrage/Buchungsanfrage
+// anschaut und laut Kalender an dem Tag schon eine Tour steht (Buchung oder blockierter Tag).
+function checkDateConflict(dateISO, excludeDbId){
+  if(!dateISO) return;
+  const isBlocked = realDriverProfile ? realBlockedDays.has(dateISO) : !!calEvents[dateISO];
+  const bookingsByDate = collectCalendarBookings();
+  const sameDayBookings = (bookingsByDate[dateISO] || []).filter(b => b.dbId !== excludeDbId && (b.status==='confirmed' || b.status==='pending'));
+  if(isBlocked || sameDayBookings.length > 0){
+    alert('⚠️ ' + t('cal_conflict_alert').split('{date}').join(formatDateDisplay(dateISO)));
+  }
+}
 let calViewYear, calViewMonth;
 function calShiftMonth(delta){
   calViewMonth += delta;
@@ -9972,12 +10175,21 @@ async function checkSiteLock(){
   // sonst: Sperrseite bleibt sichtbar (Standardzustand), nichts weiter tun
 }
 function offerDetailsHTML(row){
+  const priceLine = (row.currency && row.currency !== 'IDR' && row.price_original)
+    ? `${row.currency} ${row.price_original.toLocaleString('en-US')} (≈ ${formatIDR(row.price_idr)})`
+    : formatIDR(row.price_idr);
+  const highlightsLine = (row.highlights && row.highlights.length)
+    ? `<p style="margin:6px 0;"><strong>Highlights:</strong> ${row.highlights.map(h=>escapeHtml(h)).join(', ')}</p>` : '';
+  const extrasLine = (row.extras && row.extras.length)
+    ? `<p style="margin:6px 0;"><strong>Not included:</strong> ${row.extras.map(h=>escapeHtml(h)).join(', ')}</p>` : '';
   return `
     <div class="panel" style="padding:16px; margin:16px 0; text-align:left;">
       <p style="white-space:pre-wrap; margin:0 0 10px;">${escapeHtml(row.tour_description)}</p>
-      <p style="margin:6px 0;"><strong>Price:</strong> ${formatIDR(row.price_idr)}</p>
+      <p style="margin:6px 0;"><strong>Price:</strong> ${priceLine}</p>
       ${row.proposed_date ? `<p style="margin:6px 0;"><strong>Proposed date:</strong> ${formatDateDisplay(row.proposed_date)}</p>` : ''}
       ${row.pickup ? `<p style="margin:6px 0;"><strong>Pickup:</strong> ${escapeHtml(row.pickup)}</p>` : ''}
+      ${highlightsLine}
+      ${extrasLine}
       ${row.notes ? `<p style="margin:6px 0;"><strong>Note from your driver:</strong> ${escapeHtml(row.notes)}</p>` : ''}
     </div>`;
 }
@@ -11915,7 +12127,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v142</div>
+<div id="version-footer" style="position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v143</div>
 
 </body>
 </html>
