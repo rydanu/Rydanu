@@ -2379,7 +2379,7 @@
     </div>
     <div id="dp-reviews-summary" class="dp-reviews-summary"></div>
     <div id="dp-reviews"></div>
-    <button type="button" class="edit-profile-link" id="dp-leave-review-btn" style="display:none; margin-top:6px;" onclick="openStandaloneReview()">✍️ <span data-i18n="sr_open_btn">Already traveled with this driver? Leave a review</span></button>
+    <button type="button" class="edit-profile-link" id="dp-leave-review-btn" style="display:none; margin-top:6px;" onclick="openMyBooking()">✍️ <span data-i18n="sr_open_btn">Already traveled with this driver? Leave a review</span></button>
   </div>
 
   <div class="dp-section" id="dp-message-section">
@@ -3421,6 +3421,23 @@ function purgeOldDeletedMessages(){
 }
 let srStarRating = 0;
 let srReviewPhoto = null;
+let srBookingId = null;
+// Punkt 2 (5. August): der 'Fahrer bewerten'-Link aus der Erinnerungsmail landete bisher nur auf
+// der allgemeinen Fahrerseite -- der Kunde musste den Bewerten-Button erst selbst finden, und es
+// gab keine Pruefung, ob schon bewertet wurde. Jetzt: Link traegt die Buchungs-ID mit, Bewertung
+// oeffnet sich direkt, ist an genau diese eine Buchung gebunden und blockt Doppel-Bewertungen.
+async function openReviewFromEmailLink(driverId, bookingId){
+  const { data, error } = await supabaseClient.rpc('get_review_context', { p_booking_id: bookingId });
+  if(error){ console.error('Bewertungs-Kontext konnte nicht geladen werden:', error); return; }
+  const ctx = data && data[0];
+  if(!ctx || String(ctx.driver_id) !== String(driverId)) return;
+  if(ctx.already_reviewed){
+    alert(t('review_already_done_note'));
+    return;
+  }
+  srBookingId = bookingId;
+  openStandaloneReview();
+}
 function openStandaloneReview(){
   srStarRating = 0;
   srReviewPhoto = null;
@@ -3479,14 +3496,18 @@ async function submitStandaloneReview(){
     // die echte reviews-Tabelle speichert bewusst keinen Namen (anonym) -- Bewertungsformular
     // fragt trotzdem danach, damit sich die Bewertung persoenlich anfuehlt
     const { error } = await supabaseClient.from('reviews').insert({
-      driver_id: dpDriverId, stars: srStarRating, comment: text || null
+      driver_id: dpDriverId, stars: srStarRating, comment: text || null,
+      booking_id: srBookingId || null
     });
     if(error){
       console.error('Bewertung konnte nicht gespeichert werden:', error);
-      document.getElementById('sr-error').textContent = t('ratings_save_err');
+      // Punkt 1 (5. August): eindeutige Meldung, wenn fuer diese Buchung schon bewertet wurde
+      // (DB-Regel reviews_booking_id_unique), statt einer generischen Fehlermeldung
+      document.getElementById('sr-error').textContent = (error.code === '23505') ? t('review_already_done_note') : t('ratings_save_err');
       return;
     }
     closeStandaloneReview();
+    srBookingId = null;
     await loadAndRenderRealDriverPage(dpDriverId, dpMode);
     return;
   }
@@ -4369,7 +4390,7 @@ async function findMyBooking(){
     const { data: realRows, error: realErr } = await supabaseClient.rpc('get_booking_by_ref', { p_ref: ref, p_phone: phone });
     if(realErr){ console.error('Buchungssuche fehlgeschlagen:', realErr); }
     else if(realRows && realRows.length){
-      showMyBookingReal(realRows[0]);
+      showMyBookingReal(realRows[0], phone);
       return;
     }
   }
@@ -4470,8 +4491,8 @@ function openMyBookingByRef(ref){
   showMyBooking(found.driverId, found.source, found.index);
 }
 // zeigt eine ECHTE Buchung (aus Supabase, via get_booking_by_ref) im selben Fenster an
-function showMyBookingReal(row){
-  mbFound = { isReal:true, id: row.id, driverId: row.driver_id };
+function showMyBookingReal(row, phone){
+  mbFound = { isReal:true, id: row.id, driverId: row.driver_id, phone: phone || '' };
   document.getElementById('mb-find-step').style.display = 'none';
   document.getElementById('mb-request-step').style.display = 'none';
   document.getElementById('mb-detail-step').style.display = 'block';
@@ -4493,17 +4514,21 @@ function showMyBookingReal(row){
     balanceRow.style.display = 'none';
   }
   document.getElementById('mb-refshow').textContent = row.id.slice(0,8).toUpperCase();
-  const isCancelled = row.status === 'cancelled_by_driver' || row.status === 'cancelled_by_customer' || row.status === 'no_show';
+  const isCancelled = row.status === 'cancelled_by_driver' || row.status === 'cancelled_by_customer' || row.status === 'no_show' || row.status === 'cancelled_by_request';
+  const isCancelRequested = row.status === 'cancel_requested';
   const isCompleted = row.status === 'completed';
   const isConfirmed = row.status === 'confirmed';
   const statusEl = document.getElementById('mb-status');
-  statusEl.textContent = isCompleted ? t('st_completed') : isCancelled ? t('st_cancelled') : isConfirmed ? t('st_confirmed') : t('st_awaiting');
-  statusEl.className = 'status-pill ' + ((isCompleted || isConfirmed) ? 'confirmed' : isCancelled ? 'cancelled' : 'pending');
+  statusEl.textContent = isCompleted ? t('st_completed') : isCancelRequested ? t('mb_status_cancel_requested') : isCancelled ? t('st_cancelled') : isConfirmed ? t('st_confirmed') : t('st_awaiting');
+  statusEl.className = 'status-pill ' + ((isCompleted || isConfirmed) ? 'confirmed' : (isCancelled || isCancelRequested) ? 'cancel_requested' : 'pending');
   document.getElementById('mb-status-note').textContent = isCompleted ? t('mb_note_completed')
+    : isCancelRequested ? t('mb_note_cancel_requested')
     : isCancelled ? t('mb_note_cancelled')
     : isConfirmed ? t('mb_note_confirmed') : t('mb_note_pending');
-  // Kunden-Storno fuer echte Buchungen ist noch nicht gebaut -> Button hier immer verstecken
-  document.getElementById('mb-cancel-btn').style.display = 'none';
+  // Punkt 3 (5. August): Kunden-Storno fuer echte Buchungen jetzt angebunden -- Button sichtbar,
+  // solange die Buchung noch offen/bestaetigt ist und noch keine Stornierung angefragt wurde.
+  const cancelBtnReal = document.getElementById('mb-cancel-btn');
+  cancelBtnReal.style.display = ((isConfirmed || row.status==='pending') && !isCancelRequested) ? 'block' : 'none';
   const reviewSection = document.getElementById('mb-review-section');
   const reviewDone = document.getElementById('mb-review-done');
   const photoRow = document.getElementById('mb-review-photo-row');
@@ -4670,8 +4695,24 @@ async function submitMyReview(){
   document.getElementById('mb-review-section').style.display = 'none';
   document.getElementById('mb-review-done').style.display = 'block';
 }
-function cancelMyBooking(){
-  if(!mbFound || mbFound.source !== 'bookings') return;
+async function cancelMyBooking(){
+  if(!mbFound) return;
+  if(mbFound.isReal){
+    if(!confirm(t('mb_cancel_confirm'))) return;
+    const btn = document.getElementById('mb-cancel-btn');
+    if(btn) btn.disabled = true;
+    const { data, error } = await supabaseClient.rpc('request_booking_cancellation', { p_booking_id: mbFound.id, p_phone: mbFound.phone });
+    if(btn) btn.disabled = false;
+    const result = data && data[0];
+    if(error || !result || !result.success){
+      alert(t('mb_cancel_failed_note'));
+      return;
+    }
+    closeMyBooking();
+    alert(t('mb_cancel_requested_note'));
+    return;
+  }
+  if(mbFound.source !== 'bookings') return;
   const b = driverDataStore[mbFound.driverId].bookings[mbFound.index];
   if(!b) return;
   if(b.status === 'cancel_requested'){
@@ -5812,6 +5853,15 @@ function confirmCancellation(i){
   const b = driverBookings[i];
   if(!b) return;
   if(!confirm(t('confirm_ack_cancel') + ' ' + b.who + '?')) return;
+  if(realDriverProfile && b.dbId){
+    supabaseClient.from('bookings').update({ status: 'cancelled_by_request' }).eq('id', b.dbId).then(({error})=>{
+      if(error){ console.error('Storno konnte nicht bestätigt werden:', error); return; }
+      loadRealBookings();
+      supabaseClient.functions.invoke('send-tour-offer-email', { body: { type: 'booking_cancelled', bookingId: b.dbId, cancelReason: 'customer_request' } })
+        .catch(err=>console.error('Storno-Bestaetigungs-Mail fehlgeschlagen:', err));
+    });
+    return;
+  }
   moveBookingToCompleted(currentDriverId, i, 'cancelled', 'customer');
   renderDriverBookings();
   renderAllBookings();
@@ -6390,7 +6440,7 @@ function renderListings(){
   el.innerHTML = driverListings.map((l,i)=>`
     <div class="listing-row ${l.active?'':'paused'}" style="cursor:pointer;" onclick="openEditListing(${i})">
       <div>
-        <div class="lname">${l.name} ${driverRankBadgeHTML(currentDriverId, 'sm')}</div>
+        <div class="lname">${l.name} ${driverRankBadgeHTML(realDriverProfile ? realDriverProfile.id : currentDriverId, 'sm')}</div>
         <div class="lmeta">${l.price} · ${spotLabel(l.duration)} · ${l.bookings} bookings <span class="fee-badge">${l.fee} / booking</span></div>
         <div class="lmeta">${l.region ? '🚩 '+l.region : '<em>No starting point set</em>'} ${l.services && l.services.length ? '· '+serviceLabel(l.services) : ''}</div>
         ${l.spots && l.spots.length ? `<div class="spots-line">✦ ${l.spots.map(spotLabel).join(' · ')}</div>` : ''}
@@ -7947,7 +7997,7 @@ const translations = {
     ratings_title: "Ryvio Reviews", ratings_write_title: "Write a review", ratings_write_sub: "Tell other travelers and drivers how Ryvio worked for you.",
     ratings_name_label: "Your name *", ratings_comment_label: "Your review (optional)", ratings_submit_btn: "Submit review",
     ratings_reviews_label: "reviews", ratings_empty: "No reviews yet — be the first!", ratings_empty_summary: "No reviews yet — be the first to share your experience!",
-    ratings_err: "Please enter your name and pick a star rating.", ratings_save_err: "Couldn't save your review — please try again.",
+    ratings_err: "Please enter your name and pick a star rating.", ratings_save_err: "Couldn't save your review — please try again.", review_already_done_note: "You've already left a review for this trip — thank you!",
     alert_cancel_12h: "Cancellation is only possible up to 12 hours before the tour starts. Please contact the guest directly or Ryvio support.",
     confirm_cancel_1: "Cancel booking with", confirm_cancel_2: "The guest will be notified and refunded their deposit in full.\n\n⚠️ Frequent cancellations can lead to your driver account being deactivated.",
     cancel_reason_eyebrow: "Cancel booking", cancel_reason_prompt: "Why are you cancelling this tour? The guest will be notified.", cancel_reason_customer: "Customer didn't show up", cancel_reason_driver: "I need to cancel the tour",
@@ -7976,7 +8026,7 @@ const translations = {
     payment_failed_title: "⚠️ Automatic fee payment failed", payment_failed_body: "We couldn't charge your saved payment method for this month's fees ({amount}) — please add a valid payment method and pay by {date}, or your account will be automatically suspended.",
     suspended_inbox_title: "🚫 Account suspended — unpaid fees", suspended_inbox_body: "Your account has been automatically suspended because {amount} in Ryvio fees wasn't paid within 5 days. Your tours are now hidden from travelers. Pay your open fees anytime to be reinstated automatically — you can still access your profile and messages.",
     reinstated_inbox_title: "✓ Account reinstated", reinstated_inbox_body: "Your payment was received — your profile and tours are visible to travelers again. Thanks for settling up!",
-    my_booking_link: "Find my booking", mb_title: "My booking", mb_hint: "No account needed — use the link from your confirmation email/WhatsApp, or enter your booking reference and WhatsApp number below.", mb_ref_label: "Booking reference", mb_phone_label: "WhatsApp number used for the booking", mb_find_btn: "Show my booking", mb_err_ref: "Please enter your booking reference (e.g. RY-BK-482).", mb_err_notfound: "No booking found — please check reference and WhatsApp number.", mb_note_confirmed: "Your booking is final. Please have the cash balance ready for your driver on the day.", mb_note_pending: "Your driver has not yet confirmed your deposit. You will be notified by email & WhatsApp as soon as the booking is final.", mb_cancel_btn: "Cancel this booking", mb_cancel_confirm: "Cancel this booking? Your driver will be notified and your deposit refunded in full.", mb_cancelled: "Your booking has been cancelled. Refunded deposit:", mb_note_cancelled: "This booking was cancelled — no further action needed.", mb_note_completed: "This trip is complete. Thanks for traveling with Ryvio!",
+    my_booking_link: "Find my booking", mb_title: "My booking", mb_hint: "No account needed — use the link from your confirmation email/WhatsApp, or enter your booking reference and WhatsApp number below.", mb_ref_label: "Booking reference", mb_phone_label: "WhatsApp number used for the booking", mb_find_btn: "Show my booking", mb_err_ref: "Please enter your booking reference (e.g. RY-BK-482).", mb_err_notfound: "No booking found — please check reference and WhatsApp number.", mb_note_confirmed: "Your booking is final. Please have the cash balance ready for your driver on the day.", mb_note_pending: "Your driver has not yet confirmed your deposit. You will be notified by email & WhatsApp as soon as the booking is final.", mb_cancel_btn: "Cancel this booking", mb_cancel_confirm: "Cancel this booking? Your driver will be notified and your deposit refunded in full.", mb_cancel_failed_note: "Something went wrong — please try again, or contact your driver directly.", mb_cancelled: "Your booking has been cancelled. Refunded deposit:", mb_note_cancelled: "This booking was cancelled — no further action needed.", mb_note_completed: "This trip is complete. Thanks for traveling with Ryvio!",
     nav_calendar: "Calendar",
     nav_reviews: "Reviews",
     nav_subscription: "Fees & billing",
@@ -8247,7 +8297,7 @@ const translations = {
     ratings_title: "Ryvio-Bewertungen", ratings_write_title: "Bewertung schreiben", ratings_write_sub: "Erzähl anderen Reisenden und Fahrern, wie Ryvio für dich war.",
     ratings_name_label: "Dein Name *", ratings_comment_label: "Deine Bewertung (optional)", ratings_submit_btn: "Bewertung abschicken",
     ratings_reviews_label: "Bewertungen", ratings_empty: "Noch keine Bewertungen — sei die/der Erste!", ratings_empty_summary: "Noch keine Bewertungen — teile als Erste(r) deine Erfahrung!",
-    ratings_err: "Bitte Namen eingeben und Sterne auswählen.", ratings_save_err: "Bewertung konnte nicht gespeichert werden — bitte erneut versuchen.",
+    ratings_err: "Bitte Namen eingeben und Sterne auswählen.", ratings_save_err: "Bewertung konnte nicht gespeichert werden — bitte erneut versuchen.", review_already_done_note: "Du hast für diese Tour schon eine Bewertung abgegeben — danke dir!",
     alert_cancel_12h: "Eine Stornierung ist nur bis 12 Stunden vor Tourbeginn möglich. Bitte kontaktiere den Gast direkt oder den Ryvio-Support.",
     confirm_cancel_1: "Buchung stornieren mit", confirm_cancel_2: "Der Gast wird benachrichtigt und erhält seine Anzahlung vollständig zurück.\n\n⚠️ Häufige Stornierungen können zur Deaktivierung deines Fahrerkontos führen.",
     cancel_reason_eyebrow: "Buchung stornieren", cancel_reason_prompt: "Warum stornierst du die Tour? Der Gast wird benachrichtigt.", cancel_reason_customer: "Kunde ist nicht gekommen", cancel_reason_driver: "Ich muss die Tour absagen",
@@ -8276,7 +8326,7 @@ const translations = {
     payment_failed_title: "⚠️ Automatische Gebührenzahlung fehlgeschlagen", payment_failed_body: "Wir konnten deine hinterlegte Zahlungsmethode nicht mit den Gebühren diesen Monats ({amount}) belasten — bitte hinterlege eine gültige Zahlungsmethode und zahle bis {date}, sonst wird dein Konto automatisch gesperrt.",
     suspended_inbox_title: "🚫 Konto gesperrt — unbezahlte Gebühren", suspended_inbox_body: "Dein Konto wurde automatisch gesperrt, weil {amount} an Ryvio-Gebühren nicht innerhalb von 5 Tagen bezahlt wurden. Deine Touren sind jetzt für Reisende ausgeblendet. Bezahle deine offenen Gebühren jederzeit, um automatisch wieder freigeschaltet zu werden — Profil und Nachrichten kannst du weiterhin nutzen.",
     reinstated_inbox_title: "✓ Konto wieder freigeschaltet", reinstated_inbox_body: "Deine Zahlung ist eingegangen — dein Profil und deine Touren sind wieder für Reisende sichtbar. Danke fürs Begleichen!",
-    my_booking_link: "Meine Buchung finden", mb_title: "Meine Buchung", mb_hint: "Kein Konto nötig — nutze den Link aus deiner Bestätigungs-E-Mail/WhatsApp oder gib unten deine Buchungsreferenz und WhatsApp-Nummer ein.", mb_ref_label: "Buchungsreferenz", mb_phone_label: "WhatsApp-Nummer der Buchung", mb_find_btn: "Meine Buchung anzeigen", mb_err_ref: "Bitte gib deine Buchungsreferenz ein (z.B. RY-BK-482).", mb_err_notfound: "Keine Buchung gefunden — bitte Referenz und WhatsApp-Nummer prüfen.", mb_note_confirmed: "Deine Buchung ist final. Bitte halte den Restbetrag am Tourtag bar für deinen Fahrer bereit.", mb_note_pending: "Dein Fahrer hat den Eingang deiner Anzahlung noch nicht bestätigt. Du wirst per E-Mail & WhatsApp benachrichtigt, sobald die Buchung final ist.", mb_cancel_btn: "Diese Buchung stornieren", mb_cancel_confirm: "Diese Buchung stornieren? Dein Fahrer wird benachrichtigt und deine Anzahlung vollständig erstattet.", mb_cancelled: "Deine Buchung wurde storniert. Erstattete Anzahlung:", mb_note_cancelled: "Diese Buchung wurde storniert — keine weiteren Schritte nötig.", mb_note_completed: "Diese Tour ist abgeschlossen. Danke, dass du mit Ryvio gereist bist!",
+    my_booking_link: "Meine Buchung finden", mb_title: "Meine Buchung", mb_hint: "Kein Konto nötig — nutze den Link aus deiner Bestätigungs-E-Mail/WhatsApp oder gib unten deine Buchungsreferenz und WhatsApp-Nummer ein.", mb_ref_label: "Buchungsreferenz", mb_phone_label: "WhatsApp-Nummer der Buchung", mb_find_btn: "Meine Buchung anzeigen", mb_err_ref: "Bitte gib deine Buchungsreferenz ein (z.B. RY-BK-482).", mb_err_notfound: "Keine Buchung gefunden — bitte Referenz und WhatsApp-Nummer prüfen.", mb_note_confirmed: "Deine Buchung ist final. Bitte halte den Restbetrag am Tourtag bar für deinen Fahrer bereit.", mb_note_pending: "Dein Fahrer hat den Eingang deiner Anzahlung noch nicht bestätigt. Du wirst per E-Mail & WhatsApp benachrichtigt, sobald die Buchung final ist.", mb_cancel_btn: "Diese Buchung stornieren", mb_cancel_confirm: "Diese Buchung stornieren? Dein Fahrer wird benachrichtigt und deine Anzahlung vollständig erstattet.", mb_cancel_failed_note: "Etwas ist schiefgelaufen — bitte nochmal versuchen oder direkt deinen Fahrer kontaktieren.", mb_cancelled: "Deine Buchung wurde storniert. Erstattete Anzahlung:", mb_note_cancelled: "Diese Buchung wurde storniert — keine weiteren Schritte nötig.", mb_note_completed: "Diese Tour ist abgeschlossen. Danke, dass du mit Ryvio gereist bist!",
     nav_calendar: "Kalender",
     nav_reviews: "Bewertungen",
     nav_subscription: "Gebühren & Abrechnung",
@@ -8547,7 +8597,7 @@ const translations = {
     ratings_title: "Ulasan Ryvio", ratings_write_title: "Tulis ulasan", ratings_write_sub: "Beri tahu wisatawan dan pengemudi lain bagaimana pengalaman Anda dengan Ryvio.",
     ratings_name_label: "Nama Anda *", ratings_comment_label: "Ulasan Anda (opsional)", ratings_submit_btn: "Kirim ulasan",
     ratings_reviews_label: "ulasan", ratings_empty: "Belum ada ulasan — jadilah yang pertama!", ratings_empty_summary: "Belum ada ulasan — jadilah yang pertama berbagi pengalaman Anda!",
-    ratings_err: "Mohon masukkan nama dan pilih bintang.", ratings_save_err: "Ulasan tidak dapat disimpan — silakan coba lagi.",
+    ratings_err: "Mohon masukkan nama dan pilih bintang.", ratings_save_err: "Ulasan tidak dapat disimpan — silakan coba lagi.", review_already_done_note: "Anda sudah memberikan ulasan untuk perjalanan ini — terima kasih!",
     alert_cancel_12h: "Pembatalan hanya bisa dilakukan hingga 12 jam sebelum tur dimulai. Silakan hubungi tamu langsung atau dukungan Ryvio.",
     confirm_cancel_1: "Batalkan pemesanan dengan", confirm_cancel_2: "Tamu akan diberi tahu dan deposit dikembalikan penuh.\n\n⚠️ Pembatalan yang sering dapat menyebabkan akun sopir dinonaktifkan.",
     cancel_reason_eyebrow: "Batalkan pemesanan", cancel_reason_prompt: "Mengapa Anda membatalkan tur ini? Tamu akan diberi tahu.", cancel_reason_customer: "Pelanggan tidak datang", cancel_reason_driver: "Saya perlu membatalkan tur",
@@ -8576,7 +8626,7 @@ const translations = {
     payment_failed_title: "⚠️ Pembayaran biaya otomatis gagal", payment_failed_body: "Kami tidak dapat menagih metode pembayaran tersimpan Anda untuk biaya bulan ini ({amount}) — mohon tambahkan metode pembayaran yang valid dan bayar sebelum {date}, atau akun Anda akan ditangguhkan otomatis.",
     suspended_inbox_title: "🚫 Akun ditangguhkan — biaya belum dibayar", suspended_inbox_body: "Akun Anda telah ditangguhkan secara otomatis karena {amount} biaya Ryvio tidak dibayar dalam 5 hari. Tur Anda kini disembunyikan dari wisatawan. Bayar biaya terbuka Anda kapan saja untuk diaktifkan kembali secara otomatis — Anda masih dapat mengakses profil dan pesan Anda.",
     reinstated_inbox_title: "✓ Akun diaktifkan kembali", reinstated_inbox_body: "Pembayaran Anda telah diterima — profil dan tur Anda kembali terlihat oleh wisatawan. Terima kasih telah melunasi!",
-    my_booking_link: "Temukan pemesanan saya", mb_title: "Pemesanan saya", mb_hint: "Tanpa akun — gunakan tautan dari email/WhatsApp konfirmasi Anda, atau masukkan referensi pemesanan dan nomor WhatsApp di bawah.", mb_ref_label: "Referensi pemesanan", mb_phone_label: "Nomor WhatsApp yang digunakan", mb_find_btn: "Tampilkan pemesanan saya", mb_err_ref: "Mohon masukkan referensi pemesanan Anda (mis. RY-BK-482).", mb_err_notfound: "Pemesanan tidak ditemukan — periksa referensi dan nomor WhatsApp.", mb_note_confirmed: "Pemesanan Anda final. Siapkan sisa pembayaran tunai untuk sopir pada hari tur.", mb_note_pending: "Sopir Anda belum mengonfirmasi deposit. Anda akan diberi tahu via email & WhatsApp begitu pemesanan final.", mb_cancel_btn: "Batalkan pemesanan ini", mb_cancel_confirm: "Batalkan pemesanan ini? Sopir Anda akan diberi tahu dan deposit dikembalikan penuh.", mb_cancelled: "Pemesanan Anda dibatalkan. Deposit dikembalikan:", mb_note_cancelled: "Pemesanan ini telah dibatalkan — tidak perlu tindakan lebih lanjut.", mb_note_completed: "Perjalanan ini telah selesai. Terima kasih telah bepergian dengan Ryvio!",
+    my_booking_link: "Temukan pemesanan saya", mb_title: "Pemesanan saya", mb_hint: "Tanpa akun — gunakan tautan dari email/WhatsApp konfirmasi Anda, atau masukkan referensi pemesanan dan nomor WhatsApp di bawah.", mb_ref_label: "Referensi pemesanan", mb_phone_label: "Nomor WhatsApp yang digunakan", mb_find_btn: "Tampilkan pemesanan saya", mb_err_ref: "Mohon masukkan referensi pemesanan Anda (mis. RY-BK-482).", mb_err_notfound: "Pemesanan tidak ditemukan — periksa referensi dan nomor WhatsApp.", mb_note_confirmed: "Pemesanan Anda final. Siapkan sisa pembayaran tunai untuk sopir pada hari tur.", mb_note_pending: "Sopir Anda belum mengonfirmasi deposit. Anda akan diberi tahu via email & WhatsApp begitu pemesanan final.", mb_cancel_btn: "Batalkan pemesanan ini", mb_cancel_confirm: "Batalkan pemesanan ini? Sopir Anda akan diberi tahu dan deposit dikembalikan penuh.", mb_cancel_failed_note: "Terjadi kesalahan — silakan coba lagi, atau hubungi sopir Anda langsung.", mb_cancelled: "Pemesanan Anda dibatalkan. Deposit dikembalikan:", mb_note_cancelled: "Pemesanan ini telah dibatalkan — tidak perlu tindakan lebih lanjut.", mb_note_completed: "Perjalanan ini telah selesai. Terima kasih telah bepergian dengan Ryvio!",
     nav_calendar: "Kalender",
     nav_reviews: "Ulasan",
     nav_subscription: "Biaya & tagihan",
@@ -9096,6 +9146,14 @@ function getDriverBadges(driverId){
   return DRIVER_MILESTONE_BADGES.filter(m => m.test(b));
 }
 function driverRankBadgeHTML(driverId, size){
+  // Bugfix (Demo-vs-Echt-Check, 5. August): fuer den echten eingeloggten Fahrer wurde hier immer
+  // ueber die Demo-Datenstruktur nachgeschlagen -> zeigte in "Meine Angebote" faelschlich den
+  // Demo-Rang (Wayan) statt des tatsaechlichen eigenen Rangs an.
+  if(realDriverProfile && driverId === realDriverProfile.id){
+    const rank = getDriverRank(realDriverProfile.rank_points || 0);
+    const cls = size === 'sm' ? 'rank-badge rank-badge-sm' : 'rank-badge';
+    return `<span class="${cls} rank-${rank.key}">${rank.emoji} ${t(rank.labelKey)}</span>`;
+  }
   const b = calcDriverPointBreakdown(driverId);
   if(!b) return '';
   const rank = getDriverRank(b.total);
@@ -12203,6 +12261,12 @@ try{
     document.getElementById('site-lock-gate').style.display = 'none';
     document.getElementById('site-content').style.display = 'block';
     openDriverPage(qrDriverId, 'visitor');
+    // Punkt 2 (5. August): Link aus der Bewertungs-Erinnerungsmail (?driver=X&reviewBooking=Y)
+    // oeffnet die Bewertung jetzt direkt, statt dass der Kunde sie erst selbst suchen muss.
+    const reviewBookingId = new URLSearchParams(location.search).get('reviewBooking');
+    if(reviewBookingId){
+      setTimeout(()=>{ openReviewFromEmailLink(qrDriverId, reviewBookingId); }, 500);
+    }
   }
 }catch(err){
   console.error('Ryvio: startup error', err);
@@ -12245,7 +12309,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v147</div>
+<div id="version-footer" style="position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v149</div>
 
 </body>
 </html>
