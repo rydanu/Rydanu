@@ -1822,7 +1822,7 @@
     <div id="admin-sec-openpay" style="display:none;">
     <h2 style="margin-top:0;" data-i18n="admin_openpay_title">Open payments</h2>
     <p class="dash-head" style="display:block; margin-bottom:14px;" data-i18n="admin_openpay_sub">Drivers whose automatic month-end fee payment failed. They have 5 days to settle before their account is automatically suspended.</p>
-    <button type="button" class="link-btn" onclick="runMonthEndSettlementManual()" style="margin-bottom:14px; text-align:left; padding:0;">▶ <span data-i18n="admin_run_settlement_btn">Run month-end settlement now (test)</span></button>
+    <button type="button" class="link-btn" id="admin-run-settlement-btn" onclick="runMonthEndSettlementManual()" style="margin-bottom:14px; text-align:left; padding:0;">▶ <span data-i18n="admin_run_settlement_btn">Run month-end settlement now (test)</span></button>
     <div class="panel" id="admin-openpayments-list" style="margin-bottom:8px;"></div>
 
     </div>
@@ -5581,6 +5581,14 @@ function runMonthEndSettlement(){
   saveState();
 }
 function runMonthEndSettlementManual(){
+  if(realDriverProfile || isAdminSession){
+    // Punkt 3 (5. August): dieser Button hat nur Demo-Daten simuliert und niemals die echte
+    // Datenbank angefasst -- deshalb sah es im Admin-Bereich nach Erfolg aus, obwohl beim echten
+    // Fahrer nie etwas passiert ist. Die echte Abrechnung laeuft ohnehin automatisch taeglich per
+    // Cronjob (ryvio-daily-billing-job) -- kein manueller Trigger noetig oder aktuell gebaut.
+    alert(t('admin_settlement_real_note'));
+    return;
+  }
   if(!confirm(t('admin_confirm_run_settlement'))) return;
   runMonthEndSettlement();
   alert(t('admin_settlement_done'));
@@ -8017,7 +8025,7 @@ const translations = {
     bd_title: "Booking details", bd_email: "Email", bd_phone: "WhatsApp", bd_ref: "Reference", bd_status: "Status",
     rcpt_title: "Receipt", rcpt_no: "Receipt no.", rcpt_item: "Booking fees", rcpt_total: "Total paid", rcpt_note: "This receipt was also sent to your email address. Payment method: your saved payment method (Stripe).", el_eyebrow: "My listings", el_title: "Edit listing", el_name_label: "Tour name *", el_price_label: "Price *", el_duration_label: "Duration", el_save_btn: "Save changes", el_error: "Please fill the highlighted fields.", el_delete_btn: "🗑️ Delete this listing", el_delete_confirm: "Really delete \"{name}\"? This cannot be undone.", nl_pickup_prices_title: "Different price per pickup region? (optional — leave empty to use the same price everywhere)", rcpt_credit_applied: "Referral credit applied",
     admin_openpay_title: "Open payments", admin_openpay_sub: "Drivers whose automatic month-end fee payment failed. They have 5 days to settle before their account is automatically suspended.",
-    admin_run_settlement_btn: "Run month-end settlement now (test)", admin_openpay_empty: "No open payments right now — everyone is settled.",
+    admin_run_settlement_btn: "Run month-end settlement now (test)", admin_settlement_real_note: "Real fee billing already runs automatically every day (daily cron job) — there's no manual trigger for real drivers, and this button only affects demo data.", admin_openpay_empty: "No open payments right now — everyone is settled.",
     admin_openpay_amount: "Amount due", admin_openpay_due: "Due date", admin_openpay_suspended: "🚫 Suspended", admin_openpay_overdue: "Overdue",
     admin_openpay_days_left: "{n} days left", admin_confirm_run_settlement: "Run the automatic month-end fee settlement for all drivers now? This charges everyone with open fees and a valid payment method, and starts the 5-day countdown for anyone without one.",
     admin_settlement_done: "Settlement run complete. Check the lists below for results.",
@@ -8317,7 +8325,7 @@ const translations = {
     bd_title: "Buchungsdetails", bd_email: "E-Mail", bd_phone: "WhatsApp", bd_ref: "Referenz", bd_status: "Status",
     rcpt_title: "Beleg", rcpt_no: "Beleg-Nr.", rcpt_item: "Buchungsgebühren", rcpt_total: "Gesamt bezahlt", rcpt_note: "Dieser Beleg wurde zusätzlich an deine E-Mail-Adresse gesendet. Zahlungsmethode: deine hinterlegte Zahlungsmethode (Stripe).", el_eyebrow: "Meine Angebote", el_title: "Angebot bearbeiten", el_name_label: "Tour-Name *", el_price_label: "Preis *", el_duration_label: "Dauer", el_save_btn: "Änderungen speichern", el_error: "Bitte fülle die markierten Felder aus.", el_delete_btn: "🗑️ Angebot löschen", el_delete_confirm: "\"{name}\" wirklich löschen? Das kann nicht rückgängig gemacht werden.", nl_pickup_prices_title: "Unterschiedlicher Preis je Abholregion? (optional — leer lassen für überall denselben Preis)", rcpt_credit_applied: "Empfehlungs-Gutschrift angerechnet",
     admin_openpay_title: "Offene Zahlungen", admin_openpay_sub: "Fahrer, deren automatische Monatsend-Gebührenzahlung fehlgeschlagen ist. Sie haben 5 Tage Zeit zu zahlen, bevor ihr Konto automatisch gesperrt wird.",
-    admin_run_settlement_btn: "Monatsabrechnung jetzt ausführen (Test)", admin_openpay_empty: "Aktuell keine offenen Zahlungen — alles beglichen.",
+    admin_run_settlement_btn: "Monatsabrechnung jetzt ausführen (Test)", admin_settlement_real_note: "Die echte Gebührenabrechnung läuft schon automatisch jeden Tag (täglicher Cronjob) — dafür gibt es keinen manuellen Auslöser für echte Fahrer, dieser Button betrifft nur Demo-Daten.", admin_openpay_empty: "Aktuell keine offenen Zahlungen — alles beglichen.",
     admin_openpay_amount: "Fälliger Betrag", admin_openpay_due: "Fällig am", admin_openpay_suspended: "🚫 Gesperrt", admin_openpay_overdue: "Überfällig",
     admin_openpay_days_left: "noch {n} Tage", admin_confirm_run_settlement: "Jetzt die automatische Monatsend-Gebührenabrechnung für alle Fahrer ausführen? Das belastet alle mit offenen Gebühren und gültiger Zahlungsmethode und startet die 5-Tage-Frist für alle ohne.",
     admin_settlement_done: "Abrechnungslauf abgeschlossen. Ergebnisse unten prüfen.",
@@ -8617,7 +8625,7 @@ const translations = {
     bd_title: "Detail pemesanan", bd_email: "Email", bd_phone: "WhatsApp", bd_ref: "Referensi", bd_status: "Status",
     rcpt_title: "Kuitansi", rcpt_no: "No. kuitansi", rcpt_item: "Biaya pemesanan", rcpt_total: "Total dibayar", rcpt_note: "Kuitansi ini juga dikirim ke alamat email Anda. Metode pembayaran: metode pembayaran tersimpan Anda (Stripe).", el_eyebrow: "Tur saya", el_title: "Edit tur", el_name_label: "Nama tur *", el_price_label: "Harga *", el_duration_label: "Durasi", el_save_btn: "Simpan perubahan", el_error: "Mohon isi kolom yang ditandai.", el_delete_btn: "🗑️ Hapus tur ini", el_delete_confirm: "Yakin ingin menghapus \"{name}\"? Tindakan ini tidak dapat dibatalkan.", nl_pickup_prices_title: "Harga berbeda per wilayah penjemputan? (opsional — kosongkan untuk harga yang sama di mana saja)", rcpt_credit_applied: "Kredit referral diterapkan",
     admin_openpay_title: "Pembayaran terbuka", admin_openpay_sub: "Sopir yang pembayaran biaya akhir bulan otomatisnya gagal. Mereka punya 5 hari untuk melunasi sebelum akun mereka otomatis ditangguhkan.",
-    admin_run_settlement_btn: "Jalankan penyelesaian akhir bulan sekarang (uji)", admin_openpay_empty: "Tidak ada pembayaran terbuka saat ini — semua sudah lunas.",
+    admin_run_settlement_btn: "Jalankan penyelesaian akhir bulan sekarang (uji)", admin_settlement_real_note: "Penagihan biaya sesungguhnya sudah berjalan otomatis setiap hari (cron job harian) — tidak ada pemicu manual untuk sopir sungguhan, tombol ini hanya memengaruhi data demo.", admin_openpay_empty: "Tidak ada pembayaran terbuka saat ini — semua sudah lunas.",
     admin_openpay_amount: "Jumlah jatuh tempo", admin_openpay_due: "Tanggal jatuh tempo", admin_openpay_suspended: "🚫 Ditangguhkan", admin_openpay_overdue: "Terlambat",
     admin_openpay_days_left: "{n} hari lagi", admin_confirm_run_settlement: "Jalankan penyelesaian biaya akhir bulan otomatis untuk semua sopir sekarang? Ini akan menagih semua yang memiliki biaya terbuka dan metode pembayaran valid, dan memulai hitung mundur 5 hari untuk yang tidak punya.",
     admin_settlement_done: "Penyelesaian selesai. Periksa daftar di bawah untuk hasilnya.",
@@ -9961,6 +9969,9 @@ ${bpt('driverFeeLine')}</div>`;
   });
 
   goToStep('confirm');
+  // Punkt 1 (5. August): Fenster blieb bisher offen, bis der Kunde selbst auf "Fertig" klickt --
+  // schliesst sich jetzt nach ausreichend Lesezeit von selbst (Referenznummer bleibt sichtbar).
+  setTimeout(()=>{ closeModal(); }, 4200);
 
   // simulate async sending
   setTimeout(()=>{
@@ -9979,34 +9990,47 @@ ${bpt('driverFeeLine')}</div>`;
   // echte Buchung eines echten Angebots -> in die Datenbank schreiben
   if(currentDriver.isReal && currentDriver.ownerId){
     const priceNum = parseIDR(currentDriver.price) || 0;
-    const feePercent = 10;
-    const feeIdr = Math.round(priceNum * feePercent / 100);
     const depositIdr = Math.round(priceNum * 0.2);
-    // Bugfix: die ID wird jetzt im Browser erzeugt statt per .select() zurueckgelesen -- ein
-    // nicht eingeloggter Kunde darf laut Datenbank-Regeln zwar eine Buchung ANLEGEN, aber nicht
-    // wieder AUSLESEN (nur der Fahrer/Admin darf das). Das .select() danach liess deshalb den
-    // ganzen Vorgang mit "row-level security policy"-Fehler fehlschlagen -- keine Buchung kam an.
-    const newBookingId = crypto.randomUUID();
-    supabaseClient.from('bookings').insert({
-      id: newBookingId,
-      listing_id: currentDriver.dbListingId || null,
-      driver_id: currentDriver.ownerId,
-      customer_name: name,
-      customer_email: email,
-      customer_phone: phone,
-      pickup: pickup,
-      booking_date: document.getElementById('f-date').value || new Date().toISOString().slice(0,10),
-      status: 'pending',
-      price_idr: priceNum,
-      deposit_idr: depositIdr,
-      fee_percent_applied: feePercent,
-      fee_idr: feeIdr
-    }).then(({ error }) => {
+    const bookingDriverId = currentDriver.ownerId;
+    const bookingDate = document.getElementById('f-date').value || new Date().toISOString().slice(0,10);
+    (async () => {
+      // Bugfix (5. August): vorher stand hier immer fest 10% -- eine Sonderkondition (z.B. VIP-Bonus
+      // 0%) wurde beim Anlegen einer neuen Buchung schlicht ignoriert. Jetzt wird die tatsaechlich
+      // aktive Sonderkondition des gebuchten Fahrers abgefragt, genau wie im Fahrer-Dashboard.
+      let feePercent = 10;
+      try{
+        const today = new Date().toISOString().slice(0,10);
+        const { data: ov } = await supabaseClient.from('fee_overrides').select('fee_percent')
+          .eq('driver_id', bookingDriverId).lte('starts_at', today)
+          .or(`ends_at.is.null,ends_at.gte.${today}`).order('created_at', { ascending:false }).limit(1);
+        if(ov && ov.length) feePercent = Number(ov[0].fee_percent);
+      }catch(err){ console.error('Sonderkondition konnte nicht geladen werden, nutze Standard 10%:', err); }
+      const feeIdr = Math.round(priceNum * feePercent / 100);
+      // Bugfix: die ID wird jetzt im Browser erzeugt statt per .select() zurueckgelesen -- ein
+      // nicht eingeloggter Kunde darf laut Datenbank-Regeln zwar eine Buchung ANLEGEN, aber nicht
+      // wieder AUSLESEN (nur der Fahrer/Admin darf das). Das .select() danach liess deshalb den
+      // ganzen Vorgang mit "row-level security policy"-Fehler fehlschlagen -- keine Buchung kam an.
+      const newBookingId = crypto.randomUUID();
+      const { error } = await supabaseClient.from('bookings').insert({
+        id: newBookingId,
+        listing_id: currentDriver.dbListingId || null,
+        driver_id: bookingDriverId,
+        customer_name: name,
+        customer_email: email,
+        customer_phone: phone,
+        pickup: pickup,
+        booking_date: bookingDate,
+        status: 'pending',
+        price_idr: priceNum,
+        deposit_idr: depositIdr,
+        fee_percent_applied: feePercent,
+        fee_idr: feeIdr
+      });
       if(error){ console.error('Buchung konnte nicht gespeichert werden:', error); return; }
       // Baustein E: bestaetigt dem Kunden per Mail, dass die Buchungsanfrage angekommen ist
       supabaseClient.functions.invoke('send-tour-offer-email', { body: { type: 'booking_received', bookingId: newBookingId } })
         .catch(err=>console.error('Bestaetigungs-Mail (Buchung erhalten) fehlgeschlagen:', err));
-    });
+    })();
     lastBookingRef = ref;
     return;
   }
@@ -10389,6 +10413,17 @@ if(_offerToken){
 } else {
   checkSiteLock();
   updateIsAdminSession();
+  // Punkt 4 (5. August): Link "Buchung ändern?" aus den Buchungs-Mails oeffnet "Meine Buchung
+  // finden" direkt mit vorausgefuellter Referenz -- Telefonnummer muss der Kunde weiterhin selbst
+  // eingeben (Sicherheit), aber das Abtippen der langen Referenz entfaellt.
+  const _myBookingRef = new URLSearchParams(location.search).get('myBookingRef');
+  if(_myBookingRef){
+    setTimeout(()=>{
+      openMyBooking();
+      const refEl = document.getElementById('mb-ref');
+      if(refEl) refEl.value = _myBookingRef;
+    }, 300);
+  }
   // Punkt 2 (5. August): der Alternative-Link aus der "Fahrer kann leider nicht"-Mail traegt die
   // Region des urspruenglichen Fahrers mit -- wird hier automatisch als Suchfilter vorausgewaehlt,
   // damit der Kunde direkt passende Alternativen sieht statt wieder bei null anzufangen.
@@ -11088,6 +11123,8 @@ async function updateIsAdminSession(){
   const { data: { session } } = await supabaseClient.auth.getSession();
   isAdminSession = !!(session && session.user && session.user.user_metadata && session.user.user_metadata.role === 'admin');
   const el = document.getElementById('admin-current-account');
+  const settlementBtn = document.getElementById('admin-run-settlement-btn');
+  if(settlementBtn) settlementBtn.style.display = (session) ? 'none' : '';
   if(el){
     if(!session){ el.textContent = '⚠️ Nicht eingeloggt.'; }
     else if(isAdminSession){ el.innerHTML = `Eingeloggt als: <strong>${escapeHtml(session.user.email)}</strong>`; }
@@ -12309,7 +12346,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v149</div>
+<div id="version-footer" style="position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v150</div>
 
 </body>
 </html>
