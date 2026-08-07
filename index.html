@@ -100,11 +100,12 @@
 
   /* ---------- topbar ---------- */
   .topbar{
-    display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:14px;
+    display:flex; align-items:center; flex-wrap:wrap; gap:14px;
     padding:calc(16px + env(safe-area-inset-top)) 20px 16px; border-bottom:1px solid var(--line);
     position:sticky; top:0; background:var(--paper); z-index:50;
   }
-  .topbar-right{ display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+  .topbar-right{ display:flex; align-items:center; justify-content:space-between; gap:24px; flex:1; min-width:0; }
+  .topbar-right-main{ display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-left:56px; }
   .logo{ display:flex; align-items:center; gap:12px; min-width:0; flex-shrink:1; }
   .logo-mark{ display:none; }
   .logo-wordstack{ display:flex; flex-direction:column; align-items:flex-start; min-width:0; }
@@ -1067,6 +1068,7 @@
     </div>
   </div>
   <div class="topbar-right">
+  <div class="topbar-right-main">
   <div class="ryvio-rating-badge" id="ryvio-rating-badge" onclick="event.stopPropagation(); openRatingsPage();" style="display:none;">
     <span id="ryvio-rating-stars" class="ryvio-rating-stars"></span>
     <span id="ryvio-rating-summary"></span>
@@ -1077,6 +1079,7 @@
     <button class="tab-btn" id="tab-driver" onclick="switchView('driver')"><span data-i18n="tab_driver">Driver Dashboard</span> <span class="tab-mail-badge" id="tab-driver-mail" style="display:none;">✉️</span></button>
     <button class="tab-btn tab-btn-register" id="tab-register-btn" data-i18n="tab_register" onclick="openRealRegisterDriver()">+ Register as Driver</button>
     <button class="tab-btn tab-btn-admin" id="tab-admin" onclick="switchView('admin')"><span data-i18n="tab_admin">🔐 Admin</span> <span class="tab-mail-badge" id="tab-admin-mail" style="display:none;">✉️</span></button>
+  </div>
   </div>
   <div class="lang-switch">
     <button type="button" class="lang-btn active" data-lang="en" onclick="setLanguage('en')">EN</button>
@@ -12308,7 +12311,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v157</div>
+<div id="version-footer" style="position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v158</div>
 
 </body>
 </html>
