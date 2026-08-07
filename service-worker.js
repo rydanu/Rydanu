@@ -1,5 +1,5 @@
 // Ryvio — simple offline-friendly cache-first service worker
-const CACHE_NAME = 'rydanu-cache-v158';
+const CACHE_NAME = 'rydanu-cache-v159';
 const CORE_ASSETS = [
   './',
   './manifest.json'

@@ -105,7 +105,7 @@
     position:sticky; top:0; background:var(--paper); z-index:50;
   }
   .topbar-right{ display:flex; align-items:center; justify-content:space-between; gap:24px; flex:1; min-width:0; }
-  .topbar-right-main{ display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-left:56px; }
+  .topbar-right-main{ display:flex; align-items:center; gap:32px; flex-wrap:wrap; margin-left:56px; }
   .logo{ display:flex; align-items:center; gap:12px; min-width:0; flex-shrink:1; }
   .logo-mark{ display:none; }
   .logo-wordstack{ display:flex; flex-direction:column; align-items:flex-start; min-width:0; }
@@ -118,7 +118,7 @@
   .ryvio-rating-badge{
     display:flex; align-items:center; gap:6px; background:var(--paper-dim); border-radius:20px;
     padding:6px 14px; cursor:pointer; flex-shrink:0; font-size:0.82rem; font-weight:700; color:var(--ink);
-    white-space:nowrap;
+    white-space:nowrap; align-self:flex-end; margin-bottom:1px;
   }
   .ryvio-rating-badge:hover{ background:#eee7d9; }
   .ryvio-rating-stars{ color:#D9A400; letter-spacing:1px; }
@@ -12311,7 +12311,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v158</div>
+<div id="version-footer" style="position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v159</div>
 
 </body>
 </html>
