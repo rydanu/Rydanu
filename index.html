@@ -107,11 +107,11 @@
   .logo{ display:flex; align-items:center; gap:12px; min-width:0; flex-shrink:1; }
   .logo-mark{ display:none; }
   .logo-wordstack{ display:flex; flex-direction:column; align-items:flex-start; min-width:0; }
-  .logo-word{ height:44px; width:auto; display:block; flex-shrink:0; }
+  .logo-word{ height:64px; width:auto; display:block; flex-shrink:0; }
   .logo-tagline{
-    font-family:'Fraunces', serif; font-weight:700; font-size:0.92rem; letter-spacing:-0.005em;
+    font-family:'Fraunces', serif; font-weight:700; font-size:1.05rem; letter-spacing:-0.005em;
     color:var(--ink); line-height:1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-    max-width:100%; margin-top:3px;
+    max-width:100%; margin-top:4px;
   }
   .ryvio-rating-badge{
     display:flex; align-items:center; gap:6px; background:var(--paper-dim); border-radius:20px;
@@ -1309,45 +1309,9 @@
         <div class="row"><span class="k" data-i18n="lbl_guests">Guests</span><span class="v" id="pay-guests">2</span></div>
         <div class="row"><span class="k" data-i18n="lbl_total">Total tour price</span><span class="v mono" id="pay-total">IDR 550,000<br><span class="fx-note" id="pay-total-fx"></span></span></div>
       </div>
-      <div class="deposit-box">
-        <div class="deposit-row deposit-row-main">
-          <span data-i18n="lbl_deposit_due">Deposit due now (20%)</span>
-          <span class="mono" id="pay-deposit">IDR 110,000<br><span class="fx-note" id="pay-deposit-fx"></span></span>
-        </div>
-        <div class="deposit-row">
-          <span data-i18n="lbl_balance">Balance — pay driver in cash on the day</span>
-          <span class="mono" id="pay-balance">IDR 440,000<br><span class="fx-note" id="pay-balance-fx"></span></span>
-        </div>
-      </div>
-      <p class="deposit-hint" data-i18n="deposit_hint">⚠️ Only the 20% deposit is due now to secure your booking. The remaining 80% is paid to your driver in cash at the start of the tour.</p>
+      <p class="deposit-hint" data-i18n="pay_direct_hint">💵 You pay your driver directly — cash or QRIS — when you meet. No payment is due now, and Rydanu never handles your money.</p>
 
-      <div class="pay-direct-block">
-        <div class="pay-method-label" data-i18n="pay_direct_label">Pay your deposit directly to <strong id="pay-direct-name">your driver</strong></div>
-        <div class="pay-direct-options">
-          <div class="qris-box" id="pay-qris-box">
-            <svg viewBox="0 0 100 100" class="qris-svg" aria-label="QRIS code">
-              <rect width="100" height="100" fill="#fff"/>
-              <g fill="#14231C">
-                <rect x="6" y="6" width="24" height="24"/><rect x="70" y="6" width="24" height="24"/><rect x="6" y="70" width="24" height="24"/>
-                <rect x="11" y="11" width="14" height="14" fill="#fff"/><rect x="75" y="11" width="14" height="14" fill="#fff"/><rect x="11" y="75" width="14" height="14" fill="#fff"/>
-                <rect x="15" y="15" width="6" height="6"/><rect x="79" y="15" width="6" height="6"/><rect x="15" y="79" width="6" height="6"/>
-                <rect x="38" y="8" width="6" height="6"/><rect x="50" y="14" width="6" height="6"/><rect x="60" y="8" width="6" height="6"/>
-                <rect x="38" y="24" width="6" height="6"/><rect x="52" y="30" width="6" height="6"/><rect x="40" y="40" width="6" height="6"/>
-                <rect x="52" y="46" width="6" height="6"/><rect x="64" y="40" width="6" height="6"/><rect x="76" y="46" width="6" height="6"/>
-                <rect x="8" y="42" width="6" height="6"/><rect x="20" y="48" width="6" height="6"/><rect x="30" y="56" width="6" height="6"/>
-                <rect x="44" y="60" width="6" height="6"/><rect x="56" y="66" width="6" height="6"/><rect x="70" y="60" width="6" height="6"/>
-                <rect x="84" y="70" width="6" height="6"/><rect x="42" y="76" width="6" height="6"/><rect x="56" y="84" width="6" height="6"/>
-                <rect x="70" y="80" width="6" height="6"/><rect x="84" y="88" width="6" height="6"/><rect x="38" y="88" width="6" height="6"/>
-              </g>
-            </svg>
-            <div class="qris-caption">QRIS — <span data-i18n="qris_caption">scan with GoPay, OVO, DANA or your banking app</span></div>
-          </div>
-          <a class="pay-link-btn" id="pay-link-btn" href="#" target="_blank" rel="noopener" style="display:none;">🔗 <span data-i18n="pay_link_label">Open driver's payment link</span> <span id="pay-link-domain"></span></a>
-        </div>
-        <p class="note" style="margin-top:10px;" data-i18n="pay_direct_note">Rydanu never handles tour payments — your deposit goes straight to your driver. Your booking becomes final once the driver confirms your deposit has arrived.</p>
-      </div>
-
-      <button class="book-btn" onclick="confirmPayment()" data-i18n="pay_confirm_btn">I've sent the deposit — submit booking request</button>
+      <button class="book-btn" onclick="confirmPayment()" data-i18n="pay_confirm_btn">Submit booking request</button>
       <button class="link-btn" onclick="goToStep('form')">← Back</button>
     </div>
 
@@ -1355,15 +1319,14 @@
     <div class="modal-body" id="step-confirm" style="display:none;">
       <div class="confirm-check">✓</div>
       <h3 class="confirm-title" data-i18n="confirm_title">Booking requested</h3>
-      <p class="confirm-sub" style="margin-bottom:4px;" data-i18n="confirm_sub">Your deposit is on its way directly to your driver. The booking becomes final once he confirms it arrived — you'll be notified by email &amp; WhatsApp.</p>
+      <p class="confirm-sub" style="margin-bottom:4px;" data-i18n="confirm_sub">Your request has been sent to your driver. It becomes a final booking once they confirm — you'll be notified by email &amp; WhatsApp.</p>
       <p class="confirm-sub">Reference <span class="mono" id="confirm-ref">RY-38291</span></p>
 
       <div class="row"><span class="k" data-i18n="lbl_driver">Driver</span><span class="v" id="confirm-driver-name">Wayan Sudiartha</span></div>
       <div class="row"><span class="k" data-i18n="lbl_date">Date</span><span class="v" id="confirm-date">16 Jul 2026</span></div>
       <div class="row"><span class="k" data-i18n="lbl_pickup">Pickup</span><span class="v" id="confirm-pickup">—</span></div>
       <div class="row" id="confirm-destination-row" style="display:none;"><span class="k" data-i18n="lbl_airport_destination">Destination region</span><span class="v" id="confirm-destination">—</span> <button type="button" class="link-btn" style="margin-left:8px;" onclick="openDestinationMapModal()">🗺️</button></div>
-      <div class="row"><span class="k" data-i18n="lbl_deposit_paid">Deposit paid</span><span class="v mono" id="confirm-deposit">—</span></div>
-      <div class="row"><span class="k" data-i18n="lbl_cash_due">Cash due to driver</span><span class="v mono" id="confirm-balance">—</span></div>
+      <div class="row"><span class="k" data-i18n="lbl_total_price_due">Total — pay driver directly</span><span class="v mono" id="confirm-balance">—</span></div>
       <div class="row"><span class="k" data-i18n="lbl_your_car">Your driver's car</span><span class="v" id="confirm-vehicle" style="text-align:right;">—</span></div>
 
       <div class="notify-panel">
@@ -2101,7 +2064,7 @@
         </div>
       </div>
       <div class="form-field">
-        <label data-i18n="rd_paylink_label">Payment link for deposits (Wise / Revolut / PayPal) — optional</label>
+        <label data-i18n="rd_paylink_label">Payment link for customers who prefer to pay digitally (Wise / Revolut / PayPal) — optional</label>
         <input type="text" id="rd-paylink" placeholder="e.g. https://wise.com/pay/yourname">
       </div>
       <label class="nl-service-check" style="margin-bottom:12px;"><input type="checkbox" id="rd-qris" checked> <span data-i18n="rd_qris_label">I accept QRIS (GoPay / OVO / DANA)</span></label>
@@ -2292,7 +2255,7 @@
         </div>
       </div>
       <div class="form-field">
-        <label data-i18n="rd_paylink_label">Payment link for deposits (Wise / Revolut / PayPal) — optional</label>
+        <label data-i18n="rd_paylink_label">Payment link for customers who prefer to pay digitally (Wise / Revolut / PayPal) — optional</label>
         <input type="text" id="ep-paylink" placeholder="e.g. https://wise.com/pay/yourname">
       </div>
       <label class="nl-service-check" style="margin-bottom:12px;"><input type="checkbox" id="ep-qris"> <span data-i18n="rd_qris_label">I accept QRIS (GoPay / OVO / DANA)</span></label>
@@ -2535,8 +2498,7 @@
         <div class="row"><span class="k" data-i18n="lbl_date">Date</span><span class="v" id="mb-when"></span></div>
         <div class="row" id="mb-row-pickup"><span class="k" data-i18n="lbl_pickup_loc">Pickup location</span><span class="v" id="mb-pickup"></span></div>
         <div class="row" id="mb-row-vehicle"><span class="k" data-i18n="lbl_your_car">Your driver's car</span><span class="v" id="mb-vehicle"></span></div>
-        <div class="row" id="mb-row-deposit"><span class="k" data-i18n="lbl_deposit_paid">Deposit paid</span><span class="v mono" id="mb-deposit"></span></div>
-        <div class="row" id="mb-row-balance"><span class="k" data-i18n="lbl_cash_due">Cash due to driver</span><span class="v mono" id="mb-balance"></span></div>
+        <div class="row" id="mb-row-balance"><span class="k" data-i18n="lbl_total_price_due">Total — pay driver directly</span><span class="v mono" id="mb-balance"></span></div>
         <div class="row"><span class="k" data-i18n="bd_ref">Reference</span><span class="v mono" id="mb-refshow"></span></div>
         <div class="row"><span class="k" data-i18n="bd_status">Status</span><span class="status-pill confirmed" id="mb-status"></span></div>
         <p class="note" id="mb-status-note"></p>
@@ -2716,8 +2678,6 @@
       <div class="row" id="bd-row-pickup"><span class="k" data-i18n="lbl_pickup_loc">Pickup location</span><span class="v" id="bd-pickup"></span></div>
       <div class="row" id="bd-row-destination"><span class="k" data-i18n="lbl_airport_destination">Destination region</span><span class="v" id="bd-destination"></span> <button type="button" class="link-btn" style="margin-left:8px;" onclick="openBookingDetailMap()">🗺️</button></div>
       <div class="row" id="bd-row-price"><span class="k" data-i18n="lbl_total">Total tour price</span><span class="v mono" id="bd-price"></span></div>
-      <div class="row" id="bd-row-deposit"><span class="k" data-i18n="lbl_deposit_paid">Deposit paid</span><span class="v mono" id="bd-deposit"></span></div>
-      <div class="row" id="bd-row-balance"><span class="k" data-i18n="lbl_cash_due">Cash due to driver</span><span class="v mono" id="bd-balance"></span></div>
       <div class="row" id="bd-row-fee"><span class="k" data-i18n="lbl_ryvio_fee">Rydanu fee (10%)</span><span class="v mono" id="bd-fee"></span></div>
       <div class="row" id="bd-row-vehicle"><span class="k" data-i18n="lbl_your_car">Your driver's car</span><span class="v" id="bd-vehicle"></span></div>
       <div class="row" id="bd-row-ref"><span class="k" data-i18n="bd_ref">Reference</span><span class="v mono" id="bd-ref"></span></div>
@@ -2954,11 +2914,11 @@
     <div class="modal-body">
       <div style="max-height:320px; overflow-y:auto; padding:12px 14px; background:var(--paper-dim); border-radius:8px; font-family:'Public Sans'; font-size:0.85rem; line-height:1.6;" data-i18n-html="reg_terms_body">
         <strong>1. Bookings only through Rydanu.</strong> If a traveler found you via Rydanu, the tour must be booked and paid through Rydanu. Arranging payment privately to bypass the platform is not allowed and can lead to account suspension.<br><br>
-        <strong>2. Fees.</strong> A small platform fee applies per confirmed booking, based on the tour price — see "Fees &amp; billing" in your dashboard. No bookings, no fees.<br><br>
-        <strong>3. Cancellations.</strong> If a guest doesn't show up, you keep the deposit and owe no fee for that booking. If you cancel a confirmed tour yourself, a fixed cancellation fee of IDR 30,000 applies and the guest is refunded in full.<br><br>
+        <strong>2. Fees.</strong> A small platform fee applies to every booking you accept, based on the tour price, and is charged to your balance immediately when you accept — see "Fees &amp; billing" in your dashboard.<br><br>
+        <strong>3. Cancellations.</strong> If a guest doesn't show up, the platform fee already charged for that booking is not refunded. If you cancel a confirmed tour yourself, a fixed cancellation fee of IDR 30,000 applies.<br><br>
         <strong>4. Keep your profile accurate.</strong> Vehicle, documents, service regions and prices must reflect reality. Update your listing whenever your vehicle or availability changes.<br><br>
         <strong>5. Conduct.</strong> Be respectful, punctual and safe. Repeated cancellations, poor reviews or safety issues can lead to suspension or removal from Rydanu.<br><br>
-        <strong>6. Payments.</strong> Deposits and payments are handled via the payment details you provide (QRIS / payment link). Rydanu is not liable for errors in the details you submit.
+        <strong>6. Payments.</strong> Rydanu never handles tour payments — guests pay you directly, in cash or via the payment details you provide (QRIS / payment link). Rydanu is not liable for errors in the details you submit.
       </div>
       <label class="nl-service-check" style="margin-top:14px;">
         <input type="checkbox" id="reg-terms-checkbox">
@@ -4501,15 +4461,11 @@ function showMyBookingReal(row, phone){
   // Abholort/Fahrzeug stehen in dieser schlanken Abfrage nicht zur Verfuegung -> Zeilen ausblenden
   document.getElementById('mb-row-pickup').style.display = 'none';
   document.getElementById('mb-row-vehicle').style.display = 'none';
-  const depositRow = document.getElementById('mb-row-deposit');
   const balanceRow = document.getElementById('mb-row-balance');
-  if(row.deposit_idr){
-    document.getElementById('mb-deposit').textContent = formatIDR(row.deposit_idr);
-    document.getElementById('mb-balance').textContent = formatIDR((row.price_idr||0) - (row.deposit_idr||0));
-    depositRow.style.display = 'flex';
+  if(row.price_idr){
+    document.getElementById('mb-balance').textContent = formatIDR(row.price_idr);
     balanceRow.style.display = 'flex';
   } else {
-    depositRow.style.display = 'none';
     balanceRow.style.display = 'none';
   }
   document.getElementById('mb-refshow').textContent = row.id.slice(0,8).toUpperCase();
@@ -4561,7 +4517,6 @@ function showMyBooking(driverId, source, index){
   const optional = [
     ['mb-row-pickup','mb-pickup', b.pickup],
     ['mb-row-vehicle','mb-vehicle', b.vehicle],
-    ['mb-row-deposit','mb-deposit', b.deposit],
     ['mb-row-balance','mb-balance', b.balance],
   ];
   optional.forEach(([rowId, valId, val])=>{
@@ -5677,8 +5632,7 @@ function mapBookingRowToUI(row){
     status: row.status,
     email: '', phone: row.customer_phone || '', pickup: '',
     price: formatIDR(row.price_idr),
-    deposit: formatIDR(row.deposit_idr),
-    balance: formatIDR((row.price_idr || 0) - (row.deposit_idr || 0)),
+    balance: formatIDR(row.price_idr || 0),
     priceIdrRaw: row.price_idr || 0,
     feeIdrRaw: row.fee_idr || 0,
     cancellationFeeIdrRaw: row.cancellation_fee_idr || 0,
@@ -7395,8 +7349,6 @@ function openBookingDetail(source, idx){
     ['bd-row-pickup', 'bd-pickup', b.pickup],
     ['bd-row-destination', 'bd-destination', b.destination],
     ['bd-row-price', 'bd-price', b.price],
-    ['bd-row-deposit', 'bd-deposit', b.deposit],
-    ['bd-row-balance', 'bd-balance', b.balance],
     ['bd-row-fee', 'bd-fee', feeDisplay],
     ['bd-row-vehicle', 'bd-vehicle', b.vehicle],
     ['bd-row-ref', 'bd-ref', b.ref],
@@ -7908,13 +7860,13 @@ const translations = {
     lbl_tour: "Tour", lbl_duration: "Duration", lbl_vehicle: "Vehicle", lbl_languages: "Languages",
     lbl_rating: "Rating", lbl_price: "Price", lbl_not_included: "Not included", lbl_driver: "Driver",
     lbl_date: "Date", lbl_guests: "Guests", lbl_total: "Total tour price", lbl_pickup: "Pickup", lbl_tour_singular: "tour", lbl_tour_plural: "tours", lbl_rating_new: "New",
-    lbl_deposit_paid: "Deposit paid", lbl_cash_due: "Cash due to driver", lbl_ryvio_fee: "Rydanu fee (10%)", lbl_your_car: "Your driver's car",
+    lbl_total_price_due: "Total — pay driver directly", lbl_ryvio_fee: "Rydanu fee (10%)", lbl_your_car: "Your driver's car",
     lbl_fullname: "Full name", lbl_whatsapp: 'WhatsApp number <span class="optional">(for booking confirmation)</span>', ep_eyebrow: "Your profile", ep_title: "Edit profile",
-    lbl_pickup_loc: "Pickup location", lbl_pickup_dropoff_loc: "Pickup / drop-off location", lbl_deposit_due: "Deposit due now (20%)", lbl_airport_destination: "Destination region", lbl_transfer_destination: "Destination", lbl_pickup_region: "Your pickup region",
+    lbl_pickup_loc: "Pickup location", lbl_pickup_dropoff_loc: "Pickup / drop-off location", lbl_airport_destination: "Destination region", lbl_transfer_destination: "Destination", lbl_pickup_region: "Your pickup region",
     lbl_balance: "Balance — pay driver in cash on the day",
-    deposit_hint: "⚠️ Only the 20% deposit is due now to secure your booking — and it goes straight to your driver, just like the remaining 80%. Rydanu never receives or holds any of your money, at any point.",
+    pay_direct_hint: "💵 You pay your driver directly — cash or QRIS — when you meet. No payment is due now, and Rydanu never handles your money.",
     confirm_title: "Booking requested",
-    confirm_sub: "Your deposit is on its way directly to your driver. The booking becomes final once he confirms it arrived — you'll be notified by email & WhatsApp.",
+    confirm_sub: "Your request has been sent to your driver. It becomes a final booking once they confirm — you'll be notified by email & WhatsApp.",
     st_confirmed: "Confirmed", st_awaiting: "Awaiting confirmation", st_completed: "Completed", st_paid: "Paid",
     st_cancel_requested: "Cancellation requested", st_cancelled: "Cancelled",
     cal_eyebrow: "Availability", cal_day_eyebrow: "Tours on this day", cal_legend_confirmed: "Confirmed booking", cal_legend_pending: "Awaiting reply", cal_legend_past: "Completed / cancelled tour", cal_legend_blocked: "Blocked by you", dt_download_btn: "Download as .txt file", dt_export_title: "Export data", dt_import_title: "Import data", dt_size_warning: "⚠️ This is {kb} KB — mostly photos. If copying feels slow or the phone hangs, use \"Export without photos\" below instead.",
@@ -7927,7 +7879,7 @@ const translations = {
     rd_err_name: "Please enter your name to continue.", rd_err_vehicle: "Please enter your license plate and car color — travelers receive these details with their booking confirmation.",
     rd_err_docs: "All 4 documents are mandatory (license, insurance, vehicle papers, selfie) — your registration is only forwarded once everything is uploaded.", rd_err_referral: "This referral code was not found — please check the Rydanu number, or leave the field empty.",
     reg_terms_eyebrow: "Before you submit", reg_terms_title: "Driver terms & conditions",
-    reg_terms_body: "<strong>1. Bookings only through Rydanu.</strong> If a traveler found you via Rydanu, the tour must be booked and paid through Rydanu. Arranging payment privately to bypass the platform is not allowed and can lead to account suspension.<br><br><strong>2. Fees.</strong> A small platform fee applies per confirmed booking, based on the tour price — see \"Fees & billing\" in your dashboard. No bookings, no fees.<br><br><strong>3. Cancellations.</strong> If a guest doesn't show up, you keep the deposit and owe no fee for that booking. If you cancel a confirmed tour yourself, a fixed cancellation fee of IDR 30,000 applies and the guest is refunded in full.<br><br><strong>4. Keep your profile accurate.</strong> Vehicle, documents, service regions and prices must reflect reality. Update your listing whenever your vehicle or availability changes.<br><br><strong>5. Conduct.</strong> Be respectful, punctual and safe. Repeated cancellations, poor reviews or safety issues can lead to suspension or removal from Rydanu.<br><br><strong>6. Payments.</strong> Deposits and payments are handled via the payment details you provide (QRIS / payment link). Rydanu is not liable for errors in the details you submit.",
+    reg_terms_body: "<strong>1. Bookings only through Rydanu.</strong> If a traveler found you via Rydanu, the tour must be booked and paid through Rydanu. Arranging payment privately to bypass the platform is not allowed and can lead to account suspension.<br><br><strong>2. Fees.</strong> A small platform fee applies to every booking you accept, based on the tour price, and is charged to your balance immediately when you accept — see \"Fees & billing\" in your dashboard.<br><br><strong>3. Cancellations.</strong> If a guest doesn't show up, the platform fee already charged for that booking is not refunded. If you cancel a confirmed tour yourself, a fixed cancellation fee of IDR 30,000 applies.<br><br><strong>4. Keep your profile accurate.</strong> Vehicle, documents, service regions and prices must reflect reality. Update your listing whenever your vehicle or availability changes.<br><br><strong>5. Conduct.</strong> Be respectful, punctual and safe. Repeated cancellations, poor reviews or safety issues can lead to suspension or removal from Rydanu.<br><br><strong>6. Payments.</strong> Rydanu never handles tour payments — guests pay you directly, in cash or via the payment details you provide (QRIS / payment link). Rydanu is not liable for errors in the details you submit.",
     reg_terms_checkbox_label: "I have read and accept the Rydanu driver terms & conditions.", reg_terms_submit_btn: "Accept & submit registration",
     ep_err_name: "Name cannot be empty.",
     map_note_dropoff_booking: "Marker shows the general drop-off area — your driver will confirm the exact address after booking.", map_note_dropoff_general: "Marker shows the general drop-off area.",
@@ -7944,9 +7896,9 @@ const translations = {
     fees_featured_placement: "Featured placement", fees_featured_desc: "Higher spot in search results this week",
     fees_open_fees_title: "Open fees this month", fees_open_fees_desc: "Pay your accumulated booking fees — an invoice is emailed to you automatically",
     fees_cancellation_title: "Includes a cancellation fee", fees_cancellation_desc: "For tours you cancelled yourself — see Bookings for details",
-    cancel_outcome_customer_1: "Cancelled —", cancel_outcome_customer_2: "Since the customer didn't show up, you keep the full deposit as compensation, and no Rydanu fee applies to this booking. The customer has been informed by email that no refund will be issued.",
+    cancel_outcome_customer_1: "Cancelled —", cancel_outcome_customer_2: "Since the customer didn't show up, there's no further payout — the platform fee already charged for this booking is not refunded. The customer has been informed by email.",
     cancel_outcome_driver_1: "Cancelled —", cancel_outcome_driver_2: "No regular Rydanu fee applies to this booking, but a cancellation fee of", cancel_outcome_driver_3: "The customer has been informed by email and pointed to Rydanu to find another driver.",
-    cancel_note_customer: "Customer no-show — deposit kept", cancel_note_driver: "Cancelled by you — IDR 30,000 cancellation fee",
+    cancel_note_customer: "Customer no-show", cancel_note_driver: "Cancelled by you — IDR 30,000 cancellation fee",
     btn_pay_now: "Pay now", fees_tier_note: "Per confirmed booking, the fee scales with the trip's price — small trips cost small fees:",
     lbl_email_address: "Email address", pay_secure_note: "You'll pay your driver directly via secure payment link. Rydanu does not process tour payments.",
     notify_email_driver: "Email to driver", notify_email_to: "Email to", notify_wa_to: "WhatsApp to",
@@ -7959,8 +7911,8 @@ const translations = {
     btn_confirm_cancel: "Confirm cancellation", confirm_ack_cancel: "Confirm the cancellation requested by", btn_mark_completed: "Mark trip completed", confirm_complete_booking: "Confirm this trip is completed for", btn_decline_booking: "Decline", confirm_decline_booking: "Decline this booking request from", decline_outcome_note: "Declined. The customer will get an email letting them know and pointing them to other drivers for",
     bookings_tab_open: "Open", bookings_tab_completed: "Completed",
     mb_cancel_already_requested: "You already requested a cancellation for this booking — your driver has been notified and needs to confirm it.",
-    mb_cancel_requested_note: "Your cancellation request has been sent to your driver. Once confirmed, your deposit will be refunded.",
-    mb_status_cancel_requested: "Cancellation requested", mb_note_cancel_requested: "You requested a cancellation. Waiting for your driver to confirm — your deposit will be refunded once they do.",
+    mb_cancel_requested_note: "Your cancellation request has been sent to your driver.",
+    mb_status_cancel_requested: "Cancellation requested", mb_note_cancel_requested: "You requested a cancellation. Waiting for your driver to confirm.",
     mb_review_title: "How was your trip? Leave a review", mb_review_placeholder: "Tell other travelers about your experience...", mb_review_photo: "Add a photo (optional)",
     mb_review_submit: "Submit review", mb_review_thanks: "Thanks — your review has been posted.", mb_review_err_stars: "Please select a star rating first.",
     my_page_link: "My page", view_driver_page: "View driver's Rydanu page", dp_back: "Back", dt_upload_btn: "Upload a .txt file instead",
@@ -7999,7 +7951,7 @@ const translations = {
     dp_unsupported_file: "Please choose a photo or video file.", dp_photo_limit: "Max 20 photos — please remove one first.", dp_video_limit: "Max 5 videos — please remove one first.",
     dp_video_too_long: "This video is longer than 30 seconds — please trim it first.", dp_video_too_big: "This video file is too large (max 6 MB). Please choose a shorter or lower-resolution clip.",
     dp_video_unreadable: "Couldn't read this video file — please try a different one.", dp_caption_ph: "e.g. Waterfall",
-    btn_cancel: "Cancel", btn_deposit_received: "Deposit received", tap_to_pay: "Tap to pay", all_regions: "All regions",
+    btn_cancel: "Cancel", btn_deposit_received: "Accept booking", tap_to_pay: "Tap to pay", all_regions: "All regions",
     dur_day_tour: "Day tour", dur_half_day_tour: "Half-day tour", dur_fixed_rate: "Fixed rate", dur_full_day: "Full day",
     new_booking_banner_one: "You have a new booking request — tap to view it", new_booking_banner_many: "You have {n} new booking requests — tap to view them",
     bookings_tab_cancelled: "Cancelled", empty_cancelled: "No cancelled bookings.",
@@ -8022,10 +7974,10 @@ const translations = {
     ratings_reviews_label: "reviews", ratings_empty: "No reviews yet — be the first!", ratings_empty_summary: "No reviews yet — be the first to share your experience!",
     ratings_err: "Please enter your name and pick a star rating.", ratings_save_err: "Couldn't save your review — please try again.", review_already_done_note: "You've already left a review for this trip — thank you!",
     alert_cancel_12h: "Cancellation is only possible up to 12 hours before the tour starts. Please contact the guest directly or Rydanu support.",
-    confirm_cancel_1: "Cancel booking with", confirm_cancel_2: "The guest will be notified and refunded their deposit in full.\n\n⚠️ Frequent cancellations can lead to your driver account being deactivated.",
+    confirm_cancel_1: "Cancel booking with", confirm_cancel_2: "The guest will be notified that the tour is cancelled.\n\n⚠️ Frequent cancellations can lead to your driver account being deactivated.",
     cancel_reason_eyebrow: "Cancel booking", cancel_reason_prompt: "Why are you cancelling this tour? The guest will be notified.", cancel_reason_customer: "Customer didn't show up", cancel_reason_driver: "I need to cancel the tour",
     cancel_confirm_prompt: "Are you sure you want to cancel this tour? This cannot be undone.", cancel_confirm_back: "No, go back", cancel_confirm_yes: "Yes, cancel tour",
-    alert_deposit_confirmed_1: "Deposit confirmed — booking is now final with", alert_deposit_confirmed_2: "The guest has been notified by email & WhatsApp.",
+    alert_deposit_confirmed_1: "Booking accepted — now final with", alert_deposit_confirmed_2: "The guest has been notified by email & WhatsApp.",
     alert_no_fees: "No open fees — everything is paid. ✓", confirm_pay_fees: "Pay your open Rydanu fees of", confirm_pay_fees_credit_note: "after applying your referral credit of", confirm_pay_fees_fully_covered: "Your open fees are fully covered by your referral credit —", referral_credit_lbl: "Referral credit", admin_credit_lbl: "Credit", referral_title: "🎁 Refer a driver, earn IDR 100,000", referral_body: "Share your Rydanu number with another driver. Once they're approved and complete their first booking, you get an IDR 100,000 credit — automatically applied to your next fee payment.", referral_your_code: "Your referral code", referral_bonus_inbox_title: "🎁 Referral bonus credited!", referral_bonus_inbox_body: "{name} completed their first booking — you've been credited {amount} toward your Rydanu fees. Thanks for growing the community!", referral_no_payout: "This credit cannot be paid out in cash — it can only be used to offset your Rydanu booking fees.", tier_transfer_note: "Transfer bookings (with or without airport pickup) use the exact same price-based fee table above — there's no separate flat rate.", referral_credit_pending_note: "available — applied automatically when you next pay your fees", fees_charged_when_note: "\u24d8 Fees are only actually charged when you tap \"Pay now\", or automatically on the last day of the month. Any referral credit is applied at that moment, not before.",
     alert_fees_paid_1: "Payment successful:", alert_fees_paid_2: "Your receipt is available under \"Fee statements\":",
     alert_listing_pending: "Your listing is saved, but it will only appear to travelers once your Rydanu account has been approved.",
@@ -8052,7 +8004,7 @@ const translations = {
     payment_failed_title: "⚠️ Automatic fee payment failed", payment_failed_body: "We couldn't charge your saved payment method for this month's fees ({amount}) — please add a valid payment method and pay by {date}, or your account will be automatically suspended.",
     suspended_inbox_title: "🚫 Account suspended — unpaid fees", suspended_inbox_body: "Your account has been automatically suspended because {amount} in Rydanu fees wasn't paid within 5 days. Your tours are now hidden from travelers. Pay your open fees anytime to be reinstated automatically — you can still access your profile and messages.",
     reinstated_inbox_title: "✓ Account reinstated", reinstated_inbox_body: "Your payment was received — your profile and tours are visible to travelers again. Thanks for settling up!",
-    my_booking_link: "Find my booking", mb_title: "My booking", mb_hint: "No account needed — use the link from your confirmation email/WhatsApp, or enter your booking reference and WhatsApp number below.", mb_ref_label: "Booking reference", mb_phone_label: "WhatsApp number used for the booking", mb_find_btn: "Show my booking", mb_err_ref: "Please enter your booking reference (e.g. RY-BK-482).", mb_err_notfound: "No booking found — please check reference and WhatsApp number.", mb_note_confirmed: "Your booking is final. Please have the cash balance ready for your driver on the day.", mb_note_pending: "Your driver has not yet confirmed your deposit. You will be notified by email & WhatsApp as soon as the booking is final.", mb_cancel_btn: "Cancel this booking", mb_cancel_confirm: "Cancel this booking? Your driver will be notified and your deposit refunded in full.", mb_cancel_failed_note: "Something went wrong — please try again, or contact your driver directly.", mb_cancelled: "Your booking has been cancelled. Refunded deposit:", mb_note_cancelled: "This booking was cancelled — no further action needed.", mb_note_completed: "This trip is complete. Thanks for traveling with Rydanu!",
+    my_booking_link: "Find my booking", mb_title: "My booking", mb_hint: "No account needed — use the link from your confirmation email/WhatsApp, or enter your booking reference and WhatsApp number below.", mb_ref_label: "Booking reference", mb_phone_label: "WhatsApp number used for the booking", mb_find_btn: "Show my booking", mb_err_ref: "Please enter your booking reference (e.g. RY-BK-482).", mb_err_notfound: "No booking found — please check reference and WhatsApp number.", mb_note_confirmed: "Your booking is final. Please have the full amount ready to pay your driver directly on the day.", mb_note_pending: "Your driver has not yet confirmed this booking. You will be notified by email & WhatsApp as soon as it's final.", mb_cancel_btn: "Cancel this booking", mb_cancel_confirm: "Cancel this booking? Your driver will be notified.", mb_cancel_failed_note: "Something went wrong — please try again, or contact your driver directly.", mb_cancelled: "Your booking has been cancelled.", mb_note_cancelled: "This booking was cancelled — no further action needed.", mb_note_completed: "This trip is complete. Thanks for traveling with Rydanu!",
     nav_calendar: "Calendar",
     nav_reviews: "Reviews",
     nav_subscription: "Fees & billing",
@@ -8089,14 +8041,14 @@ const translations = {
     done_btn: "Done",
     apply_filters_btn: "Apply filters",
     clear_all_btn: "Clear all",
-    pay_method_label: "Pay deposit with",
-    pay_direct_label: "Pay your deposit directly to",
+    pay_method_label: "Pay with",
+    
     qris_caption: "scan with GoPay, OVO, DANA or your banking app",
     pay_link_label: "Open driver's payment link",
-    pay_direct_note: "Rydanu never handles tour payments — your deposit goes straight to your driver. Your booking becomes final once the driver confirms your deposit has arrived.",
-    rd_paylink_label: "Payment link for deposits (Wise / Revolut / PayPal) — optional",
+    
+    rd_paylink_label: "Payment link for customers who prefer to pay digitally (Wise / Revolut / PayPal) — optional",
     rd_qris_label: "I accept QRIS (GoPay / OVO / DANA)",
-    pay_confirm_btn: "I've sent the deposit — submit booking request",
+    pay_confirm_btn: "Submit booking request",
     rd_name_label: "Full name",
     rd_region_label: "Home region",
     rd_lang_label: "Languages spoken",
@@ -8211,13 +8163,13 @@ const translations = {
     lbl_tour: "Tour", lbl_duration: "Dauer", lbl_vehicle: "Fahrzeug", lbl_languages: "Sprachen",
     lbl_rating: "Bewertung", lbl_price: "Preis", lbl_not_included: "Nicht enthalten", lbl_driver: "Fahrer",
     lbl_date: "Datum", lbl_guests: "Gäste", lbl_total: "Gesamtpreis der Tour", lbl_pickup: "Abholung", lbl_tour_singular: "Tour", lbl_tour_plural: "Touren", lbl_rating_new: "Neu",
-    lbl_deposit_paid: "Anzahlung geleistet", lbl_cash_due: "Bar an den Fahrer", lbl_ryvio_fee: "Rydanu-Gebühr (10%)", lbl_your_car: "Das Auto deines Fahrers",
+    lbl_total_price_due: "Gesamtbetrag — direkt an den Fahrer", lbl_ryvio_fee: "Rydanu-Gebühr (10%)", lbl_your_car: "Das Auto deines Fahrers",
     lbl_fullname: "Vollständiger Name", lbl_whatsapp: 'WhatsApp-Nummer <span class="optional">(für die Buchungsbestätigung)</span>', ep_eyebrow: "Dein Profil", ep_title: "Profil bearbeiten",
-    lbl_pickup_loc: "Abholort", lbl_pickup_dropoff_loc: "Abhol-/Zielort", lbl_deposit_due: "Anzahlung jetzt fällig (20%)", lbl_airport_destination: "Zielregion", lbl_transfer_destination: "Ziel", lbl_pickup_region: "Deine Abholregion",
+    lbl_pickup_loc: "Abholort", lbl_pickup_dropoff_loc: "Abhol-/Zielort", lbl_airport_destination: "Zielregion", lbl_transfer_destination: "Ziel", lbl_pickup_region: "Deine Abholregion",
     lbl_balance: "Restbetrag — bar an den Fahrer am Tourtag",
-    deposit_hint: "⚠️ Nur die 20% Anzahlung ist jetzt fällig, um deine Buchung zu sichern — und sie geht direkt an deinen Fahrer, genau wie die restlichen 80%. Rydanu erhält oder verwaltet zu keinem Zeitpunkt dein Geld.",
+    pay_direct_hint: "💵 Du bezahlst deinen Fahrer direkt — bar oder QRIS — wenn ihr euch trefft. Jetzt ist nichts fällig, Rydanu verwaltet niemals dein Geld.",
     confirm_title: "Buchung angefragt",
-    confirm_sub: "Deine Anzahlung ist direkt auf dem Weg zu deinem Fahrer. Die Buchung wird final, sobald er den Eingang bestätigt — du wirst per E-Mail & WhatsApp benachrichtigt.",
+    confirm_sub: "Deine Anfrage wurde an deinen Fahrer gesendet. Sie wird final, sobald er bestätigt — du wirst per E-Mail & WhatsApp benachrichtigt.",
     st_confirmed: "Bestätigt", st_awaiting: "Wartet auf Bestätigung", st_completed: "Abgeschlossen", st_paid: "Bezahlt",
     st_cancel_requested: "Stornierung angefragt", st_cancelled: "Storniert",
     cal_eyebrow: "Verfügbarkeit", cal_day_eyebrow: "Touren an diesem Tag", cal_legend_confirmed: "Bestätigte Buchung", cal_legend_pending: "Wartet auf Antwort", cal_legend_past: "Abgeschlossene / stornierte Tour", cal_legend_blocked: "Von dir blockiert", dt_download_btn: "Als .txt-Datei herunterladen", dt_export_title: "Daten exportieren", dt_import_title: "Daten importieren", dt_size_warning: "⚠️ Das sind {kb} KB — meist Fotos. Falls das Kopieren langsam wirkt oder das Handy hängt, nutze stattdessen \"Export ohne Fotos\" weiter unten.",
@@ -8230,7 +8182,7 @@ const translations = {
     rd_err_name: "Bitte gib deinen Namen ein, um fortzufahren.", rd_err_vehicle: "Bitte gib dein Kennzeichen und die Fahrzeugfarbe ein — Reisende erhalten diese Angaben mit ihrer Buchungsbestätigung.",
     rd_err_docs: "Alle 4 Dokumente sind Pflicht (Führerschein, Versicherung, Fahrzeugpapiere, Selfie) — deine Registrierung wird erst weitergeleitet, sobald alles hochgeladen ist.", rd_err_referral: "Dieser Empfehlungs-Code wurde nicht gefunden — bitte die Rydanu-Nummer prüfen oder das Feld leer lassen.",
     reg_terms_eyebrow: "Bevor du absendest", reg_terms_title: "Nutzungsbedingungen für Fahrer",
-    reg_terms_body: "<strong>1. Buchungen nur über Rydanu.</strong> Wenn ein Reisender dich über Rydanu gefunden hat, muss die Tour über Rydanu gebucht und bezahlt werden. Eine private Zahlung am System vorbei ist nicht erlaubt und kann zur Sperrung deines Kontos führen.<br><br><strong>2. Gebühren.</strong> Pro bestätigter Buchung fällt eine kleine, preisbasierte Plattformgebühr an — Details unter \"Gebühren & Abrechnung\" im Dashboard. Keine Buchung, keine Gebühr.<br><br><strong>3. Stornierungen.</strong> Erscheint ein Gast nicht, behältst du die Anzahlung und zahlst keine Gebühr für diese Buchung. Sagst du selbst eine bestätigte Tour ab, fällt eine feste Stornogebühr von IDR 30.000 an, der Gast erhält seine Anzahlung vollständig zurück.<br><br><strong>4. Profil aktuell halten.</strong> Fahrzeug, Dokumente, Abholregionen und Preise müssen der Realität entsprechen. Aktualisiere dein Angebot, sobald sich Fahrzeug oder Verfügbarkeit ändern.<br><br><strong>5. Verhalten.</strong> Sei respektvoll, pünktlich und sicherheitsbewusst. Wiederholte Stornierungen, schlechte Bewertungen oder Sicherheitsprobleme können zur Sperrung oder zum Ausschluss von Rydanu führen.<br><br><strong>6. Zahlungen.</strong> Anzahlungen und Zahlungen laufen über die von dir angegebenen Zahlungsdaten (QRIS / Zahlungslink). Rydanu haftet nicht für Fehler in den von dir übermittelten Angaben.",
+    reg_terms_body: "<strong>1. Buchungen nur über Rydanu.</strong> Wenn ein Reisender dich über Rydanu gefunden hat, muss die Tour über Rydanu gebucht und bezahlt werden. Eine private Zahlung am System vorbei ist nicht erlaubt und kann zur Sperrung deines Kontos führen.<br><br><strong>2. Gebühren.</strong> Für jede Buchung, die du annimmst, fällt eine kleine, preisbasierte Plattformgebühr an — sie wird deinem Guthaben sofort bei Annahme belastet. Details unter \"Gebühren & Abrechnung\" im Dashboard.<br><br><strong>3. Stornierungen.</strong> Erscheint ein Gast nicht, wird die für diese Buchung bereits belastete Plattformgebühr nicht erstattet. Sagst du selbst eine bestätigte Tour ab, fällt eine feste Stornogebühr von IDR 30.000 an.<br><br><strong>4. Profil aktuell halten.</strong> Fahrzeug, Dokumente, Abholregionen und Preise müssen der Realität entsprechen. Aktualisiere dein Angebot, sobald sich Fahrzeug oder Verfügbarkeit ändern.<br><br><strong>5. Verhalten.</strong> Sei respektvoll, pünktlich und sicherheitsbewusst. Wiederholte Stornierungen, schlechte Bewertungen oder Sicherheitsprobleme können zur Sperrung oder zum Ausschluss von Rydanu führen.<br><br><strong>6. Zahlungen.</strong> Rydanu wickelt niemals Tour-Zahlungen ab — Gäste zahlen dich direkt, bar oder über die von dir angegebenen Zahlungsdaten (QRIS / Zahlungslink). Rydanu haftet nicht für Fehler in den von dir übermittelten Angaben.",
     reg_terms_checkbox_label: "Ich habe die Rydanu-Nutzungsbedingungen für Fahrer gelesen und akzeptiere sie.", reg_terms_submit_btn: "Akzeptieren & Registrierung absenden",
     ep_err_name: "Der Name darf nicht leer sein.",
     map_note_dropoff_booking: "Der Marker zeigt den ungefähren Abholbereich — dein Fahrer bestätigt die genaue Adresse nach der Buchung.", map_note_dropoff_general: "Der Marker zeigt den ungefähren Abholbereich.",
@@ -8247,9 +8199,9 @@ const translations = {
     fees_featured_placement: "Featured Placement", fees_featured_desc: "Höhere Platzierung in den Suchergebnissen diese Woche",
     fees_open_fees_title: "Offene Gebühren diesen Monat", fees_open_fees_desc: "Bezahle deine angesammelten Buchungsgebühren — eine Rechnung wird dir automatisch per E-Mail zugesendet",
     fees_cancellation_title: "Enthält eine Stornogebühr", fees_cancellation_desc: "Für Touren, die du selbst storniert hast — Details unter Buchungen",
-    cancel_outcome_customer_1: "Storniert —", cancel_outcome_customer_2: "Da der Kunde nicht erschienen ist, behältst du die vollständige Anzahlung als Entschädigung, und es fällt keine Rydanu-Gebühr für diese Buchung an. Der Kunde wurde per E-Mail informiert, dass keine Rückerstattung erfolgt.",
+    cancel_outcome_customer_1: "Storniert —", cancel_outcome_customer_2: "Da der Kunde nicht erschienen ist, gibt es keine weitere Auszahlung — die bereits belastete Plattformgebühr für diese Buchung wird nicht erstattet. Der Kunde wurde per E-Mail informiert.",
     cancel_outcome_driver_1: "Storniert —", cancel_outcome_driver_2: "Für diese Buchung fällt keine reguläre Rydanu-Gebühr an, aber eine Stornogebühr von", cancel_outcome_driver_3: "Der Kunde wurde per E-Mail informiert und auf Rydanu verwiesen, um einen anderen Fahrer zu finden.",
-    cancel_note_customer: "Kunde nicht erschienen — Anzahlung einbehalten", cancel_note_driver: "Von dir storniert — IDR 30.000 Stornogebühr",
+    cancel_note_customer: "Kunde nicht erschienen", cancel_note_driver: "Von dir storniert — IDR 30.000 Stornogebühr",
     btn_pay_now: "Jetzt bezahlen", fees_tier_note: "Pro bestätigter Buchung richtet sich die Gebühr nach dem Reisepreis — kleine Touren, kleine Gebühren:",
     lbl_email_address: "E-Mail-Adresse", pay_secure_note: "Du bezahlst deinen Fahrer direkt über einen sicheren Zahlungslink. Rydanu wickelt keine Tour-Zahlungen ab.",
     notify_email_driver: "E-Mail an Fahrer", notify_email_to: "E-Mail an", notify_wa_to: "WhatsApp an",
@@ -8302,7 +8254,7 @@ const translations = {
     dp_unsupported_file: "Bitte wähle eine Foto- oder Videodatei.", dp_photo_limit: "Maximal 20 Fotos — bitte erst eins entfernen.", dp_video_limit: "Maximal 5 Videos — bitte erst eins entfernen.",
     dp_video_too_long: "Dieses Video ist länger als 30 Sekunden — bitte erst kürzen.", dp_video_too_big: "Diese Videodatei ist zu groß (max. 6 MB). Bitte wähle einen kürzeren Clip oder eine niedrigere Auflösung.",
     dp_video_unreadable: "Diese Videodatei konnte nicht gelesen werden — bitte eine andere versuchen.", dp_caption_ph: "z.B. Wasserfall",
-    btn_cancel: "Stornieren", btn_deposit_received: "Anzahlung erhalten", tap_to_pay: "Zum Bezahlen tippen", all_regions: "Alle Regionen",
+    btn_cancel: "Stornieren", btn_deposit_received: "Buchung annehmen", tap_to_pay: "Zum Bezahlen tippen", all_regions: "Alle Regionen",
     dur_day_tour: "Tagestour", dur_half_day_tour: "Halbtagestour", dur_fixed_rate: "Festpreis", dur_full_day: "Ganztägig",
     new_booking_banner_one: "Du hast eine neue Buchungsanfrage — antippen zum Ansehen", new_booking_banner_many: "Du hast {n} neue Buchungsanfragen — antippen zum Ansehen",
     bookings_tab_cancelled: "Storniert", empty_cancelled: "Keine stornierten Buchungen.",
@@ -8325,10 +8277,10 @@ const translations = {
     ratings_reviews_label: "Bewertungen", ratings_empty: "Noch keine Bewertungen — sei die/der Erste!", ratings_empty_summary: "Noch keine Bewertungen — teile als Erste(r) deine Erfahrung!",
     ratings_err: "Bitte Namen eingeben und Sterne auswählen.", ratings_save_err: "Bewertung konnte nicht gespeichert werden — bitte erneut versuchen.", review_already_done_note: "Du hast für diese Tour schon eine Bewertung abgegeben — danke dir!",
     alert_cancel_12h: "Eine Stornierung ist nur bis 12 Stunden vor Tourbeginn möglich. Bitte kontaktiere den Gast direkt oder den Rydanu-Support.",
-    confirm_cancel_1: "Buchung stornieren mit", confirm_cancel_2: "Der Gast wird benachrichtigt und erhält seine Anzahlung vollständig zurück.\n\n⚠️ Häufige Stornierungen können zur Deaktivierung deines Fahrerkontos führen.",
+    confirm_cancel_1: "Buchung stornieren mit", confirm_cancel_2: "Der Gast wird benachrichtigt, dass die Tour storniert ist.\n\n⚠️ Häufige Stornierungen können zur Deaktivierung deines Fahrerkontos führen.",
     cancel_reason_eyebrow: "Buchung stornieren", cancel_reason_prompt: "Warum stornierst du die Tour? Der Gast wird benachrichtigt.", cancel_reason_customer: "Kunde ist nicht gekommen", cancel_reason_driver: "Ich muss die Tour absagen",
     cancel_confirm_prompt: "Willst du diese Tour wirklich stornieren? Das kann nicht rückgängig gemacht werden.", cancel_confirm_back: "Nein, zurück", cancel_confirm_yes: "Ja, Tour stornieren",
-    alert_deposit_confirmed_1: "Anzahlung bestätigt — Buchung ist jetzt final mit", alert_deposit_confirmed_2: "Der Gast wurde per E-Mail & WhatsApp benachrichtigt.",
+    alert_deposit_confirmed_1: "Buchung angenommen — jetzt final mit", alert_deposit_confirmed_2: "Der Gast wurde per E-Mail & WhatsApp benachrichtigt.",
     alert_no_fees: "Keine offenen Gebühren — alles bezahlt. ✓", confirm_pay_fees: "Deine offenen Rydanu-Gebühren jetzt bezahlen:", confirm_pay_fees_credit_note: "nach Anrechnung deiner Empfehlungs-Gutschrift von", confirm_pay_fees_fully_covered: "Deine offenen Gebühren sind vollständig durch deine Empfehlungs-Gutschrift gedeckt —", referral_credit_lbl: "Empfehlungs-Gutschrift", admin_credit_lbl: "Gutschrift", referral_title: "🎁 Fahrer werben, IDR 100.000 verdienen", referral_body: "Teile deine Rydanu-Nummer mit einem anderen Fahrer. Sobald er freigeschaltet ist und seine erste Buchung abgeschlossen hat, bekommst du eine Gutschrift von IDR 100.000 — automatisch bei deiner nächsten Gebührenzahlung angerechnet.", referral_your_code: "Deine Empfehlungs-Nummer", referral_bonus_inbox_title: "🎁 Empfehlungsbonus gutgeschrieben!", referral_bonus_inbox_body: "{name} hat seine erste Buchung abgeschlossen — dir wurden {amount} auf deine Rydanu-Gebühren gutgeschrieben. Danke, dass du die Community wachsen lässt!", referral_no_payout: "Diese Gutschrift kann nicht ausgezahlt werden — sie kann nur zur Verrechnung mit deinen Rydanu-Gebühren verwendet werden.", tier_transfer_note: "Transfer-Buchungen (mit oder ohne Flughafenabholung) nutzen genau dieselbe preisbasierte Gebührentabelle oben — es gibt keinen separaten Pauschalsatz.", referral_credit_pending_note: "verf\u00fcgbar — wird automatisch bei deiner n\u00e4chsten Gebührenzahlung angerechnet", fees_charged_when_note: "\u24d8 Geb\u00fchren werden erst berechnet, wenn du auf \"Jetzt bezahlen\" tippst, oder automatisch am letzten Tag des Monats. Eine Empfehlungs-Gutschrift wird erst zu diesem Zeitpunkt angerechnet, nicht vorher.",
     alert_fees_paid_1: "Zahlung erfolgreich:", alert_fees_paid_2: "Dein Beleg liegt unter \"Gebührenabrechnung\":",
     alert_listing_pending: "Dein Angebot ist gespeichert, erscheint für Reisende aber erst, sobald dein Rydanu-Konto freigeschaltet wurde.",
@@ -8355,7 +8307,7 @@ const translations = {
     payment_failed_title: "⚠️ Automatische Gebührenzahlung fehlgeschlagen", payment_failed_body: "Wir konnten deine hinterlegte Zahlungsmethode nicht mit den Gebühren diesen Monats ({amount}) belasten — bitte hinterlege eine gültige Zahlungsmethode und zahle bis {date}, sonst wird dein Konto automatisch gesperrt.",
     suspended_inbox_title: "🚫 Konto gesperrt — unbezahlte Gebühren", suspended_inbox_body: "Dein Konto wurde automatisch gesperrt, weil {amount} an Rydanu-Gebühren nicht innerhalb von 5 Tagen bezahlt wurden. Deine Touren sind jetzt für Reisende ausgeblendet. Bezahle deine offenen Gebühren jederzeit, um automatisch wieder freigeschaltet zu werden — Profil und Nachrichten kannst du weiterhin nutzen.",
     reinstated_inbox_title: "✓ Konto wieder freigeschaltet", reinstated_inbox_body: "Deine Zahlung ist eingegangen — dein Profil und deine Touren sind wieder für Reisende sichtbar. Danke fürs Begleichen!",
-    my_booking_link: "Meine Buchung finden", mb_title: "Meine Buchung", mb_hint: "Kein Konto nötig — nutze den Link aus deiner Bestätigungs-E-Mail/WhatsApp oder gib unten deine Buchungsreferenz und WhatsApp-Nummer ein.", mb_ref_label: "Buchungsreferenz", mb_phone_label: "WhatsApp-Nummer der Buchung", mb_find_btn: "Meine Buchung anzeigen", mb_err_ref: "Bitte gib deine Buchungsreferenz ein (z.B. RY-BK-482).", mb_err_notfound: "Keine Buchung gefunden — bitte Referenz und WhatsApp-Nummer prüfen.", mb_note_confirmed: "Deine Buchung ist final. Bitte halte den Restbetrag am Tourtag bar für deinen Fahrer bereit.", mb_note_pending: "Dein Fahrer hat den Eingang deiner Anzahlung noch nicht bestätigt. Du wirst per E-Mail & WhatsApp benachrichtigt, sobald die Buchung final ist.", mb_cancel_btn: "Diese Buchung stornieren", mb_cancel_confirm: "Diese Buchung stornieren? Dein Fahrer wird benachrichtigt und deine Anzahlung vollständig erstattet.", mb_cancel_failed_note: "Etwas ist schiefgelaufen — bitte nochmal versuchen oder direkt deinen Fahrer kontaktieren.", mb_cancelled: "Deine Buchung wurde storniert. Erstattete Anzahlung:", mb_note_cancelled: "Diese Buchung wurde storniert — keine weiteren Schritte nötig.", mb_note_completed: "Diese Tour ist abgeschlossen. Danke, dass du mit Rydanu gereist bist!",
+    my_booking_link: "Meine Buchung finden", mb_title: "Meine Buchung", mb_hint: "Kein Konto nötig — nutze den Link aus deiner Bestätigungs-E-Mail/WhatsApp oder gib unten deine Buchungsreferenz und WhatsApp-Nummer ein.", mb_ref_label: "Buchungsreferenz", mb_phone_label: "WhatsApp-Nummer der Buchung", mb_find_btn: "Meine Buchung anzeigen", mb_err_ref: "Bitte gib deine Buchungsreferenz ein (z.B. RY-BK-482).", mb_err_notfound: "Keine Buchung gefunden — bitte Referenz und WhatsApp-Nummer prüfen.", mb_note_confirmed: "Deine Buchung ist final. Bitte halte den vollen Betrag bereit, um deinen Fahrer am Tourtag direkt zu bezahlen.", mb_note_pending: "Dein Fahrer hat diese Buchung noch nicht bestätigt. Du wirst per E-Mail & WhatsApp benachrichtigt, sobald sie final ist.", mb_cancel_btn: "Diese Buchung stornieren", mb_cancel_confirm: "Diese Buchung stornieren? Dein Fahrer wird benachrichtigt.", mb_cancel_failed_note: "Etwas ist schiefgelaufen — bitte nochmal versuchen oder direkt deinen Fahrer kontaktieren.", mb_cancelled: "Deine Buchung wurde storniert.", mb_note_cancelled: "Diese Buchung wurde storniert — keine weiteren Schritte nötig.", mb_note_completed: "Diese Tour ist abgeschlossen. Danke, dass du mit Rydanu gereist bist!",
     nav_calendar: "Kalender",
     nav_reviews: "Bewertungen",
     nav_subscription: "Gebühren & Abrechnung",
@@ -8392,14 +8344,14 @@ const translations = {
     done_btn: "Fertig",
     apply_filters_btn: "Filter anwenden",
     clear_all_btn: "Alle zurücksetzen",
-    pay_method_label: "Anzahlung bezahlen mit",
-    pay_direct_label: "Zahle deine Anzahlung direkt an",
+    pay_method_label: "Bezahlen mit",
+    
     qris_caption: "mit GoPay, OVO, DANA oder deiner Banking-App scannen",
     pay_link_label: "Zahlungslink des Fahrers öffnen",
-    pay_direct_note: "Rydanu verwaltet niemals Tour-Zahlungen — deine Anzahlung geht direkt an deinen Fahrer. Die Buchung wird final, sobald der Fahrer den Eingang bestätigt.",
-    rd_paylink_label: "Zahlungslink für Anzahlungen (Wise / Revolut / PayPal) — optional",
+    
+    rd_paylink_label: "Zahlungslink für Gäste, die lieber digital bezahlen (Wise / Revolut / PayPal) — optional",
     rd_qris_label: "Ich akzeptiere QRIS (GoPay / OVO / DANA)",
-    pay_confirm_btn: "Anzahlung gesendet — Buchungsanfrage absenden",
+    pay_confirm_btn: "Buchungsanfrage absenden",
     rd_name_label: "Vollständiger Name",
     rd_region_label: "Heimatregion",
     rd_lang_label: "Gesprochene Sprachen",
@@ -8514,13 +8466,13 @@ const translations = {
     lbl_tour: "Tur", lbl_duration: "Durasi", lbl_vehicle: "Kendaraan", lbl_languages: "Bahasa",
     lbl_rating: "Rating", lbl_price: "Harga", lbl_not_included: "Tidak termasuk", lbl_driver: "Sopir",
     lbl_date: "Tanggal", lbl_guests: "Tamu", lbl_total: "Total harga tur", lbl_pickup: "Penjemputan", lbl_tour_singular: "tur", lbl_tour_plural: "tur", lbl_rating_new: "Baru",
-    lbl_deposit_paid: "Deposit dibayar", lbl_cash_due: "Tunai untuk sopir", lbl_ryvio_fee: "Biaya Rydanu (10%)", lbl_your_car: "Mobil sopir Anda",
+    lbl_total_price_due: "Total — bayar langsung ke sopir", lbl_ryvio_fee: "Biaya Rydanu (10%)", lbl_your_car: "Mobil sopir Anda",
     lbl_fullname: "Nama lengkap", lbl_whatsapp: 'Nomor WhatsApp <span class="optional">(untuk konfirmasi pemesanan)</span>', ep_eyebrow: "Profil Anda", ep_title: "Edit profil",
-    lbl_pickup_loc: "Lokasi penjemputan", lbl_pickup_dropoff_loc: "Lokasi jemput/antar", lbl_deposit_due: "Deposit jatuh tempo sekarang (20%)", lbl_airport_destination: "Wilayah tujuan", lbl_transfer_destination: "Tujuan", lbl_pickup_region: "Wilayah penjemputan Anda",
+    lbl_pickup_loc: "Lokasi penjemputan", lbl_pickup_dropoff_loc: "Lokasi jemput/antar", lbl_airport_destination: "Wilayah tujuan", lbl_transfer_destination: "Tujuan", lbl_pickup_region: "Wilayah penjemputan Anda",
     lbl_balance: "Sisa — bayar tunai ke sopir pada hari tur",
-    deposit_hint: "⚠️ Hanya deposit 20% yang harus dibayar sekarang untuk mengamankan pemesanan Anda — dan langsung masuk ke sopir Anda, sama seperti sisa 80%. Rydanu tidak pernah menerima atau menyimpan uang Anda, kapan pun.",
+    pay_direct_hint: "💵 Anda membayar sopir langsung — tunai atau QRIS — saat bertemu. Belum ada yang perlu dibayar sekarang, Rydanu tidak pernah menangani uang Anda.",
     confirm_title: "Pemesanan diajukan",
-    confirm_sub: "Deposit Anda sedang menuju langsung ke sopir. Pemesanan menjadi final setelah dia mengonfirmasi penerimaan — Anda akan diberi tahu via email & WhatsApp.",
+    confirm_sub: "Permintaan Anda telah dikirim ke sopir Anda. Ini menjadi final setelah dia mengonfirmasi — Anda akan diberi tahu via email & WhatsApp.",
     st_confirmed: "Dikonfirmasi", st_awaiting: "Menunggu konfirmasi", st_completed: "Selesai", st_paid: "Lunas",
     st_cancel_requested: "Pembatalan diminta", st_cancelled: "Dibatalkan",
     cal_eyebrow: "Ketersediaan", cal_day_eyebrow: "Tur pada hari ini", cal_legend_confirmed: "Pemesanan dikonfirmasi", cal_legend_pending: "Menunggu balasan", cal_legend_past: "Tur selesai / dibatalkan", cal_legend_blocked: "Diblokir oleh Anda", dt_download_btn: "Sebagai file .txt unduh", dt_export_title: "Ekspor data", dt_import_title: "Impor data", dt_size_warning: "⚠️ Ini {kb} KB — sebagian besar foto. Jika penyalinan terasa lambat atau ponsel macet, gunakan \"Ekspor tanpa foto\" di bawah.",
@@ -8533,7 +8485,7 @@ const translations = {
     rd_err_name: "Mohon masukkan nama Anda untuk melanjutkan.", rd_err_vehicle: "Mohon masukkan plat nomor dan warna mobil Anda — wisatawan menerima detail ini bersama konfirmasi pemesanan mereka.",
     rd_err_docs: "Keempat dokumen wajib diisi (SIM, asuransi, surat kendaraan, selfie) — pendaftaran Anda hanya diteruskan setelah semuanya diunggah.", rd_err_referral: "Kode referral ini tidak ditemukan — mohon periksa nomor Rydanu, atau kosongkan kolom ini.",
     reg_terms_eyebrow: "Sebelum mengirim", reg_terms_title: "Syarat & ketentuan sopir",
-    reg_terms_body: "<strong>1. Pemesanan hanya melalui Rydanu.</strong> Jika wisatawan menemukan Anda melalui Rydanu, tur harus dipesan dan dibayar melalui Rydanu. Mengatur pembayaran secara pribadi untuk melewati platform tidak diizinkan dan dapat menyebabkan penangguhan akun.<br><br><strong>2. Biaya.</strong> Biaya platform kecil berlaku per pemesanan yang dikonfirmasi, berdasarkan harga tur — lihat \"Biaya & penagihan\" di dashboard Anda. Tanpa pemesanan, tanpa biaya.<br><br><strong>3. Pembatalan.</strong> Jika tamu tidak datang, Anda menyimpan deposit dan tidak berutang biaya untuk pemesanan tersebut. Jika Anda membatalkan tur yang dikonfirmasi sendiri, biaya pembatalan tetap sebesar IDR 30.000 berlaku dan tamu mendapat pengembalian dana penuh.<br><br><strong>4. Jaga profil tetap akurat.</strong> Kendaraan, dokumen, wilayah layanan dan harga harus mencerminkan kenyataan. Perbarui listing Anda setiap kali kendaraan atau ketersediaan berubah.<br><br><strong>5. Etika.</strong> Bersikaplah hormat, tepat waktu dan aman. Pembatalan berulang, ulasan buruk atau masalah keamanan dapat menyebabkan penangguhan atau penghapusan dari Rydanu.<br><br><strong>6. Pembayaran.</strong> Deposit dan pembayaran ditangani melalui detail pembayaran yang Anda berikan (QRIS / tautan pembayaran). Rydanu tidak bertanggung jawab atas kesalahan dalam detail yang Anda kirimkan.",
+    reg_terms_body: "<strong>1. Pemesanan hanya melalui Rydanu.</strong> Jika wisatawan menemukan Anda melalui Rydanu, tur harus dipesan dan dibayar melalui Rydanu. Mengatur pembayaran secara pribadi untuk melewati platform tidak diizinkan dan dapat menyebabkan penangguhan akun.<br><br><strong>2. Biaya.</strong> Biaya platform kecil berlaku untuk setiap pemesanan yang Anda terima, berdasarkan harga tur, dan dibebankan ke saldo Anda segera setelah diterima — lihat \"Biaya & penagihan\" di dashboard Anda.<br><br><strong>3. Pembatalan.</strong> Jika tamu tidak datang, biaya platform yang sudah dibebankan untuk pemesanan tersebut tidak dikembalikan. Jika Anda membatalkan tur yang dikonfirmasi sendiri, biaya pembatalan tetap sebesar IDR 30.000 berlaku.<br><br><strong>4. Jaga profil tetap akurat.</strong> Kendaraan, dokumen, wilayah layanan dan harga harus mencerminkan kenyataan. Perbarui listing Anda setiap kali kendaraan atau ketersediaan berubah.<br><br><strong>5. Etika.</strong> Bersikaplah hormat, tepat waktu dan aman. Pembatalan berulang, ulasan buruk atau masalah keamanan dapat menyebabkan penangguhan atau penghapusan dari Rydanu.<br><br><strong>6. Pembayaran.</strong> Rydanu tidak pernah menangani pembayaran tur — tamu membayar Anda langsung, tunai atau melalui detail pembayaran yang Anda berikan (QRIS / tautan pembayaran). Rydanu tidak bertanggung jawab atas kesalahan dalam detail yang Anda kirimkan.",
     reg_terms_checkbox_label: "Saya telah membaca dan menerima syarat & ketentuan sopir Rydanu.", reg_terms_submit_btn: "Terima & kirim pendaftaran",
     ep_err_name: "Nama tidak boleh kosong.",
     map_note_dropoff_booking: "Penanda menunjukkan area penjemputan umum — sopir Anda akan mengonfirmasi alamat pastinya setelah pemesanan.", map_note_dropoff_general: "Penanda menunjukkan area penjemputan umum.",
@@ -8550,9 +8502,9 @@ const translations = {
     fees_featured_placement: "Featured placement", fees_featured_desc: "Posisi lebih tinggi di hasil pencarian minggu ini",
     fees_open_fees_title: "Biaya terbuka bulan ini", fees_open_fees_desc: "Bayar biaya pemesanan terkumpul Anda — faktur dikirim otomatis melalui email",
     fees_cancellation_title: "Termasuk biaya pembatalan", fees_cancellation_desc: "Untuk tur yang Anda batalkan sendiri — lihat Pemesanan untuk detail",
-    cancel_outcome_customer_1: "Dibatalkan —", cancel_outcome_customer_2: "Karena pelanggan tidak datang, Anda menyimpan seluruh deposit sebagai kompensasi, dan tidak ada biaya Rydanu untuk pemesanan ini. Pelanggan telah diberi tahu melalui email bahwa tidak ada pengembalian dana.",
+    cancel_outcome_customer_1: "Dibatalkan —", cancel_outcome_customer_2: "Karena pelanggan tidak datang, tidak ada pembayaran lebih lanjut — biaya platform yang sudah dibebankan untuk pemesanan ini tidak dikembalikan. Pelanggan telah diberi tahu melalui email.",
     cancel_outcome_driver_1: "Dibatalkan —", cancel_outcome_driver_2: "Tidak ada biaya Rydanu reguler untuk pemesanan ini, tetapi ada biaya pembatalan sebesar", cancel_outcome_driver_3: "Pelanggan telah diberi tahu melalui email dan diarahkan ke Rydanu untuk mencari sopir lain.",
-    cancel_note_customer: "Pelanggan tidak datang — deposit disimpan", cancel_note_driver: "Dibatalkan oleh Anda — biaya pembatalan IDR 30.000",
+    cancel_note_customer: "Pelanggan tidak datang", cancel_note_driver: "Dibatalkan oleh Anda — biaya pembatalan IDR 30.000",
     btn_pay_now: "Bayar sekarang", fees_tier_note: "Per pemesanan terkonfirmasi, biaya menyesuaikan harga perjalanan — perjalanan kecil, biaya kecil:",
     lbl_email_address: "Alamat email", pay_secure_note: "Anda membayar sopir Anda langsung melalui tautan pembayaran yang aman. Rydanu tidak memproses pembayaran tur.",
     notify_email_driver: "Email ke sopir", notify_email_to: "Email ke", notify_wa_to: "WhatsApp ke",
@@ -8565,8 +8517,8 @@ const translations = {
     btn_confirm_cancel: "Konfirmasi pembatalan", confirm_ack_cancel: "Konfirmasi pembatalan yang diminta oleh", btn_mark_completed: "Tandai perjalanan selesai", confirm_complete_booking: "Konfirmasi perjalanan ini telah selesai untuk", btn_decline_booking: "Tolak", confirm_decline_booking: "Tolak permintaan pemesanan ini dari", decline_outcome_note: "Ditolak. Pelanggan akan menerima email pemberitahuan dan diarahkan ke sopir lain untuk",
     bookings_tab_open: "Terbuka", bookings_tab_completed: "Selesai",
     mb_cancel_already_requested: "Anda sudah meminta pembatalan untuk pemesanan ini — sopir Anda telah diberi tahu dan perlu mengonfirmasinya.",
-    mb_cancel_requested_note: "Permintaan pembatalan Anda telah dikirim ke sopir Anda. Setelah dikonfirmasi, deposit Anda akan dikembalikan.",
-    mb_status_cancel_requested: "Pembatalan diminta", mb_note_cancel_requested: "Anda meminta pembatalan. Menunggu konfirmasi sopir Anda — deposit akan dikembalikan setelah itu.",
+    mb_cancel_requested_note: "Permintaan pembatalan Anda telah dikirim ke sopir Anda.",
+    mb_status_cancel_requested: "Pembatalan diminta", mb_note_cancel_requested: "Anda meminta pembatalan. Menunggu konfirmasi sopir Anda.",
     mb_review_title: "Bagaimana perjalanan Anda? Tinggalkan ulasan", mb_review_placeholder: "Ceritakan pengalaman Anda kepada wisatawan lain...", mb_review_photo: "Tambahkan foto (opsional)",
     mb_review_submit: "Kirim ulasan", mb_review_thanks: "Terima kasih — ulasan Anda telah diposting.", mb_review_err_stars: "Mohon pilih rating bintang terlebih dahulu.",
     my_page_link: "Halaman saya", view_driver_page: "Lihat halaman Rydanu sopir", dp_back: "Kembali", dt_upload_btn: "Unggah file .txt sebagai gantinya",
@@ -8605,7 +8557,7 @@ const translations = {
     dp_unsupported_file: "Mohon pilih file foto atau video.", dp_photo_limit: "Maksimal 20 foto — mohon hapus satu terlebih dahulu.", dp_video_limit: "Maksimal 5 video — mohon hapus satu terlebih dahulu.",
     dp_video_too_long: "Video ini lebih dari 30 detik — mohon potong terlebih dahulu.", dp_video_too_big: "File video ini terlalu besar (maks 6 MB). Mohon pilih klip yang lebih pendek atau resolusi lebih rendah.",
     dp_video_unreadable: "Tidak dapat membaca file video ini — mohon coba yang lain.", dp_caption_ph: "mis. Air Terjun",
-    btn_cancel: "Batalkan", btn_deposit_received: "Deposit diterima", tap_to_pay: "Ketuk untuk bayar", all_regions: "Semua wilayah",
+    btn_cancel: "Batalkan", btn_deposit_received: "Terima pemesanan", tap_to_pay: "Ketuk untuk bayar", all_regions: "Semua wilayah",
     dur_day_tour: "Tur sehari", dur_half_day_tour: "Tur setengah hari", dur_fixed_rate: "Harga tetap", dur_full_day: "Sehari penuh",
     new_booking_banner_one: "Anda memiliki permintaan pemesanan baru — ketuk untuk melihatnya", new_booking_banner_many: "Anda memiliki {n} permintaan pemesanan baru — ketuk untuk melihatnya",
     bookings_tab_cancelled: "Dibatalkan", empty_cancelled: "Tidak ada pemesanan yang dibatalkan.",
@@ -8628,10 +8580,10 @@ const translations = {
     ratings_reviews_label: "ulasan", ratings_empty: "Belum ada ulasan — jadilah yang pertama!", ratings_empty_summary: "Belum ada ulasan — jadilah yang pertama berbagi pengalaman Anda!",
     ratings_err: "Mohon masukkan nama dan pilih bintang.", ratings_save_err: "Ulasan tidak dapat disimpan — silakan coba lagi.", review_already_done_note: "Anda sudah memberikan ulasan untuk perjalanan ini — terima kasih!",
     alert_cancel_12h: "Pembatalan hanya bisa dilakukan hingga 12 jam sebelum tur dimulai. Silakan hubungi tamu langsung atau dukungan Rydanu.",
-    confirm_cancel_1: "Batalkan pemesanan dengan", confirm_cancel_2: "Tamu akan diberi tahu dan deposit dikembalikan penuh.\n\n⚠️ Pembatalan yang sering dapat menyebabkan akun sopir dinonaktifkan.",
+    confirm_cancel_1: "Batalkan pemesanan dengan", confirm_cancel_2: "Tamu akan diberi tahu bahwa tur dibatalkan.\n\n⚠️ Pembatalan yang sering dapat menyebabkan akun sopir dinonaktifkan.",
     cancel_reason_eyebrow: "Batalkan pemesanan", cancel_reason_prompt: "Mengapa Anda membatalkan tur ini? Tamu akan diberi tahu.", cancel_reason_customer: "Pelanggan tidak datang", cancel_reason_driver: "Saya perlu membatalkan tur",
     cancel_confirm_prompt: "Apakah Anda yakin ingin membatalkan tur ini? Tindakan ini tidak dapat dibatalkan.", cancel_confirm_back: "Tidak, kembali", cancel_confirm_yes: "Ya, batalkan tur",
-    alert_deposit_confirmed_1: "Deposit dikonfirmasi — pemesanan kini final dengan", alert_deposit_confirmed_2: "Tamu telah diberi tahu via email & WhatsApp.",
+    alert_deposit_confirmed_1: "Pemesanan diterima — kini final dengan", alert_deposit_confirmed_2: "Tamu telah diberi tahu via email & WhatsApp.",
     alert_no_fees: "Tidak ada biaya terbuka — semuanya lunas. ✓", confirm_pay_fees: "Bayar biaya Rydanu terbuka Anda:", confirm_pay_fees_credit_note: "setelah menerapkan kredit referral Anda sebesar", confirm_pay_fees_fully_covered: "Biaya terbuka Anda telah sepenuhnya ditutupi oleh kredit referral Anda —", referral_credit_lbl: "Kredit referral", admin_credit_lbl: "Kredit", referral_title: "🎁 Ajak sopir, dapatkan IDR 100.000", referral_body: "Bagikan nomor Rydanu Anda kepada sopir lain. Setelah mereka disetujui dan menyelesaikan pemesanan pertama, Anda mendapat kredit IDR 100.000 — otomatis diterapkan pada pembayaran biaya berikutnya.", referral_your_code: "Kode referral Anda", referral_bonus_inbox_title: "🎁 Bonus referral dikreditkan!", referral_bonus_inbox_body: "{name} telah menyelesaikan pemesanan pertama mereka — Anda dikreditkan {amount} untuk biaya Rydanu Anda. Terima kasih telah mengembangkan komunitas!", referral_no_payout: "Kredit ini tidak dapat dicairkan secara tunai — hanya dapat digunakan untuk mengurangi biaya pemesanan Rydanu Anda.", tier_transfer_note: "Pemesanan transfer (dengan atau tanpa penjemputan bandara) menggunakan tabel biaya berbasis harga yang sama persis seperti di atas — tidak ada tarif tetap terpisah.", referral_credit_pending_note: "tersedia — otomatis diterapkan saat Anda membayar biaya berikutnya", fees_charged_when_note: "\u24d8 Biaya hanya benar-benar dikenakan saat Anda mengetuk \"Bayar sekarang\", atau otomatis pada hari terakhir bulan tersebut. Kredit referral apa pun diterapkan pada saat itu, bukan sebelumnya.",
     alert_fees_paid_1: "Pembayaran berhasil:", alert_fees_paid_2: "Kuitansi tersedia di \"Laporan biaya\":",
     alert_listing_pending: "Tur Anda tersimpan, tetapi baru terlihat oleh wisatawan setelah akun Rydanu Anda disetujui.",
@@ -8658,7 +8610,7 @@ const translations = {
     payment_failed_title: "⚠️ Pembayaran biaya otomatis gagal", payment_failed_body: "Kami tidak dapat menagih metode pembayaran tersimpan Anda untuk biaya bulan ini ({amount}) — mohon tambahkan metode pembayaran yang valid dan bayar sebelum {date}, atau akun Anda akan ditangguhkan otomatis.",
     suspended_inbox_title: "🚫 Akun ditangguhkan — biaya belum dibayar", suspended_inbox_body: "Akun Anda telah ditangguhkan secara otomatis karena {amount} biaya Rydanu tidak dibayar dalam 5 hari. Tur Anda kini disembunyikan dari wisatawan. Bayar biaya terbuka Anda kapan saja untuk diaktifkan kembali secara otomatis — Anda masih dapat mengakses profil dan pesan Anda.",
     reinstated_inbox_title: "✓ Akun diaktifkan kembali", reinstated_inbox_body: "Pembayaran Anda telah diterima — profil dan tur Anda kembali terlihat oleh wisatawan. Terima kasih telah melunasi!",
-    my_booking_link: "Temukan pemesanan saya", mb_title: "Pemesanan saya", mb_hint: "Tanpa akun — gunakan tautan dari email/WhatsApp konfirmasi Anda, atau masukkan referensi pemesanan dan nomor WhatsApp di bawah.", mb_ref_label: "Referensi pemesanan", mb_phone_label: "Nomor WhatsApp yang digunakan", mb_find_btn: "Tampilkan pemesanan saya", mb_err_ref: "Mohon masukkan referensi pemesanan Anda (mis. RY-BK-482).", mb_err_notfound: "Pemesanan tidak ditemukan — periksa referensi dan nomor WhatsApp.", mb_note_confirmed: "Pemesanan Anda final. Siapkan sisa pembayaran tunai untuk sopir pada hari tur.", mb_note_pending: "Sopir Anda belum mengonfirmasi deposit. Anda akan diberi tahu via email & WhatsApp begitu pemesanan final.", mb_cancel_btn: "Batalkan pemesanan ini", mb_cancel_confirm: "Batalkan pemesanan ini? Sopir Anda akan diberi tahu dan deposit dikembalikan penuh.", mb_cancel_failed_note: "Terjadi kesalahan — silakan coba lagi, atau hubungi sopir Anda langsung.", mb_cancelled: "Pemesanan Anda dibatalkan. Deposit dikembalikan:", mb_note_cancelled: "Pemesanan ini telah dibatalkan — tidak perlu tindakan lebih lanjut.", mb_note_completed: "Perjalanan ini telah selesai. Terima kasih telah bepergian dengan Rydanu!",
+    my_booking_link: "Temukan pemesanan saya", mb_title: "Pemesanan saya", mb_hint: "Tanpa akun — gunakan tautan dari email/WhatsApp konfirmasi Anda, atau masukkan referensi pemesanan dan nomor WhatsApp di bawah.", mb_ref_label: "Referensi pemesanan", mb_phone_label: "Nomor WhatsApp yang digunakan", mb_find_btn: "Tampilkan pemesanan saya", mb_err_ref: "Mohon masukkan referensi pemesanan Anda (mis. RY-BK-482).", mb_err_notfound: "Pemesanan tidak ditemukan — periksa referensi dan nomor WhatsApp.", mb_note_confirmed: "Pemesanan Anda final. Siapkan jumlah penuh untuk membayar sopir Anda langsung pada hari itu.", mb_note_pending: "Sopir Anda belum mengonfirmasi pemesanan ini. Anda akan diberi tahu via email & WhatsApp begitu final.", mb_cancel_btn: "Batalkan pemesanan ini", mb_cancel_confirm: "Batalkan pemesanan ini? Sopir Anda akan diberi tahu.", mb_cancel_failed_note: "Terjadi kesalahan — silakan coba lagi, atau hubungi sopir Anda langsung.", mb_cancelled: "Pemesanan Anda telah dibatalkan.", mb_note_cancelled: "Pemesanan ini telah dibatalkan — tidak perlu tindakan lebih lanjut.", mb_note_completed: "Perjalanan ini telah selesai. Terima kasih telah bepergian dengan Rydanu!",
     nav_calendar: "Kalender",
     nav_reviews: "Ulasan",
     nav_subscription: "Biaya & tagihan",
@@ -8695,14 +8647,14 @@ const translations = {
     done_btn: "Selesai",
     apply_filters_btn: "Terapkan filter",
     clear_all_btn: "Hapus semua",
-    pay_method_label: "Bayar deposit dengan",
-    pay_direct_label: "Bayar deposit Anda langsung ke",
+    pay_method_label: "Bayar dengan",
+    
     qris_caption: "pindai dengan GoPay, OVO, DANA atau aplikasi bank Anda",
     pay_link_label: "Buka tautan pembayaran sopir",
-    pay_direct_note: "Rydanu tidak pernah menangani pembayaran tur — deposit Anda langsung ke sopir. Pemesanan menjadi final setelah sopir mengonfirmasi deposit diterima.",
-    rd_paylink_label: "Tautan pembayaran untuk deposit (Wise / Revolut / PayPal) — opsional",
+    
+    rd_paylink_label: "Tautan pembayaran untuk tamu yang lebih suka membayar secara digital (Wise / Revolut / PayPal) — opsional",
     rd_qris_label: "Saya menerima QRIS (GoPay / OVO / DANA)",
-    pay_confirm_btn: "Deposit terkirim — kirim permintaan pemesanan",
+    pay_confirm_btn: "Kirim permintaan pemesanan",
     rd_name_label: "Nama lengkap",
     rd_region_label: "Wilayah asal",
     rd_lang_label: "Bahasa yang dikuasai",
@@ -9286,10 +9238,10 @@ const termsContent = {
     booking:{
       title:"Per-booking fee — conditions",
       body:`<ul>
-        <li>The booking fee is charged only once a guest's deposit has cleared — never in advance.</li>
+        <li>The booking fee is charged to your balance immediately when you accept a booking — not when it's completed.</li>
         <li>Fee tier is based on the total tour price shown at the time of booking.</li>
-        <li>If a guest cancels before the deposit is paid, no fee applies.</li>
-        <li>Fees are deducted automatically from your next payout cycle, not charged separately.</li>
+        <li>If you decline a request before accepting it, no fee applies.</li>
+        <li>Charged fees accumulate until the monthly billing run — or you can pay them anytime under "Fees &amp; billing".</li>
       </ul>`
     }
   },
@@ -9321,10 +9273,10 @@ const termsContent = {
     booking:{
       title:"Gebühr pro Buchung — Bedingungen",
       body:`<ul>
-        <li>Die Buchungsgebühr wird erst berechnet, sobald die Anzahlung des Gastes eingegangen ist — nie im Voraus.</li>
+        <li>Die Buchungsgebühr wird deinem Guthaben sofort belastet, wenn du eine Buchung annimmst — nicht erst bei Abschluss.</li>
         <li>Die Gebührenstufe richtet sich nach dem Gesamtpreis der Tour zum Zeitpunkt der Buchung.</li>
-        <li>Storniert ein Gast, bevor die Anzahlung bezahlt wurde, fällt keine Gebühr an.</li>
-        <li>Gebühren werden automatisch mit deiner nächsten Abrechnung verrechnet, nicht separat berechnet.</li>
+        <li>Lehnst du eine Anfrage ab, bevor du sie angenommen hast, fällt keine Gebühr an.</li>
+        <li>Belastete Gebühren sammeln sich bis zur monatlichen Abrechnung — oder du zahlst sie jederzeit unter "Gebühren &amp; Abrechnung".</li>
       </ul>`
     }
   },
@@ -9356,10 +9308,10 @@ const termsContent = {
     booking:{
       title:"Biaya per pemesanan — ketentuan",
       body:`<ul>
-        <li>Biaya pemesanan hanya dikenakan setelah deposit tamu berhasil — tidak pernah di muka.</li>
+        <li>Biaya pemesanan dibebankan ke saldo Anda segera setelah Anda menerima pemesanan — bukan setelah selesai.</li>
         <li>Tingkat biaya didasarkan pada total harga tur yang ditampilkan saat pemesanan.</li>
-        <li>Jika tamu membatalkan sebelum deposit dibayar, tidak ada biaya yang berlaku.</li>
-        <li>Biaya dipotong otomatis dari siklus pembayaran Anda berikutnya, bukan ditagih terpisah.</li>
+        <li>Jika Anda menolak permintaan sebelum menerimanya, tidak ada biaya yang berlaku.</li>
+        <li>Biaya yang dibebankan terkumpul hingga penagihan bulanan — atau Anda dapat membayarnya kapan saja di "Biaya &amp; penagihan".</li>
       </ul>`
     }
   }
@@ -9724,10 +9676,7 @@ function openModal(d){
   document.getElementById('pay-driver').textContent = d.name;
   document.getElementById('pay-tour').textContent = d.tour;
   document.getElementById('pay-total').innerHTML = priceBlockHTML(d.price);
-  const totalNum = parseIDR(d.price);
-  const depositNum = totalNum * 0.2;
-  document.getElementById('pay-deposit').innerHTML = priceBlockHTML(depositNum);
-  document.getElementById('pay-balance').innerHTML = priceBlockHTML(totalNum - depositNum);
+
   // direct-to-driver payment options
   document.getElementById('pay-direct-name').textContent = d.name;
   const owner = d.ownerId ? driverProfiles[d.ownerId] : null;
@@ -9756,10 +9705,7 @@ function onAirportRegionChange(){
     currentDriver.airportDestination = region;
     document.getElementById('modal-price').innerHTML = priceBlockHTML(price);
     document.getElementById('pay-total').innerHTML = priceBlockHTML(price);
-    const totalNum = parseIDR(price);
-    const depositNum = totalNum * 0.2;
-    document.getElementById('pay-deposit').innerHTML = priceBlockHTML(depositNum);
-    document.getElementById('pay-balance').innerHTML = priceBlockHTML(totalNum - depositNum);
+
   }
   const coords = regionCoords[region];
   const mapBox = document.getElementById('modal-airport-map');
@@ -9780,10 +9726,7 @@ function onTransferRegionChange(){
     currentDriver.transferDestination = region;
     document.getElementById('modal-price').innerHTML = priceBlockHTML(price);
     document.getElementById('pay-total').innerHTML = priceBlockHTML(price);
-    const totalNum = parseIDR(price);
-    const depositNum = totalNum * 0.2;
-    document.getElementById('pay-deposit').innerHTML = priceBlockHTML(depositNum);
-    document.getElementById('pay-balance').innerHTML = priceBlockHTML(totalNum - depositNum);
+
   }
   const coords = regionCoords[region];
   const originCoords = regionCoords[currentDriver.region] || AIRPORT_COORDS;
@@ -9805,10 +9748,7 @@ function onPickupRegionChange(){
     currentDriver.price = price;
     document.getElementById('modal-price').innerHTML = priceBlockHTML(price);
     document.getElementById('pay-total').innerHTML = priceBlockHTML(price);
-    const totalNum = parseIDR(price);
-    const depositNum = totalNum * 0.2;
-    document.getElementById('pay-deposit').innerHTML = priceBlockHTML(depositNum);
-    document.getElementById('pay-balance').innerHTML = priceBlockHTML(totalNum - depositNum);
+
   }
 }
 function goToStep(step){
@@ -9843,15 +9783,14 @@ const bookingPreviewText = {
     emailIntro: 'Your request for "{tour}" with {driverName} on {date} has been sent. It becomes final once the driver confirms — we\'ll notify you right away.',
     pickupLine: "Pickup: {pickup}",
     destLine: "Destination: {dest}",
-    depositLine: "Deposit ({deposit}): you told us it's on its way directly to {driverFirst} — via QRIS or his payment link. Rydanu never handles tour payments.",
-    balanceLine: "Balance due in cash on the day: {balance}",
+    balanceLine: "Total — pay your driver directly (cash or QRIS) on the day: {balance}",
     vehicleLine: "Your driver's car: {vehicle}",
-    finalNote: "Your booking becomes FINAL once {driverFirst} confirms your deposit has arrived — we'll email & WhatsApp you immediately.",
+    finalNote: "Your booking becomes FINAL once {driverFirst} confirms — we'll email & WhatsApp you immediately.",
     magicLinkBtn: "🎫 View & manage my booking",
     magicLinkNote: "(your personal link — no account needed)",
     reachOut: "{driverName} will reach out shortly to confirm pickup time.",
     referenceLine: "Reference: {ref}",
-    waBody: "Hi {name}! 🙏 Your Rydanu request {ref} was sent to {driverName} for {date}. We will message you the moment he confirms! Pickup: {pickup}.{destPart} Your {deposit} deposit goes directly to the driver (QRIS/payment link) — he'll confirm once it arrives, then your booking is final. Manage your booking anytime via your personal link: ryvio.app/b/{ref} Please have {balance} cash ready on the day. Look out for: {vehicle}. He'll message you here shortly to confirm timing. Selamat datang! 🌴",
+    waBody: "Hi {name}! 🙏 Your Rydanu request {ref} was sent to {driverName} for {date}. We will message you the moment he confirms! Pickup: {pickup}.{destPart} You pay {driverFirst} directly (cash or QRIS) when you meet — no payment is due now. Manage your booking anytime via your personal link: rydanu.com/b/{ref} Please have {balance} ready on the day. Look out for: {vehicle}. He'll message you here shortly to confirm timing. Selamat datang! 🌴",
     waDestPart: " Destination: {dest}.",
     driverSubject: "New booking request — please confirm — {ref}",
     driverGuestLine: "Guest: {name}",
@@ -9859,24 +9798,22 @@ const bookingPreviewText = {
     driverDateLine: "Date: {date}",
     driverPickupLine: "Pickup: {pickup}",
     driverDestLine: "Destination: {dest}",
-    driverDepositLine: "Deposit {deposit} sent directly to you by the guest — please check your QRIS/payment account and confirm receipt in your dashboard",
-    driverBalanceLine: "Collect in cash from guest on the day: {balance}",
-    driverFeeLine: "Platform fee: applies per your tier once trip is completed"
+    driverBalanceLine: "Collect directly from the guest (cash or QRIS) on the day: {balance}",
+    driverFeeLine: "Platform fee: charged to your balance as soon as you accept this booking"
   },
   de: {
     emailSubject: "Deine Rydanu-Buchungsanfrage — {ref}",
     emailIntro: 'Deine Anfrage für "{tour}" bei {driverName} am {date} wurde gesendet. Sie wird final, sobald der Fahrer bestätigt — wir benachrichtigen dich sofort.',
     pickupLine: "Abholung: {pickup}",
     destLine: "Ziel: {dest}",
-    depositLine: "Anzahlung ({deposit}): du hast angegeben, dass sie direkt an {driverFirst} unterwegs ist — via QRIS oder seinen Zahlungslink. Rydanu wickelt niemals Tour-Zahlungen ab.",
-    balanceLine: "Restbetrag bar am Tourtag: {balance}",
+    balanceLine: "Gesamtbetrag — direkt an deinen Fahrer (bar oder QRIS) am Tourtag: {balance}",
     vehicleLine: "Das Auto deines Fahrers: {vehicle}",
-    finalNote: "Deine Buchung wird FINAL, sobald {driverFirst} den Eingang deiner Anzahlung bestätigt — wir informieren dich sofort per E-Mail & WhatsApp.",
+    finalNote: "Deine Buchung wird FINAL, sobald {driverFirst} bestätigt — wir informieren dich sofort per E-Mail & WhatsApp.",
     magicLinkBtn: "🎫 Meine Buchung ansehen & verwalten",
     magicLinkNote: "(dein persönlicher Link — kein Konto nötig)",
     reachOut: "{driverName} meldet sich in Kürze, um die Abholzeit zu bestätigen.",
     referenceLine: "Referenz: {ref}",
-    waBody: "Hi {name}! 🙏 Deine Rydanu-Anfrage {ref} wurde an {driverName} für {date} gesendet. Wir melden uns, sobald er bestätigt! Abholung: {pickup}.{destPart} Deine Anzahlung von {deposit} geht direkt an den Fahrer (QRIS/Zahlungslink) — er bestätigt den Eingang, dann ist deine Buchung final. Verwalte deine Buchung jederzeit über deinen persönlichen Link: ryvio.app/b/{ref} Bitte halte {balance} bar für den Tourtag bereit. Achte auf: {vehicle}. Er meldet sich hier in Kürze, um die Uhrzeit zu bestätigen. Selamat datang! 🌴",
+    waBody: "Hi {name}! 🙏 Deine Rydanu-Anfrage {ref} wurde an {driverName} für {date} gesendet. Wir melden uns, sobald er bestätigt! Abholung: {pickup}.{destPart} Du bezahlst {driverFirst} direkt (bar oder QRIS), wenn ihr euch trefft — jetzt ist nichts fällig. Verwalte deine Buchung jederzeit über deinen persönlichen Link: rydanu.com/b/{ref} Bitte halte {balance} für den Tourtag bereit. Achte auf: {vehicle}. Er meldet sich hier in Kürze, um die Uhrzeit zu bestätigen. Selamat datang! 🌴",
     waDestPart: " Ziel: {dest}.",
     driverSubject: "Neue Buchungsanfrage — bitte bestätigen — {ref}",
     driverGuestLine: "Gast: {name}",
@@ -9884,24 +9821,22 @@ const bookingPreviewText = {
     driverDateLine: "Datum: {date}",
     driverPickupLine: "Abholung: {pickup}",
     driverDestLine: "Ziel: {dest}",
-    driverDepositLine: "Anzahlung {deposit} wurde vom Gast direkt an dich gesendet — bitte dein QRIS-/Zahlungskonto prüfen und den Eingang in deinem Dashboard bestätigen",
-    driverBalanceLine: "Bar vom Gast am Tourtag einsammeln: {balance}",
-    driverFeeLine: "Plattformgebühr: fällt gemäß deiner Stufe an, sobald die Tour abgeschlossen ist"
+    driverBalanceLine: "Direkt vom Gast einsammeln (bar oder QRIS) am Tourtag: {balance}",
+    driverFeeLine: "Plattformgebühr: wird deinem Guthaben belastet, sobald du diese Buchung annimmst"
   },
   id: {
     emailSubject: "Permintaan pemesanan Rydanu Anda — {ref}",
     emailIntro: 'Permintaan Anda untuk "{tour}" bersama {driverName} pada {date} telah dikirim. Ini menjadi final setelah sopir mengonfirmasi — kami akan segera memberi tahu Anda.',
     pickupLine: "Penjemputan: {pickup}",
     destLine: "Tujuan: {dest}",
-    depositLine: "Deposit ({deposit}): Anda memberi tahu kami bahwa itu sedang dalam perjalanan langsung ke {driverFirst} — melalui QRIS atau tautan pembayarannya. Rydanu tidak pernah menangani pembayaran tur.",
-    balanceLine: "Sisa dibayar tunai pada hari itu: {balance}",
+    balanceLine: "Total — bayar langsung ke sopir (tunai atau QRIS) pada hari itu: {balance}",
     vehicleLine: "Mobil sopir Anda: {vehicle}",
-    finalNote: "Pemesanan Anda menjadi FINAL setelah {driverFirst} mengonfirmasi deposit Anda telah diterima — kami akan mengirim email & WhatsApp segera.",
+    finalNote: "Pemesanan Anda menjadi FINAL setelah {driverFirst} mengonfirmasi — kami akan mengirim email & WhatsApp segera.",
     magicLinkBtn: "🎫 Lihat & kelola pemesanan saya",
     magicLinkNote: "(tautan pribadi Anda — tanpa akun)",
     reachOut: "{driverName} akan segera menghubungi Anda untuk mengonfirmasi waktu penjemputan.",
     referenceLine: "Referensi: {ref}",
-    waBody: "Hai {name}! 🙏 Permintaan Rydanu Anda {ref} telah dikirim ke {driverName} untuk {date}. Kami akan menghubungi Anda segera setelah dia mengonfirmasi! Penjemputan: {pickup}.{destPart} Deposit {deposit} Anda langsung masuk ke sopir (QRIS/tautan pembayaran) — dia akan mengonfirmasi setelah diterima, lalu pemesanan Anda final. Kelola pemesanan Anda kapan saja melalui tautan pribadi Anda: ryvio.app/b/{ref} Mohon siapkan {balance} tunai pada hari itu. Perhatikan: {vehicle}. Dia akan segera menghubungi Anda di sini untuk mengonfirmasi waktu. Selamat datang! 🌴",
+    waBody: "Hai {name}! 🙏 Permintaan Rydanu Anda {ref} telah dikirim ke {driverName} untuk {date}. Kami akan menghubungi Anda segera setelah dia mengonfirmasi! Penjemputan: {pickup}.{destPart} Anda membayar {driverFirst} langsung (tunai atau QRIS) saat bertemu — belum ada yang perlu dibayar sekarang. Kelola pemesanan Anda kapan saja melalui tautan pribadi Anda: rydanu.com/b/{ref} Mohon siapkan {balance} pada hari itu. Perhatikan: {vehicle}. Dia akan segera menghubungi Anda di sini untuk mengonfirmasi waktu. Selamat datang! 🌴",
     waDestPart: " Tujuan: {dest}.",
     driverSubject: "Permintaan pemesanan baru — mohon konfirmasi — {ref}",
     driverGuestLine: "Tamu: {name}",
@@ -9909,9 +9844,8 @@ const bookingPreviewText = {
     driverDateLine: "Tanggal: {date}",
     driverPickupLine: "Penjemputan: {pickup}",
     driverDestLine: "Tujuan: {dest}",
-    driverDepositLine: "Deposit {deposit} dikirim langsung ke Anda oleh tamu — mohon periksa akun QRIS/pembayaran Anda dan konfirmasi penerimaan di dashboard Anda",
-    driverBalanceLine: "Kumpulkan tunai dari tamu pada hari itu: {balance}",
-    driverFeeLine: "Biaya platform: berlaku sesuai tingkat Anda setelah perjalanan selesai"
+    driverBalanceLine: "Kumpulkan langsung dari tamu (tunai atau QRIS) pada hari itu: {balance}",
+    driverFeeLine: "Biaya platform: dibebankan ke saldo Anda segera setelah Anda menerima pemesanan ini"
   }
 };
 function bpt(key){ return (bookingPreviewText[currentLang] || bookingPreviewText.en)[key]; }
@@ -9926,13 +9860,11 @@ function confirmPayment(){
   const date = document.getElementById('pay-date').textContent;
   const ref = 'RY-' + Math.floor(10000 + Math.random()*89999);
   const totalNum = parseIDR(currentDriver.price);
-  const depositStr = formatIDR(totalNum * 0.2);
-  const balanceStr = formatIDR(totalNum * 0.8);
+  const balanceStr = formatIDR(totalNum);
 
   document.getElementById('confirm-ref').textContent = ref;
   document.getElementById('confirm-date').textContent = date;
   document.getElementById('confirm-pickup').textContent = pickup;
-  document.getElementById('confirm-deposit').textContent = depositStr;
   document.getElementById('confirm-balance').textContent = balanceStr;
   const destRow = document.getElementById('confirm-destination-row');
   if(currentDriver.airportDestination){
@@ -9951,7 +9883,7 @@ function confirmPayment(){
 
   // build message previews
   const driverFirst = currentDriver.name.split(' ')[0];
-  const emailVars = {ref, name, tour:currentDriver.tour, driverName:currentDriver.name, date, pickup, deposit:depositStr, driverFirst, balance:balanceStr, vehicle:vehicleStr};
+  const emailVars = {ref, name, tour:currentDriver.tour, driverName:currentDriver.name, date, pickup, driverFirst, balance:balanceStr, vehicle:vehicleStr};
   document.getElementById('preview-email').innerHTML = `
     <div class="p-subject">${fillTemplate(bpt('emailSubject'), emailVars)}</div>
     <div class="p-body">${t('email_greeting')} ${name},
@@ -9959,7 +9891,6 @@ function confirmPayment(){
 ${fillTemplate(bpt('emailIntro'), emailVars)}
 ${fillTemplate(bpt('pickupLine'), emailVars)}
 ${destLine}
-${fillTemplate(bpt('depositLine'), emailVars)}
 ${fillTemplate(bpt('balanceLine'), emailVars)}
 ${fillTemplate(bpt('vehicleLine'), emailVars)}
 
@@ -9981,8 +9912,7 @@ ${fillTemplate(bpt('referenceLine'), emailVars)}</div>`;
 ${fillTemplate(bpt('driverTourLine'), emailVars)}
 ${fillTemplate(bpt('driverDateLine'), emailVars)}
 ${fillTemplate(bpt('driverPickupLine'), emailVars)}
-${currentDriver.airportDestination ? fillTemplate(bpt('driverDestLine'), emailVars) + '\n' : ''}${fillTemplate(bpt('driverDepositLine'), emailVars)}
-${fillTemplate(bpt('driverBalanceLine'), emailVars)}
+${currentDriver.airportDestination ? fillTemplate(bpt('driverDestLine'), emailVars) + '\n' : ''}${fillTemplate(bpt('driverBalanceLine'), emailVars)}
 ${bpt('driverFeeLine')}</div>`;
 
   // reset preview visibility + statuses
@@ -10014,7 +9944,6 @@ ${bpt('driverFeeLine')}</div>`;
   // echte Buchung eines echten Angebots -> in die Datenbank schreiben
   if(currentDriver.isReal && currentDriver.ownerId){
     const priceNum = parseIDR(currentDriver.price) || 0;
-    const depositIdr = Math.round(priceNum * 0.2);
     const bookingDriverId = currentDriver.ownerId;
     const bookingDate = document.getElementById('f-date').value || new Date().toISOString().slice(0,10);
     (async () => {
@@ -10046,7 +9975,6 @@ ${bpt('driverFeeLine')}</div>`;
         booking_date: bookingDate,
         status: 'pending',
         price_idr: priceNum,
-        deposit_idr: depositIdr,
         fee_percent_applied: feePercent,
         fee_idr: feeIdr
       });
@@ -10063,7 +9991,7 @@ ${bpt('driverFeeLine')}</div>`;
   const targetId = currentDriver.ownerId && driverDataStore[currentDriver.ownerId] ? currentDriver.ownerId : 'wayan';
   driverDataStore[targetId].bookings.unshift({
     who:name, tour:currentDriver.tour, when:date, status:'pending', isNew:true, driverSeen:false,
-    email, phone, pickup, price:currentDriver.price, deposit:depositStr, balance:balanceStr,
+    email, phone, pickup, price:currentDriver.price, balance:balanceStr,
     vehicle:vehicleStr, ref, destination: currentDriver.airportDestination || currentDriver.transferDestination || null,
     dateISO: document.getElementById('f-date').value || null
   });
@@ -12377,7 +12305,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v153</div>
+<div id="version-footer" style="position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v154</div>
 
 </body>
 </html>
