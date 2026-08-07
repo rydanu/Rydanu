@@ -100,23 +100,23 @@
 
   /* ---------- topbar ---------- */
   .topbar{
-    display:flex; align-items:center; flex-wrap:wrap; gap:14px;
+    display:flex; align-items:flex-end; flex-wrap:wrap; gap:14px;
     padding:calc(16px + env(safe-area-inset-top)) 20px 16px; border-bottom:1px solid var(--line);
     position:sticky; top:0; background:var(--paper); z-index:50;
   }
-  .logo{ display:flex; align-items:center; gap:12px; min-width:0; flex-shrink:1; margin-right:auto; }
+  .logo{ display:flex; align-items:flex-end; gap:8px; min-width:0; flex-shrink:1; }
   .logo-mark{ display:none; }
   .logo-wordstack{ display:flex; flex-direction:column; align-items:flex-start; min-width:0; }
   .logo-word{ height:84px; width:auto; display:block; flex-shrink:0; }
   .logo-tagline{
-    font-family:'Public Sans', sans-serif; font-weight:600; font-size:0.8rem; letter-spacing:-0.005em;
+    font-family:'Public Sans', sans-serif; font-weight:700; font-size:0.8rem; letter-spacing:-0.005em;
     color:var(--ink-soft); line-height:1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
     max-width:100%; margin-top:4px;
   }
   .ryvio-rating-badge{
     display:flex; align-items:center; gap:6px; background:var(--paper-dim); border-radius:20px;
     padding:6px 14px; cursor:pointer; flex-shrink:0; font-size:0.82rem; font-weight:700; color:var(--ink);
-    white-space:nowrap;
+    white-space:nowrap; align-self:flex-end; margin-bottom:2px;
   }
   .ryvio-rating-badge:hover{ background:#eee7d9; }
   .ryvio-rating-stars{ color:#D9A400; letter-spacing:1px; }
@@ -12305,7 +12305,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v155</div>
+<div id="version-footer" style="position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v156</div>
 
 </body>
 </html>
