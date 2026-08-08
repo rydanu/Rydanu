@@ -1450,8 +1450,8 @@
       <h2 style="font-family:'Public Sans', sans-serif; font-weight:700; margin-top:0;">🚗 Fahrer-Bereich</h2>
 
       <div id="auth-login-form">
-        <p class="note" style="margin-top:0;">Mit E-Mail und Passwort anmelden.</p>
-        <input type="email" id="auth-login-email" placeholder="E-Mail" class="auth-input">
+        <p class="note" style="margin-top:0;">Mit Telefonnummer (oder E-Mail bei älteren Konten) und Passwort anmelden.</p>
+        <input type="text" id="auth-login-email" placeholder="Telefonnummer oder E-Mail" class="auth-input">
         <input type="password" id="auth-login-password" placeholder="Passwort" class="auth-input">
         <button type="button" class="btn-primary auth-submit-btn" onclick="handleDriverLogin()">Anmelden</button>
         <p class="note" style="text-align:center;"><a href="#" onclick="openForgotPassword(); return false;">Passwort vergessen?</a></p>
@@ -1460,10 +1460,24 @@
 
       <div id="auth-signup-form" style="display:none;">
         <p class="note" style="margin-top:0;">Neues Fahrerkonto anlegen.</p>
-        <input type="text" id="auth-signup-name" placeholder="Dein Name" class="auth-input">
-        <input type="email" id="auth-signup-email" placeholder="E-Mail" class="auth-input">
-        <input type="password" id="auth-signup-password" placeholder="Passwort (mind. 6 Zeichen)" class="auth-input">
-        <input type="text" id="auth-signup-phone" placeholder="Telefon / WhatsApp (optional)" class="auth-input">
+        <input type="text" id="auth-signup-name" placeholder="Dein Name *" class="auth-input">
+        <div style="display:flex; gap:8px;">
+          <select id="auth-signup-country" class="auth-input" style="flex:0 0 92px;">
+            <option value="62" selected>🇮🇩 +62</option>
+            <option value="49">🇩🇪 +49</option>
+            <option value="61">🇦🇺 +61</option>
+            <option value="65">🇸🇬 +65</option>
+            <option value="60">🇲🇾 +60</option>
+            <option value="1">🇺🇸 +1</option>
+            <option value="44">🇬🇧 +44</option>
+            <option value="33">🇫🇷 +33</option>
+            <option value="81">🇯🇵 +81</option>
+            <option value="86">🇨🇳 +86</option>
+          </select>
+          <input type="text" id="auth-signup-phone" inputmode="tel" placeholder="Telefon / WhatsApp *" class="auth-input" style="flex:1;">
+        </div>
+        <input type="password" id="auth-signup-password" placeholder="Passwort (mind. 6 Zeichen) *" class="auth-input">
+        <input type="email" id="auth-signup-email" placeholder="E-Mail (optional)" class="auth-input">
         <div class="form-field" style="margin-top:8px;">
           <label data-i18n="rd_region_label">Region</label>
           <select id="auth-signup-region" class="auth-input">
@@ -8285,7 +8299,7 @@ const translations = {
     subscription_sub: "No fixed fees — only pay when you get booked.",
     pending_banner_text: "Your account is pending approval. Your listings won't be visible to travelers until Rydanu approves your profile.",
     request_booking_btn: "Request booking",
-    continue_payment_btn: "Continue to payment",
+    continue_payment_btn: "Request booking",
     view_as_driver_btn: "See this booking as the driver",
     done_btn: "Done",
     apply_filters_btn: "Apply filters",
@@ -8588,7 +8602,7 @@ const translations = {
     subscription_sub: "Keine Fixkosten — du zahlst nur, wenn du gebucht wirst.",
     pending_banner_text: "Dein Konto wartet auf Freischaltung. Deine Angebote sind für Reisende erst sichtbar, sobald Rydanu dein Profil freigibt.",
     request_booking_btn: "Buchung anfragen",
-    continue_payment_btn: "Weiter zur Zahlung",
+    continue_payment_btn: "Buchung anfragen",
     view_as_driver_btn: "Diese Buchung als Fahrer ansehen",
     done_btn: "Fertig",
     apply_filters_btn: "Filter anwenden",
@@ -8891,7 +8905,7 @@ const translations = {
     subscription_sub: "Tanpa biaya tetap — Anda hanya membayar saat dipesan.",
     pending_banner_text: "Akun Anda sedang menunggu persetujuan. Tur Anda tidak akan terlihat oleh wisatawan sampai Rydanu menyetujui profil Anda.",
     request_booking_btn: "Ajukan pemesanan",
-    continue_payment_btn: "Lanjut ke pembayaran",
+    continue_payment_btn: "Ajukan pemesanan",
     view_as_driver_btn: "Lihat pemesanan ini sebagai sopir",
     done_btn: "Selesai",
     apply_filters_btn: "Terapkan filter",
@@ -10713,18 +10727,40 @@ function showAuthError(err){
 }
 
 function translateAuthError(msg){
-  if(/Invalid login credentials/i.test(msg)) return 'E-Mail oder Passwort ist falsch.';
-  if(/User already registered/i.test(msg)) return 'Für diese E-Mail existiert schon ein Konto — bitte anmelden.';
+  if(/Invalid login credentials/i.test(msg)) return 'Telefonnummer/E-Mail oder Passwort ist falsch.';
+  if(/User already registered/i.test(msg)) return 'Für diese Telefonnummer existiert schon ein Konto — bitte anmelden.';
   if(/Password should be at least/i.test(msg)) return 'Das Passwort muss mindestens 6 Zeichen haben.';
-  if(/Unable to validate email/i.test(msg)) return 'Bitte eine gültige E-Mail-Adresse eingeben.';
+  if(/Unable to validate email/i.test(msg)) return 'Bitte eine gültige Telefonnummer eingeben.';
   return msg;
+}
+
+// Telefonnummer-Normalisierung (8. August): akzeptiert 0-Vorwahl, 00-Landesvorwahl, +Landesvorwahl
+// oder blanke Ziffern und macht daraus ein einheitliches +<Landesvorwahl><Rest>-Format. Gilt fuer
+// jede Landesvorwahl (Standard: +62 Indonesien, per Dropdown bei der Registrierung aenderbar).
+function normalizePhoneE164(raw, countryCode){
+  let digits = String(raw || '').replace(/[^\d+]/g, '');
+  if(digits.startsWith('+')) return digits;
+  if(digits.startsWith('00')) return '+' + digits.slice(2);
+  if(digits.startsWith('0')) return '+' + countryCode + digits.slice(1);
+  return '+' + countryCode + digits;
+}
+function isValidE164(phone){
+  return /^\+\d{7,15}$/.test(phone);
+}
+// Fahrer ohne eigene E-Mail (sehr verbreitet, 90%+ nutzen nur WhatsApp) bekommen eine interne,
+// aus der Telefonnummer abgeleitete Pseudo-Adresse fuer den technischen Login-Account bei Supabase.
+// Der Login laeuft trotzdem ganz normal ueber die Telefonnummer -- die Pseudo-Adresse sieht der
+// Fahrer nie. Eine echte, freiwillig angegebene E-Mail wird separat als Kontaktinfo gespeichert.
+function phoneToAuthEmail(normalizedPhone){
+  return 'driver.' + normalizedPhone.replace('+', '') + '@phone.rydanu.app';
 }
 
 async function handleDriverSignup(){
   const name = document.getElementById('auth-signup-name').value.trim();
   const email = document.getElementById('auth-signup-email').value.trim();
   const password = document.getElementById('auth-signup-password').value;
-  const phone = document.getElementById('auth-signup-phone').value.trim();
+  const country = document.getElementById('auth-signup-country').value;
+  const phoneRaw = document.getElementById('auth-signup-phone').value.trim();
   const region = document.getElementById('auth-signup-region').value;
   const vtype = document.getElementById('auth-signup-vtype').value;
   const car = document.getElementById('auth-signup-car').value.trim();
@@ -10733,14 +10769,17 @@ async function handleDriverSignup(){
   const color = document.getElementById('auth-signup-color').value.trim();
   const referralInput = document.getElementById('auth-signup-referral').value.trim();
   document.getElementById('auth-error').textContent = '';
-  if(!name || !email || !password){ showAuthError({message:'Bitte alle Felder ausfüllen.'}); return; }
+  if(!name || !password || !phoneRaw){ showAuthError({message:'Bitte Name, Telefonnummer und Passwort ausfüllen.'}); return; }
+  const phone = normalizePhoneE164(phoneRaw, country);
+  if(!isValidE164(phone)){ showAuthError({message:'Bitte eine gültige Telefonnummer eingeben.'}); return; }
   if(!plate || !color){ showAuthError({message:'Bitte Kennzeichen und Fahrzeugfarbe angeben.'}); return; }
   const missingDocs = updateSignupDocStatus() < 4;
   if(missingDocs){ showAuthError({message:'Bitte alle 4 Dokumente hochladen (Führerschein, Versicherung, Fahrzeugpapiere, Selfie).'}); return; }
 
   setAuthLoading(true);
+  const authEmail = phoneToAuthEmail(phone);
   const { data, error } = await supabaseClient.auth.signUp({
-    email, password,
+    email: authEmail, password,
     options: { data: { name } }
   });
   if(error){ setAuthLoading(false); showAuthError(error); return; }
@@ -10748,11 +10787,13 @@ async function handleDriverSignup(){
   await checkDriverAuthState();
   if(!realDriverProfile){ setAuthLoading(false); return; }
 
-  // Fahrzeugdaten + Telefon + Region auf dem frisch angelegten Profil speichern
+  // Fahrzeugdaten + Telefon (normalisiert) + echte E-Mail (falls angegeben) + Region speichern.
+  // drivers.email bleibt bewusst leer, wenn keine echte Adresse angegeben wurde -- die technische
+  // Pseudo-Adresse landet sonst dort und wuerde faelschlich als "echte" Kontakt-Mail angezeigt.
   const vehicle = { vtype, car, seats, plate, color };
   const { data: updatedDriver, error: vehicleErr } = await supabaseClient
     .from('drivers')
-    .update({ vehicle, phone: phone || null, region })
+    .update({ vehicle, phone, email: email || null, region })
     .eq('id', realDriverProfile.id)
     .select()
     .single();
@@ -10819,10 +10860,21 @@ async function resolveReferralCode(code){
 }
 
 async function handleDriverLogin(){
-  const email = document.getElementById('auth-login-email').value.trim();
+  const raw = document.getElementById('auth-login-email').value.trim();
   const password = document.getElementById('auth-login-password').value;
   document.getElementById('auth-error').textContent = '';
-  if(!email || !password){ showAuthError({message:'Bitte E-Mail und Passwort eingeben.'}); return; }
+  if(!raw || !password){ showAuthError({message:'Bitte Telefonnummer/E-Mail und Passwort eingeben.'}); return; }
+  // Enthaelt die Eingabe ein @, ist es eine (bei aelteren Konten noch echte) E-Mail-Adresse --
+  // sonst wird sie als Telefonnummer behandelt und in dieselbe Pseudo-Adresse umgerechnet, die
+  // bei der Registrierung erzeugt wurde (Standard-Landesvorwahl +62, falls keine andere angegeben).
+  let email;
+  if(raw.includes('@')){
+    email = raw;
+  } else {
+    const phone = normalizePhoneE164(raw, '62');
+    if(!isValidE164(phone)){ showAuthError({message:'Bitte eine gültige Telefonnummer eingeben.'}); return; }
+    email = phoneToAuthEmail(phone);
+  }
   setAuthLoading(true);
   const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
   setAuthLoading(false);
@@ -12567,7 +12619,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v164</div>
+<div id="version-footer" style="position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v165</div>
 
 </body>
 </html>
