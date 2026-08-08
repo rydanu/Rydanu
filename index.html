@@ -2012,6 +2012,24 @@
       <p class="form-error" id="balance-topup-status"></p>
     </div>
     <button type="button" class="link-btn" onclick="openBalanceOverviewModal()">📋 <span data-i18n="admin_view_balances_btn">Alle Guthaben anzeigen</span> (<span id="balance-overview-count">0</span>)</button>
+
+    <h3 style="margin-top:24px;" data-i18n="admin_pwreset_title">Fahrer-Passwort zurücksetzen</h3>
+    <p class="dash-head" style="display:block; margin-bottom:20px;" data-i18n="admin_pwreset_sub">Für Fahrer, die sich nicht mehr einloggen können (z. B. Passwort vergessen ohne eigene E-Mail). Das neue Passwort gibst du dem Fahrer danach selbst durch, z. B. per WhatsApp.</p>
+    <div class="panel" style="padding:16px; margin-bottom:20px;">
+      <div class="form-field">
+        <label data-i18n="admin_select_driver">Fahrer auswählen</label>
+        <select id="pwreset-driver-select"></select>
+      </div>
+      <div class="form-field">
+        <label data-i18n="admin_pwreset_new_password">Neues Passwort (mind. 6 Zeichen)</label>
+        <div style="display:flex; gap:8px;">
+          <input type="text" id="pwreset-new-password" placeholder="z.B. rydanu1234" style="flex:1;">
+          <button type="button" class="link-btn" style="padding:0 6px;" onclick="generatePwresetPassword()" data-i18n="admin_pwreset_generate">🎲 Generieren</button>
+        </div>
+      </div>
+      <button type="button" class="period-btn" onclick="resetRealDriverPassword()" style="background:var(--gold); border-color:var(--gold); color:var(--ink); font-weight:700;" data-i18n="admin_pwreset_save_btn">Passwort zurücksetzen</button>
+      <p class="form-error" id="pwreset-status"></p>
+    </div>
     </div>
 
   </div>
@@ -2249,13 +2267,30 @@
       <h2>Passwort vergessen</h2>
     </div>
     <div class="modal-body">
-      <p class="note" style="margin-top:0;">Gib deine E-Mail-Adresse ein. Wir schicken dir einen Link, mit dem du ein neues Passwort setzen kannst.</p>
-      <div class="form-field">
-        <label>E-Mail</label>
-        <input type="email" id="forgot-password-email" placeholder="deine@email.com">
+      <p class="note" style="margin-top:0;">Hast du dich mit E-Mail oder mit Telefonnummer registriert?</p>
+      <div style="display:flex; gap:8px; margin-bottom:16px;">
+        <button type="button" class="period-btn active" id="fp-mode-email-btn" onclick="setForgotPasswordMode('email')" style="flex:1;">E-Mail</button>
+        <button type="button" class="period-btn" id="fp-mode-phone-btn" onclick="setForgotPasswordMode('phone')" style="flex:1;">Telefonnummer</button>
       </div>
-      <p class="form-error" id="forgot-password-status"></p>
-      <button class="book-btn" onclick="handleForgotPassword()">Link zum Zurücksetzen senden</button>
+
+      <div id="fp-email-block">
+        <p class="note" style="margin-top:0;">Gib deine E-Mail-Adresse ein. Wir schicken dir einen Link, mit dem du ein neues Passwort setzen kannst.</p>
+        <div class="form-field">
+          <label>E-Mail</label>
+          <input type="email" id="forgot-password-email" placeholder="deine@email.com">
+        </div>
+        <p class="form-error" id="forgot-password-status"></p>
+        <button class="book-btn" onclick="handleForgotPassword()">Link zum Zurücksetzen senden</button>
+      </div>
+
+      <div id="fp-phone-block" style="display:none;">
+        <p class="note" style="margin-top:0;">Für Konten mit Telefonnummer läuft das Zurücksetzen aktuell noch über unseren Support — keine Sorge, das geht schnell.</p>
+        <div class="form-field">
+          <label>Deine Telefonnummer (für die Zuordnung)</label>
+          <input type="text" id="forgot-password-phone" placeholder="z.B. 081234567890">
+        </div>
+        <a href="#" id="fp-whatsapp-link" target="_blank" class="book-btn" style="display:block; text-align:center; text-decoration:none;" onclick="return openForgotPasswordWhatsapp();">💬 Support per WhatsApp kontaktieren</a>
+      </div>
     </div>
   </div>
 </div>
@@ -8354,7 +8389,7 @@ const translations = {
     admin_feeoverride_title: "Set an individual fee rate", admin_select_driver: "Select driver", admin_fee_percent: "Fee in % (0 or higher)",
     admin_fee_start: "Start date", admin_fee_end: "End date", admin_fee_save_btn: "Save",
     admin_credit_title: "Create a fee credit", admin_credit_amount: "Amount (IDR)", admin_credit_note: "Note (optional)", admin_credit_save_btn: "Create credit", admin_view_overrides_btn: "View all individual fee rates", admin_view_credits_btn: "View all credits", admin_view_drivers_btn: "View all drivers", admin_filter_by_driver: "Filter by driver",
-    admin_topup_title: "Manually top up balance", admin_topup_sub: "As long as there's no real payment provider yet, you can credit a driver with test balance directly here.", admin_topup_amount: "Amount (IDR)", admin_topup_note: "Note (optional)", admin_topup_save_btn: "Top up balance", admin_topup_fill_required: "Please select a driver and enter an amount.", admin_topup_success: "✓ Balance topped up.", admin_topup_notify_title: "💰 Your balance was topped up", admin_topup_notify_body: "Rydanu added {amount} to your balance.",
+    admin_topup_title: "Manually top up balance", admin_topup_sub: "As long as there's no real payment provider yet, you can credit a driver with test balance directly here.", admin_topup_amount: "Amount (IDR)", admin_topup_note: "Note (optional)", admin_topup_save_btn: "Top up balance", admin_topup_fill_required: "Please select a driver and enter an amount.", admin_topup_success: "✓ Balance topped up.", admin_topup_notify_title: "💰 Your balance was topped up", admin_topup_notify_body: "Rydanu added {amount} to your balance.", admin_pwreset_title: "Reset driver password", admin_pwreset_sub: "For drivers who can't log in anymore (e.g. forgot password, no own email). Give the new password to the driver yourself afterwards, e.g. via WhatsApp.", admin_pwreset_new_password: "New password (min. 6 characters)", admin_pwreset_generate: "🎲 Generate", admin_pwreset_save_btn: "Reset password", admin_pwreset_fill_required: "Please select a driver and enter a password (min. 6 characters).", admin_pwreset_success: "✓ Password reset — please share it with the driver now.",
     admin_locked_alert: "Driver locked ✓", admin_unlocked_alert: "Driver unlocked ✓",
     lock_notice_title: "Your account has been locked 🚫", lock_notice_body: "Your account was locked by Rydanu — your listings are hidden from travelers and you can't receive new bookings until it's unlocked again. Contact support if you have questions.",
     unlock_notice_title: "Your account is active again ✓", unlock_notice_body: "Good news — your account has been unlocked. Your listings are visible again and you can receive new bookings.",
@@ -8657,7 +8692,7 @@ const translations = {
     admin_feeoverride_title: "Individuellen Gebührensatz festlegen", admin_select_driver: "Fahrer auswählen", admin_fee_percent: "Gebühr in % (0 oder höher)",
     admin_fee_start: "Startdatum", admin_fee_end: "Enddatum", admin_fee_save_btn: "Speichern",
     admin_credit_title: "Gebühren-Gutschrift erstellen", admin_credit_amount: "Betrag (IDR)", admin_credit_note: "Notiz (optional)", admin_credit_save_btn: "Gutschrift erstellen", admin_view_overrides_btn: "Alle individuellen Gebührensätze anzeigen", admin_view_credits_btn: "Alle Gutschriften anzeigen", admin_view_drivers_btn: "Alle Fahrer anzeigen", admin_filter_by_driver: "Nach Fahrer filtern",
-    admin_topup_title: "Guthaben manuell aufladen", admin_topup_sub: "Solange es noch keinen echten Zahlungsanbieter gibt, kannst du hier Test-Guthaben direkt einem Fahrer gutschreiben.", admin_topup_amount: "Betrag (IDR)", admin_topup_note: "Notiz (optional)", admin_topup_save_btn: "Guthaben aufladen", admin_topup_fill_required: "Bitte einen Fahrer auswählen und einen Betrag eingeben.", admin_topup_success: "✓ Guthaben aufgeladen.", admin_topup_notify_title: "💰 Dein Guthaben wurde aufgeladen", admin_topup_notify_body: "Rydanu hat deinem Guthaben {amount} hinzugefügt.",
+    admin_topup_title: "Guthaben manuell aufladen", admin_topup_sub: "Solange es noch keinen echten Zahlungsanbieter gibt, kannst du hier Test-Guthaben direkt einem Fahrer gutschreiben.", admin_topup_amount: "Betrag (IDR)", admin_topup_note: "Notiz (optional)", admin_topup_save_btn: "Guthaben aufladen", admin_topup_fill_required: "Bitte einen Fahrer auswählen und einen Betrag eingeben.", admin_topup_success: "✓ Guthaben aufgeladen.", admin_topup_notify_title: "💰 Dein Guthaben wurde aufgeladen", admin_topup_notify_body: "Rydanu hat deinem Guthaben {amount} hinzugefügt.", admin_pwreset_title: "Fahrer-Passwort zurücksetzen", admin_pwreset_sub: "Für Fahrer, die sich nicht mehr einloggen können (z. B. Passwort vergessen ohne eigene E-Mail). Das neue Passwort gibst du dem Fahrer danach selbst durch, z. B. per WhatsApp.", admin_pwreset_new_password: "Neues Passwort (mind. 6 Zeichen)", admin_pwreset_generate: "🎲 Generieren", admin_pwreset_save_btn: "Passwort zurücksetzen", admin_pwreset_fill_required: "Bitte einen Fahrer auswählen und ein Passwort (mind. 6 Zeichen) eingeben.", admin_pwreset_success: "✓ Passwort zurückgesetzt — bitte jetzt an den Fahrer weitergeben.",
     admin_locked_alert: "Fahrer gesperrt ✓", admin_unlocked_alert: "Fahrer entsperrt ✓",
     lock_notice_title: "Dein Konto wurde gesperrt 🚫", lock_notice_body: "Dein Konto wurde von Rydanu gesperrt — deine Angebote sind für Reisende nicht sichtbar und du kannst keine neuen Buchungen mehr erhalten, bis es wieder entsperrt wird. Kontaktiere den Support bei Fragen.",
     unlock_notice_title: "Dein Konto ist wieder aktiv ✓", unlock_notice_body: "Gute Nachricht — dein Konto wurde entsperrt. Deine Angebote sind wieder sichtbar und du kannst neue Buchungen erhalten.",
@@ -8960,7 +8995,7 @@ const translations = {
     admin_feeoverride_title: "Tetapkan tarif biaya individual", admin_select_driver: "Pilih sopir", admin_fee_percent: "Biaya dalam % (0 atau lebih)",
     admin_fee_start: "Tanggal mulai", admin_fee_end: "Tanggal akhir", admin_fee_save_btn: "Simpan",
     admin_credit_title: "Buat kredit biaya", admin_credit_amount: "Jumlah (IDR)", admin_credit_note: "Catatan (opsional)", admin_credit_save_btn: "Buat kredit", admin_view_overrides_btn: "Lihat semua tarif biaya individual", admin_view_credits_btn: "Lihat semua kredit", admin_view_drivers_btn: "Lihat semua sopir", admin_filter_by_driver: "Filter berdasarkan sopir",
-    admin_topup_title: "Isi ulang saldo secara manual", admin_topup_sub: "Selama belum ada penyedia pembayaran resmi, Anda dapat menambahkan saldo uji coba langsung ke sopir di sini.", admin_topup_amount: "Jumlah (IDR)", admin_topup_note: "Catatan (opsional)", admin_topup_save_btn: "Isi ulang saldo", admin_topup_fill_required: "Silakan pilih sopir dan masukkan jumlah.", admin_topup_success: "✓ Saldo telah diisi ulang.", admin_topup_notify_title: "💰 Saldo Anda telah diisi ulang", admin_topup_notify_body: "Rydanu menambahkan {amount} ke saldo Anda.",
+    admin_topup_title: "Isi ulang saldo secara manual", admin_topup_sub: "Selama belum ada penyedia pembayaran resmi, Anda dapat menambahkan saldo uji coba langsung ke sopir di sini.", admin_topup_amount: "Jumlah (IDR)", admin_topup_note: "Catatan (opsional)", admin_topup_save_btn: "Isi ulang saldo", admin_topup_fill_required: "Silakan pilih sopir dan masukkan jumlah.", admin_topup_success: "✓ Saldo telah diisi ulang.", admin_topup_notify_title: "💰 Saldo Anda telah diisi ulang", admin_topup_notify_body: "Rydanu menambahkan {amount} ke saldo Anda.", admin_pwreset_title: "Reset kata sandi sopir", admin_pwreset_sub: "Untuk sopir yang tidak bisa lagi masuk (mis. lupa kata sandi tanpa email sendiri). Berikan kata sandi baru kepada sopir setelahnya, mis. via WhatsApp.", admin_pwreset_new_password: "Kata sandi baru (min. 6 karakter)", admin_pwreset_generate: "🎲 Buat", admin_pwreset_save_btn: "Reset kata sandi", admin_pwreset_fill_required: "Silakan pilih sopir dan masukkan kata sandi (min. 6 karakter).", admin_pwreset_success: "✓ Kata sandi direset — mohon segera berikan kepada sopir.",
     admin_locked_alert: "Sopir diblokir ✓", admin_unlocked_alert: "Sopir dibuka blokirnya ✓",
     lock_notice_title: "Akun Anda telah diblokir 🚫", lock_notice_body: "Akun Anda telah diblokir oleh Rydanu — tur Anda tidak terlihat oleh wisatawan dan Anda tidak dapat menerima pemesanan baru sampai dibuka kembali. Hubungi dukungan jika ada pertanyaan.",
     unlock_notice_title: "Akun Anda aktif kembali ✓", unlock_notice_body: "Kabar baik — akun Anda telah dibuka blokirnya. Tur Anda terlihat kembali dan Anda dapat menerima pemesanan baru.",
@@ -10885,9 +10920,29 @@ async function handleDriverLogin(){
 }
 
 // ---- Passwort zuruecksetzen (Baustein 10) ----
+// Support-WhatsApp (8. August): bis die eigene Rydanu-Business-Nummer (geplant Ende des Jahres)
+// steht, wird uebergangsweise Joergs private Nummer genutzt. Einfach hier zentral aendern, sobald
+// die Business-Nummer da ist -- an dieser einen Stelle, sonst nirgends im Code hart verdrahtet.
+const SUPPORT_WHATSAPP_NUMBER = '4917632774893';
+
+function setForgotPasswordMode(mode){
+  document.getElementById('fp-mode-email-btn').classList.toggle('active', mode==='email');
+  document.getElementById('fp-mode-phone-btn').classList.toggle('active', mode==='phone');
+  document.getElementById('fp-email-block').style.display = mode==='email' ? 'block' : 'none';
+  document.getElementById('fp-phone-block').style.display = mode==='phone' ? 'block' : 'none';
+}
+function openForgotPasswordWhatsapp(){
+  const phone = document.getElementById('forgot-password-phone').value.trim();
+  if(!phone){ alert('Bitte zuerst deine Telefonnummer eingeben.'); return false; }
+  const text = `Hallo Rydanu-Support, ich habe mein Passwort vergessen. Meine registrierte Telefonnummer ist: ${phone}`;
+  window.open('https://wa.me/' + SUPPORT_WHATSAPP_NUMBER + '?text=' + encodeURIComponent(text), '_blank');
+  return false;
+}
 function openForgotPassword(){
   document.getElementById('forgot-password-email').value = document.getElementById('auth-login-email').value.trim();
+  document.getElementById('forgot-password-phone').value = '';
   document.getElementById('forgot-password-status').textContent = '';
+  setForgotPasswordMode('email');
   document.getElementById('forgot-password-modal-bg').classList.add('active');
 }
 function closeForgotPassword(){ document.getElementById('forgot-password-modal-bg').classList.remove('active'); }
@@ -11631,6 +11686,8 @@ async function renderFeeOverridePanel(){
     creditSel.innerHTML = optsHTML;
     const topupSel = document.getElementById('balance-topup-driver-select');
     if(topupSel) topupSel.innerHTML = optsHTML;
+    const pwresetSel = document.getElementById('pwreset-driver-select');
+    if(pwresetSel) pwresetSel.innerHTML = optsHTML;
     const ovFilter = document.getElementById('fee-overrides-filter-select');
     const crFilter = document.getElementById('fee-credits-filter-select');
     if(ovFilter) ovFilter.innerHTML = realDriverFilterOptionsHTML();
@@ -12084,7 +12141,36 @@ async function createRealBalanceTopup(){
   loadRealAllDriversCache();
 }
 
-// -- Guthaben-Übersicht (alle Fahrer mit aktuellem Guthaben), echt --
+// -- Fahrer-Passwort zuruecksetzen (Admin, ueber Edge Function mit Service-Role) --
+function generatePwresetPassword(){
+  const chars = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789';
+  let pw = '';
+  for(let i=0;i<8;i++){ pw += chars[Math.floor(Math.random()*chars.length)]; }
+  document.getElementById('pwreset-new-password').value = pw;
+}
+async function resetRealDriverPassword(){
+  const driverId = document.getElementById('pwreset-driver-select').value;
+  const newPassword = document.getElementById('pwreset-new-password').value.trim();
+  const statusEl = document.getElementById('pwreset-status');
+  if(!driverId || !newPassword || newPassword.length < 6){
+    statusEl.style.color = 'var(--danger)';
+    statusEl.textContent = t('admin_pwreset_fill_required');
+    return;
+  }
+  statusEl.style.color = 'var(--ink-soft)';
+  statusEl.textContent = '…';
+  const { data, error } = await supabaseClient.functions.invoke('admin-reset-driver-password', {
+    body: { driverId, newPassword }
+  });
+  if(error || (data && data.error)){
+    statusEl.style.color = 'var(--danger)';
+    statusEl.textContent = 'Fehler: ' + (error ? error.message : data.error);
+    return;
+  }
+  statusEl.style.color = 'var(--teal)';
+  statusEl.textContent = t('admin_pwreset_success');
+  document.getElementById('pwreset-new-password').value = '';
+}
 function openBalanceOverviewModal(){ document.getElementById('balance-overview-modal-bg').classList.add('active'); renderBalanceOverviewList(); }
 function closeBalanceOverviewModal(){ document.getElementById('balance-overview-modal-bg').classList.remove('active'); }
 document.getElementById('balance-overview-modal-bg').addEventListener('click', e=>{ if(e.target.id==='balance-overview-modal-bg') closeBalanceOverviewModal(); });
@@ -12621,7 +12707,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v166</div>
+<div id="version-footer" style="position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v167</div>
 
 </body>
 </html>
