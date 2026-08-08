@@ -10896,6 +10896,15 @@ async function resolveReferralCode(code){
   if(data) realDriverProfile = data;
 }
 
+// Alte Konten, die schon vor der Telefon-Registrierung existierten und eine echte E-Mail als
+// Login hinterlegt haben (statt der automatischen Pseudo-Adresse aus phoneToAuthEmail). Damit
+// auch diese Konten sich per Telefonnummer einloggen koennen, wird die normalisierte Nummer
+// hier auf die echte Login-E-Mail gemappt. Neue Eintraege einfach unten ergaenzen (Telefonnummer
+// im +<Landesvorwahl>-Format als Key, wie in der drivers-Tabelle hinterlegt).
+const LEGACY_PHONE_LOGIN_MAP = {
+  '+4917632774893': 'ryviobali@gmail.com' // Joerg / RY-100
+};
+
 async function handleDriverLogin(){
   const raw = document.getElementById('auth-login-email').value.trim();
   const password = document.getElementById('auth-login-password').value;
@@ -10904,13 +10913,15 @@ async function handleDriverLogin(){
   // Enthaelt die Eingabe ein @, ist es eine (bei aelteren Konten noch echte) E-Mail-Adresse --
   // sonst wird sie als Telefonnummer behandelt und in dieselbe Pseudo-Adresse umgerechnet, die
   // bei der Registrierung erzeugt wurde (Standard-Landesvorwahl +62, falls keine andere angegeben).
+  // Bekannte Alt-Konten (LEGACY_PHONE_LOGIN_MAP) werden stattdessen auf ihre echte Login-E-Mail
+  // umgeleitet, da bei ihnen keine Pseudo-Adresse existiert.
   let email;
   if(raw.includes('@')){
     email = raw;
   } else {
     const phone = normalizePhoneE164(raw, '62');
     if(!isValidE164(phone)){ showAuthError({message:'Bitte eine gültige Telefonnummer eingeben.'}); return; }
-    email = phoneToAuthEmail(phone);
+    email = LEGACY_PHONE_LOGIN_MAP[phone] || phoneToAuthEmail(phone);
   }
   setAuthLoading(true);
   const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
@@ -12707,7 +12718,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v167</div>
+<div id="version-footer" style="position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v168</div>
 
 </body>
 </html>
