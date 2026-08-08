@@ -1453,8 +1453,8 @@
       <h2 style="font-family:'Public Sans', sans-serif; font-weight:700; margin-top:0;">🚗 Fahrer-Bereich</h2>
 
       <div id="auth-login-form">
-        <p class="note" style="margin-top:0;">Mit Telefonnummer und Passwort anmelden. <strong>Bitte mit Ländervorwahl eingeben</strong> — z. B. <span class="mono">+4917632774893</span> oder <span class="mono">0049 17632774893</span> (funktioniert auch mit <span class="mono">+62</span> / <span class="mono">0062</span>). Ohne diese Vorwahl schlägt der Login fehl.</p>
-        <input type="text" id="auth-login-email" placeholder="z. B. +4917632774893 oder E-Mail" class="auth-input">
+        <p class="note" style="margin-top:0;">Anmeldung mit Telefonnummer (0062 / +62) oder E-Mail und Passwort.</p>
+        <input type="text" id="auth-login-email" placeholder="Telefonnummer oder E-Mail" class="auth-input">
         <input type="password" id="auth-login-password" placeholder="Passwort" class="auth-input">
         <button type="button" class="btn-primary auth-submit-btn" onclick="handleDriverLogin()">Anmelden</button>
         <p class="note" style="text-align:center;"><a href="#" onclick="openForgotPassword(); return false;">Passwort vergessen?</a></p>
@@ -10951,10 +10951,15 @@ function openForgotPasswordWhatsapp(){
   return false;
 }
 function openForgotPassword(){
-  document.getElementById('forgot-password-email').value = document.getElementById('auth-login-email').value.trim();
-  document.getElementById('forgot-password-phone').value = '';
+  // Erkennt automatisch, ob im Login-Feld eine Telefonnummer oder eine E-Mail stand, und
+  // oeffnet den passenden Reset-Modus direkt -- vorher landete eine Telefonnummer immer im
+  // E-Mail-Feld und der Reset-Link-Versand schlug fehl (ungueltige E-Mail-Adresse).
+  const loginValue = document.getElementById('auth-login-email').value.trim();
+  const isPhone = !!loginValue && !loginValue.includes('@');
+  document.getElementById('forgot-password-email').value = isPhone ? '' : loginValue;
+  document.getElementById('forgot-password-phone').value = isPhone ? loginValue : '';
   document.getElementById('forgot-password-status').textContent = '';
-  setForgotPasswordMode('email');
+  setForgotPasswordMode(isPhone ? 'phone' : 'email');
   document.getElementById('forgot-password-modal-bg').classList.add('active');
 }
 function closeForgotPassword(){ document.getElementById('forgot-password-modal-bg').classList.remove('active'); }
@@ -12719,7 +12724,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v172</div>
+<div id="version-footer" style="position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v173</div>
 
 </body>
 </html>
