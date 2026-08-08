@@ -100,23 +100,26 @@
 
   /* ---------- topbar ---------- */
   .topbar{
-    display:flex; align-items:center; flex-wrap:wrap; gap:14px;
+    display:flex; align-items:stretch; flex-wrap:wrap; gap:14px;
     padding:calc(16px + env(safe-area-inset-top)) 20px 16px; border-bottom:1px solid var(--line);
     position:sticky; top:0; background:var(--paper); z-index:50;
   }
-  .logo{ display:flex; align-items:center; gap:12px; min-width:0; flex-shrink:1; margin-right:auto; }
+  .topbar-right{ display:flex; align-items:stretch; justify-content:space-between; gap:24px; flex:1; min-width:0; }
+  .topbar-right-main{ display:flex; align-items:center; gap:60px; flex-wrap:wrap; margin-left:56px; }
+  .logo{ display:flex; align-items:center; gap:12px; min-width:0; flex-shrink:1; }
   .logo-mark{ display:none; }
+  .lang-switch{ display:flex; align-items:center; }
   .logo-wordstack{ display:flex; flex-direction:column; align-items:flex-start; min-width:0; }
   .logo-word{ height:84px; width:auto; display:block; flex-shrink:0; }
   .logo-tagline{
-    font-family:'Public Sans', sans-serif; font-weight:600; font-size:0.8rem; letter-spacing:-0.005em;
+    font-family:'Public Sans', sans-serif; font-weight:700; font-size:0.8rem; letter-spacing:-0.005em;
     color:var(--ink-soft); line-height:1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
     max-width:100%; margin-top:4px;
   }
   .ryvio-rating-badge{
     display:flex; align-items:center; gap:6px; background:var(--paper-dim); border-radius:20px;
     padding:6px 14px; cursor:pointer; flex-shrink:0; font-size:0.82rem; font-weight:700; color:var(--ink);
-    white-space:nowrap;
+    white-space:nowrap; align-self:flex-end; margin-bottom:1px;
   }
   .ryvio-rating-badge:hover{ background:#eee7d9; }
   .ryvio-rating-stars{ color:#D9A400; letter-spacing:1px; }
@@ -300,6 +303,9 @@
     align-items:flex-start; justify-content:center; padding:40px 20px; overflow-y:auto;
   }
   .modal-bg.active{ display:flex; }
+  #cal-day-modal-bg{ z-index:360; } /* Bugfix (8. August): lag im DOM vor #cal-modal-bg, wurde beim
+    gleichzeitigen "active"-Zustand trotz identischem z-index vom Kalender optisch ueberdeckt — sah
+    fuer den Fahrer wie ein sofortiges Zuklappen des Kalenders aus, statt der gewuenschten Tagesansicht. */
   .modal{
     background:var(--paper); max-width:560px; width:100%; border-radius:8px; overflow:hidden;
     border:1px solid var(--line);
@@ -483,6 +489,19 @@
     font-size:1rem; line-height:1; color:var(--ink-soft); padding:4px 6px; border-radius:4px;
   }
   .inbox-delete-x:hover{ color:var(--danger); background:var(--paper-dim); }
+  .inbox-select-cb{
+    position:absolute; top:14px; right:14px; width:18px; height:18px; cursor:pointer; accent-color:var(--teal);
+  }
+  .inbox-bulk-bar{
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    padding:10px 14px; background:var(--paper-dim); border-radius:10px; margin-bottom:10px;
+  }
+  .danger-btn{
+    background:#fff; border:1px solid var(--danger); color:var(--danger); border-radius:8px;
+    padding:8px 14px; font-size:0.82rem; font-weight:700; cursor:pointer;
+  }
+  .danger-btn:hover:not(:disabled){ background:var(--danger); color:#fff; }
+  .danger-btn:disabled{ opacity:0.4; cursor:not-allowed; }
   .mailbox-delete-x{
     background:none; border:none; cursor:pointer; font-size:1rem; line-height:1;
     color:var(--ink-soft); padding:4px 6px; border-radius:4px; margin-left:6px;
@@ -765,12 +784,20 @@
     font-family:'Public Sans'; padding:8px 10px 8px 0; margin:-8px 0 -8px -6px; -webkit-tap-highlight-color:transparent;
   }
   .dp-brand{ display:flex; align-items:center; }
-  .dp-brand-img{ height:32px; width:auto; display:block; }
-  .dp-hero{ text-align:center; padding:48px 20px 36px; background:var(--ink); color:var(--paper); }
+  .dp-brand-img{ height:40px; width:auto; display:block; }
+  .dp-hero{
+    display:flex; align-items:center; gap:28px; text-align:center;
+    padding:44px 24px; background:var(--ink); color:var(--paper);
+  }
+  .dp-hero-info{ flex:1; display:flex; flex-direction:column; align-items:center; min-width:0; }
   .dp-avatar{
-    width:176px; height:176px; border-radius:50%; background:var(--teal); color:#fff; margin:0 auto 18px;
-    display:flex; align-items:center; justify-content:center; font-family:'Public Sans'; font-weight:700; font-size:2.86rem;
+    width:220px; height:220px; border-radius:50%; background:var(--teal); color:#fff; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center; font-family:'Public Sans'; font-weight:700; font-size:3.6rem;
     background-size:cover; background-position:center; border:4px solid var(--gold);
+  }
+  @media (max-width:600px){
+    .dp-hero{ flex-direction:column; padding:40px 20px 32px; }
+    .dp-avatar{ width:176px; height:176px; font-size:2.86rem; margin-bottom:4px; }
   }
   .dp-hero h1{ font-family:'Public Sans', sans-serif; font-weight:700; font-size:2rem; margin:0 0 8px; }
   .dp-meta{ color:var(--gold); font-size:0.9rem; margin-bottom:10px; }
@@ -779,6 +806,11 @@
   .dp-hero .rank-badge{ font-size:0.95rem; padding:6px 16px; }
   .dp-services{ font-size:0.82rem; color:var(--teal-soft); }
   .dp-section{ max-width:640px; margin:0 auto; padding:26px 20px 6px; }
+  @media (min-width:601px){
+    .dp-section{ margin:0; max-width:760px; padding-left:24px; padding-right:24px; }
+    .dp-section-reviews{ max-width:760px; margin:0 auto; text-align:center; }
+    .dp-section-reviews .dp-tour-row, .dp-section-reviews .dp-review{ text-align:left; }
+  }
   .dp-section h3{ font-family:'Public Sans', sans-serif; font-weight:700; font-size:1.15rem; margin:0 0 12px; border-bottom:2px solid var(--gold); display:inline-block; padding-bottom:3px; }
   .dp-section-head{ display:flex; align-items:center; gap:10px; }
   .dp-edit-pencil{
@@ -820,9 +852,14 @@
     position:absolute; top:4px; right:4px; background:rgba(11,61,34,0.75); color:#fff; border:none;
     width:24px; height:24px; border-radius:50%; cursor:pointer; font-size:0.8rem; line-height:1;
   }
+  #dp-tours{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  #dp-tours .empty-state{ grid-column:1 / -1; }
   .dp-tour-row{
     display:flex; justify-content:space-between; align-items:center; gap:10px; padding:13px 15px;
-    border:1px solid var(--line); border-radius:8px; margin-bottom:8px; background:#fff;
+    border:1px solid var(--line); border-radius:8px; margin-bottom:0; background:#fff;
+  }
+  @media (max-width:520px){
+    #dp-tours{ grid-template-columns:1fr; }
   }
   .dp-tour-row .tname{ font-weight:700; font-size:0.92rem; }
   .dp-tour-row .tmeta{ font-family:'JetBrains Mono'; font-size:0.72rem; color:var(--ink-soft); }
@@ -1065,6 +1102,8 @@
     <span class="logo-tagline"><span data-i18n="logo_tagline">Local drivers. Anywhere in Bali</span></span>
     </div>
   </div>
+  <div class="topbar-right">
+  <div class="topbar-right-main">
   <div class="ryvio-rating-badge" id="ryvio-rating-badge" onclick="event.stopPropagation(); openRatingsPage();" style="display:none;">
     <span id="ryvio-rating-stars" class="ryvio-rating-stars"></span>
     <span id="ryvio-rating-summary"></span>
@@ -1076,10 +1115,12 @@
     <button class="tab-btn tab-btn-register" id="tab-register-btn" data-i18n="tab_register" onclick="openRealRegisterDriver()">+ Register as Driver</button>
     <button class="tab-btn tab-btn-admin" id="tab-admin" onclick="switchView('admin')"><span data-i18n="tab_admin">🔐 Admin</span> <span class="tab-mail-badge" id="tab-admin-mail" style="display:none;">✉️</span></button>
   </div>
+  </div>
   <div class="lang-switch">
     <button type="button" class="lang-btn active" data-lang="en" onclick="setLanguage('en')">EN</button>
     <button type="button" class="lang-btn" data-lang="de" onclick="setLanguage('de')">DE</button>
     <button type="button" class="lang-btn" data-lang="id" onclick="setLanguage('id')">ID</button>
+  </div>
   </div>
 </div>
 
@@ -1120,24 +1161,42 @@
 
     <div class="panel" style="padding:20px; margin-bottom:26px;">
       <h3 style="margin:0 0 4px;" data-i18n="ratings_write_title">Write a review</h3>
-      <p class="note" style="margin:0 0 14px;" data-i18n="ratings_write_sub">Tell other travelers and drivers how Rydanu worked for you.</p>
-      <div class="form-field">
-        <label data-i18n="ratings_name_label">Your name *</label>
-        <input type="text" id="rt-name" maxlength="60">
+      <p class="note" style="margin:0 0 14px;" data-i18n="ratings_write_sub2">To keep reviews genuine, we only accept them from completed bookings. Enter your booking reference and phone number to continue.</p>
+
+      <div id="rt-verify-step">
+        <div class="form-field">
+          <label data-i18n="mb_ref_label">Booking reference</label>
+          <input type="text" id="rt-ref" maxlength="12" placeholder="e.g. A1B2C3D4">
+        </div>
+        <div class="form-field">
+          <label data-i18n="mb_phone_label">Phone number used for the booking</label>
+          <input type="tel" id="rt-phone">
+        </div>
+        <p class="form-error" id="rt-verify-error"></p>
+        <button type="button" class="book-btn" id="rt-verify-btn" onclick="verifyPlatformReview()" data-i18n="ratings_verify_btn">Continue</button>
       </div>
-      <div class="star-picker" id="rt-star-picker">
-        <span class="star-pick" data-val="1">★</span>
-        <span class="star-pick" data-val="2">★</span>
-        <span class="star-pick" data-val="3">★</span>
-        <span class="star-pick" data-val="4">★</span>
-        <span class="star-pick" data-val="5">★</span>
+
+      <div id="rt-form-step" style="display:none;">
+        <div class="form-field">
+          <label data-i18n="ratings_name_label">Your name *</label>
+          <input type="text" id="rt-name" maxlength="60">
+        </div>
+        <div class="star-picker" id="rt-star-picker">
+          <span class="star-pick" data-val="1">★</span>
+          <span class="star-pick" data-val="2">★</span>
+          <span class="star-pick" data-val="3">★</span>
+          <span class="star-pick" data-val="4">★</span>
+          <span class="star-pick" data-val="5">★</span>
+        </div>
+        <div class="form-field">
+          <label data-i18n="ratings_comment_label">Your review (optional)</label>
+          <textarea id="rt-comment" rows="3" maxlength="500"></textarea>
+        </div>
+        <p class="form-error" id="rt-error"></p>
+        <button type="button" class="book-btn" id="rt-submit-btn" onclick="submitPlatformReview()" data-i18n="ratings_submit_btn">Submit review</button>
       </div>
-      <div class="form-field">
-        <label data-i18n="ratings_comment_label">Your review (optional)</label>
-        <textarea id="rt-comment" rows="3" maxlength="500"></textarea>
-      </div>
-      <p class="form-error" id="rt-error"></p>
-      <button type="button" class="book-btn" id="rt-submit-btn" onclick="submitPlatformReview()" data-i18n="ratings_submit_btn">Submit review</button>
+
+      <div id="rt-done-step" style="display:none;" class="note">✓ <span data-i18n="mb_review_thanks">Thanks — your review has been posted.</span></div>
     </div>
 
     <div id="ratings-list"></div>
@@ -1645,6 +1704,10 @@
             <p class="form-error" id="nl-error" style="width:100%;"></p>
             <button class="add-btn" onclick="addListing()">Save</button>
           </div>
+          <div class="period-tabs" id="listings-view-tabs" style="margin-bottom:14px;">
+            <button type="button" class="period-btn active" data-view="active" onclick="setListingsViewTab('active')" data-i18n="listings_tab_active">Active</button>
+            <button type="button" class="period-btn" data-view="paused" onclick="setListingsViewTab('paused')" data-i18n="listings_tab_paused">Paused</button>
+          </div>
           <div id="listings-list"></div>
         </div>
       </div>
@@ -1712,6 +1775,13 @@
           <button type="button" class="period-btn active" data-view="inbox" onclick="setInboxViewTab('inbox')" data-i18n="mailbox_tab_inbox">Inbox</button>
           <button type="button" class="period-btn" data-view="archive" onclick="setInboxViewTab('archive')" data-i18n="mailbox_tab_archive">Archive</button>
           <button type="button" class="period-btn" data-view="deleted" onclick="setInboxViewTab('deleted')" data-i18n="mailbox_tab_deleted">Deleted</button>
+        </div>
+        <div class="inbox-bulk-bar" id="inbox-bulk-bar" style="display:none;">
+          <label style="display:flex; align-items:center; gap:6px; font-size:0.85rem; cursor:pointer;">
+            <input type="checkbox" id="inbox-select-all-cb" onclick="toggleSelectAllInbox(this.checked)">
+            <span data-i18n="inbox_select_all">Select all</span>
+          </label>
+          <button type="button" class="danger-btn" id="inbox-delete-selected-btn" onclick="deleteSelectedInboxMessages()" disabled>🗑️ <span data-i18n="inbox_delete_selected">Delete selected</span> (<span id="inbox-selected-count">0</span>)</button>
         </div>
         <div class="panel" id="inbox-list"></div>
       </div>
@@ -2296,12 +2366,14 @@
   </div>
   <div class="dp-hero">
     <div class="dp-avatar" id="dp-avatar">WS</div>
-    <h1 id="dp-name">Wayan Sudiartha</h1>
-    <div class="dp-meta" id="dp-meta">🚩 Amed · EN, ID</div>
-    <div class="dp-divider"></div>
-    <div class="dp-lw mono" id="dp-lw" onclick="copyRyvioNumber('dp-lw')" style="cursor:pointer;" title="Klicken zum Kopieren">RY-104</div>
-    <div id="dp-rank" style="margin:8px 0;"></div>
-    <div class="dp-services" id="dp-services"></div>
+    <div class="dp-hero-info">
+      <h1 id="dp-name">Wayan Sudiartha</h1>
+      <div class="dp-meta" id="dp-meta">🚩 Amed · EN, ID</div>
+      <div class="dp-divider"></div>
+      <div class="dp-lw mono" id="dp-lw" onclick="copyRyvioNumber('dp-lw')" style="cursor:pointer;" title="Klicken zum Kopieren">RY-104</div>
+      <div id="dp-rank" style="margin:8px 0;"></div>
+      <div class="dp-services" id="dp-services"></div>
+    </div>
   </div>
 
   <div class="dp-section">
@@ -2335,7 +2407,7 @@
     <button type="button" class="request-tour-link-btn" id="dp-request-tour-btn" style="display:none;" onclick="openTourRequest(dpDriverId)">✨ <span data-i18n="tr_open_btn">Don't see what you want? Request a custom tour</span></button>
   </div>
 
-  <div class="dp-section">
+  <div class="dp-section dp-section-reviews">
     <div class="dp-section-head">
       <h3 data-i18n="dp_reviews_title">What guests say</h3>
     </div>
@@ -3718,14 +3790,85 @@ document.querySelectorAll('#rt-star-picker .star-pick').forEach(el=>{
     renderStarPickerUI();
   });
 });
-function openRatingsPage(){
+function openRatingsPage(prBookingIdFromLink){
   document.querySelectorAll('.modal-bg.active').forEach(m => m.classList.remove('active'));
   document.getElementById('ratings-page').style.display = 'block';
   document.getElementById('ratings-page').scrollTop = 0;
+  resetPlatformReviewFlow();
+  if(prBookingIdFromLink){
+    verifyPlatformReviewById(prBookingIdFromLink);
+  }
   loadPlatformReviews();
+}
+let prVerifiedBookingId = null;
+function resetPlatformReviewFlow(){
+  prVerifiedBookingId = null;
+  selectedReviewStars = 0;
+  const refEl = document.getElementById('rt-ref'); if(refEl) refEl.value = '';
+  const phoneEl = document.getElementById('rt-phone'); if(phoneEl) phoneEl.value = '';
+  const nameEl = document.getElementById('rt-name'); if(nameEl) nameEl.value = '';
+  const commentEl = document.getElementById('rt-comment'); if(commentEl) commentEl.value = '';
+  const verr = document.getElementById('rt-verify-error'); if(verr) verr.textContent = '';
+  const err = document.getElementById('rt-error'); if(err) err.textContent = '';
+  document.getElementById('rt-verify-step').style.display = 'block';
+  document.getElementById('rt-form-step').style.display = 'none';
+  document.getElementById('rt-done-step').style.display = 'none';
+  renderStarPickerUI();
+}
+function unlockPlatformReviewForm(bookingId, customerName){
+  prVerifiedBookingId = bookingId;
+  document.getElementById('rt-verify-step').style.display = 'none';
+  document.getElementById('rt-form-step').style.display = 'block';
+  const nameEl = document.getElementById('rt-name');
+  if(nameEl && customerName) nameEl.value = customerName;
+}
+async function verifyPlatformReview(){
+  const ref = document.getElementById('rt-ref').value.trim().toUpperCase();
+  const phone = normalizePhone(document.getElementById('rt-phone').value);
+  const errEl = document.getElementById('rt-verify-error');
+  errEl.textContent = '';
+  if(ref.length < 8 || phone.length < 4){
+    errEl.textContent = t('mb_err_ref');
+    return;
+  }
+  const btn = document.getElementById('rt-verify-btn');
+  btn.disabled = true;
+  const { data, error } = await supabaseClient.rpc('get_platform_review_context', { p_ref: ref, p_phone: phone });
+  btn.disabled = false;
+  const ctx = data && data[0];
+  if(error || !ctx){
+    errEl.textContent = t('mb_err_notfound');
+    return;
+  }
+  if(ctx.already_reviewed){
+    errEl.textContent = t('review_already_done_note');
+    return;
+  }
+  if(!ctx.eligible){
+    errEl.textContent = t('ratings_not_eligible');
+    return;
+  }
+  unlockPlatformReviewForm(ctx.booking_id, ctx.customer_name);
+}
+async function verifyPlatformReviewById(bookingId){
+  const { data, error } = await supabaseClient.rpc('get_platform_review_context_by_id', { p_booking_id: bookingId });
+  const ctx = data && data[0];
+  if(error || !ctx) return;
+  if(ctx.already_reviewed){
+    document.getElementById('rt-verify-step').style.display = 'none';
+    document.getElementById('rt-done-step').style.display = 'block';
+    document.getElementById('rt-done-step').innerHTML = t('review_already_done_note');
+    return;
+  }
+  if(!ctx.eligible) return;
+  unlockPlatformReviewForm(ctx.booking_id, ctx.customer_name);
 }
 function closeRatingsPage(){ document.getElementById('ratings-page').style.display = 'none'; }
 async function submitPlatformReview(){
+  if(!prVerifiedBookingId){
+    document.getElementById('rt-error').textContent = t('mb_err_notfound');
+    return;
+  }
   const name = document.getElementById('rt-name').value.trim();
   const comment = document.getElementById('rt-comment').value.trim();
   const errEl = document.getElementById('rt-error');
@@ -3737,18 +3880,18 @@ async function submitPlatformReview(){
   const btn = document.getElementById('rt-submit-btn');
   btn.disabled = true;
   const { error } = await supabaseClient.from('platform_reviews').insert({
-    customer_name: name, rating: selectedReviewStars, comment: comment || null
+    customer_name: name, rating: selectedReviewStars, comment: comment || null, booking_id: prVerifiedBookingId
   });
   btn.disabled = false;
   if(error){
     console.error('Bewertung konnte nicht gespeichert werden:', error);
-    errEl.textContent = t('ratings_save_err');
+    // Unique-Constraint auf booking_id (23505) -> schon bewertet, sonst generischer Fehler
+    errEl.textContent = (error.code === '23505') ? t('review_already_done_note') : t('ratings_save_err');
     return;
   }
-  document.getElementById('rt-name').value = '';
-  document.getElementById('rt-comment').value = '';
-  selectedReviewStars = 0;
-  renderStarPickerUI();
+  document.getElementById('rt-form-step').style.display = 'none';
+  document.getElementById('rt-done-step').style.display = 'block';
+  prVerifiedBookingId = null;
   await loadPlatformReviews();
 }
 
@@ -5973,15 +6116,16 @@ function renderRealInbox(){
     el.innerHTML = `<div class="empty-state">${inboxViewTab==='deleted' ? t('empty_deleted') : (inboxViewTab==='archive' ? t('empty_archive') : t('empty_inbox'))}</div>`;
     return;
   }
+  const isDeletedView = inboxViewTab==='deleted';
+  updateInboxBulkBar(msgs.filter(m => m.archived && m.is_read));
   el.innerHTML = msgs.map(m=>{
     const idx = realMessages.indexOf(m);
     const isSettled = m.archived && m.is_read;
-    const isDeletedView = inboxViewTab==='deleted';
     const clickAction = m.type==='admin' ? `openMyThreadFromInbox(${idx})` : `openRealMsgDetail(${idx})`;
     const archiveAction = m.type==='admin' ? `archiveMyThread()` : `archiveRealMessage(${idx})`;
     return `
     <div class="inbox-row ${!m.is_read?'unread':''}" style="cursor:${isDeletedView?'default':'pointer'}; position:relative;" ${isDeletedView ? '' : `onclick="${clickAction}"`}>
-      ${isSettled && !isDeletedView ? `<button type="button" class="inbox-delete-x" title="Löschen" onclick="event.stopPropagation(); deleteRealMessage(${idx})">✕</button>` : ''}
+      ${isSettled && !isDeletedView ? `<input type="checkbox" class="inbox-select-cb" data-id="${m.id}" onclick="event.stopPropagation(); toggleInboxSelect('${m.id}')" ${selectedInboxIds.has(m.id)?'checked':''}>` : ''}
       <div class="inbox-title">${!m.is_read?'● ':''}${DRIVER_MSG_TYPE_ICON[m.type]||''} ${escapeHtml(m.subject)}</div>
       <div class="inbox-body">${escapeHtml(m.body)}</div>
       <div class="inbox-date">${formatDateDisplay((m.created_at||'').slice(0,10))} · Rydanu</div>
@@ -5992,9 +6136,48 @@ function renderRealInbox(){
     </div>
   `;}).join('');
 }
-// Loescht eine Nachricht aus dem eigenen Posteingang in den "Gelöscht"-Ordner (nur im Archiv
-// moeglich, per X-Button oben rechts in der Nachrichtenzeile). Endgueltig geloescht wird sie erst
-// automatisch nach 30 Tagen (taeglicher Supabase-Cronjob), vorher kann sie wiederhergestellt werden.
+let selectedInboxIds = new Set();
+function toggleInboxSelect(id){
+  if(selectedInboxIds.has(id)) selectedInboxIds.delete(id);
+  else selectedInboxIds.add(id);
+  const settled = realMessages.filter(m => m.archived && m.is_read && !m.deleted);
+  updateInboxBulkBar(settled);
+}
+function toggleSelectAllInbox(checked){
+  const settled = realMessages.filter(m => m.archived && m.is_read && !m.deleted);
+  if(checked){ settled.forEach(m => selectedInboxIds.add(m.id)); }
+  else { selectedInboxIds.clear(); }
+  renderRealInbox();
+}
+function updateInboxBulkBar(settledMsgs){
+  const bar = document.getElementById('inbox-bulk-bar');
+  if(!bar) return;
+  if(inboxViewTab !== 'archive' || settledMsgs.length === 0){
+    bar.style.display = 'none';
+    return;
+  }
+  bar.style.display = 'flex';
+  // Auswahl von Nachrichten bereinigen, die inzwischen nicht mehr im Archiv sichtbar sind
+  const visibleIds = new Set(settledMsgs.map(m=>m.id));
+  Array.from(selectedInboxIds).forEach(id=>{ if(!visibleIds.has(id)) selectedInboxIds.delete(id); });
+  const count = selectedInboxIds.size;
+  document.getElementById('inbox-selected-count').textContent = count;
+  document.getElementById('inbox-delete-selected-btn').disabled = count === 0;
+  const allCb = document.getElementById('inbox-select-all-cb');
+  if(allCb) allCb.checked = count > 0 && count === settledMsgs.length;
+}
+async function deleteSelectedInboxMessages(){
+  if(selectedInboxIds.size === 0) return;
+  if(!confirm(t('confirm_move_to_deleted_bulk'))) return;
+  const ids = Array.from(selectedInboxIds);
+  const nowIso = new Date().toISOString();
+  const { error } = await supabaseClient.from('driver_messages').update({ deleted:true, deleted_at: nowIso }).in('id', ids);
+  if(error){ console.error('Nachrichten konnten nicht gelöscht werden:', error); alert('Löschen hat nicht geklappt.'); return; }
+  realMessages.forEach(m=>{ if(ids.includes(m.id)){ m.deleted = true; m.deleted_at = nowIso; } });
+  selectedInboxIds.clear();
+  renderRealInbox();
+  updateRealInboxDot();
+}
 async function deleteRealMessage(idx){
   const m = realMessages[idx];
   if(!m) return;
@@ -6164,6 +6347,7 @@ function pushInboxMessage(driverId, title, body, link){
 let inboxViewTab = 'inbox';
 function setInboxViewTab(view){
   inboxViewTab = view;
+  selectedInboxIds.clear();
   document.querySelectorAll('#inbox-view-tabs .period-btn').forEach(b=>b.classList.toggle('active', b.dataset.view===view));
   if(realDriverProfile) renderRealInbox(); else renderInbox();
 }
@@ -6369,13 +6553,13 @@ async function loadAdminDocsResubmittedCount(){
 }
 
 // ---- driver's own listings (linked to public search once created) ----
-function feeForPrice(priceStr, spots, driverId){
+function feeForPrice(priceStr, spots, driverId, overridePercent){
   const num = parseInt(String(priceStr).replace(/[^\d]/g,'')) || 0;
-  const percent = getFeePercentForDriver(driverId || currentDriverId);
+  const percent = (overridePercent != null) ? overridePercent : getFeePercentForDriver(driverId || currentDriverId);
   return formatIDR(Math.round(num * (percent/100)));
 }
 // ---- echte Angebote (Listings) aus Supabase laden ----
-function mapListingRowToUI(row){
+function mapListingRowToUI(row, realFeePercent){
   const d = row.details || {};
   return {
     dbId: row.id,
@@ -6383,7 +6567,7 @@ function mapListingRowToUI(row){
     price: row.price_display || '',
     duration: row.duration || '',
     bookings: 0,
-    fee: feeForPrice(row.price_display || '', d.spots || []),
+    fee: feeForPrice(row.price_display || '', d.spots || [], null, realFeePercent),
     active: row.active,
     region: d.area || row.region,
     services: d.services || [],
@@ -6398,23 +6582,50 @@ function mapListingRowToUI(row){
 }
 async function loadRealListings(){
   if(!realDriverProfile) return;
-  const { data, error } = await supabaseClient
-    .from('listings')
-    .select('*')
-    .eq('driver_id', realDriverProfile.id)
-    .order('created_at', { ascending: false });
+  const today = new Date().toISOString().slice(0,10);
+  const [{ data, error }, { data: overrides }] = await Promise.all([
+    supabaseClient.from('listings').select('*').eq('driver_id', realDriverProfile.id).order('created_at', { ascending: false }),
+    supabaseClient.from('fee_overrides').select('fee_percent').eq('driver_id', realDriverProfile.id).lte('starts_at', today).or(`ends_at.is.null,ends_at.gte.${today}`).order('created_at', { ascending:false }).limit(1)
+  ]);
   if(error){ console.error('Angebote konnten nicht geladen werden:', error); return; }
-  driverListings = (data || []).map(mapListingRowToUI);
+  // Bugfix (8. August): die Gebühren-Anzeige je Angebot nutzte bisher immer den Demo-Fahrer statt
+  // der echten Sonderkondition dieses Fahrers -- jetzt der tatsaechliche, aktive Satz aus fee_overrides.
+  const realFeePercent = (overrides && overrides[0]) ? Number(overrides[0].fee_percent) : DEFAULT_FEE_PERCENT;
+  driverListings = (data || []).map(row => mapListingRowToUI(row, realFeePercent));
   renderListings();
 }
 
+let listingsViewTab = 'active';
+function setListingsViewTab(tab){
+  listingsViewTab = tab;
+  document.querySelectorAll('#listings-view-tabs .period-btn').forEach(b=>{
+    b.classList.toggle('active', b.dataset.view === tab);
+  });
+  renderListings();
+}
 function renderListings(){
   const el = document.getElementById('listings-list');
+  const activeCount = driverListings.filter(l=>l.active).length;
+  const pausedCount = driverListings.filter(l=>!l.active).length;
+  const tabsEl = document.getElementById('listings-view-tabs');
+  if(tabsEl){
+    const activeBtn = tabsEl.querySelector('[data-view="active"]');
+    const pausedBtn = tabsEl.querySelector('[data-view="paused"]');
+    if(activeBtn) activeBtn.textContent = `${t('listings_tab_active')} (${activeCount})`;
+    if(pausedBtn) pausedBtn.textContent = `${t('listings_tab_paused')} (${pausedCount})`;
+  }
+  const visible = driverListings
+    .map((l,i)=>({l,i}))
+    .filter(({l}) => listingsViewTab === 'active' ? l.active : !l.active);
   if(driverListings.length === 0){
     el.innerHTML = `<div class="empty-state">${t('empty_listings')}</div>`;
     return;
   }
-  el.innerHTML = driverListings.map((l,i)=>`
+  if(visible.length === 0){
+    el.innerHTML = `<div class="empty-state">${listingsViewTab === 'active' ? t('listings_empty_active') : t('listings_empty_paused')}</div>`;
+    return;
+  }
+  el.innerHTML = visible.map(({l,i})=>`
     <div class="listing-row ${l.active?'':'paused'}" style="cursor:pointer;" onclick="openEditListing(${i})">
       <div>
         <div class="lname">${l.name} ${driverRankBadgeHTML(realDriverProfile ? realDriverProfile.id : currentDriverId, 'sm')}</div>
@@ -7955,7 +8166,7 @@ const translations = {
     dur_day_tour: "Day tour", dur_half_day_tour: "Half-day tour", dur_fixed_rate: "Fixed rate", dur_full_day: "Full day",
     new_booking_banner_one: "You have a new booking request — tap to view it", new_booking_banner_many: "You have {n} new booking requests — tap to view them",
     bookings_tab_cancelled: "Cancelled", empty_cancelled: "No cancelled bookings.",
-    mailbox_tab_deleted: "Deleted", empty_deleted: "Nothing in Deleted.", restore_btn: "↩ Restore", confirm_move_to_deleted: "Move this message to Deleted? It will be permanently removed after 30 days.",
+    mailbox_tab_deleted: "Deleted", empty_deleted: "Nothing in Deleted.", restore_btn: "↩ Restore", confirm_move_to_deleted: "Move this message to Deleted? It will be permanently removed after 30 days.", inbox_select_all: "Select all", inbox_delete_selected: "Delete selected", confirm_move_to_deleted_bulk: "Move the selected messages to Deleted? They will be permanently removed after 30 days.",
     co_open_btn: "✨ Create a custom offer", co_title: "Create custom offer",
     co_intro: "Create a one-off offer for a specific traveler. They'll get a link to review and confirm it — no Rydanu account needed for them.",
     co_name_label: "Customer name *", co_email_label: "Customer email *", co_phone_label: "Customer phone (optional)",
@@ -7969,7 +8180,7 @@ const translations = {
     co_copy_btn: "📋 Copy link", co_copied_label: "Copied!", btn_done: "Done",
     co_err: "Please fill in name, email, description and price.", co_save_err: "Couldn't save the offer — please try again.",
     co_real_only_note: "Custom offers currently only work with your real, approved driver account.",
-    ratings_title: "Rydanu Reviews", ratings_write_title: "Write a review", ratings_write_sub: "Tell other travelers and drivers how Rydanu worked for you.",
+    ratings_title: "Rydanu Reviews", ratings_write_title: "Write a review", ratings_write_sub2: "To keep reviews genuine, we only accept them from completed bookings. Enter your booking reference and phone number to continue.", ratings_verify_btn: "Continue", ratings_not_eligible: "This review is only available once your tour is marked completed.",
     ratings_name_label: "Your name *", ratings_comment_label: "Your review (optional)", ratings_submit_btn: "Submit review",
     ratings_reviews_label: "reviews", ratings_empty: "No reviews yet — be the first!", ratings_empty_summary: "No reviews yet — be the first to share your experience!",
     ratings_err: "Please enter your name and pick a star rating.", ratings_save_err: "Couldn't save your review — please try again.", review_already_done_note: "You've already left a review for this trip — thank you!",
@@ -7982,7 +8193,7 @@ const translations = {
     alert_fees_paid_1: "Payment successful:", alert_fees_paid_2: "Your receipt is available under \"Fee statements\":",
     alert_listing_pending: "Your listing is saved, but it will only appear to travelers once your Rydanu account has been approved.",
     empty_bookings: "No bookings yet. Add your first listing to start receiving requests.",
-    empty_listings: "You don't have any listings yet. Add your first tour below — it will appear for travelers right away.",
+    empty_listings: "You don't have any listings yet. Add your first tour below — it will appear for travelers right away.", listings_tab_active: "Active", listings_tab_paused: "Paused", listings_empty_active: "No active listings right now. Reactivate a paused one below, or add a new tour.", listings_empty_paused: "Nothing paused — all your listings are active.",
     empty_history: "No booking history yet.", empty_reviews: "No reviews yet — they'll appear here after your first completed tours.",
     empty_receipts: "No receipts yet — they appear here after you pay your fees.", empty_inbox: "No messages yet.",
     real_receipts_not_yet: "Real fee payments aren't connected yet — a payment provider is coming before launch. Your current fees are shown on the overview page.",
@@ -8258,7 +8469,7 @@ const translations = {
     dur_day_tour: "Tagestour", dur_half_day_tour: "Halbtagestour", dur_fixed_rate: "Festpreis", dur_full_day: "Ganztägig",
     new_booking_banner_one: "Du hast eine neue Buchungsanfrage — antippen zum Ansehen", new_booking_banner_many: "Du hast {n} neue Buchungsanfragen — antippen zum Ansehen",
     bookings_tab_cancelled: "Storniert", empty_cancelled: "Keine stornierten Buchungen.",
-    mailbox_tab_deleted: "Gelöscht", empty_deleted: "Nichts im Ordner Gelöscht.", restore_btn: "↩ Wiederherstellen", confirm_move_to_deleted: "Diese Nachricht in den Ordner Gelöscht verschieben? Sie wird nach 30 Tagen endgültig gelöscht.",
+    mailbox_tab_deleted: "Gelöscht", empty_deleted: "Nichts im Ordner Gelöscht.", restore_btn: "↩ Wiederherstellen", confirm_move_to_deleted: "Diese Nachricht in den Ordner Gelöscht verschieben? Sie wird nach 30 Tagen endgültig gelöscht.", inbox_select_all: "Alle auswählen", inbox_delete_selected: "Ausgewählte löschen", confirm_move_to_deleted_bulk: "Die ausgewählten Nachrichten in den Ordner Gelöscht verschieben? Sie werden nach 30 Tagen endgültig gelöscht.",
     co_open_btn: "✨ Individuelles Angebot erstellen", co_title: "Individuelles Angebot erstellen",
     co_intro: "Erstelle ein einmaliges Angebot für einen bestimmten Reisenden. Er bekommt einen Link zum Ansehen und Bestätigen — kein Rydanu-Konto nötig.",
     co_name_label: "Name des Kunden *", co_email_label: "E-Mail des Kunden *", co_phone_label: "Telefon des Kunden (optional)",
@@ -8272,7 +8483,7 @@ const translations = {
     co_copy_btn: "📋 Link kopieren", co_copied_label: "Kopiert!", btn_done: "Fertig",
     co_err: "Bitte Name, E-Mail, Beschreibung und Preis ausfüllen.", co_save_err: "Angebot konnte nicht gespeichert werden — bitte erneut versuchen.",
     co_real_only_note: "Individuelle Angebote funktionieren aktuell nur mit deinem echten, freigeschalteten Fahrer-Konto.",
-    ratings_title: "Rydanu-Bewertungen", ratings_write_title: "Bewertung schreiben", ratings_write_sub: "Erzähl anderen Reisenden und Fahrern, wie Rydanu für dich war.",
+    ratings_title: "Rydanu-Bewertungen", ratings_write_title: "Bewertung schreiben", ratings_write_sub2: "Damit Bewertungen echt bleiben, akzeptieren wir sie nur für abgeschlossene Buchungen. Gib deine Buchungsreferenz und Telefonnummer ein, um fortzufahren.", ratings_verify_btn: "Weiter", ratings_not_eligible: "Diese Bewertung ist erst verfügbar, sobald deine Tour als abgeschlossen markiert wurde.",
     ratings_name_label: "Dein Name *", ratings_comment_label: "Deine Bewertung (optional)", ratings_submit_btn: "Bewertung abschicken",
     ratings_reviews_label: "Bewertungen", ratings_empty: "Noch keine Bewertungen — sei die/der Erste!", ratings_empty_summary: "Noch keine Bewertungen — teile als Erste(r) deine Erfahrung!",
     ratings_err: "Bitte Namen eingeben und Sterne auswählen.", ratings_save_err: "Bewertung konnte nicht gespeichert werden — bitte erneut versuchen.", review_already_done_note: "Du hast für diese Tour schon eine Bewertung abgegeben — danke dir!",
@@ -8285,7 +8496,7 @@ const translations = {
     alert_fees_paid_1: "Zahlung erfolgreich:", alert_fees_paid_2: "Dein Beleg liegt unter \"Gebührenabrechnung\":",
     alert_listing_pending: "Dein Angebot ist gespeichert, erscheint für Reisende aber erst, sobald dein Rydanu-Konto freigeschaltet wurde.",
     empty_bookings: "Noch keine Buchungen. Lege dein erstes Angebot an, um Anfragen zu erhalten.",
-    empty_listings: "Du hast noch keine Angebote. Füge unten deine erste Tour hinzu — sie erscheint sofort für Reisende.",
+    empty_listings: "Du hast noch keine Angebote. Füge unten deine erste Tour hinzu — sie erscheint sofort für Reisende.", listings_tab_active: "Aktiv", listings_tab_paused: "Pausiert", listings_empty_active: "Gerade keine aktiven Angebote. Aktiviere unten eins wieder, oder füge eine neue Tour hinzu.", listings_empty_paused: "Nichts pausiert — alle deine Angebote sind aktiv.",
     empty_history: "Noch keine Buchungshistorie.", empty_reviews: "Noch keine Bewertungen — sie erscheinen hier nach deinen ersten Touren.",
     empty_receipts: "Noch keine Belege — sie erscheinen hier, nachdem du deine Gebühren bezahlt hast.", empty_inbox: "Noch keine Nachrichten.",
     real_receipts_not_yet: "Echte Gebührenzahlungen sind noch nicht angebunden — ein Zahlungsanbieter kommt vor dem Start. Deine aktuellen Gebühren siehst du auf der Übersichtsseite.",
@@ -8561,7 +8772,7 @@ const translations = {
     dur_day_tour: "Tur sehari", dur_half_day_tour: "Tur setengah hari", dur_fixed_rate: "Harga tetap", dur_full_day: "Sehari penuh",
     new_booking_banner_one: "Anda memiliki permintaan pemesanan baru — ketuk untuk melihatnya", new_booking_banner_many: "Anda memiliki {n} permintaan pemesanan baru — ketuk untuk melihatnya",
     bookings_tab_cancelled: "Dibatalkan", empty_cancelled: "Tidak ada pemesanan yang dibatalkan.",
-    mailbox_tab_deleted: "Dihapus", empty_deleted: "Tidak ada apa pun di folder Dihapus.", restore_btn: "↩ Pulihkan", confirm_move_to_deleted: "Pindahkan pesan ini ke folder Dihapus? Akan dihapus permanen setelah 30 hari.",
+    mailbox_tab_deleted: "Dihapus", empty_deleted: "Tidak ada apa pun di folder Dihapus.", restore_btn: "↩ Pulihkan", confirm_move_to_deleted: "Pindahkan pesan ini ke folder Dihapus? Akan dihapus permanen setelah 30 hari.", inbox_select_all: "Pilih semua", inbox_delete_selected: "Hapus yang dipilih", confirm_move_to_deleted_bulk: "Pindahkan pesan terpilih ke folder Dihapus? Akan dihapus permanen setelah 30 hari.",
     co_open_btn: "✨ Buat penawaran khusus", co_title: "Buat penawaran khusus",
     co_intro: "Buat penawaran satu kali untuk wisatawan tertentu. Mereka akan mendapatkan tautan untuk melihat dan mengonfirmasi — tidak perlu akun Rydanu.",
     co_name_label: "Nama pelanggan *", co_email_label: "Email pelanggan *", co_phone_label: "Telepon pelanggan (opsional)",
@@ -8575,7 +8786,7 @@ const translations = {
     co_copy_btn: "📋 Salin tautan", co_copied_label: "Disalin!", btn_done: "Selesai",
     co_err: "Mohon isi nama, email, deskripsi, dan harga.", co_save_err: "Penawaran tidak dapat disimpan — silakan coba lagi.",
     co_real_only_note: "Penawaran khusus saat ini hanya berfungsi dengan akun pengemudi asli Anda yang sudah disetujui.",
-    ratings_title: "Ulasan Rydanu", ratings_write_title: "Tulis ulasan", ratings_write_sub: "Beri tahu wisatawan dan pengemudi lain bagaimana pengalaman Anda dengan Rydanu.",
+    ratings_title: "Ulasan Rydanu", ratings_write_title: "Tulis ulasan", ratings_write_sub2: "Agar ulasan tetap asli, kami hanya menerima dari pemesanan yang telah selesai. Masukkan referensi pemesanan dan nomor telepon Anda untuk melanjutkan.", ratings_verify_btn: "Lanjutkan", ratings_not_eligible: "Ulasan ini hanya tersedia setelah tur Anda ditandai selesai.",
     ratings_name_label: "Nama Anda *", ratings_comment_label: "Ulasan Anda (opsional)", ratings_submit_btn: "Kirim ulasan",
     ratings_reviews_label: "ulasan", ratings_empty: "Belum ada ulasan — jadilah yang pertama!", ratings_empty_summary: "Belum ada ulasan — jadilah yang pertama berbagi pengalaman Anda!",
     ratings_err: "Mohon masukkan nama dan pilih bintang.", ratings_save_err: "Ulasan tidak dapat disimpan — silakan coba lagi.", review_already_done_note: "Anda sudah memberikan ulasan untuk perjalanan ini — terima kasih!",
@@ -8588,7 +8799,7 @@ const translations = {
     alert_fees_paid_1: "Pembayaran berhasil:", alert_fees_paid_2: "Kuitansi tersedia di \"Laporan biaya\":",
     alert_listing_pending: "Tur Anda tersimpan, tetapi baru terlihat oleh wisatawan setelah akun Rydanu Anda disetujui.",
     empty_bookings: "Belum ada pemesanan. Tambahkan tur pertama Anda untuk menerima permintaan.",
-    empty_listings: "Anda belum punya tur. Tambahkan tur pertama di bawah — langsung terlihat oleh wisatawan.",
+    empty_listings: "Anda belum punya tur. Tambahkan tur pertama di bawah — langsung terlihat oleh wisatawan.", listings_tab_active: "Aktif", listings_tab_paused: "Dijeda", listings_empty_active: "Belum ada tur aktif. Aktifkan kembali salah satu di bawah, atau tambahkan tur baru.", listings_empty_paused: "Tidak ada yang dijeda — semua tur Anda aktif.",
     empty_history: "Belum ada riwayat pemesanan.", empty_reviews: "Belum ada ulasan — muncul di sini setelah tur pertama Anda.",
     empty_receipts: "Belum ada kuitansi — muncul di sini setelah Anda membayar biaya.", empty_inbox: "Belum ada pesan.",
     real_receipts_not_yet: "Pembayaran biaya nyata belum terhubung — penyedia pembayaran akan hadir sebelum peluncuran. Biaya Anda saat ini terlihat di halaman ringkasan.",
@@ -10141,7 +10352,6 @@ function handleDayClick(el, key, dayBookings){
   toggleBlock(el, key);
 }
 function openCalDayDetail(key, dayBookings){
-  closeCalendar();
   const [y,m,d] = key.split('-').map(Number);
   const dateObj = new Date(y, m-1, d);
   const dateLabel = dateObj.toLocaleDateString('en-GB', {day:'numeric', month:'short', year:'numeric'});
@@ -10351,6 +10561,7 @@ async function confirmCustomOfferPublic(token){
 // Baustein F: derselbe Gedanke gilt fuer den "Rate Rydanu"-Link aus der Bewertungs-Erinnerungsmail.
 const _offerToken = new URLSearchParams(location.search).get('offer');
 const _wantsRatingsPage = new URLSearchParams(location.search).get('ratings') === '1';
+const _prBookingFromLink = new URLSearchParams(location.search).get('prBooking');
 if(_offerToken){
   document.getElementById('site-lock-gate').style.display = 'none';
   initOfferConfirmPage(_offerToken);
@@ -10360,6 +10571,8 @@ if(_offerToken){
   // obwohl ratings-page selbst schon auf "block" stand.
   document.getElementById('site-lock-gate').style.display = 'none';
   document.getElementById('site-content').style.display = 'block';
+  resetPlatformReviewFlow();
+  if(_prBookingFromLink){ verifyPlatformReviewById(_prBookingFromLink); }
   loadPlatformReviews();
   document.getElementById('ratings-page').style.display = 'block';
 } else {
@@ -11091,6 +11304,13 @@ async function loadAdminPendingDrivers(){
   updateAdminMailBadge();
   renderRealAdminPendingDrivers(data || []);
 }
+function pendingDriverDocsSummary(p){
+  const docs = p.documents || {};
+  return DRIVER_DOC_FIELDS.map(f => {
+    const has = !!docs[f.key];
+    return `<span style="display:inline-flex; align-items:center; gap:3px; margin-right:10px; font-size:0.8rem; color:${has ? 'var(--teal)' : '#C0392B'};">${has ? '✅' : '❌'} ${f.icon} ${f.label}</span>`;
+  }).join('');
+}
 function renderRealAdminPendingDrivers(list){
   const el = document.getElementById('admin-pending-list');
   if(!el) return;
@@ -11105,6 +11325,10 @@ function renderRealAdminPendingDrivers(list){
       <div class="booking-row"><div><div class="who">E-Mail</div></div><span>${escapeHtml(p.email||'—')}</span></div>
       <div class="booking-row"><div><div class="who">Telefon</div></div><span>${escapeHtml(p.phone||'—')}</span></div>
       <div class="booking-row"><div><div class="who">Rydanu-Nummer</div></div><span>${p.lw_number||'—'}</span></div>
+      <div style="padding:12px 20px 0; border-top:1px solid var(--line); margin-top:4px;">
+        <div style="font-size:0.78rem; color:var(--ink-soft); margin-bottom:6px; font-weight:700;">📎 Dokumente</div>
+        <div style="margin-bottom:4px;">${pendingDriverDocsSummary(p)}</div>
+      </div>
       <div style="padding:0 20px 16px;">
         <button type="button" class="link-btn" style="padding:0; margin-bottom:12px;" onclick="jumpToAdminDocuments('${p.id}')">📄 Dokumente ansehen</button>
         <button class="book-btn" onclick="approveRealDriver('${p.id}')">✓ Approve driver</button>
@@ -12305,7 +12529,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v155</div>
+<div id="version-footer" style="position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v163</div>
 
 </body>
 </html>
