@@ -104,21 +104,19 @@
     padding:calc(16px + env(safe-area-inset-top)) 20px 16px; border-bottom:1px solid var(--line);
     position:sticky; top:0; background:var(--paper); z-index:50;
   }
-  .topbar-right{ display:flex; align-items:center; justify-content:space-between; gap:24px; flex:1; min-width:0; }
-  .topbar-right-main{ display:flex; align-items:center; gap:32px; flex-wrap:wrap; margin-left:56px; }
-  .logo{ display:flex; align-items:center; gap:12px; min-width:0; flex-shrink:1; }
+  .logo{ display:flex; align-items:center; gap:12px; min-width:0; flex-shrink:1; margin-right:auto; }
   .logo-mark{ display:none; }
   .logo-wordstack{ display:flex; flex-direction:column; align-items:flex-start; min-width:0; }
   .logo-word{ height:84px; width:auto; display:block; flex-shrink:0; }
   .logo-tagline{
-    font-family:'Public Sans', sans-serif; font-weight:700; font-size:0.8rem; letter-spacing:-0.005em;
+    font-family:'Public Sans', sans-serif; font-weight:600; font-size:0.8rem; letter-spacing:-0.005em;
     color:var(--ink-soft); line-height:1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
     max-width:100%; margin-top:4px;
   }
   .ryvio-rating-badge{
     display:flex; align-items:center; gap:6px; background:var(--paper-dim); border-radius:20px;
     padding:6px 14px; cursor:pointer; flex-shrink:0; font-size:0.82rem; font-weight:700; color:var(--ink);
-    white-space:nowrap; align-self:flex-end; margin-bottom:1px;
+    white-space:nowrap;
   }
   .ryvio-rating-badge:hover{ background:#eee7d9; }
   .ryvio-rating-stars{ color:#D9A400; letter-spacing:1px; }
@@ -1067,8 +1065,6 @@
     <span class="logo-tagline"><span data-i18n="logo_tagline">Local drivers. Anywhere in Bali</span></span>
     </div>
   </div>
-  <div class="topbar-right">
-  <div class="topbar-right-main">
   <div class="ryvio-rating-badge" id="ryvio-rating-badge" onclick="event.stopPropagation(); openRatingsPage();" style="display:none;">
     <span id="ryvio-rating-stars" class="ryvio-rating-stars"></span>
     <span id="ryvio-rating-summary"></span>
@@ -1080,12 +1076,10 @@
     <button class="tab-btn tab-btn-register" id="tab-register-btn" data-i18n="tab_register" onclick="openRealRegisterDriver()">+ Register as Driver</button>
     <button class="tab-btn tab-btn-admin" id="tab-admin" onclick="switchView('admin')"><span data-i18n="tab_admin">🔐 Admin</span> <span class="tab-mail-badge" id="tab-admin-mail" style="display:none;">✉️</span></button>
   </div>
-  </div>
   <div class="lang-switch">
     <button type="button" class="lang-btn active" data-lang="en" onclick="setLanguage('en')">EN</button>
     <button type="button" class="lang-btn" data-lang="de" onclick="setLanguage('de')">DE</button>
     <button type="button" class="lang-btn" data-lang="id" onclick="setLanguage('id')">ID</button>
-  </div>
   </div>
 </div>
 
@@ -12311,7 +12305,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v159</div>
+<div id="version-footer" style="position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v155</div>
 
 </body>
 </html>
