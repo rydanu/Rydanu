@@ -105,10 +105,10 @@
     position:sticky; top:0; background:var(--paper); z-index:50;
   }
   .topbar-right{ display:flex; align-items:stretch; justify-content:space-between; gap:24px; flex:1; min-width:0; }
-  .topbar-right-main{ display:flex; align-items:center; gap:60px; flex-wrap:wrap; margin-left:56px; }
+  .topbar-right-main{ display:flex; align-items:flex-end; gap:60px; flex-wrap:wrap; margin-left:56px; }
   .logo{ display:flex; align-items:center; gap:12px; min-width:0; flex-shrink:1; }
   .logo-mark{ display:none; }
-  .lang-switch{ display:flex; align-items:center; }
+  .lang-switch{ display:flex; align-items:center; align-self:flex-end; margin-bottom:1px; }
   .logo-wordstack{ display:flex; flex-direction:column; align-items:flex-start; min-width:0; }
   .logo-word{ height:84px; width:auto; display:block; flex-shrink:0; }
   .logo-tagline{
@@ -132,22 +132,28 @@
   .tab-btn{
     border:none; background:transparent; padding:8px 18px; border-radius:16px;
     font-family:'Public Sans'; font-size:0.85rem; font-weight:600; color:var(--ink-soft);
-    cursor:pointer; transition:all .2s ease;
+    cursor:pointer; transition:all .2s ease; outline:none;
   }
+  .tab-btn:hover:not(.active){ background:rgba(11,61,34,0.08); color:var(--ink); }
   .tab-btn.active{ background:var(--ink); color:var(--paper); }
+  .tab-btn.active:hover{ background:#0a2e1c; }
   .tab-btn-register{ color:var(--teal); }
   .tab-btn-admin{ color:var(--ink-soft); font-size:0.78rem; }
   .lang-switch{ display:flex; gap:2px; background:var(--paper-dim); border-radius:14px; padding:3px; margin-left:8px; }
   .lang-btn{
-    border:none; background:transparent; padding:5px 10px; border-radius:12px; cursor:pointer;
+    border:none; background:transparent; padding:5px 10px; border-radius:12px; cursor:pointer; outline:none;
     font-family:'JetBrains Mono'; font-size:0.7rem; font-weight:700; color:var(--ink-soft);
   }
+  .lang-btn:hover:not(.active){ background:rgba(11,61,34,0.1); color:var(--ink); }
   .lang-btn.active{ background:var(--ink); color:var(--paper); }
+  .lang-btn.active:hover{ background:#0a2e1c; }
   .hamburger-wrap{ position:relative; margin-left:4px; }
   .hamburger-btn{
     background:var(--paper-dim); border:none; width:36px; height:36px; border-radius:20px;
     font-size:1rem; cursor:pointer; color:var(--ink); display:flex; align-items:center; justify-content:center;
+    outline:none; transition:background .15s ease;
   }
+  .hamburger-btn:hover{ background:#e3ddc9; }
   .hamburger-menu{
     position:absolute; top:calc(100% + 6px); right:0; background:#fff; border:1px solid var(--line);
     border-radius:8px; box-shadow:0 8px 20px rgba(11,61,34,0.15); z-index:60; min-width:220px; overflow:hidden;
@@ -786,14 +792,20 @@
   .dp-brand{ display:flex; align-items:center; }
   .dp-brand-img{ height:40px; width:auto; display:block; }
   .dp-hero{
-    display:flex; align-items:center; gap:28px; text-align:center;
+    position:relative; min-height:300px; text-align:center;
     padding:44px 24px; background:var(--ink); color:var(--paper);
+    display:flex; align-items:center; justify-content:center;
   }
-  .dp-hero-info{ flex:1; display:flex; flex-direction:column; align-items:center; min-width:0; }
+  .dp-hero-info{ width:100%; max-width:520px; display:flex; flex-direction:column; align-items:center; min-width:0; margin:0 auto; }
   .dp-avatar{
-    width:220px; height:220px; border-radius:50%; background:var(--teal); color:#fff; flex-shrink:0;
-    display:flex; align-items:center; justify-content:center; font-family:'Public Sans'; font-weight:700; font-size:3.6rem;
+    width:253px; height:253px; border-radius:50%; background:var(--teal); color:#fff; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center; font-family:'Public Sans'; font-weight:700; font-size:4.14rem;
     background-size:cover; background-position:center; border:4px solid var(--gold);
+    position:absolute; left:100px; top:50%; transform:translateY(-50%);
+  }
+  @media (max-width:900px){
+    .dp-avatar{ position:static; transform:none; margin-bottom:16px; }
+    .dp-hero{ flex-direction:column; }
   }
   @media (max-width:600px){
     .dp-hero{ flex-direction:column; padding:40px 20px 32px; }
@@ -891,6 +903,11 @@
   .fee-badge{ font-family:'JetBrains Mono'; font-size:0.68rem; background:var(--paper-dim); color:var(--teal); padding:3px 7px; border-radius:3px; margin-left:8px; white-space:nowrap; display:inline-block; }
 
   .listing-row{ display:flex; justify-content:space-between; align-items:center; padding:14px 20px; border-bottom:1px solid var(--line); font-size:0.85rem; }
+  .listing-delete-x{
+    background:none; border:none; cursor:pointer; font-size:0.95rem; line-height:1;
+    color:var(--ink-soft); padding:4px 6px; border-radius:6px; opacity:0.7;
+  }
+  .listing-delete-x:hover{ color:var(--danger); background:var(--paper-dim); opacity:1; }
   .listing-row:last-child{ border-bottom:none; }
   .listing-row .lname{ font-weight:600; margin-bottom:2px; }
   .listing-row .lmeta{ font-family:'JetBrains Mono'; font-size:0.72rem; color:var(--ink-soft); display:flex; flex-wrap:wrap; align-items:center; gap:4px 0; row-gap:4px; }
@@ -1464,8 +1481,8 @@
             <option value="Large Vehicle" data-i18n="vt_large">More than 5 seats</option>
           </select>
         </div>
-        <input type="text" id="auth-signup-car" placeholder="Modell (optional) — z.B. Toyota Avanza" class="auth-input">
-        <input type="text" id="auth-signup-seats" inputmode="numeric" placeholder="Sitzplätze (optional)" class="auth-input">
+        <input type="text" id="auth-signup-car" placeholder="Modell — z.B. Toyota Avanza" class="auth-input">
+        <input type="text" id="auth-signup-seats" inputmode="numeric" placeholder="Sitzplätze" class="auth-input">
         <input type="text" id="auth-signup-plate" placeholder="Kennzeichen *" class="auth-input">
         <input type="text" id="auth-signup-color" placeholder="Fahrzeugfarbe *" class="auth-input">
         <input type="text" id="auth-signup-referral" placeholder="Empfehlungs-Code (optional) — z.B. RY-104" class="auth-input">
@@ -1754,15 +1771,15 @@
           <p class="tier-footnote" data-i18n="fees_charged_when_note">ⓘ Fees are only actually charged when you tap "Pay now", or automatically on the last day of the month. Any referral credit is applied at that moment, not before.</p>
           <div class="tier-note" data-i18n="fees_tier_note">Per confirmed booking, Rydanu charges a flat 10% commission on the tour price:</div>
           <table class="tier-table">
-            <thead><tr><th>Booking value</th><th>Fee charged to driver</th></tr></thead>
+            <thead><tr><th data-i18n="fees_th_booking_value">Booking value</th><th data-i18n="fees_th_fee_charged">Fee charged to driver</th></tr></thead>
             <tbody>
-              <tr><td>Any confirmed booking</td><td class="mono">10% of tour price</td></tr>
+              <tr><td data-i18n="fees_row_any_booking">Any confirmed booking</td><td class="mono" data-i18n="fees_row_any_booking_val">10% of tour price</td></tr>
               <tr><td data-i18n="fees_featured_placement">Featured placement <em style="font-style:normal;color:var(--ink-soft);font-size:0.75rem;" data-i18n="lbl_optional_inline">(optional)</em></td><td class="mono">IDR 75,000 / wk</td></tr>
             </tbody>
           </table>
-          <p class="conditions-hint" style="padding:0 20px 14px;">ⓘ Conditions apply to every booking — <a href="#" onclick="openTerms('booking'); return false;">see full terms</a></p>
+          <p class="conditions-hint" style="padding:0 20px 14px;">ⓘ <span data-i18n="fees_conditions_apply_booking">Conditions apply to every booking</span> — <a href="#" onclick="openTerms('booking'); return false;" data-i18n="fees_see_full_terms">see full terms</a></p>
           <p class="tier-footnote" data-i18n="tier_transfer_note">Transfer bookings (with or without airport pickup) use the exact same price-based fee table above — there's no separate flat rate.</p>
-          <p class="tier-footnote">A driver with zero bookings this month pays nothing at all — the fee only appears once a guest actually confirms a paid trip.</p>
+          <p class="tier-footnote" data-i18n="fees_zero_bookings_note">A driver with zero bookings this month pays nothing at all — the fee only appears once a guest actually confirms a paid trip.</p>
         </div>
 
         <div class="dash-head" style="margin-top:26px;"><div><h3 data-i18n="feestatements_title" style="margin:0;">Fee statements</h3><p data-i18n="feestatements_sub">Every paid fee generates a receipt here — also emailed to you.</p></div></div>
@@ -2116,11 +2133,11 @@
         </select>
       </div>
       <div class="form-field">
-        <label data-i18n="rd_seats_label">Number of seats <span class="optional" data-i18n="lbl_optional_inline">(optional)</span></label>
+        <label data-i18n="rd_seats_label">Number of seats</label>
         <input type="text" id="rd-seats" inputmode="numeric" placeholder="e.g. 4">
       </div>
       <div class="form-field">
-        <label data-i18n="rd_car_label">Model <span class="optional" data-i18n="lbl_optional_inline">(optional)</span></label>
+        <label data-i18n="rd_car_label">Model</label>
         <input type="text" id="rd-car" placeholder="e.g. Toyota Avanza">
       </div>
       <div class="form-row">
@@ -2307,11 +2324,11 @@
         </select>
       </div>
       <div class="form-field">
-        <label data-i18n="rd_seats_label">Number of seats <span class="optional" data-i18n="lbl_optional_inline">(optional)</span></label>
+        <label data-i18n="rd_seats_label">Number of seats</label>
         <input type="text" id="ep-seats" inputmode="numeric" placeholder="e.g. 4">
       </div>
       <div class="form-field">
-        <label data-i18n="rd_car_label">Model <span class="optional" data-i18n="lbl_optional_inline">(optional)</span></label>
+        <label data-i18n="rd_car_label">Model</label>
         <input type="text" id="ep-car" placeholder="e.g. Toyota Avanza">
       </div>
       <div class="form-row">
@@ -2362,7 +2379,7 @@
 <div class="driver-page" id="driver-page" style="display:none;">
   <div class="dp-topbar">
     <button type="button" class="dp-back" onclick="closeDriverPage()">‹ <span data-i18n="dp_back">Back</span></button>
-    <span class="dp-brand"><img class="dp-brand-img" alt="Rydanu" src="data:image/png;base64,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"></span>
+    <span class="dp-brand"><img class="dp-brand-img" alt="Rydanu" src="data:image/png;base64,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"></span>
   </div>
   <div class="dp-hero">
     <div class="dp-avatar" id="dp-avatar">WS</div>
@@ -6638,9 +6655,30 @@ function renderListings(){
         ${l.transferRegions && Object.keys(l.transferRegions).length ? `<div class="spots-line" style="color:var(--teal);">🚐 ${Object.entries(l.transferRegions).map(([r,p])=>r+': '+p).join(' · ')}</div>` : ''}
         ${l.pickupRegionPrices && Object.keys(l.pickupRegionPrices).length ? `<div class="spots-line" style="color:var(--teal);">🚩 ${Object.entries(l.pickupRegionPrices).map(([r,p])=>r+': '+p).join(' · ')}</div>` : ''}
       </div>
-      <div class="toggle ${l.active?'':'off'}" onclick="event.stopPropagation(); toggleListing(${i})"></div>
+      <div style="display:flex; flex-direction:column; align-items:center; gap:10px;">
+        <div class="toggle ${l.active?'':'off'}" onclick="event.stopPropagation(); toggleListing(${i})"></div>
+        <button type="button" class="listing-delete-x" title="${t('el_delete_btn')}" onclick="event.stopPropagation(); deleteListingFromRow(${i})">🗑️</button>
+      </div>
     </div>
   `).join('');
+}
+function deleteListingFromRow(i){
+  const l = driverListings[i];
+  if(!l) return;
+  if(!confirm(t('el_delete_confirm').replace('{name}', l.name))) return;
+  const idx = drivers.findIndex(d => (d.ownerId===currentDriverId || (!d.ownerId && d.name===driverProfiles[currentDriverId] && driverProfiles[currentDriverId].fullName)) && d.tour===l.name);
+  if(idx !== -1) drivers.splice(idx, 1);
+  const dbId = l.dbId;
+  driverListings.splice(i, 1);
+  renderListings();
+  renderDriverGrid(visibleDrivers());
+  saveState();
+  if(dbId){
+    supabaseClient.from('listings').delete().eq('id', dbId).then(({error})=>{
+      if(error){ console.error('Angebot konnte nicht gelöscht werden:', error); alert('Das Angebot konnte nicht gelöscht werden. Bitte nochmal versuchen.'); }
+      else { loadRealPublicListings(); }
+    });
+  }
 }
 let editingListingIndex = null;
 let elSelectedSpots = [];
@@ -8075,7 +8113,7 @@ const translations = {
     lbl_fullname: "Full name", lbl_whatsapp: 'WhatsApp number <span class="optional">(for booking confirmation)</span>', ep_eyebrow: "Your profile", ep_title: "Edit profile",
     lbl_pickup_loc: "Pickup location", lbl_pickup_dropoff_loc: "Pickup / drop-off location", lbl_airport_destination: "Destination region", lbl_transfer_destination: "Destination", lbl_pickup_region: "Your pickup region",
     lbl_balance: "Balance — pay driver in cash on the day",
-    pay_direct_hint: "💵 You pay your driver directly — cash or QRIS — when you meet. No payment is due now, and Rydanu never handles your money.",
+    pay_direct_hint: "💵 You pay your driver directly in cash when you meet. No payment is due now, and Rydanu never handles your money.",
     confirm_title: "Booking requested",
     confirm_sub: "Your request has been sent to your driver. It becomes a final booking once they confirm — you'll be notified by email & WhatsApp.",
     st_confirmed: "Confirmed", st_awaiting: "Awaiting confirmation", st_completed: "Completed", st_paid: "Paid",
@@ -8103,7 +8141,7 @@ const translations = {
     admin_confirm_unblock: "Unblock {name}? Their tours become publicly bookable again.",
     admin_confirm_block: "Block {name}?\n\nAll their tours disappear from the traveler view immediately and they can no longer receive bookings.", lw_number_label: "Your Rydanu number:",
  fees_listing_profile: "Listing & profile", fees_listing_desc: "Always free — create unlimited listings, no cost while you have zero bookings",
-    fees_conditions_apply: "Conditions apply", fees_see_full_terms: "see full terms",
+    fees_conditions_apply: "Conditions apply", fees_see_full_terms: "see full terms", fees_th_booking_value: "Booking value", fees_th_fee_charged: "Fee charged to driver", fees_row_any_booking: "Any confirmed booking", fees_row_any_booking_val: "10% of tour price", fees_conditions_apply_booking: "Conditions apply to every booking", fees_zero_bookings_note: "A driver with zero bookings this month pays nothing at all — the fee only appears once a guest actually confirms a paid trip.",
     fees_featured_placement: "Featured placement", fees_featured_desc: "Higher spot in search results this week",
     fees_open_fees_title: "Open fees this month", fees_open_fees_desc: "Pay your accumulated booking fees — an invoice is emailed to you automatically",
     fees_cancellation_title: "Includes a cancellation fee", fees_cancellation_desc: "For tours you cancelled yourself — see Bookings for details",
@@ -8378,7 +8416,7 @@ const translations = {
     lbl_fullname: "Vollständiger Name", lbl_whatsapp: 'WhatsApp-Nummer <span class="optional">(für die Buchungsbestätigung)</span>', ep_eyebrow: "Dein Profil", ep_title: "Profil bearbeiten",
     lbl_pickup_loc: "Abholort", lbl_pickup_dropoff_loc: "Abhol-/Zielort", lbl_airport_destination: "Zielregion", lbl_transfer_destination: "Ziel", lbl_pickup_region: "Deine Abholregion",
     lbl_balance: "Restbetrag — bar an den Fahrer am Tourtag",
-    pay_direct_hint: "💵 Du bezahlst deinen Fahrer direkt — bar oder QRIS — wenn ihr euch trefft. Jetzt ist nichts fällig, Rydanu verwaltet niemals dein Geld.",
+    pay_direct_hint: "💵 Du bezahlst deinen Fahrer direkt in bar, wenn ihr euch trefft. Jetzt ist nichts fällig, Rydanu verwaltet niemals dein Geld.",
     confirm_title: "Buchung angefragt",
     confirm_sub: "Deine Anfrage wurde an deinen Fahrer gesendet. Sie wird final, sobald er bestätigt — du wirst per E-Mail & WhatsApp benachrichtigt.",
     st_confirmed: "Bestätigt", st_awaiting: "Wartet auf Bestätigung", st_completed: "Abgeschlossen", st_paid: "Bezahlt",
@@ -8406,7 +8444,7 @@ const translations = {
     admin_confirm_unblock: "{name} entsperren? Seine/ihre Touren werden wieder öffentlich buchbar.",
     admin_confirm_block: "{name} sperren?\n\nAlle Touren verschwinden sofort aus der Reisenden-Ansicht und er/sie kann keine Buchungen mehr erhalten.", lw_number_label: "Deine Rydanu Nummer:",
  fees_listing_profile: "Listing & Profil", fees_listing_desc: "Immer kostenlos — erstelle unbegrenzt viele Angebote, keine Kosten solange du keine Buchungen hast",
-    fees_conditions_apply: "Bedingungen gelten", fees_see_full_terms: "vollständige Bedingungen ansehen",
+    fees_conditions_apply: "Bedingungen gelten", fees_see_full_terms: "vollständige Bedingungen ansehen", fees_th_booking_value: "Buchungswert", fees_th_fee_charged: "Gebühr für Fahrer", fees_row_any_booking: "Jede bestätigte Buchung", fees_row_any_booking_val: "10% des Tourpreises", fees_conditions_apply_booking: "Bedingungen gelten für jede Buchung", fees_zero_bookings_note: "Ein Fahrer ohne Buchungen in diesem Monat zahlt gar nichts — die Gebühr entsteht erst, sobald ein Gast tatsächlich eine bezahlte Tour bestätigt.",
     fees_featured_placement: "Featured Placement", fees_featured_desc: "Höhere Platzierung in den Suchergebnissen diese Woche",
     fees_open_fees_title: "Offene Gebühren diesen Monat", fees_open_fees_desc: "Bezahle deine angesammelten Buchungsgebühren — eine Rechnung wird dir automatisch per E-Mail zugesendet",
     fees_cancellation_title: "Enthält eine Stornogebühr", fees_cancellation_desc: "Für Touren, die du selbst storniert hast — Details unter Buchungen",
@@ -8681,7 +8719,7 @@ const translations = {
     lbl_fullname: "Nama lengkap", lbl_whatsapp: 'Nomor WhatsApp <span class="optional">(untuk konfirmasi pemesanan)</span>', ep_eyebrow: "Profil Anda", ep_title: "Edit profil",
     lbl_pickup_loc: "Lokasi penjemputan", lbl_pickup_dropoff_loc: "Lokasi jemput/antar", lbl_airport_destination: "Wilayah tujuan", lbl_transfer_destination: "Tujuan", lbl_pickup_region: "Wilayah penjemputan Anda",
     lbl_balance: "Sisa — bayar tunai ke sopir pada hari tur",
-    pay_direct_hint: "💵 Anda membayar sopir langsung — tunai atau QRIS — saat bertemu. Belum ada yang perlu dibayar sekarang, Rydanu tidak pernah menangani uang Anda.",
+    pay_direct_hint: "💵 Anda membayar sopir langsung secara tunai saat bertemu. Belum ada yang perlu dibayar sekarang, Rydanu tidak pernah menangani uang Anda.",
     confirm_title: "Pemesanan diajukan",
     confirm_sub: "Permintaan Anda telah dikirim ke sopir Anda. Ini menjadi final setelah dia mengonfirmasi — Anda akan diberi tahu via email & WhatsApp.",
     st_confirmed: "Dikonfirmasi", st_awaiting: "Menunggu konfirmasi", st_completed: "Selesai", st_paid: "Lunas",
@@ -8709,7 +8747,7 @@ const translations = {
     admin_confirm_unblock: "Buka blokir {name}? Tur mereka akan dapat dipesan publik kembali.",
     admin_confirm_block: "Blokir {name}?\n\nSemua tur mereka langsung hilang dari tampilan wisatawan dan mereka tidak dapat lagi menerima pemesanan.", lw_number_label: "Nomor Rydanu Anda:",
  fees_listing_profile: "Listing & profil", fees_listing_desc: "Selalu gratis — buat tur aktif tanpa batas, tanpa biaya selama Anda belum memiliki pemesanan",
-    fees_conditions_apply: "Ketentuan berlaku", fees_see_full_terms: "lihat ketentuan lengkap",
+    fees_conditions_apply: "Ketentuan berlaku", fees_see_full_terms: "lihat ketentuan lengkap", fees_th_booking_value: "Nilai pemesanan", fees_th_fee_charged: "Biaya yang dibebankan ke sopir", fees_row_any_booking: "Setiap pemesanan terkonfirmasi", fees_row_any_booking_val: "10% dari harga tur", fees_conditions_apply_booking: "Ketentuan berlaku untuk setiap pemesanan", fees_zero_bookings_note: "Sopir tanpa pemesanan bulan ini tidak membayar apa pun — biaya baru muncul setelah tamu benar-benar mengonfirmasi perjalanan berbayar.",
     fees_featured_placement: "Featured placement", fees_featured_desc: "Posisi lebih tinggi di hasil pencarian minggu ini",
     fees_open_fees_title: "Biaya terbuka bulan ini", fees_open_fees_desc: "Bayar biaya pemesanan terkumpul Anda — faktur dikirim otomatis melalui email",
     fees_cancellation_title: "Termasuk biaya pembatalan", fees_cancellation_desc: "Untuk tur yang Anda batalkan sendiri — lihat Pemesanan untuk detail",
@@ -9994,14 +10032,14 @@ const bookingPreviewText = {
     emailIntro: 'Your request for "{tour}" with {driverName} on {date} has been sent. It becomes final once the driver confirms — we\'ll notify you right away.',
     pickupLine: "Pickup: {pickup}",
     destLine: "Destination: {dest}",
-    balanceLine: "Total — pay your driver directly (cash or QRIS) on the day: {balance}",
+    balanceLine: "Total — pay your driver directly in cash on the day: {balance}",
     vehicleLine: "Your driver's car: {vehicle}",
     finalNote: "Your booking becomes FINAL once {driverFirst} confirms — we'll email & WhatsApp you immediately.",
     magicLinkBtn: "🎫 View & manage my booking",
     magicLinkNote: "(your personal link — no account needed)",
     reachOut: "{driverName} will reach out shortly to confirm pickup time.",
     referenceLine: "Reference: {ref}",
-    waBody: "Hi {name}! 🙏 Your Rydanu request {ref} was sent to {driverName} for {date}. We will message you the moment he confirms! Pickup: {pickup}.{destPart} You pay {driverFirst} directly (cash or QRIS) when you meet — no payment is due now. Manage your booking anytime via your personal link: rydanu.com/b/{ref} Please have {balance} ready on the day. Look out for: {vehicle}. He'll message you here shortly to confirm timing. Selamat datang! 🌴",
+    waBody: "Hi {name}! 🙏 Your Rydanu request {ref} was sent to {driverName} for {date}. We will message you the moment he confirms! Pickup: {pickup}.{destPart} You pay {driverFirst} directly in cash when you meet — no payment is due now. Manage your booking anytime via your personal link: rydanu.com/b/{ref} Please have {balance} ready on the day. Look out for: {vehicle}. He'll message you here shortly to confirm timing. Selamat datang! 🌴",
     waDestPart: " Destination: {dest}.",
     driverSubject: "New booking request — please confirm — {ref}",
     driverGuestLine: "Guest: {name}",
@@ -10009,7 +10047,7 @@ const bookingPreviewText = {
     driverDateLine: "Date: {date}",
     driverPickupLine: "Pickup: {pickup}",
     driverDestLine: "Destination: {dest}",
-    driverBalanceLine: "Collect directly from the guest (cash or QRIS) on the day: {balance}",
+    driverBalanceLine: "Collect directly from the guest in cash on the day: {balance}",
     driverFeeLine: "Platform fee: charged to your balance as soon as you accept this booking"
   },
   de: {
@@ -10017,14 +10055,14 @@ const bookingPreviewText = {
     emailIntro: 'Deine Anfrage für "{tour}" bei {driverName} am {date} wurde gesendet. Sie wird final, sobald der Fahrer bestätigt — wir benachrichtigen dich sofort.',
     pickupLine: "Abholung: {pickup}",
     destLine: "Ziel: {dest}",
-    balanceLine: "Gesamtbetrag — direkt an deinen Fahrer (bar oder QRIS) am Tourtag: {balance}",
+    balanceLine: "Gesamtbetrag — direkt an deinen Fahrer in bar am Tourtag: {balance}",
     vehicleLine: "Das Auto deines Fahrers: {vehicle}",
     finalNote: "Deine Buchung wird FINAL, sobald {driverFirst} bestätigt — wir informieren dich sofort per E-Mail & WhatsApp.",
     magicLinkBtn: "🎫 Meine Buchung ansehen & verwalten",
     magicLinkNote: "(dein persönlicher Link — kein Konto nötig)",
     reachOut: "{driverName} meldet sich in Kürze, um die Abholzeit zu bestätigen.",
     referenceLine: "Referenz: {ref}",
-    waBody: "Hi {name}! 🙏 Deine Rydanu-Anfrage {ref} wurde an {driverName} für {date} gesendet. Wir melden uns, sobald er bestätigt! Abholung: {pickup}.{destPart} Du bezahlst {driverFirst} direkt (bar oder QRIS), wenn ihr euch trefft — jetzt ist nichts fällig. Verwalte deine Buchung jederzeit über deinen persönlichen Link: rydanu.com/b/{ref} Bitte halte {balance} für den Tourtag bereit. Achte auf: {vehicle}. Er meldet sich hier in Kürze, um die Uhrzeit zu bestätigen. Selamat datang! 🌴",
+    waBody: "Hi {name}! 🙏 Deine Rydanu-Anfrage {ref} wurde an {driverName} für {date} gesendet. Wir melden uns, sobald er bestätigt! Abholung: {pickup}.{destPart} Du bezahlst {driverFirst} direkt in bar, wenn ihr euch trefft — jetzt ist nichts fällig. Verwalte deine Buchung jederzeit über deinen persönlichen Link: rydanu.com/b/{ref} Bitte halte {balance} für den Tourtag bereit. Achte auf: {vehicle}. Er meldet sich hier in Kürze, um die Uhrzeit zu bestätigen. Selamat datang! 🌴",
     waDestPart: " Ziel: {dest}.",
     driverSubject: "Neue Buchungsanfrage — bitte bestätigen — {ref}",
     driverGuestLine: "Gast: {name}",
@@ -10032,7 +10070,7 @@ const bookingPreviewText = {
     driverDateLine: "Datum: {date}",
     driverPickupLine: "Abholung: {pickup}",
     driverDestLine: "Ziel: {dest}",
-    driverBalanceLine: "Direkt vom Gast einsammeln (bar oder QRIS) am Tourtag: {balance}",
+    driverBalanceLine: "Direkt vom Gast in bar am Tourtag einsammeln: {balance}",
     driverFeeLine: "Plattformgebühr: wird deinem Guthaben belastet, sobald du diese Buchung annimmst"
   },
   id: {
@@ -10040,14 +10078,14 @@ const bookingPreviewText = {
     emailIntro: 'Permintaan Anda untuk "{tour}" bersama {driverName} pada {date} telah dikirim. Ini menjadi final setelah sopir mengonfirmasi — kami akan segera memberi tahu Anda.',
     pickupLine: "Penjemputan: {pickup}",
     destLine: "Tujuan: {dest}",
-    balanceLine: "Total — bayar langsung ke sopir (tunai atau QRIS) pada hari itu: {balance}",
+    balanceLine: "Total — bayar langsung ke sopir secara tunai pada hari itu: {balance}",
     vehicleLine: "Mobil sopir Anda: {vehicle}",
     finalNote: "Pemesanan Anda menjadi FINAL setelah {driverFirst} mengonfirmasi — kami akan mengirim email & WhatsApp segera.",
     magicLinkBtn: "🎫 Lihat & kelola pemesanan saya",
     magicLinkNote: "(tautan pribadi Anda — tanpa akun)",
     reachOut: "{driverName} akan segera menghubungi Anda untuk mengonfirmasi waktu penjemputan.",
     referenceLine: "Referensi: {ref}",
-    waBody: "Hai {name}! 🙏 Permintaan Rydanu Anda {ref} telah dikirim ke {driverName} untuk {date}. Kami akan menghubungi Anda segera setelah dia mengonfirmasi! Penjemputan: {pickup}.{destPart} Anda membayar {driverFirst} langsung (tunai atau QRIS) saat bertemu — belum ada yang perlu dibayar sekarang. Kelola pemesanan Anda kapan saja melalui tautan pribadi Anda: rydanu.com/b/{ref} Mohon siapkan {balance} pada hari itu. Perhatikan: {vehicle}. Dia akan segera menghubungi Anda di sini untuk mengonfirmasi waktu. Selamat datang! 🌴",
+    waBody: "Hai {name}! 🙏 Permintaan Rydanu Anda {ref} telah dikirim ke {driverName} untuk {date}. Kami akan menghubungi Anda segera setelah dia mengonfirmasi! Penjemputan: {pickup}.{destPart} Anda membayar {driverFirst} langsung secara tunai saat bertemu — belum ada yang perlu dibayar sekarang. Kelola pemesanan Anda kapan saja melalui tautan pribadi Anda: rydanu.com/b/{ref} Mohon siapkan {balance} pada hari itu. Perhatikan: {vehicle}. Dia akan segera menghubungi Anda di sini untuk mengonfirmasi waktu. Selamat datang! 🌴",
     waDestPart: " Tujuan: {dest}.",
     driverSubject: "Permintaan pemesanan baru — mohon konfirmasi — {ref}",
     driverGuestLine: "Tamu: {name}",
@@ -10055,7 +10093,7 @@ const bookingPreviewText = {
     driverDateLine: "Tanggal: {date}",
     driverPickupLine: "Penjemputan: {pickup}",
     driverDestLine: "Tujuan: {dest}",
-    driverBalanceLine: "Kumpulkan langsung dari tamu (tunai atau QRIS) pada hari itu: {balance}",
+    driverBalanceLine: "Kumpulkan langsung dari tamu secara tunai pada hari itu: {balance}",
     driverFeeLine: "Biaya platform: dibebankan ke saldo Anda segera setelah Anda menerima pemesanan ini"
   }
 };
@@ -12529,7 +12567,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v163</div>
+<div id="version-footer" style="position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v164</div>
 
 </body>
 </html>
