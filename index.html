@@ -712,6 +712,9 @@
     color:var(--teal); font-weight:700; font-family:'Public Sans'; font-size:0.88rem; background:none; border:none; padding:0;
   }
   @media (max-width:520px){ .admin-tile-grid{ gap:10px; } .admin-tile{ padding:14px 12px; } }
+  .money-panel-grid{ display:grid; grid-template-columns:1fr 1fr; gap:24px; align-items:start; }
+  .money-panel-grid h3{ margin-top:0; }
+  @media (max-width:860px){ .money-panel-grid{ grid-template-columns:1fr; gap:0; } }
   .stat-card .num{ font-family:'Public Sans', sans-serif; font-size:1.7rem; font-weight:700; }
   .stat-card .lbl{ font-family:'JetBrains Mono'; font-size:0.68rem; text-transform:uppercase; letter-spacing:0.08em; color:var(--ink-soft); margin-top:4px; }
 
@@ -1985,6 +1988,8 @@
     <h2 style="margin-top:0;" data-i18n="admin_money_title">💰 Geld — Gebühren &amp; Gutschriften</h2>
     <p class="dash-head" style="display:block; margin-bottom:20px;" data-i18n="admin_money_sub">Standardmäßig gilt für alle Fahrer 10% Provision pro Buchung. Hier kannst du für einzelne Fahrer einen abweichenden Satz für einen bestimmten Zeitraum festlegen, oder eine Gutschrift erstellen.</p>
 
+    <div class="money-panel-grid">
+    <div>
     <h3 data-i18n="admin_feeoverride_title">Individuellen Gebührensatz festlegen</h3>
     <div class="panel" style="padding:16px; margin-bottom:20px;">
       <div class="form-field">
@@ -2009,7 +2014,9 @@
       <p class="form-error" id="fee-override-status"></p>
     </div>
     <button type="button" class="link-btn" onclick="openFeeOverridesModal()" style="margin-bottom:24px;">📋 <span data-i18n="admin_view_overrides_btn">Alle individuellen Gebührensätze anzeigen</span> (<span id="fee-overrides-count">0</span>)</button>
+    </div>
 
+    <div>
     <h3 data-i18n="admin_credit_title">Gebühren-Gutschrift erstellen</h3>
     <div class="panel" style="padding:16px; margin-bottom:20px;">
       <div class="form-field">
@@ -2028,8 +2035,31 @@
       <p class="form-error" id="fee-credit-status"></p>
     </div>
     <button type="button" class="link-btn" onclick="openFeeCreditsModal()">📋 <span data-i18n="admin_view_credits_btn">Alle Gutschriften anzeigen</span> (<span id="fee-credits-count">0</span>)</button>
+    </div>
 
-    <h3 style="margin-top:24px;" data-i18n="admin_topup_title">Guthaben manuell aufladen</h3>
+    <div>
+    <h3 data-i18n="admin_charge_title">Gebühren belasten</h3>
+    <div class="panel" style="padding:16px; margin-bottom:20px;">
+      <div class="form-field">
+        <label data-i18n="admin_select_driver">Fahrer auswählen</label>
+        <select id="fee-charge-driver-select"></select>
+      </div>
+      <div class="form-field">
+        <label data-i18n="admin_charge_amount">Betrag (IDR)</label>
+        <input type="number" id="fee-charge-amount" min="0" step="1000" placeholder="z.B. 100000">
+      </div>
+      <div class="form-field">
+        <label data-i18n="admin_charge_note">Grund (Pflichtfeld)</label>
+        <input type="text" id="fee-charge-note" placeholder="z.B. Schaden am Fahrzeug bei Buchung #123">
+      </div>
+      <button type="button" class="period-btn" onclick="createFeeCharge()" style="background:var(--danger); border-color:var(--danger); color:#fff; font-weight:700;" data-i18n="admin_charge_save_btn">Gebühr belasten</button>
+      <p class="form-error" id="fee-charge-status"></p>
+    </div>
+    <button type="button" class="link-btn" onclick="openFeeChargesModal()">📋 <span data-i18n="admin_view_charges_btn">Alle Belastungen anzeigen</span> (<span id="fee-charges-count">0</span>)</button>
+    </div>
+
+    <div>
+    <h3 data-i18n="admin_topup_title">Guthaben manuell aufladen</h3>
     <p class="dash-head" style="display:block; margin-bottom:20px;" data-i18n="admin_topup_sub">Solange es noch keinen echten Zahlungsanbieter gibt, kannst du hier Test-Guthaben direkt einem Fahrer gutschreiben.</p>
     <div class="panel" style="padding:16px; margin-bottom:20px;">
       <div class="form-field">
@@ -2048,6 +2078,8 @@
       <p class="form-error" id="balance-topup-status"></p>
     </div>
     <button type="button" class="link-btn" onclick="openBalanceOverviewModal()">📋 <span data-i18n="admin_view_balances_btn">Alle Guthaben anzeigen</span> (<span id="balance-overview-count">0</span>)</button>
+    </div>
+    </div>
     </div>
 
     <div id="admin-sec-pwreset" style="display:none;">
@@ -2124,6 +2156,23 @@
         <select id="fee-credits-filter-select" onchange="renderFeeCreditsList()"></select>
       </div>
       <div id="admin-fee-credits-list"></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="fee-charges-modal-bg">
+  <div class="modal" style="max-width:520px;">
+    <div class="modal-header">
+      <button class="modal-close" onclick="closeFeeChargesModal()">✕</button>
+      <span class="eyebrow" data-i18n="admin_charge_title">Gebühren belasten</span>
+      <h2 data-i18n="admin_view_charges_btn">Alle Belastungen anzeigen</h2>
+    </div>
+    <div class="modal-body">
+      <div class="form-field" style="margin-bottom:14px;">
+        <label data-i18n="admin_filter_by_driver">Nach Fahrer filtern</label>
+        <select id="fee-charges-filter-select" onchange="renderFeeChargesList()"></select>
+      </div>
+      <div id="admin-fee-charges-list"></div>
     </div>
   </div>
 </div>
@@ -5225,6 +5274,7 @@ let reviews = driverDataStore.wayan.reviews;
 let feeOverrides = [];
 // feeCredits: [{id, driverId, amountIDR, note, dateISO}]
 let feeCredits = [];
+let feeCharges = [];
 const DEFAULT_FEE_PERCENT = 10; // standard commission, in percent
 
 function getActiveFeeOverride(driverId, dateISO){
@@ -8445,6 +8495,12 @@ const translations = {
     admin_fc_fill_required: "Please select a driver and an amount greater than 0.", admin_fc_driver_not_found: "Driver not found.",
     admin_fc_created: "✓ Credit applied — the driver's fee balance was reduced right away.", admin_fc_created_to_balance: "✓ Applied: {due} to open fees, {balance} added to the driver's balance for future fees.", admin_fc_notify_title: "💚 You received a credit",
     admin_fc_notify_body: "You've been credited {amount}{note} — it was applied to your fees right away.", admin_fc_notify_body_balance: "You've been credited {amount}{note} — added to your balance and will be applied to your future fees automatically.",
+    admin_charge_title: "Charge a fee", admin_charge_amount: "Amount (IDR)", admin_charge_note: "Reason (required)", admin_charge_save_btn: "Charge fee",
+    admin_fch_fill_required: "Please select a driver and enter an amount.", admin_fch_note_required: "Please enter a reason for the driver.",
+    admin_fch_created: "✓ Fee charged — added to the driver's open fees.", admin_fch_created_split: "✓ Charged: {balance} taken from balance, {due} added to open fees.",
+    admin_fch_notify_title: "⚠️ A fee was charged to your account", admin_fch_notify_body: "Rydanu charged you {amount}{note}.",
+    admin_view_charges_btn: "View all charges", admin_fch_empty_default: "No charges yet.", admin_fch_empty_filtered: "No charges for this driver yet.",
+    admin_fch_confirm_delete: "Delete this charge entry? This does not reverse the amount already applied.",
     admin_fc_confirm_delete: "Really delete this credit? The already-credited amount will be deducted from the driver again, if not yet used.",
     admin_fc_empty_default: "No credits created yet.", admin_fc_empty_filtered: "No credits created for this driver yet.",
     admin_all_drivers_option: "All drivers", admin_drivers_search_placeholder: "Search driver…", admin_delete_btn: "✕ Delete", admin_status_suspended: "🚫 Suspended (unpaid fees)", admin_status_blocked: "🚫 Blocked", admin_status_active: "Active", admin_lock_btn: "Block", admin_unlock_btn: "Unblock", payment_received_title: "Payment received — receipt {ref}", payment_received_body_credit: "We received your fee payment of {amount} (an {credit} referral credit was applied). The receipt is available under \"Fees & billing\" and was emailed to you.", payment_received_body_plain: "We received your fee payment of {amount}. The receipt is available under \"Fees & billing\" and was emailed to you.", welcome_inbox_title: "Welcome to Rydanu! 🌴", welcome_inbox_body: "Your registration was received and is under review. Your Rydanu number is {number} — keep it handy for all support requests.", approved_inbox_title: "Your account is approved ✓", approved_inbox_body: "Congratulations! Your profile and all your tours are now live and bookable for travelers.", approved_alert: "{name} has been approved and is now live on Rydanu.", rejected_inbox_title: "Your registration was rejected", rejected_inbox_body: "Reason: {reason} — you can register again with corrected documents or contact support.", rejected_alert: "{name} has been rejected and notified with your reason.", account_blocked_banner: "🚫 Your account has been blocked by Rydanu. Your tours are not visible to travelers. Please contact support via the WhatsApp button below.", rejected_banner: "✕ Your registration was rejected. Reason: {reason}<br>Please contact Rydanu support or register again with corrected documents.",
@@ -8748,6 +8804,12 @@ const translations = {
     admin_fc_fill_required: "Bitte Fahrer und einen Betrag über 0 angeben.", admin_fc_driver_not_found: "Fahrer nicht gefunden.",
     admin_fc_created: "✓ Gutschrift verrechnet — die Gebühren des Fahrers wurden sofort reduziert.", admin_fc_created_to_balance: "✓ Verrechnet: {due} mit offenen Gebühren, {balance} als Guthaben für künftige Gebühren gutgeschrieben.", admin_fc_notify_title: "💚 Gutschrift erhalten",
     admin_fc_notify_body: "Dir wurde eine Gutschrift von {amount}{note} gutgeschrieben — sie wurde direkt mit deinen Gebühren verrechnet.", admin_fc_notify_body_balance: "Dir wurde eine Gutschrift von {amount}{note} gutgeschrieben — sie wurde deinem Guthaben hinzugefügt und wird automatisch mit künftigen Gebühren verrechnet.",
+    admin_charge_title: "Gebühren belasten", admin_charge_amount: "Betrag (IDR)", admin_charge_note: "Grund (Pflichtfeld)", admin_charge_save_btn: "Gebühr belasten",
+    admin_fch_fill_required: "Bitte einen Fahrer auswählen und einen Betrag eingeben.", admin_fch_note_required: "Bitte einen Grund für den Fahrer angeben.",
+    admin_fch_created: "✓ Gebühr belastet — zu den offenen Gebühren des Fahrers hinzugefügt.", admin_fch_created_split: "✓ Belastet: {balance} vom Guthaben, {due} zu offenen Gebühren hinzugefügt.",
+    admin_fch_notify_title: "⚠️ Dir wurde eine Gebühr belastet", admin_fch_notify_body: "Rydanu hat dir {amount}{note} belastet.",
+    admin_view_charges_btn: "Alle Belastungen anzeigen", admin_fch_empty_default: "Noch keine Belastungen.", admin_fch_empty_filtered: "Noch keine Belastungen für diesen Fahrer.",
+    admin_fch_confirm_delete: "Diesen Belastungs-Eintrag löschen? Der bereits verrechnete Betrag wird dadurch nicht rückgängig gemacht.",
     admin_fc_confirm_delete: "Diese Gutschrift wirklich löschen? Der bereits gutgeschriebene Betrag wird dem Fahrer wieder abgezogen, sofern er noch nicht verbraucht wurde.",
     admin_fc_empty_default: "Noch keine Gutschriften erstellt.", admin_fc_empty_filtered: "Für diesen Fahrer wurden noch keine Gutschriften erstellt.",
     admin_all_drivers_option: "Alle Fahrer", admin_drivers_search_placeholder: "Fahrer suchen…", admin_delete_btn: "✕ Löschen", admin_status_suspended: "🚫 Gesperrt (unbezahlte Gebühren)", admin_status_blocked: "🚫 Gesperrt", admin_status_active: "Aktiv", admin_lock_btn: "Sperren", admin_unlock_btn: "Entsperren", payment_received_title: "Zahlung erhalten — Beleg {ref}", payment_received_body_credit: "Wir haben deine Gebührenzahlung von {amount} erhalten (eine Empfehlungs-Gutschrift von {credit} wurde angerechnet). Der Beleg ist unter \"Gebühren & Abrechnung\" verfügbar und wurde dir per Mail geschickt.", payment_received_body_plain: "Wir haben deine Gebührenzahlung von {amount} erhalten. Der Beleg ist unter \"Gebühren & Abrechnung\" verfügbar und wurde dir per Mail geschickt.", welcome_inbox_title: "Willkommen bei Rydanu! 🌴", welcome_inbox_body: "Deine Registrierung ist eingegangen und wird geprüft. Deine Rydanu-Nummer ist {number} — halte sie für alle Support-Anfragen bereit.", approved_inbox_title: "Dein Konto ist freigeschaltet ✓", approved_inbox_body: "Glückwunsch! Dein Profil und alle deine Touren sind jetzt live und für Reisende buchbar.", approved_alert: "{name} wurde freigeschaltet und ist jetzt live auf Rydanu.", rejected_inbox_title: "Deine Registrierung wurde abgelehnt", rejected_inbox_body: "Grund: {reason} — du kannst dich mit korrigierten Dokumenten erneut registrieren oder den Support kontaktieren.", rejected_alert: "{name} wurde abgelehnt und über deinen Grund benachrichtigt.", account_blocked_banner: "🚫 Dein Konto wurde von Rydanu gesperrt. Deine Touren sind für Reisende nicht sichtbar. Bitte kontaktiere den Support über den WhatsApp-Button unten.", rejected_banner: "✕ Deine Registrierung wurde abgelehnt. Grund: {reason}<br>Bitte kontaktiere den Rydanu-Support oder registriere dich mit korrigierten Dokumenten erneut.",
@@ -9051,6 +9113,12 @@ const translations = {
     admin_fc_fill_required: "Harap pilih sopir dan jumlah lebih dari 0.", admin_fc_driver_not_found: "Sopir tidak ditemukan.",
     admin_fc_created: "✓ Kredit diterapkan — biaya sopir langsung dikurangi.", admin_fc_created_to_balance: "✓ Diterapkan: {due} untuk biaya terbuka, {balance} ditambahkan ke saldo untuk biaya mendatang.", admin_fc_notify_title: "💚 Anda menerima kredit",
     admin_fc_notify_body: "Anda telah dikreditkan {amount}{note} — ini langsung diterapkan pada biaya Anda.", admin_fc_notify_body_balance: "Anda telah dikreditkan {amount}{note} — ditambahkan ke saldo Anda dan akan diterapkan otomatis pada biaya mendatang.",
+    admin_charge_title: "Bebankan biaya", admin_charge_amount: "Jumlah (IDR)", admin_charge_note: "Alasan (wajib diisi)", admin_charge_save_btn: "Bebankan biaya",
+    admin_fch_fill_required: "Silakan pilih sopir dan masukkan jumlah.", admin_fch_note_required: "Silakan masukkan alasan untuk sopir.",
+    admin_fch_created: "✓ Biaya dibebankan — ditambahkan ke biaya terbuka sopir.", admin_fch_created_split: "✓ Dibebankan: {balance} dari saldo, {due} ditambahkan ke biaya terbuka.",
+    admin_fch_notify_title: "⚠️ Anda dikenakan biaya", admin_fch_notify_body: "Rydanu membebankan {amount}{note} kepada Anda.",
+    admin_view_charges_btn: "Lihat semua pembebanan", admin_fch_empty_default: "Belum ada pembebanan.", admin_fch_empty_filtered: "Belum ada pembebanan untuk sopir ini.",
+    admin_fch_confirm_delete: "Hapus entri pembebanan ini? Jumlah yang sudah diterapkan tidak akan dibatalkan.",
     admin_fc_confirm_delete: "Yakin ingin menghapus kredit ini? Jumlah yang sudah dikreditkan akan dikurangi kembali dari sopir, jika belum digunakan.",
     admin_fc_empty_default: "Belum ada kredit yang dibuat.", admin_fc_empty_filtered: "Belum ada kredit yang dibuat untuk sopir ini.",
     admin_all_drivers_option: "Semua sopir", admin_drivers_search_placeholder: "Cari sopir…", admin_delete_btn: "✕ Hapus", admin_status_suspended: "🚫 Ditangguhkan (biaya belum dibayar)", admin_status_blocked: "🚫 Diblokir", admin_status_active: "Aktif", admin_lock_btn: "Blokir", admin_unlock_btn: "Buka blokir", payment_received_title: "Pembayaran diterima — kwitansi {ref}", payment_received_body_credit: "Kami telah menerima pembayaran biaya Anda sebesar {amount} (kredit referral sebesar {credit} telah diterapkan). Kwitansi tersedia di \"Biaya & tagihan\" dan telah dikirim melalui email.", payment_received_body_plain: "Kami telah menerima pembayaran biaya Anda sebesar {amount}. Kwitansi tersedia di \"Biaya & tagihan\" dan telah dikirim melalui email.", welcome_inbox_title: "Selamat datang di Rydanu! 🌴", welcome_inbox_body: "Pendaftaran Anda telah diterima dan sedang ditinjau. Nomor Rydanu Anda adalah {number} — simpan baik-baik untuk semua permintaan dukungan.", approved_inbox_title: "Akun Anda telah disetujui ✓", approved_inbox_body: "Selamat! Profil dan semua tur Anda sekarang aktif dan dapat dipesan oleh wisatawan.", approved_alert: "{name} telah disetujui dan sekarang aktif di Rydanu.", rejected_inbox_title: "Pendaftaran Anda ditolak", rejected_inbox_body: "Alasan: {reason} — Anda dapat mendaftar lagi dengan dokumen yang telah diperbaiki atau menghubungi dukungan.", rejected_alert: "{name} telah ditolak dan diberi tahu dengan alasan Anda.", account_blocked_banner: "🚫 Akun Anda telah diblokir oleh Rydanu. Tur Anda tidak terlihat oleh wisatawan. Silakan hubungi dukungan melalui tombol WhatsApp di bawah.", rejected_banner: "✕ Pendaftaran Anda ditolak. Alasan: {reason}<br>Silakan hubungi dukungan Rydanu atau daftar lagi dengan dokumen yang telah diperbaiki.",
@@ -11740,31 +11808,43 @@ async function renderFeeOverridePanel(){
     if(topupSel) topupSel.innerHTML = optsHTML;
     const pwresetSel = document.getElementById('pwreset-driver-select');
     if(pwresetSel) pwresetSel.innerHTML = optsHTML;
+    const chargeSel = document.getElementById('fee-charge-driver-select');
+    if(chargeSel) chargeSel.innerHTML = optsHTML;
     const ovFilter = document.getElementById('fee-overrides-filter-select');
     const crFilter = document.getElementById('fee-credits-filter-select');
     if(ovFilter) ovFilter.innerHTML = realDriverFilterOptionsHTML();
     if(crFilter) crFilter.innerHTML = realDriverFilterOptionsHTML();
+    const chFilter = document.getElementById('fee-charges-filter-select');
+    if(chFilter) chFilter.innerHTML = realDriverFilterOptionsHTML();
     const balFilter = document.getElementById('balance-overview-filter-select');
     if(balFilter) balFilter.innerHTML = realDriverFilterOptionsHTML();
     const balCount = document.getElementById('balance-overview-count');
     if(balCount) balCount.textContent = realAllDriversCache.length;
     renderRealFeeOverridesList();
     renderRealFeeCreditsList();
+    renderRealFeeChargesList();
     return;
   }
   const optsHTML = allDriverOptionsHTML();
   driverSel.innerHTML = optsHTML;
   creditSel.innerHTML = optsHTML;
+  const chargeSel = document.getElementById('fee-charge-driver-select');
+  if(chargeSel) chargeSel.innerHTML = optsHTML;
   const ovFilter = document.getElementById('fee-overrides-filter-select');
   const crFilter = document.getElementById('fee-credits-filter-select');
+  const chFilter = document.getElementById('fee-charges-filter-select');
   if(ovFilter && !ovFilter.dataset.populated){ ovFilter.innerHTML = allDriverFilterOptionsHTML(); ovFilter.dataset.populated = '1'; }
   if(crFilter && !crFilter.dataset.populated){ crFilter.innerHTML = allDriverFilterOptionsHTML(); crFilter.dataset.populated = '1'; }
+  if(chFilter && !chFilter.dataset.populated){ chFilter.innerHTML = allDriverFilterOptionsHTML(); chFilter.dataset.populated = '1'; }
   renderFeeOverridesList();
   renderFeeCreditsList();
+  renderFeeChargesList();
   const ovCount = document.getElementById('fee-overrides-count');
   if(ovCount) ovCount.textContent = feeOverrides.length;
   const crCount = document.getElementById('fee-credits-count');
   if(crCount) crCount.textContent = feeCredits.length;
+  const chCount = document.getElementById('fee-charges-count');
+  if(chCount) chCount.textContent = feeCharges.length;
 }
 function openFeeOverridesModal(){ document.getElementById('fee-overrides-modal-bg').classList.add('active'); }
 function closeFeeOverridesModal(){ document.getElementById('fee-overrides-modal-bg').classList.remove('active'); }
@@ -11772,6 +11852,7 @@ document.getElementById('fee-overrides-modal-bg').addEventListener('click', e=>{
 function openFeeCreditsModal(){ document.getElementById('fee-credits-modal-bg').classList.add('active'); }
 function closeFeeCreditsModal(){ document.getElementById('fee-credits-modal-bg').classList.remove('active'); }
 document.getElementById('fee-credits-modal-bg').addEventListener('click', e=>{ if(e.target.id==='fee-credits-modal-bg') closeFeeCreditsModal(); });
+document.getElementById('fee-charges-modal-bg').addEventListener('click', e=>{ if(e.target.id==='fee-charges-modal-bg') closeFeeChargesModal(); });
 function createFeeOverride(){
   if(realDriverProfile || isAdminSession){ createRealFeeOverride(); return; }
   const driverId = document.getElementById('fee-override-driver-select').value;
@@ -11903,6 +11984,88 @@ function deleteFeeCredit(id){
   if(crCount2) crCount2.textContent = feeCredits.length;
   saveState();
 }
+function createFeeCharge(){
+  if(realDriverProfile || isAdminSession){ createRealFeeCharge(); return; }
+  const driverId = document.getElementById('fee-charge-driver-select').value;
+  const amount = document.getElementById('fee-charge-amount').value;
+  const note = document.getElementById('fee-charge-note').value.trim();
+  const statusEl = document.getElementById('fee-charge-status');
+  if(!driverId || !amount || Number(amount) <= 0){
+    statusEl.textContent = t('admin_fch_fill_required');
+    return;
+  }
+  if(!note){
+    statusEl.textContent = t('admin_fch_note_required');
+    return;
+  }
+  const store = driverDataStore[driverId];
+  if(!store){
+    statusEl.textContent = t('admin_fc_driver_not_found');
+    return;
+  }
+  const amountNum = Number(amount);
+  feeCharges.push({
+    id: 'fch_' + Date.now(),
+    driverId, amountIDR: amountNum, note,
+    dateISO: new Date().toISOString(),
+  });
+  if(store.stats.adminCredit === undefined) store.stats.adminCredit = 0;
+  store.stats.adminCredit -= amountNum;
+  const chargeNote = ': ' + note;
+  pushInboxMessage(driverId, t('admin_fch_notify_title'),
+    t('admin_fch_notify_body').replace('{amount}', formatIDR(amountNum)).replace('{note}', chargeNote));
+  statusEl.style.color = 'var(--teal)';
+  statusEl.textContent = t('admin_fch_created');
+  document.getElementById('fee-charge-amount').value = '';
+  document.getElementById('fee-charge-note').value = '';
+  renderFeeChargesList();
+  const chCount = document.getElementById('fee-charges-count');
+  if(chCount) chCount.textContent = feeCharges.length;
+  if(currentDriverId === driverId) renderOverviewStats();
+  updateInboxDot();
+  saveState();
+}
+function deleteFeeCharge(id){
+  if(!confirm(t('admin_fch_confirm_delete'))) return;
+  const charge = feeCharges.find(c => c.id === id);
+  if(charge){
+    const store = driverDataStore[charge.driverId];
+    if(store){
+      store.stats.adminCredit = (store.stats.adminCredit || 0) + charge.amountIDR;
+      if(currentDriverId === charge.driverId) renderOverviewStats();
+    }
+  }
+  feeCharges = feeCharges.filter(c => c.id !== id);
+  renderFeeChargesList();
+  const chCount2 = document.getElementById('fee-charges-count');
+  if(chCount2) chCount2.textContent = feeCharges.length;
+  saveState();
+}
+function renderFeeChargesList(){
+  if(realDriverProfile || isAdminSession){ renderRealFeeChargesList(); return; }
+  const el = document.getElementById('admin-fee-charges-list');
+  if(!el) return;
+  const filterSel = document.getElementById('fee-charges-filter-select');
+  const filterDriverId = filterSel ? filterSel.value : '';
+  const list = filterDriverId ? feeCharges.filter(c => c.driverId === filterDriverId) : feeCharges;
+  if(list.length === 0){
+    el.innerHTML = `<div class="empty-state">${filterDriverId ? t('admin_fch_empty_filtered') : t('admin_fch_empty_default')}</div>`;
+    return;
+  }
+  const localeMap = {en:'en-GB', de:'de-DE', id:'id-ID'};
+  el.innerHTML = list.slice().reverse().map(c=>{
+    const p = driverProfiles[c.driverId];
+    const name = p ? p.fullName : c.driverId;
+    const dateStr = new Date(c.dateISO).toLocaleDateString(localeMap[currentLang] || 'en-GB');
+    return `
+    <div class="booking-row">
+      <div><div class="who">${name} — ${formatIDR(c.amountIDR)}</div><div class="when">${dateStr}${c.note ? ' · ' + c.note : ''}</div></div>
+      <button type="button" class="link-btn" style="color:var(--danger);" onclick="deleteFeeCharge('${c.id}')">${t('admin_delete_btn')}</button>
+    </div>`;
+  }).join('');
+}
+function openFeeChargesModal(){ document.getElementById('fee-charges-modal-bg').classList.add('active'); }
+function closeFeeChargesModal(){ document.getElementById('fee-charges-modal-bg').classList.remove('active'); }
 function renderFeeCreditsList(){
   if(realDriverProfile || isAdminSession){ renderRealFeeCreditsList(); return; }
   const el = document.getElementById('admin-fee-credits-list');
@@ -12175,6 +12338,72 @@ async function renderRealFeeCreditsList(){
     <div class="booking-row">
       <div><div class="who">${escapeHtml(name)} — ${formatIDR(c.amount_idr)}</div><div class="when">${dateStr}${c.applied ? ' · ✓ verrechnet' : ''}</div></div>
       <button type="button" class="link-btn" style="color:var(--danger);" onclick="deleteRealFeeCredit('${c.id}','${c.driver_id}', ${c.applied?'true':'false'})">${t('admin_delete_btn')}</button>
+    </div>`;
+  }).join('');
+}
+async function loadRealFeeChargesCache(filterDriverId){
+  let q = supabaseClient.from('fee_charges').select('*, driver:drivers(name, lw_number)').order('created_at', { ascending:false });
+  if(filterDriverId) q = q.eq('driver_id', filterDriverId);
+  const { data, error } = await q;
+  if(error){ console.error('Belastungen konnten nicht geladen werden:', error); return []; }
+  return data || [];
+}
+async function createRealFeeCharge(){
+  const driverId = document.getElementById('fee-charge-driver-select').value;
+  const amount = document.getElementById('fee-charge-amount').value;
+  const note = document.getElementById('fee-charge-note').value.trim();
+  const statusEl = document.getElementById('fee-charge-status');
+  if(!driverId || !amount || Number(amount) <= 0){ statusEl.style.color=''; statusEl.textContent = t('admin_fch_fill_required'); return; }
+  if(!note){ statusEl.style.color=''; statusEl.textContent = t('admin_fch_note_required'); return; }
+  // Vorhandenes Guthaben wird zuerst herangezogen, der Rest erhoeht die offenen Gebuehren
+  // (gleiches Feld wie normale Buchungsgebuehren) -- Gegenstueck zur Gutschrift-Logik.
+  const { data, error } = await supabaseClient.rpc('admin_charge_driver_fee', {
+    p_driver_id: driverId, p_amount: Number(amount), p_note: note
+  });
+  if(error){ statusEl.style.color='var(--danger)'; statusEl.textContent = 'Fehler: ' + error.message; return; }
+  const r = data && data[0];
+  const fromBalance = r ? r.applied_from_balance_idr : 0;
+  const toDue = r ? r.added_to_due_idr : Number(amount);
+  const chargeNote = ': ' + note;
+  await supabaseClient.from('driver_messages').insert({
+    driver_id: driverId, type:'system', subject: t('admin_fch_notify_title'),
+    body: t('admin_fch_notify_body').replace('{amount}', formatIDR(Number(amount))).replace('{note}', chargeNote)
+  });
+  statusEl.style.color = 'var(--teal)';
+  statusEl.textContent = fromBalance > 0
+    ? t('admin_fch_created_split').replace('{balance}', formatIDR(fromBalance)).replace('{due}', formatIDR(toDue))
+    : t('admin_fch_created');
+  document.getElementById('fee-charge-amount').value = '';
+  document.getElementById('fee-charge-note').value = '';
+  renderRealFeeChargesList();
+  if(typeof renderAdminOpenPayments === 'function') renderAdminOpenPayments();
+}
+async function deleteRealFeeCharge(id){
+  if(!confirm(t('admin_fch_confirm_delete'))) return;
+  const { error } = await supabaseClient.from('fee_charges').delete().eq('id', id);
+  if(error){ alert('Löschen fehlgeschlagen: ' + error.message); return; }
+  renderRealFeeChargesList();
+}
+async function renderRealFeeChargesList(){
+  const el = document.getElementById('admin-fee-charges-list');
+  if(!el) return;
+  const filterSel = document.getElementById('fee-charges-filter-select');
+  const filterDriverId = filterSel ? filterSel.value : '';
+  const list = await loadRealFeeChargesCache(filterDriverId || null);
+  const countEl = document.getElementById('fee-charges-count');
+  if(countEl) countEl.textContent = list.length;
+  if(list.length === 0){
+    el.innerHTML = `<div class="empty-state">${filterDriverId ? t('admin_fch_empty_filtered') : t('admin_fch_empty_default')}</div>`;
+    return;
+  }
+  const localeMap = {en:'en-GB', de:'de-DE', id:'id-ID'};
+  el.innerHTML = list.map(c=>{
+    const name = c.driver ? c.driver.name : c.driver_id;
+    const dateStr = new Date(c.created_at).toLocaleDateString(localeMap[currentLang] || 'en-GB');
+    return `
+    <div class="booking-row">
+      <div><div class="who">${escapeHtml(name)} — ${formatIDR(c.amount_idr)}</div><div class="when">${dateStr}${c.note ? ' · ' + escapeHtml(c.note) : ''}</div></div>
+      <button type="button" class="link-btn" style="color:var(--danger);" onclick="deleteRealFeeCharge('${c.id}')">${t('admin_delete_btn')}</button>
     </div>`;
   }).join('');
 }
@@ -12787,7 +13016,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v184</div>
+<div id="version-footer" style="position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v185</div>
 
 </body>
 </html>
