@@ -576,24 +576,13 @@
     text-decoration:none; font-weight:600; font-size:0.95rem;
   }
   .seo-menu-link:hover{ background:var(--teal-soft); }
-  .mobile-nav-menu{ display:none; }
-  .mobile-nav-menu-link{
-    display:block; width:100%; text-align:left; background:none; border:none;
-    padding:16px 20px; border-bottom:1px solid var(--line); color:var(--ink);
-    font-family:'Public Sans'; font-weight:600; font-size:0.95rem; cursor:pointer;
-  }
-  .mobile-nav-menu-link:hover{ background:var(--teal-soft); }
-  .mobile-nav-lang-row{ display:flex; gap:8px; padding:14px 20px; border-bottom:1px solid var(--line); }
-  .mobile-nav-lang-row .lang-btn{
-    flex:1; text-align:center; padding:8px 0; border:1px solid var(--line); border-radius:8px;
-    font-family:'JetBrains Mono'; font-weight:700; font-size:0.78rem; background:var(--paper); color:var(--ink-soft);
-  }
-  .mobile-nav-lang-row .lang-btn.active{ background:var(--ink); color:var(--paper); border-color:var(--ink); }
   @media (max-width:1024px){
-    .topbar-right-main{ margin-left:0; gap:14px; }
-    .tabs .tab-btn{ display:none; }
-    .lang-switch{ display:none; }
-    .mobile-nav-menu{ display:block; }
+    .topbar{ row-gap:10px; }
+    .logo{ width:100%; }
+    .topbar-right{ flex-wrap:wrap; row-gap:10px; }
+    .topbar-right-main{ margin-left:0; gap:10px; row-gap:8px; }
+    .tabs{ flex-wrap:wrap; row-gap:6px; }
+    .lang-switch{ margin-left:0; }
   }
   .admin-driver-row:hover{ border-color:var(--teal); }
   .admin-driver-row.blocked-row{ opacity:0.65; background:#FBE4DC; }
@@ -1186,17 +1175,6 @@
 <!-- SEO-Menü: Ratgeber-Unterseiten (Baustein 10) -->
 <div class="seo-menu-overlay" id="seo-menu-overlay" onclick="closeSeoMenu()"></div>
 <div class="seo-menu-panel" id="seo-menu-panel">
-  <div class="mobile-nav-menu">
-    <button type="button" class="mobile-nav-menu-link" data-i18n="tab_travelers" onclick="switchView('customer'); closeSeoMenu();">For Travelers</button>
-    <button type="button" class="mobile-nav-menu-link" data-i18n="tab_driver" onclick="switchView('driver'); closeSeoMenu();">Driver Dashboard</button>
-    <button type="button" class="mobile-nav-menu-link" style="color:var(--teal);" data-i18n="tab_register" onclick="openRealRegisterDriver(); closeSeoMenu();">+ Register as Driver</button>
-    <button type="button" class="mobile-nav-menu-link" data-i18n="tab_admin" onclick="switchView('admin'); closeSeoMenu();">🔐 Admin</button>
-    <div class="mobile-nav-lang-row">
-      <button type="button" class="lang-btn active" data-lang="en" onclick="setLanguage('en')">EN</button>
-      <button type="button" class="lang-btn" data-lang="de" onclick="setLanguage('de')">DE</button>
-      <button type="button" class="lang-btn" data-lang="id" onclick="setLanguage('id')">ID</button>
-    </div>
-  </div>
   <div class="seo-menu-head">
     <span>Reise-Ratgeber</span>
     <button type="button" class="modal-close" onclick="closeSeoMenu()">✕</button>
@@ -12780,7 +12758,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v181</div>
+<div id="version-footer" style="position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v182</div>
 
 </body>
 </html>
