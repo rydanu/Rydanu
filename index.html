@@ -1595,6 +1595,9 @@
   <div class="new-booking-banner" id="new-request-banner" style="display:none;" onclick="goToNewRequests()">
     ✨ <span id="new-request-banner-text"></span>
   </div>
+  <div class="new-booking-banner" id="new-villa-banner" style="display:none;" onclick="showDashSection('villa')">
+    🏠 <span id="new-villa-banner-text"></span>
+  </div>
 
   <div class="dash-wrap" id="driver-dash-wrap" style="display:none;">
     <div class="dash-nav">
@@ -1999,23 +2002,23 @@
 
     <div id="admin-sec-driverstats" style="display:none;">
     <h2 style="margin-top:0; text-align:center;">Fahrer- / Villen-Statistik</h2>
-    <div class="money-panel-grid" style="max-width:700px; margin:0 auto;">
+    <div class="money-panel-grid" style="max-width:100%; margin:0 auto; gap:56px; grid-template-columns:1fr 1fr;">
     <div>
     <h3 data-i18n="admin_driverstats_title">Driver statistics</h3>
     <p class="dash-head" style="display:block; margin-bottom:14px;" data-i18n="admin_driverstats_sub">Select a driver to see their completed and cancelled tours.</p>
     <div class="form-field">
       <select id="admin-driver-stats-select" onchange="renderAdminDriverStats()"></select>
     </div>
-    <div class="stat-row" id="admin-driver-stats-row" style="grid-template-columns:repeat(2,1fr);"></div>
+    <div class="stat-row" id="admin-driver-stats-row" style="grid-template-columns:repeat(2,1fr); gap:14px;"></div>
     </div>
 
-    <div>
+    <div style="padding-left:24px; border-left:1px solid var(--line);">
     <h3>🏠 Villa-Statistik</h3>
     <p class="dash-head" style="display:block; margin-bottom:14px;">Villa auswählen, um abgeschlossene und stornierte Buchungen zu sehen.</p>
     <div class="form-field">
       <select id="admin-villa-stats-select" onchange="renderVillaStats()"></select>
     </div>
-    <div class="stat-row" id="admin-villa-stats-row" style="grid-template-columns:repeat(2,1fr);"></div>
+    <div class="stat-row" id="admin-villa-stats-row" style="grid-template-columns:repeat(2,1fr); gap:14px;"></div>
     </div>
     </div>
     </div>
@@ -7450,6 +7453,7 @@ function renderVillaRequests(){
           <div class="who">🏠 ${escapeHtml(villaName)} — ${escapeHtml(r.destination)}</div>
           <div class="when">${whenText} · ${r.guests || '—'} ${t('lbl_guests')}</div>
           ${r.pickup ? `<div class="when">📍 ${escapeHtml(r.pickup)}</div>` : ''}
+          ${r.customer_phone ? `<div class="when">📞 ${escapeHtml(r.customer_phone)}</div>` : ''}
           ${r.notes ? `<div class="when" style="font-style:italic;">"${escapeHtml(r.notes)}"</div>` : ''}
           <span class="status-pill" style="background:var(--accent-light,#eef4ee);">${t('villa_source_tag')}</span>
         </div>
@@ -7476,6 +7480,7 @@ async function claimVillaRequest(requestId){
   openCustomOfferModal();
   document.getElementById('co-name').value = r.customer_name || '';
   document.getElementById('co-email').value = r.customer_email || '';
+  document.getElementById('co-phone').value = r.customer_phone || '';
   document.getElementById('co-desc').value = `${villaName}: ${r.destination}`;
   if(r.request_date) document.getElementById('co-date').value = r.request_date;
   const coPickup = document.getElementById('co-pickup');
@@ -7492,6 +7497,16 @@ function updateVillaDot(){
   if(dot){
     dot.style.display = openCount>0 ? 'inline-block' : 'none';
     dot.textContent = openCount>0 ? String(openCount) : '';
+  }
+  const banner = document.getElementById('new-villa-banner');
+  const bannerText = document.getElementById('new-villa-banner-text');
+  if(banner && bannerText){
+    if(openCount > 0){
+      bannerText.textContent = openCount === 1 ? t('new_villa_banner_one') : t('new_villa_banner_many').replace('{n}', openCount);
+      banner.style.display = 'flex';
+    } else {
+      banner.style.display = 'none';
+    }
   }
 }
 // ---------- Push-Benachrichtigungen (VAPID) ----------
@@ -8946,7 +8961,7 @@ const translations = {
     villa_push_error: "Could not enable push notifications. Please check your browser permissions.", villa_push_unsupported: "Push notifications aren't supported in this browser.",
     vr_title: "Book your Rydanu transfer", vr_intro: "{villa} has partnered with Rydanu to arrange reliable drivers for you.",
     vr_pickup: "Pickup location", vr_destination: "Destination", vr_date: "Date", vr_time: "Time",
-    vr_passengers: "Passengers", vr_luggage: "Luggage", vr_name: "Your name", vr_email: "Your email",
+    vr_passengers: "Passengers", vr_luggage: "Luggage", vr_name: "Your name", vr_phone: "Your phone number", vr_email: "Your email",
     vr_email_hint: "so we can reach you about this request", vr_notes: "Notes", vr_optional: "(optional)",
     vr_submit_btn: "Request transfer", vr_err_required: "Please fill in destination and email.",
     vr_err_generic: "Something went wrong. Please try again or contact the villa directly.",
@@ -8956,7 +8971,7 @@ const translations = {
     fees_overview_new_title: "Fees this month", fees_overview_villa_note: "Villa Partner bookings: 20% platform fee (instead of the usual 10%)", fees_how_it_works_title: "How fees work",
     requests_tab_open: "Open", requests_tab_offered: "Completed", requests_empty_offered: "No completed requests yet.", requests_tab_declined: "Declined", requests_empty_declined: "No declined requests.",
     co_open_btn_standalone: "✨ Or create a custom offer without a request",
-    new_request_banner_one: "You have a new custom tour request — tap to view it", new_request_banner_many: "You have {n} new custom tour requests — tap to view them",
+    new_request_banner_one: "You have a new custom tour request — tap to view it", new_request_banner_many: "You have {n} new custom tour requests — tap to view them", new_villa_banner_one: "🏠 New Villa Partner request — tap to view it", new_villa_banner_many: "🏠 {n} new Villa Partner requests — tap to view them",
     tr_open_btn: "Don't see what you want? Request a custom tour", tr_eyebrow: "Custom tour request", tr_title: "Tell us what you'd like",
     tr_hint: "Your driver will review this and, if they can help, prepare a tour offer for you through Rydanu — with a proper price and booking, not a private side deal.",
     tr_destination_label: "What would you like to do / see?", tr_destination_ph: "e.g. 3-day trip to Sidemen & Munduk", tr_pickup_ph: "e.g. your hotel or villa name",
@@ -9270,7 +9285,7 @@ const translations = {
     villa_push_error: "Push-Benachrichtigungen konnten nicht aktiviert werden. Bitte Browser-Berechtigungen prüfen.", villa_push_unsupported: "Push-Benachrichtigungen werden von diesem Browser nicht unterstützt.",
     vr_title: "Buchen Sie Ihren Rydanu-Transfer", vr_intro: "{villa} arbeitet mit Rydanu zusammen, um Ihnen zuverlässige Fahrer zu vermitteln.",
     vr_pickup: "Abholort", vr_destination: "Ziel", vr_date: "Datum", vr_time: "Zeit",
-    vr_passengers: "Passagiere", vr_luggage: "Gepäck", vr_name: "Ihr Name", vr_email: "Ihre E-Mail-Adresse",
+    vr_passengers: "Passagiere", vr_luggage: "Gepäck", vr_name: "Ihr Name", vr_phone: "Ihre Telefonnummer", vr_email: "Ihre E-Mail-Adresse",
     vr_email_hint: "damit wir Sie bezüglich dieser Anfrage kontaktieren können", vr_notes: "Anmerkungen", vr_optional: "(optional)",
     vr_submit_btn: "Transfer anfragen", vr_err_required: "Bitte Ziel und E-Mail-Adresse ausfüllen.",
     vr_err_generic: "Etwas ist schiefgelaufen. Bitte nochmal versuchen oder direkt die Villa kontaktieren.",
@@ -9280,7 +9295,7 @@ const translations = {
     fees_overview_new_title: "Gebühren diesen Monat", fees_overview_villa_note: "Villa-Partner-Buchungen: 20% Plattformgebühr (statt sonst 10%)", fees_how_it_works_title: "So funktionieren Gebühren",
     requests_tab_open: "Offen", requests_tab_offered: "Abgeschlossen", requests_empty_offered: "Noch keine abgeschlossenen Anfragen.", requests_tab_declined: "Abgelehnt", requests_empty_declined: "Keine abgelehnten Anfragen.",
     co_open_btn_standalone: "✨ Oder individuelles Angebot ohne Anfrage erstellen",
-    new_request_banner_one: "Du hast eine neue individuelle Touranfrage — antippen zum Ansehen", new_request_banner_many: "Du hast {n} neue individuelle Touranfragen — antippen zum Ansehen",
+    new_request_banner_one: "Du hast eine neue individuelle Touranfrage — antippen zum Ansehen", new_request_banner_many: "Du hast {n} neue individuelle Touranfragen — antippen zum Ansehen", new_villa_banner_one: "🏠 Neue Villa-Partner-Anfrage — antippen zum Ansehen", new_villa_banner_many: "🏠 {n} neue Villa-Partner-Anfragen — antippen zum Ansehen",
     tr_open_btn: "Nicht das Richtige dabei? Individuelle Tour anfragen", tr_eyebrow: "Individuelle Touranfrage", tr_title: "Sag uns, was du dir wünschst",
     tr_hint: "Dein Fahrer prüft die Anfrage und erstellt, falls möglich, ein Tourangebot über Rydanu für dich — mit richtigem Preis und Buchung, kein privates Nebengeschäft.",
     tr_destination_label: "Was möchtest du unternehmen / sehen?", tr_destination_ph: "z.B. 3-tägige Tour nach Sidemen &amp; Munduk", tr_pickup_ph: "z.B. dein Hotel oder Villa-Name",
@@ -9594,7 +9609,7 @@ const translations = {
     villa_push_error: "Notifikasi push tidak dapat diaktifkan. Silakan periksa izin browser Anda.", villa_push_unsupported: "Notifikasi push tidak didukung di browser ini.",
     vr_title: "Pesan Transfer Rydanu Anda", vr_intro: "{villa} bekerja sama dengan Rydanu untuk menyediakan pengemudi terpercaya untuk Anda.",
     vr_pickup: "Lokasi penjemputan", vr_destination: "Tujuan", vr_date: "Tanggal", vr_time: "Waktu",
-    vr_passengers: "Penumpang", vr_luggage: "Bagasi", vr_name: "Nama Anda", vr_email: "Email Anda",
+    vr_passengers: "Penumpang", vr_luggage: "Bagasi", vr_name: "Nama Anda", vr_phone: "Nomor telepon Anda", vr_email: "Email Anda",
     vr_email_hint: "agar kami dapat menghubungi Anda mengenai permintaan ini", vr_notes: "Catatan", vr_optional: "(opsional)",
     vr_submit_btn: "Ajukan permintaan transfer", vr_err_required: "Silakan isi tujuan dan email.",
     vr_err_generic: "Terjadi kesalahan. Silakan coba lagi atau hubungi villa langsung.",
@@ -9604,7 +9619,7 @@ const translations = {
     fees_overview_new_title: "Biaya bulan ini", fees_overview_villa_note: "Booking Villa Partner: biaya platform 20% (bukan 10% seperti biasa)", fees_how_it_works_title: "Cara kerja biaya",
     requests_tab_open: "Terbuka", requests_tab_offered: "Selesai", requests_empty_offered: "Belum ada permintaan yang selesai.", requests_tab_declined: "Ditolak", requests_empty_declined: "Tidak ada permintaan yang ditolak.",
     co_open_btn_standalone: "✨ Atau buat penawaran khusus tanpa permintaan",
-    new_request_banner_one: "Anda memiliki permintaan tur khusus baru — ketuk untuk melihatnya", new_request_banner_many: "Anda memiliki {n} permintaan tur khusus baru — ketuk untuk melihatnya",
+    new_request_banner_one: "Anda memiliki permintaan tur khusus baru — ketuk untuk melihatnya", new_request_banner_many: "Anda memiliki {n} permintaan tur khusus baru — ketuk untuk melihatnya", new_villa_banner_one: "🏠 Permintaan Villa Partner baru — ketuk untuk melihatnya", new_villa_banner_many: "🏠 {n} permintaan Villa Partner baru — ketuk untuk melihatnya",
     tr_open_btn: "Tidak menemukan yang Anda cari? Minta tur khusus", tr_eyebrow: "Permintaan tur khusus", tr_title: "Beri tahu kami keinginan Anda",
     tr_hint: "Sopir Anda akan meninjau ini dan, jika bisa membantu, menyiapkan penawaran tur untuk Anda melalui Rydanu — dengan harga dan pemesanan yang tepat, bukan kesepakatan pribadi.",
     tr_destination_label: "Apa yang ingin Anda lakukan / lihat?", tr_destination_ph: "mis. perjalanan 3 hari ke Sidemen &amp; Munduk", tr_pickup_ph: "mis. nama hotel atau vila Anda",
@@ -11506,6 +11521,9 @@ async function initVillaRequestPage(slug){
       <label style="display:block; margin-bottom:12px;">${t('vr_name')}
         <input type="text" id="vr-name" style="width:100%; margin-top:4px;">
       </label>
+      <label style="display:block; margin-bottom:12px;">${t('vr_phone')}
+        <input type="tel" id="vr-phone" required style="width:100%; margin-top:4px;">
+      </label>
       <label style="display:block; margin-bottom:12px;">${t('vr_email')} <span style="font-weight:400; opacity:0.7;">(${t('vr_email_hint')})</span>
         <input type="email" id="vr-email" required style="width:100%; margin-top:4px;">
       </label>
@@ -11521,8 +11539,9 @@ async function submitVillaRequest(slug){
   const pickup = document.getElementById('vr-pickup').value.trim();
   const destination = document.getElementById('vr-destination').value.trim();
   const email = document.getElementById('vr-email').value.trim();
+  const phone = document.getElementById('vr-phone').value.trim();
   const errEl = document.getElementById('vr-error');
-  if(!destination || !email){
+  if(!destination || !email || !phone){
     errEl.textContent = t('vr_err_required');
     return;
   }
@@ -11540,7 +11559,8 @@ async function submitVillaRequest(slug){
     p_guests: document.getElementById('vr-guests').value.trim() || null,
     p_luggage: document.getElementById('vr-luggage').value.trim() || null,
     p_notes: document.getElementById('vr-notes').value.trim() || null,
-    p_pickup_region: vrPickupRegion
+    p_pickup_region: vrPickupRegion,
+    p_customer_phone: phone
   });
   if(error){
     console.error('Villa-Anfrage fehlgeschlagen:', error);
@@ -12048,7 +12068,7 @@ async function checkDriverAuthState(silent){
   // koennen ohnehin keine Anfragen uebernommen werden (RLS prueft status='approved').
   const villaNavItem = document.getElementById('nav-villa-item');
   if(villaNavItem) villaNavItem.style.display = driverRow.status === 'approved' ? 'flex' : 'none';
-  if(driverRow.status === 'approved') updateVillaDot();
+  if(driverRow.status === 'approved') loadVillaRequests();
 }
 // Fragt den Fahrer-Status automatisch neu ab, wenn die Seite wieder aktiv wird (z.B. nach
 // Tab-Wechsel) - so verschwindet der "wartet auf Freischaltung"-Hinweis von selbst, sobald
@@ -13899,7 +13919,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v192</div>
+<div id="version-footer" style="position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v193</div>
 
 </body>
 </html>
