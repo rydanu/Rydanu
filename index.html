@@ -7524,7 +7524,7 @@ async function claimVillaRequest(requestId){
 async function withdrawVillaOffer(villaRequestId){
   if(!realDriverProfile) return;
   if(!confirm(t('villa_withdraw_confirm'))) return;
-  const { data: offerRow, error: findErr } = await supabaseClient
+  const { data: offerRow } = await supabaseClient
     .from('custom_tour_requests')
     .select('token')
     .eq('villa_request_id', villaRequestId)
@@ -7533,7 +7533,14 @@ async function withdrawVillaOffer(villaRequestId){
     .order('created_at', { ascending:false })
     .limit(1)
     .maybeSingle();
-  if(findErr || !offerRow){ console.error('Eigenes Angebot nicht gefunden:', findErr); alert(t('villa_action_err')); return; }
+  if(!offerRow){
+    // Sonderfall: Anfrage wurde uebernommen, aber nie ein Angebot abgesendet (Formular
+    // zwischendurch geschlossen) -- kein Token vorhanden, also direkt zuruecksetzen.
+    const { data: released, error: releaseErr } = await supabaseClient.rpc('release_villa_claim', { p_request_id: villaRequestId });
+    if(releaseErr || !released){ console.error('Zuruecksetzen fehlgeschlagen:', releaseErr); alert(t('villa_action_err')); return; }
+    await loadVillaRequests();
+    return;
+  }
   const { data: declineResult, error: declineErr } = await supabaseClient.rpc('decline_custom_tour_request', { p_token: offerRow.token });
   if(declineErr){ console.error('Zurueckziehen fehlgeschlagen:', declineErr); alert(t('villa_action_err')); return; }
   const releasedVillaRequestId = declineResult && declineResult[0] && declineResult[0].villa_request_id;
@@ -7549,7 +7556,7 @@ async function editAndResendVillaOffer(villaRequestId){
   if(!realDriverProfile) return;
   const r = realVillaRequests.find(x=>x.id===villaRequestId);
   if(!r) return;
-  const { data: offerRow, error: findErr } = await supabaseClient
+  const { data: offerRow } = await supabaseClient
     .from('custom_tour_requests')
     .select('id, token, price_idr, notes, proposed_date')
     .eq('villa_request_id', villaRequestId)
@@ -7558,9 +7565,12 @@ async function editAndResendVillaOffer(villaRequestId){
     .order('created_at', { ascending:false })
     .limit(1)
     .maybeSingle();
-  if(findErr || !offerRow){ console.error('Eigenes Angebot nicht gefunden:', findErr); alert(t('villa_action_err')); return; }
-  const { error: cancelErr } = await supabaseClient.from('custom_tour_requests').update({ status:'cancelled' }).eq('id', offerRow.id);
-  if(cancelErr){ console.error('Altes Angebot konnte nicht storniert werden:', cancelErr); alert(t('villa_action_err')); return; }
+  // Sonderfall: kein Angebot vorhanden (Formular wurde beim Uebernehmen nie abgeschickt) --
+  // dann gibt es nichts zu stornieren, einfach frisch loslegen.
+  if(offerRow){
+    const { error: cancelErr } = await supabaseClient.from('custom_tour_requests').update({ status:'cancelled' }).eq('id', offerRow.id);
+    if(cancelErr){ console.error('Altes Angebot konnte nicht storniert werden:', cancelErr); alert(t('villa_action_err')); return; }
+  }
 
   const villaName = (r.villa_partners && r.villa_partners.name) || t('villa_source_tag');
   pendingVillaRequest = { villaRequestId: r.id, villaPartnerId: r.villa_partner_id };
@@ -7570,15 +7580,16 @@ async function editAndResendVillaOffer(villaRequestId){
   document.getElementById('co-email').value = r.customer_email || '';
   document.getElementById('co-phone').value = r.customer_phone || '';
   document.getElementById('co-desc').value = `${villaName}: ${r.destination}`;
-  document.getElementById('co-price').value = offerRow.price_idr || '';
-  if(offerRow.proposed_date) document.getElementById('co-date').value = offerRow.proposed_date;
+  document.getElementById('co-price').value = offerRow ? (offerRow.price_idr || '') : '';
+  if(offerRow && offerRow.proposed_date) document.getElementById('co-date').value = offerRow.proposed_date;
+  else if(r.request_date) document.getElementById('co-date').value = r.request_date;
   const coPickup = document.getElementById('co-pickup');
   if(r.pickup){
     coPickup.value = r.pickup;
     coPickup.readOnly = true;
     document.getElementById('co-pickup-hint').style.display = 'block';
   }
-  document.getElementById('co-notes').value = offerRow.notes || '';
+  document.getElementById('co-notes').value = offerRow ? (offerRow.notes || '') : (r.notes ? (t('co_prefill_from_request') + ' "' + r.notes + '"') : '');
 }
 function updateVillaDot(){
   const openCount = realVillaRequests.filter(r=>r.status==='open').length;
@@ -14043,7 +14054,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v194</div>
+<div id="version-footer" style="position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v195</div>
 
 </body>
 </html>
