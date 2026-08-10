@@ -1160,6 +1160,16 @@
   </div>
 </div>
 
+<!-- Villa Partner: oeffentliches "Villa werden"-Bewerbungsformular (rydanu.com/?apply=villa).
+     Bewusst AUSSERHALB der Baustellen-Tuer, genau wie die anderen oeffentlichen Formulare oben --
+     ein Villa-Manager ohne Rydanu-Konto darf hier nie an der Login-Sperre haengen bleiben. -->
+<div id="villa-apply-page" class="offer-confirm-page" style="display:none;">
+  <div class="offer-confirm-card">
+    <div class="lock-logo"><img id="villa-apply-logo" alt="Rydanu"></div>
+    <div id="villa-apply-body"><p class="note">Loading…</p></div>
+  </div>
+</div>
+
 <div id="site-content" style="display:none;">
 
 <div class="topbar">
@@ -2160,6 +2170,26 @@
     <h2 style="margin-top:0;">🏠 Villa-Partner</h2>
     <p class="dash-head" style="display:block; margin-bottom:20px;">Villen &amp; Hotels anlegen, die ihren Gästen über einen persönlichen Link Transfers anfragen lassen können. Fahrer zahlen bei Villa-Buchungen pauschal 20% (statt normal 10%) — die Villa bekommt davon ihren festgelegten Anteil, Rydanu die Differenz.</p>
 
+    <div class="panel" style="padding:16px; margin-bottom:20px;">
+      <h3 style="margin-top:0;">Bewerbungslink für neue Villen</h3>
+      <p class="dash-head" style="display:block; margin-bottom:10px;">Diesen Link kannst du an Villa-/Hotel-Manager schicken — sie tragen sich damit selbst ein, du bestätigst und legst die Provision danach hier fest.</p>
+      <div class="when">🔗 <span id="villa-apply-link" class="mono"></span></div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;">
+        <button type="button" class="link-btn" style="width:auto; text-decoration:none; background:var(--paper-dim); padding:8px 12px; border-radius:6px;" id="villa-apply-copy-btn" onclick="copyVillaApplyLink()">📋 Link kopieren</button>
+        <button type="button" class="link-btn" style="width:auto; text-decoration:none; background:var(--paper-dim); padding:8px 12px; border-radius:6px;" onclick="toggleVillaApplyQr()">📱 QR-Code</button>
+        <button type="button" class="link-btn" style="width:auto; text-decoration:none; background:var(--paper-dim); padding:8px 12px; border-radius:6px;" onclick="shareVillaApplyLinkWhatsapp()">📲 Per WhatsApp senden</button>
+      </div>
+      <div id="villa-apply-qr-wrap" style="display:none; margin-top:12px; text-align:center;">
+        <img id="villa-apply-qr-img" alt="QR code" style="width:180px; height:180px; border:1px solid var(--line); border-radius:8px; background:#fff; padding:8px;">
+      </div>
+    </div>
+
+    <div class="panel" style="padding:16px; margin-bottom:20px;">
+      <h3 style="margin-top:0;">Neue Bewerbungen <span id="villa-applications-count" class="inbox-dot" style="display:none;">0</span></h3>
+      <p class="dash-head" style="display:block; margin-bottom:10px;">Über den Bewerbungslink eingegangene Villen — noch nicht live, bis du sie hier annimmst.</p>
+      <div id="villa-applications-list"><p class="note">Noch keine offenen Bewerbungen.</p></div>
+    </div>
+
     <div class="money-panel-grid">
     <div>
     <h3>Neue Villa anlegen</h3>
@@ -2254,7 +2284,15 @@
 
         <div style="margin-top:18px; padding-top:14px; border-top:1px solid var(--line);">
           <div class="when">🔗 <span id="villa-edit-link" class="mono"></span></div>
-          <div class="when">Offene Anfragen: <strong id="villa-edit-openreqs">0</strong></div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;">
+            <button type="button" class="link-btn" style="width:auto; text-decoration:none; background:var(--paper-dim); padding:8px 12px; border-radius:6px;" id="villa-edit-copy-btn" onclick="copyVillaLink()">📋 Link kopieren</button>
+            <button type="button" class="link-btn" style="width:auto; text-decoration:none; background:var(--paper-dim); padding:8px 12px; border-radius:6px;" onclick="toggleVillaQr()">📱 QR-Code</button>
+            <button type="button" class="link-btn" style="width:auto; text-decoration:none; background:var(--paper-dim); padding:8px 12px; border-radius:6px;" onclick="shareVillaLinkWhatsapp()">📲 Per WhatsApp senden</button>
+          </div>
+          <div id="villa-edit-qr-wrap" style="display:none; margin-top:12px; text-align:center;">
+            <img id="villa-edit-qr-img" alt="QR code" style="width:180px; height:180px; border:1px solid var(--line); border-radius:8px; background:#fff; padding:8px;">
+          </div>
+          <div class="when" style="margin-top:12px;">Offene Anfragen: <strong id="villa-edit-openreqs">0</strong></div>
           <div class="when">Provision offen: <strong id="villa-edit-earned">IDR 0</strong></div>
           <div class="when">Bereits ausgezahlt: <span id="villa-edit-paid">IDR 0</span></div>
           <button type="button" class="link-btn" id="villa-edit-markpaid-btn" onclick="markVillaCommissionsPaid(currentManagedVillaId)" style="margin-top:8px;">Als ausgezahlt markieren</button>
@@ -3620,6 +3658,7 @@ const RYVIO_LOGO_WORDMARK = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAlgAA
 document.getElementById('lock-logo-img').src = RYVIO_LOGO_WORDMARK;
 document.getElementById('offer-confirm-logo').src = RYVIO_LOGO_WORDMARK;
 document.getElementById('villa-request-logo').src = RYVIO_LOGO_WORDMARK;
+document.getElementById('villa-apply-logo').src = RYVIO_LOGO_WORDMARK;
 
 // ---- persistence: keep demo changes across reloads on this device/browser ----
 const STORAGE_KEY = 'ryvio_demo_state_v1';
@@ -6886,6 +6925,7 @@ function updateAdminMailBadge(){
 // Zahlung beglichen). Wird ueberall dort aufgerufen, wo sich die zugrundeliegenden Zahlen aendern.
 let adminOpenPaymentCount = 0;
 let realDocsResubmittedCount = 0;
+let realVillaApplicationsPendingCount = 0;
 function updateAdminTileAlerts(){
   const pendingTile = document.getElementById('admin-tile-pending');
   if(pendingTile) pendingTile.classList.toggle('has-alert', realPendingDriverCount > 0);
@@ -6902,6 +6942,8 @@ function updateAdminTileAlerts(){
   // angefordertes Dokument hochgeladen hat, das der Admin noch nicht angesehen hat.
   const documentsTile = document.getElementById('admin-tile-documents');
   if(documentsTile) documentsTile.classList.toggle('has-alert', realDocsResubmittedCount > 0);
+  const villaTile = document.getElementById('admin-tile-villa');
+  if(villaTile) villaTile.classList.toggle('has-alert', realVillaApplicationsPendingCount > 0);
 }
 // Zaehlt, bei wie vielen Fahrern gerade ein frisch hochgeladenes Dokument auf Ansicht wartet.
 async function loadAdminDocsResubmittedCount(){
@@ -7733,15 +7775,24 @@ async function createVillaPartner(){
   if(!commission || commission < 5 || commission > 20){ statusEl.textContent = 'Provisionssatz muss zwischen 5 und 20% liegen.'; return; }
   statusEl.textContent = 'Speichere…';
   statusEl.style.color = '';
-  const { error } = await supabaseClient.from('villa_partners').insert({
+  const { data: newVilla, error } = await supabaseClient.from('villa_partners').insert({
     name, slug, contact_name: contactName, contact_phone: contactPhone, contact_email: contactEmail,
     region, commission_percent: commission
-  });
+  }).select('id').single();
   if(error){
     console.error('Villa konnte nicht angelegt werden:', error);
     statusEl.style.color = 'var(--danger)';
     statusEl.textContent = error.code === '23505' ? 'Diese Link-Kennung ist schon vergeben — bitte eine andere wählen.' : 'Fehler beim Speichern.';
     return;
+  }
+  // Falls diese Villa aus einer Bewerbung uebernommen wurde: Bewerbung als angenommen markieren
+  // und mit dem neuen villa_partners-Eintrag verknuepfen (rein informativ, blockiert nichts).
+  if(currentAcceptingApplicationId){
+    const { error: linkErr } = await supabaseClient.from('villa_partner_applications')
+      .update({ status:'approved', created_villa_partner_id: newVilla.id, reviewed_at: new Date().toISOString() })
+      .eq('id', currentAcceptingApplicationId);
+    if(linkErr) console.error('Bewerbung konnte nicht als angenommen markiert werden:', linkErr);
+    currentAcceptingApplicationId = null;
   }
   statusEl.style.color = 'var(--teal)';
   statusEl.textContent = '✓ Villa angelegt.';
@@ -7758,10 +7809,105 @@ let currentManagedVillaId = null;
 async function loadVillaAdminData(){
   const sel = document.getElementById('villa-manage-select');
   if(!sel) return;
+  const linkEl = document.getElementById('villa-apply-link');
+  if(linkEl) linkEl.textContent = location.origin + '/?apply=villa';
   const { data: villas, error: villasErr } = await supabaseClient.from('villa_partners').select('*').order('name');
   if(villasErr){ console.error('Villen konnten nicht geladen werden:', villasErr); return; }
   villaAdminCache = villas || [];
   renderVillaManageOptions(villaAdminCache);
+  loadVillaApplications();
+}
+// Nur die Anzahl laden (fuer die rote Admin-Kachel), ohne den ganzen Villa-Bereich zu oeffnen --
+// gleiches Muster wie loadAdminDocsResubmittedCount, wird beim Admin-Login sofort mitgeladen.
+async function loadVillaApplicationsCount(){
+  const { data, error } = await supabaseClient.from('villa_partner_applications').select('id').eq('status','pending');
+  if(error){ console.error('Villa-Bewerbungen (Zaehler) konnten nicht geladen werden:', error); return; }
+  realVillaApplicationsPendingCount = (data||[]).length;
+  updateAdminTileAlerts();
+}
+let villaApplicationsCache = [];
+async function loadVillaApplications(){
+  const listEl = document.getElementById('villa-applications-list');
+  if(!listEl) return;
+  const { data, error } = await supabaseClient.from('villa_partner_applications').select('*').eq('status','pending').order('created_at', { ascending:true });
+  if(error){ console.error('Villa-Bewerbungen konnten nicht geladen werden:', error); return; }
+  villaApplicationsCache = data || [];
+  realVillaApplicationsPendingCount = villaApplicationsCache.length;
+  updateAdminTileAlerts();
+  const countBadge = document.getElementById('villa-applications-count');
+  if(countBadge){
+    countBadge.textContent = String(villaApplicationsCache.length);
+    countBadge.style.display = villaApplicationsCache.length > 0 ? 'inline-block' : 'none';
+  }
+  if(villaApplicationsCache.length === 0){
+    listEl.innerHTML = '<p class="note">Noch keine offenen Bewerbungen.</p>';
+    return;
+  }
+  listEl.innerHTML = villaApplicationsCache.map(a => `
+    <div class="booking-row">
+      <div>
+        <div class="who">🏠 ${escapeHtml(a.name)}</div>
+        <div class="when">${a.contact_name ? escapeHtml(a.contact_name) + ' · ' : ''}${escapeHtml(a.contact_phone)} · ${escapeHtml(a.contact_email)}</div>
+        <div class="when">Region: ${a.region === 'lombok' ? 'Lombok' : 'Bali'}</div>
+        ${a.message ? `<div class="when" style="font-style:italic;">"${escapeHtml(a.message)}"</div>` : ''}
+      </div>
+      <div class="row-actions" style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
+        <button type="button" class="accept-btn" onclick="acceptVillaApplication('${a.id}')">✓ Annehmen</button>
+        <button type="button" class="link-btn" style="width:auto; color:var(--danger);" onclick="rejectVillaApplication('${a.id}')">Ablehnen</button>
+      </div>
+    </div>
+  `).join('');
+}
+// "Annehmen" fuellt einfach das bestehende "Neue Villa anlegen"-Formular vor -- der Admin prueft
+// kurz und legt vor allem den Provisionssatz fest (den bewusst NICHT die Villa selbst waehlt),
+// dann ganz normal auf "Villa anlegen" klicken. Die eigentliche Verknuepfung mit der Bewerbung
+// passiert danach automatisch in createVillaPartner().
+let currentAcceptingApplicationId = null;
+function acceptVillaApplication(applicationId){
+  const a = villaApplicationsCache.find(x=>x.id===applicationId);
+  if(!a) return;
+  currentAcceptingApplicationId = applicationId;
+  document.getElementById('villa-new-name').value = a.name;
+  document.getElementById('villa-new-contact-name').value = a.contact_name || '';
+  document.getElementById('villa-new-contact-phone').value = a.contact_phone || '';
+  document.getElementById('villa-new-contact-email').value = a.contact_email || '';
+  document.getElementById('villa-new-region').value = a.region;
+  suggestVillaSlug();
+  document.getElementById('villa-new-status').style.color = 'var(--teal)';
+  document.getElementById('villa-new-status').textContent = 'Bewerbung übernommen — bitte Provisionssatz prüfen und unten auf "Villa anlegen" klicken.';
+  document.getElementById('villa-new-name').scrollIntoView({ behavior:'smooth', block:'center' });
+}
+async function rejectVillaApplication(applicationId){
+  if(!confirm('Diese Bewerbung wirklich ablehnen?')) return;
+  const { error } = await supabaseClient.rpc('reject_villa_partner_application', { p_application_id: applicationId });
+  if(error){ console.error('Bewerbung konnte nicht abgelehnt werden:', error); alert('Fehler beim Ablehnen.'); return; }
+  await loadVillaApplications();
+}
+// Bewerbungslink teilen: kopieren, QR-Code, WhatsApp -- gleiches Muster wie beim Villa-Buchungslink.
+function copyVillaApplyLink(){
+  const link = document.getElementById('villa-apply-link').textContent;
+  if(!link) return;
+  navigator.clipboard.writeText(link).then(()=>{
+    const btn = document.getElementById('villa-apply-copy-btn');
+    const original = btn.textContent;
+    btn.textContent = '✓ Kopiert!';
+    setTimeout(()=>{ btn.textContent = original; }, 1800);
+  }).catch(()=>{ alert(link); });
+}
+function toggleVillaApplyQr(){
+  const link = document.getElementById('villa-apply-link').textContent;
+  if(!link) return;
+  const wrap = document.getElementById('villa-apply-qr-wrap');
+  const showing = wrap.style.display !== 'none';
+  if(showing){ wrap.style.display = 'none'; return; }
+  document.getElementById('villa-apply-qr-img').src = 'https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=' + encodeURIComponent(link);
+  wrap.style.display = 'block';
+}
+function shareVillaApplyLinkWhatsapp(){
+  const link = document.getElementById('villa-apply-link').textContent;
+  if(!link) return;
+  const text = `Hallo! Wir würden uns freuen, Sie als Rydanu Villa-Partner zu begrüßen — Ihre Gäste können dann ganz einfach Transfers über Ihren eigenen Link buchen. Kurze Anmeldung hier:\n${link}`;
+  window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
 }
 function renderVillaManageOptions(list){
   const sel = document.getElementById('villa-manage-select');
@@ -7796,6 +7942,7 @@ async function loadVillaIntoManageForm(){
   const activeBtn = document.getElementById('villa-edit-toggle-active-btn');
   activeBtn.textContent = v.active ? '🚫 Villa deaktivieren' : '✓ Villa aktivieren';
   document.getElementById('villa-edit-link').textContent = location.origin + '/v/' + v.slug;
+  document.getElementById('villa-edit-qr-wrap').style.display = 'none';
 
   const [{ data: commissions }, { data: openReqs }] = await Promise.all([
     supabaseClient.from('villa_commissions').select('villa_amount_idr, status').eq('villa_partner_id', villaId),
@@ -7806,6 +7953,34 @@ async function loadVillaIntoManageForm(){
   document.getElementById('villa-edit-openreqs').textContent = (openReqs||[]).length;
   document.getElementById('villa-edit-earned').textContent = formatIDR(earned);
   document.getElementById('villa-edit-paid').textContent = formatIDR(paid);
+}
+// Villa-Link teilen: kopieren, QR-Code anzeigen, per WhatsApp senden (gleiches QR-API-Muster wie
+// beim bereits bestehenden Fahrer-QR-Code, keine neue Abhaengigkeit noetig).
+function copyVillaLink(){
+  const link = document.getElementById('villa-edit-link').textContent;
+  if(!link) return;
+  navigator.clipboard.writeText(link).then(()=>{
+    const btn = document.getElementById('villa-edit-copy-btn');
+    const original = btn.textContent;
+    btn.textContent = '✓ Kopiert!';
+    setTimeout(()=>{ btn.textContent = original; }, 1800);
+  }).catch(()=>{ alert(link); });
+}
+function toggleVillaQr(){
+  const link = document.getElementById('villa-edit-link').textContent;
+  if(!link) return;
+  const wrap = document.getElementById('villa-edit-qr-wrap');
+  const showing = wrap.style.display !== 'none';
+  if(showing){ wrap.style.display = 'none'; return; }
+  document.getElementById('villa-edit-qr-img').src = 'https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=' + encodeURIComponent(link);
+  wrap.style.display = 'block';
+}
+function shareVillaLinkWhatsapp(){
+  const link = document.getElementById('villa-edit-link').textContent;
+  if(!link) return;
+  const villaName = document.getElementById('villa-edit-name').value.trim() || 'Ihre Villa';
+  const text = `Hallo! Hier ist Ihr persönlicher Rydanu-Buchungslink für ${villaName} — Gäste können darüber direkt einen Transfer anfragen:\n${link}`;
+  window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
 }
 async function saveVillaEdits(){
   if(!currentManagedVillaId) return;
@@ -11761,6 +11936,80 @@ async function submitVillaRequest(slug){
   supabaseClient.functions.invoke('notify-villa-request', { body: { requestId } }).catch(err=>console.error('Fahrer-Benachrichtigung fehlgeschlagen:', err));
   document.getElementById('villa-request-body').innerHTML = `<h2>✓ ${t('vr_sent_title')}</h2><p class="note">${t('vr_sent_body').replace('{email}', escapeHtml(email))}</p>`;
 }
+// ============================================
+// VILLA PARTNER — Bewerbungsformular fuer neue Villen/Hotels (rydanu.com/?apply=villa)
+// Kein Login noetig. Legt eine 'pending' Zeile in villa_partner_applications an (siehe RLS/RPC
+// submit_villa_partner_application) -- erst wenn der Admin sie im Villa-Bereich annimmt, entsteht
+// daraus ein echter villa_partners-Eintrag mit Provisionssatz.
+// ============================================
+async function initVillaApplyPage(){
+  const page = document.getElementById('villa-apply-page');
+  const body = document.getElementById('villa-apply-body');
+  page.style.display = 'flex';
+  body.innerHTML = `
+    <h2>Rydanu Villa-Partner werden</h2>
+    <p class="note" style="margin-bottom:18px;">Ihre Gäste können dann über einen persönlichen Link direkt einen Fahrer für Transfers anfragen — kostenlos für Sie, Sie erhalten eine Provision pro erfolgreicher Buchung. Wir melden uns nach Ihrer Anmeldung kurz bei Ihnen.</p>
+    <form id="villa-apply-form" onsubmit="return false;" style="text-align:left;">
+      <div class="form-field" style="margin-bottom:12px;">
+        <label>Name der Villa / des Hotels</label>
+        <input type="text" id="va-name" required placeholder="z.B. Sunset Bali Villas" style="width:100%; margin-top:4px;">
+      </div>
+      <div class="form-field" style="margin-bottom:12px;">
+        <label>Ansprechpartner</label>
+        <input type="text" id="va-contact-name" placeholder="z.B. Made" style="width:100%; margin-top:4px;">
+      </div>
+      <div class="form-field" style="margin-bottom:12px;">
+        <label>Region</label>
+        <select id="va-region" style="width:100%; margin-top:4px;">
+          <option value="bali">Bali</option>
+          <option value="lombok">Lombok</option>
+        </select>
+      </div>
+      <div class="form-field" style="margin-bottom:12px;">
+        <label>WhatsApp / Telefon</label>
+        <input type="tel" id="va-phone" required placeholder="z.B. +62812..." style="width:100%; margin-top:4px;">
+      </div>
+      <div class="form-field" style="margin-bottom:12px;">
+        <label>E-Mail</label>
+        <input type="email" id="va-email" required placeholder="z.B. manager@villa.com" style="width:100%; margin-top:4px;">
+      </div>
+      <div class="form-field" style="margin-bottom:16px;">
+        <label>Nachricht <span style="font-weight:400; opacity:0.7;">(optional)</span></label>
+        <textarea id="va-message" rows="2" style="width:100%; margin-top:4px;"></textarea>
+      </div>
+      <button type="button" class="book-btn" id="va-submit-btn" onclick="submitVillaApplication()" style="width:100%;">Anfrage senden</button>
+      <p class="note" id="va-error" style="color:var(--danger); margin-top:10px;"></p>
+    </form>
+  `;
+}
+async function submitVillaApplication(){
+  const name = document.getElementById('va-name').value.trim();
+  const phone = document.getElementById('va-phone').value.trim();
+  const email = document.getElementById('va-email').value.trim();
+  const errEl = document.getElementById('va-error');
+  if(!name || !phone || !email){
+    errEl.textContent = 'Bitte Name, WhatsApp-Nummer und E-Mail ausfüllen.';
+    return;
+  }
+  const btn = document.getElementById('va-submit-btn');
+  btn.disabled = true;
+  errEl.textContent = '';
+  const { error } = await supabaseClient.rpc('submit_villa_partner_application', {
+    p_name: name,
+    p_contact_name: document.getElementById('va-contact-name').value.trim() || null,
+    p_contact_phone: phone,
+    p_contact_email: email,
+    p_region: document.getElementById('va-region').value,
+    p_message: document.getElementById('va-message').value.trim() || null
+  });
+  if(error){
+    console.error('Villa-Bewerbung fehlgeschlagen:', error);
+    errEl.textContent = 'Etwas ist schiefgelaufen — bitte nochmal versuchen.';
+    btn.disabled = false;
+    return;
+  }
+  document.getElementById('villa-apply-body').innerHTML = `<h2>✓ Danke!</h2><p class="note">Ihre Anmeldung ist bei uns eingegangen — wir melden uns in Kürze bei Ihnen.</p>`;
+}
 async function initOfferConfirmPage(token){
   const page = document.getElementById('offer-confirm-page');
   const body = document.getElementById('offer-confirm-body');
@@ -11838,9 +12087,13 @@ const _prBookingFromLink = new URLSearchParams(location.search).get('prBooking')
 // aus ?villa=<slug>, falls das Rewrite (noch) nicht greift.
 const _villaPathMatch = location.pathname.match(/^\/v\/([a-z0-9-]+)\/?$/i);
 const _villaSlug = _villaPathMatch ? _villaPathMatch[1] : new URLSearchParams(location.search).get('villa');
+const _wantsVillaApply = new URLSearchParams(location.search).get('apply') === 'villa';
 if(_villaSlug){
   document.getElementById('site-lock-gate').style.display = 'none';
   initVillaRequestPage(_villaSlug);
+} else if(_wantsVillaApply){
+  document.getElementById('site-lock-gate').style.display = 'none';
+  initVillaApplyPage();
 } else if(_offerToken){
   document.getElementById('site-lock-gate').style.display = 'none';
   initOfferConfirmPage(_offerToken);
@@ -12319,7 +12572,7 @@ function switchView(view){
   // Ohne diesen Reset blieb das Signup-Formular beim Tab-Wechsel einfach stehen.
   if(view==='driver'){ toggleAuthForm('login'); }
   if(view==='driver'){ checkDriverAuthState(true); }
-  if(view==='admin'){ updateIsAdminSession().then(()=>{ renderAdminList(); loadAdminPendingDrivers(); loadRealAdminMessages(); loadAdminDocsResubmittedCount(); renderAdminOpenPayments(); }); }
+  if(view==='admin'){ updateIsAdminSession().then(()=>{ renderAdminList(); loadAdminPendingDrivers(); loadRealAdminMessages(); loadAdminDocsResubmittedCount(); renderAdminOpenPayments(); loadVillaApplicationsCount(); }); }
 }
 function switchViewProgrammatic(view){
   document.getElementById('view-customer').classList.toggle('active', view==='customer');
@@ -12332,7 +12585,7 @@ function switchViewProgrammatic(view){
   if(regBtn2) regBtn2.classList.remove('active');
   if(view==='driver'){ toggleAuthForm('login'); }
   if(view==='driver'){ checkDriverAuthState(true); }
-  if(view==='admin'){ updateIsAdminSession().then(()=>{ renderAdminList(); loadAdminPendingDrivers(); loadRealAdminMessages(); loadAdminDocsResubmittedCount(); renderAdminOpenPayments(); }); }
+  if(view==='admin'){ updateIsAdminSession().then(()=>{ renderAdminList(); loadAdminPendingDrivers(); loadRealAdminMessages(); loadAdminDocsResubmittedCount(); renderAdminOpenPayments(); loadVillaApplicationsCount(); }); }
 }
 function populateDemoDriverSwitcher(){
   const sel = document.getElementById('demo-driver-select');
@@ -14115,7 +14368,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v201</div>
+<div id="version-footer" style="position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v203</div>
 
 </body>
 </html>
