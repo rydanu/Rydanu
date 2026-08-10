@@ -1845,28 +1845,32 @@
         </div>
 
         <div class="dash-head" style="margin-top:26px;"><div><h3 data-i18n="fees_how_it_works_title" style="margin:0;">How fees work</h3></div></div>
-        <div class="panel">
-          <div class="booking-row">
-            <div>
-              <div class="who" data-i18n="fees_listing_profile">Listing & profile</div>
-              <div class="when" data-i18n="fees_listing_desc">Always free — create unlimited listings, no cost while you have zero bookings</div>
-              <div class="conditions-hint">ⓘ <span data-i18n="fees_conditions_apply">Conditions apply</span> — <a href="#" onclick="openTerms('listing'); return false;" data-i18n="fees_see_full_terms">see full terms</a></div>
-            </div>
-            <span class="mono" style="font-weight:600;">IDR 0</span>
+
+        <!-- Hero-Karte: die wichtigste Botschaft ("kostenlos") soll sofort ins Auge fallen, nicht in
+             einer Zeile zwischen anderen Posten untergehen. -->
+        <div class="panel" style="background:var(--teal-soft); border-color:var(--teal); padding:20px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center; gap:14px; flex-wrap:wrap;">
+          <div>
+            <div style="font-size:1.15rem; font-weight:800; color:var(--ink); display:flex; align-items:center; gap:8px;">🎉 <span data-i18n="fees_listing_profile">Listing & profile</span> — <span data-i18n="fees_hero_free_label">always free</span></div>
+            <div class="when" style="margin-top:4px;" data-i18n="fees_listing_desc">Always free — create unlimited listings, no cost while you have zero bookings</div>
+            <div class="conditions-hint" style="margin-top:6px;">ⓘ <span data-i18n="fees_conditions_apply">Conditions apply</span> — <a href="#" onclick="openTerms('listing'); return false;" data-i18n="fees_see_full_terms">see full terms</a></div>
           </div>
-          <div class="booking-row"><div><div class="who" data-i18n="fees_featured_placement">Featured placement <em style="font-style:normal;color:var(--ink-soft);font-size:0.75rem;" data-i18n="lbl_optional_inline">(optional)</em></div><div class="when" data-i18n="fees_featured_desc">Higher spot in search results this week</div></div><span class="mono" style="font-weight:600;">IDR 75,000 / wk</span></div>
-          <div class="tier-note" data-i18n="fees_tier_note">Per confirmed booking, Rydanu charges a flat 10% commission on the tour price:</div>
+          <span class="mono" style="font-weight:800; font-size:1.3rem; color:var(--teal); white-space:nowrap;">IDR 0</span>
+        </div>
+
+        <div class="panel">
+          <div class="booking-row"><div><div class="who">✨ <span data-i18n="fees_featured_placement">Featured placement <em style="font-style:normal;color:var(--ink-soft);font-size:0.75rem;" data-i18n="lbl_optional_inline">(optional)</em></span></div><div class="when" data-i18n="fees_featured_desc">Higher spot in search results this week</div></div><span class="mono" style="font-weight:600;">IDR 75,000 / wk</span></div>
+          <div class="tier-note" style="font-weight:700;" data-i18n="fees_tier_note">Per confirmed booking, Rydanu charges a flat 10% commission on the tour price:</div>
           <table class="tier-table">
             <thead><tr><th data-i18n="fees_th_booking_value">Booking value</th><th data-i18n="fees_th_fee_charged">Fee charged to driver</th></tr></thead>
             <tbody>
-              <tr><td data-i18n="fees_row_any_booking">Any confirmed booking</td><td class="mono" data-i18n="fees_row_any_booking_val">10% of tour price</td></tr>
-              <tr style="background:var(--accent-light,#eef4ee);"><td>🏠 <span data-i18n="villa_source_tag">Villa Partner</span></td><td class="mono" data-i18n="fees_overview_villa_note">20% platform fee (instead of the usual 10%)</td></tr>
-              <tr><td data-i18n="fees_featured_placement">Featured placement <em style="font-style:normal;color:var(--ink-soft);font-size:0.75rem;" data-i18n="lbl_optional_inline">(optional)</em></td><td class="mono">IDR 75,000 / wk</td></tr>
+              <tr><td>🚗 <span data-i18n="fees_row_any_booking">Any confirmed booking</span></td><td class="mono" data-i18n="fees_row_any_booking_val">10% of tour price</td></tr>
+              <tr style="background:var(--gold); border-radius:6px;"><td style="font-weight:800; color:var(--ink);">🏠 <span data-i18n="villa_source_tag">Villa Partner</span></td><td class="mono" style="font-weight:800; color:var(--ink);" data-i18n="fees_overview_villa_note">20% platform fee (instead of the usual 10%)</td></tr>
+              <tr><td>✨ <span data-i18n="fees_featured_placement">Featured placement <em style="font-style:normal;color:var(--ink-soft);font-size:0.75rem;" data-i18n="lbl_optional_inline">(optional)</em></span></td><td class="mono">IDR 75,000 / wk</td></tr>
             </tbody>
           </table>
           <p class="conditions-hint" style="padding:0 20px 14px;">ⓘ <span data-i18n="fees_conditions_apply_booking">Conditions apply to every booking</span> — <a href="#" onclick="openTerms('booking'); return false;" data-i18n="fees_see_full_terms">see full terms</a></p>
           <p class="tier-footnote" data-i18n="tier_transfer_note">Transfer bookings (with or without airport pickup) use the exact same price-based fee table above — there's no separate flat rate.</p>
-          <p class="tier-footnote" data-i18n="fees_zero_bookings_note">A driver with zero bookings this month pays nothing at all — the fee only appears once a guest actually confirms a paid trip.</p>
+          <p class="tier-footnote">💚 <span data-i18n="fees_zero_bookings_note">A driver with zero bookings this month pays nothing at all — the fee only appears once a guest actually confirms a paid trip.</span></p>
         </div>
 
         <div class="dash-head" style="margin-top:26px;"><div><h3 data-i18n="feestatements_title" style="margin:0;">Fee statements</h3><p data-i18n="feestatements_sub">Every paid fee generates a receipt here — also emailed to you.</p></div></div>
@@ -1919,10 +1923,10 @@
         <span class="at-title">Geschäftsübersicht</span>
         <span class="at-sub">Gebühren, Buchungen &amp; Stornos nach Zeitraum</span>
       </button>
-      <button type="button" class="admin-tile" onclick="showAdminSection('driverstats')">
+      <button type="button" class="admin-tile" onclick="showAdminSection('driverstats'); populateVillaStatsSelect();">
         <span class="at-icon">📈</span>
-        <span class="at-title">Fahrer-Statistik</span>
-        <span class="at-sub">Touren pro Fahrer im Detail ansehen</span>
+        <span class="at-title">Fahrer / Villen-Statistik</span>
+        <span class="at-sub">Touren pro Fahrer oder Villa im Detail ansehen</span>
       </button>
       <button type="button" class="admin-tile" id="admin-tile-messages" onclick="showAdminSection('messages')">
         <span class="at-icon">✉️</span>
@@ -1948,6 +1952,11 @@
         <span class="at-icon">🏠</span>
         <span class="at-title">Villa-Partner</span>
         <span class="at-sub">Villen anlegen, Provisionssatz &amp; Buchungen verwalten</span>
+      </button>
+      <button type="button" class="admin-tile" id="admin-tile-villabookings" onclick="showAdminSection('villabookings'); populateVillaBookingsSelect();">
+        <span class="at-icon">📖</span>
+        <span class="at-title">Villa-Buchungen</span>
+        <span class="at-sub">Buchungen &amp; Provisionen je Villa im Detail ansehen</span>
       </button>
       <button type="button" class="admin-tile" onclick="showAdminSection('money')" style="grid-column:1 / -1;">
         <span class="at-icon">💰</span>
@@ -1990,13 +1999,26 @@
     </div>
 
     <div id="admin-sec-driverstats" style="display:none;">
-    <h2 style="margin-top:0;" data-i18n="admin_driverstats_title">Driver statistics</h2>
+    <h2 style="margin-top:0;">Fahrer- / Villen-Statistik</h2>
+    <div class="money-panel-grid">
+    <div>
+    <h3 data-i18n="admin_driverstats_title">Driver statistics</h3>
     <p class="dash-head" style="display:block; margin-bottom:14px;" data-i18n="admin_driverstats_sub">Select a driver to see their completed and cancelled tours.</p>
     <div class="form-field" style="max-width:340px;">
       <select id="admin-driver-stats-select" onchange="renderAdminDriverStats()"></select>
     </div>
     <div class="stat-row" id="admin-driver-stats-row"></div>
+    </div>
 
+    <div>
+    <h3>🏠 Villa-Statistik</h3>
+    <p class="dash-head" style="display:block; margin-bottom:14px;">Villa auswählen, um abgeschlossene und stornierte Buchungen zu sehen.</p>
+    <div class="form-field" style="max-width:340px;">
+      <select id="admin-villa-stats-select" onchange="renderVillaStats()"></select>
+    </div>
+    <div class="stat-row" id="admin-villa-stats-row"></div>
+    </div>
+    </div>
     </div>
 
     <div id="admin-sec-messages" style="display:none;">
@@ -2130,6 +2152,8 @@
     <h2 style="margin-top:0;">🏠 Villa-Partner</h2>
     <p class="dash-head" style="display:block; margin-bottom:20px;">Villen &amp; Hotels anlegen, die ihren Gästen über einen persönlichen Link Transfers anfragen lassen können. Fahrer zahlen bei Villa-Buchungen pauschal 20% (statt normal 10%) — die Villa bekommt davon ihren festgelegten Anteil, Rydanu die Differenz.</p>
 
+    <div class="money-panel-grid">
+    <div>
     <h3>Neue Villa anlegen</h3>
     <div class="panel" style="padding:16px; margin-bottom:20px;">
       <div class="form-field">
@@ -2170,9 +2194,77 @@
       <button type="button" class="period-btn" onclick="createVillaPartner()" style="background:var(--gold); border-color:var(--gold); color:var(--ink); font-weight:700;">Villa anlegen</button>
       <p class="form-error" id="villa-new-status"></p>
     </div>
+    </div>
 
-    <h3>Bestehende Villen</h3>
-    <div class="panel" id="villa-admin-list"><div class="empty-state">Lädt…</div></div>
+    <div>
+    <h3>Villa verwalten</h3>
+    <div class="panel" style="padding:16px; margin-bottom:20px;">
+      <div class="form-field">
+        <label>Villa suchen / auswählen</label>
+        <input type="text" id="villa-manage-search" placeholder="Namen tippen zum Filtern…" oninput="filterVillaManageSelect()" style="margin-bottom:8px;">
+        <select id="villa-manage-select" onchange="loadVillaIntoManageForm()" size="5" style="height:auto;"></select>
+      </div>
+      <div id="villa-manage-form" style="display:none; margin-top:16px; padding-top:16px; border-top:1px solid var(--line);">
+        <div class="form-field">
+          <label>Name der Villa / des Hotels</label>
+          <input type="text" id="villa-edit-name">
+        </div>
+        <div class="form-field">
+          <label>Link (Kennung kann aus technischen Gründen nicht mehr geändert werden)</label>
+          <input type="text" id="villa-edit-slug" disabled style="opacity:0.6;">
+        </div>
+        <div style="display:flex; gap:10px;">
+          <div class="form-field" style="flex:1;">
+            <label>Ansprechpartner</label>
+            <input type="text" id="villa-edit-contact-name">
+          </div>
+          <div class="form-field" style="flex:1;">
+            <label>Region</label>
+            <select id="villa-edit-region">
+              <option value="bali">Bali</option>
+              <option value="lombok">Lombok</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:flex; gap:10px;">
+          <div class="form-field" style="flex:1;">
+            <label>WhatsApp / Telefon</label>
+            <input type="text" id="villa-edit-contact-phone">
+          </div>
+          <div class="form-field" style="flex:1;">
+            <label>E-Mail</label>
+            <input type="email" id="villa-edit-contact-email">
+          </div>
+        </div>
+        <div class="form-field">
+          <label>Provisionssatz der Villa (5–20%)</label>
+          <input type="number" id="villa-edit-commission" min="5" max="20" step="0.5">
+        </div>
+        <button type="button" class="period-btn" onclick="saveVillaEdits()" style="background:var(--gold); border-color:var(--gold); color:var(--ink); font-weight:700;">Änderungen speichern</button>
+        <button type="button" class="link-btn" id="villa-edit-toggle-active-btn" onclick="toggleVillaActiveFromEditForm()" style="margin-top:8px;"></button>
+        <p class="form-error" id="villa-edit-status"></p>
+
+        <div style="margin-top:18px; padding-top:14px; border-top:1px solid var(--line);">
+          <div class="when">🔗 <span id="villa-edit-link" class="mono"></span></div>
+          <div class="when">Offene Anfragen: <strong id="villa-edit-openreqs">0</strong></div>
+          <div class="when">Provision offen: <strong id="villa-edit-earned">IDR 0</strong></div>
+          <div class="when">Bereits ausgezahlt: <span id="villa-edit-paid">IDR 0</span></div>
+          <button type="button" class="link-btn" id="villa-edit-markpaid-btn" onclick="markVillaCommissionsPaid(currentManagedVillaId)" style="margin-top:8px;">Als ausgezahlt markieren</button>
+        </div>
+      </div>
+    </div>
+    </div>
+    </div>
+    </div>
+
+    <div id="admin-sec-villabookings" style="display:none;">
+    <h2 style="margin-top:0;">📖 Villa-Buchungen</h2>
+    <p class="dash-head" style="display:block; margin-bottom:14px;">Villa auswählen, um alle ihre Buchungen mit Provisions-/Gebührenaufteilung einzusehen.</p>
+    <div class="form-field" style="max-width:340px;">
+      <select id="villa-bookings-select" onchange="renderVillaBookingsList()"></select>
+    </div>
+    <div class="stat-row" id="villa-bookings-stats"></div>
+    <div class="panel" id="villa-bookings-list"></div>
     </div>
 
     <div id="admin-sec-pwreset" style="display:none;">
@@ -7508,74 +7600,183 @@ async function createVillaPartner(){
   document.getElementById('villa-new-commission').value = '10';
   loadVillaAdminData();
 }
+let villaAdminCache = [];
+let currentManagedVillaId = null;
 async function loadVillaAdminData(){
-  const listEl = document.getElementById('villa-admin-list');
-  if(!listEl) return;
-  const [{ data: villas, error: villasErr }, { data: commissions, error: commErr }, { data: openReqs }] = await Promise.all([
-    supabaseClient.from('villa_partners').select('*').order('created_at', { ascending:false }),
-    supabaseClient.from('villa_commissions').select('villa_partner_id, villa_amount_idr, status'),
-    supabaseClient.from('villa_requests').select('villa_partner_id, status')
+  const sel = document.getElementById('villa-manage-select');
+  if(!sel) return;
+  const { data: villas, error: villasErr } = await supabaseClient.from('villa_partners').select('*').order('name');
+  if(villasErr){ console.error('Villen konnten nicht geladen werden:', villasErr); return; }
+  villaAdminCache = villas || [];
+  renderVillaManageOptions(villaAdminCache);
+}
+function renderVillaManageOptions(list){
+  const sel = document.getElementById('villa-manage-select');
+  if(!sel) return;
+  if(list.length === 0){
+    sel.innerHTML = '<option disabled>Keine Villa gefunden</option>';
+    return;
+  }
+  sel.innerHTML = list.map(v => `<option value="${v.id}">${v.active ? '' : '🚫 '}${escapeHtml(v.name)} (${v.slug})</option>`).join('');
+}
+function filterVillaManageSelect(){
+  const q = document.getElementById('villa-manage-search').value.trim().toLowerCase();
+  const filtered = q ? villaAdminCache.filter(v => v.name.toLowerCase().includes(q) || v.slug.toLowerCase().includes(q)) : villaAdminCache;
+  renderVillaManageOptions(filtered);
+}
+async function loadVillaIntoManageForm(){
+  const sel = document.getElementById('villa-manage-select');
+  const villaId = sel.value;
+  if(!villaId) return;
+  currentManagedVillaId = villaId;
+  const v = villaAdminCache.find(x=>x.id===villaId);
+  if(!v) return;
+  document.getElementById('villa-manage-form').style.display = 'block';
+  document.getElementById('villa-edit-name').value = v.name;
+  document.getElementById('villa-edit-slug').value = v.slug;
+  document.getElementById('villa-edit-contact-name').value = v.contact_name || '';
+  document.getElementById('villa-edit-region').value = v.region;
+  document.getElementById('villa-edit-contact-phone').value = v.contact_phone || '';
+  document.getElementById('villa-edit-contact-email').value = v.contact_email || '';
+  document.getElementById('villa-edit-commission').value = v.commission_percent;
+  document.getElementById('villa-edit-status').textContent = '';
+  const activeBtn = document.getElementById('villa-edit-toggle-active-btn');
+  activeBtn.textContent = v.active ? '🚫 Villa deaktivieren' : '✓ Villa aktivieren';
+  document.getElementById('villa-edit-link').textContent = location.origin + '/v/' + v.slug;
+
+  const [{ data: commissions }, { data: openReqs }] = await Promise.all([
+    supabaseClient.from('villa_commissions').select('villa_amount_idr, status').eq('villa_partner_id', villaId),
+    supabaseClient.from('villa_requests').select('id').eq('villa_partner_id', villaId).eq('status','open')
   ]);
-  if(villasErr){ console.error('Villen konnten nicht geladen werden:', villasErr); listEl.innerHTML = '<div class="empty-state">Fehler beim Laden.</div>'; return; }
-  if(!villas || villas.length === 0){ listEl.innerHTML = '<div class="empty-state">Noch keine Villa angelegt.</div>'; return; }
-  const commByVilla = {};
-  (commErr ? [] : (commissions||[])).forEach(c=>{
-    if(!commByVilla[c.villa_partner_id]) commByVilla[c.villa_partner_id] = { earned:0, paid:0 };
-    if(c.status === 'paid') commByVilla[c.villa_partner_id].paid += Number(c.villa_amount_idr||0);
-    else commByVilla[c.villa_partner_id].earned += Number(c.villa_amount_idr||0);
-  });
-  const openByVilla = {};
-  (openReqs||[]).forEach(r=>{
-    if(r.status !== 'open') return;
-    openByVilla[r.villa_partner_id] = (openByVilla[r.villa_partner_id]||0) + 1;
-  });
-  listEl.innerHTML = villas.map(v=>{
-    const comm = commByVilla[v.id] || { earned:0, paid:0 };
-    const openCount = openByVilla[v.id] || 0;
-    const link = location.origin + '/v/' + v.slug;
-    return `
-    <div class="booking-row" style="flex-direction:column; align-items:stretch; gap:8px;">
-      <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px; flex-wrap:wrap;">
-        <div>
-          <div class="who">🏠 ${escapeHtml(v.name)} ${v.active ? '' : '<span class="status-pill" style="background:var(--danger); color:#fff;">Inaktiv</span>'}</div>
-          <div class="when">${v.contact_name ? escapeHtml(v.contact_name) + ' · ' : ''}${v.contact_phone ? escapeHtml(v.contact_phone) + ' · ' : ''}${v.contact_email ? escapeHtml(v.contact_email) : ''}</div>
-          <div class="when mono" style="cursor:pointer;" onclick="navigator.clipboard && navigator.clipboard.writeText('${link}')" title="Klicken zum Kopieren">🔗 ${link}</div>
-        </div>
-        <div style="text-align:right;">
-          <div class="when">Offene Anfragen: <strong>${openCount}</strong></div>
-          <div class="when">Provision offen: <strong>${formatIDR(comm.earned)}</strong></div>
-          <div class="when">Bereits ausgezahlt: ${formatIDR(comm.paid)}</div>
-        </div>
-      </div>
-      <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-        <label style="font-size:0.8rem; display:flex; align-items:center; gap:4px;">Satz:
-          <input type="number" min="5" max="20" step="0.5" value="${v.commission_percent}" style="width:70px;" id="villa-percent-${v.id}">%
-        </label>
-        <button type="button" class="link-btn" style="width:auto;" onclick="updateVillaCommissionPercent('${v.id}')">Speichern</button>
-        <button type="button" class="link-btn" style="width:auto;" onclick="toggleVillaActive('${v.id}', ${!v.active})">${v.active ? 'Deaktivieren' : 'Aktivieren'}</button>
-        ${comm.earned > 0 ? `<button type="button" class="link-btn" style="width:auto;" onclick="markVillaCommissionsPaid('${v.id}')">Als ausgezahlt markieren</button>` : ''}
-      </div>
-    </div>`;
-  }).join('');
+  let earned = 0, paid = 0;
+  (commissions||[]).forEach(c=>{ if(c.status==='paid') paid += Number(c.villa_amount_idr||0); else earned += Number(c.villa_amount_idr||0); });
+  document.getElementById('villa-edit-openreqs').textContent = (openReqs||[]).length;
+  document.getElementById('villa-edit-earned').textContent = formatIDR(earned);
+  document.getElementById('villa-edit-paid').textContent = formatIDR(paid);
 }
-async function updateVillaCommissionPercent(villaId){
-  const input = document.getElementById('villa-percent-' + villaId);
-  const val = Number(input.value);
-  if(!val || val < 5 || val > 20){ alert('Provisionssatz muss zwischen 5 und 20% liegen.'); return; }
-  const { error } = await supabaseClient.from('villa_partners').update({ commission_percent: val }).eq('id', villaId);
-  if(error){ console.error('Satz konnte nicht aktualisiert werden:', error); alert('Fehler beim Speichern.'); return; }
+async function saveVillaEdits(){
+  if(!currentManagedVillaId) return;
+  const name = document.getElementById('villa-edit-name').value.trim();
+  const commission = Number(document.getElementById('villa-edit-commission').value);
+  const statusEl = document.getElementById('villa-edit-status');
+  if(!name){ statusEl.style.color = 'var(--danger)'; statusEl.textContent = 'Name darf nicht leer sein.'; return; }
+  if(!commission || commission < 5 || commission > 20){ statusEl.style.color = 'var(--danger)'; statusEl.textContent = 'Provisionssatz muss zwischen 5 und 20% liegen.'; return; }
+  const { error } = await supabaseClient.from('villa_partners').update({
+    name,
+    contact_name: document.getElementById('villa-edit-contact-name').value.trim() || null,
+    region: document.getElementById('villa-edit-region').value,
+    contact_phone: document.getElementById('villa-edit-contact-phone').value.trim() || null,
+    contact_email: document.getElementById('villa-edit-contact-email').value.trim() || null,
+    commission_percent: commission
+  }).eq('id', currentManagedVillaId);
+  if(error){ console.error('Villa konnte nicht aktualisiert werden:', error); statusEl.style.color = 'var(--danger)'; statusEl.textContent = 'Fehler beim Speichern.'; return; }
+  statusEl.style.color = 'var(--teal)';
+  statusEl.textContent = '✓ Gespeichert.';
   loadVillaAdminData();
 }
-async function toggleVillaActive(villaId, newActive){
-  const { error } = await supabaseClient.from('villa_partners').update({ active: newActive }).eq('id', villaId);
+async function toggleVillaActiveFromEditForm(){
+  if(!currentManagedVillaId) return;
+  const v = villaAdminCache.find(x=>x.id===currentManagedVillaId);
+  if(!v) return;
+  const { error } = await supabaseClient.from('villa_partners').update({ active: !v.active }).eq('id', currentManagedVillaId);
   if(error){ console.error('Status konnte nicht geaendert werden:', error); alert('Fehler beim Speichern.'); return; }
-  loadVillaAdminData();
+  await loadVillaAdminData();
+  const sel = document.getElementById('villa-manage-select');
+  sel.value = currentManagedVillaId;
+  loadVillaIntoManageForm();
 }
 async function markVillaCommissionsPaid(villaId){
+  if(!villaId) return;
   if(!confirm('Alle offenen Provisionen dieser Villa als ausgezahlt markieren? (Auszahlung selbst läuft weiterhin manuell außerhalb der Plattform, z.B. per Überweisung.)')) return;
   const { error } = await supabaseClient.from('villa_commissions').update({ status:'paid', paid_at: new Date().toISOString() }).eq('villa_partner_id', villaId).eq('status','earned');
   if(error){ console.error('Konnte nicht als ausgezahlt markiert werden:', error); alert('Fehler beim Speichern.'); return; }
-  loadVillaAdminData();
+  loadVillaIntoManageForm();
+}
+// ---------- Villa-Buchungen (Detailansicht je Villa) ----------
+async function populateVillaBookingsSelect(){
+  const sel = document.getElementById('villa-bookings-select');
+  if(!sel) return;
+  const current = sel.value;
+  const { data, error } = await supabaseClient.from('villa_partners').select('id, name, slug').order('name');
+  if(error){ console.error('Villenliste konnte nicht geladen werden:', error); return; }
+  sel.innerHTML = (data||[]).map(v => `<option value="${v.id}">${escapeHtml(v.name)} (${v.slug})</option>`).join('');
+  if(current && sel.querySelector(`option[value="${current}"]`)) sel.value = current;
+  renderVillaBookingsList();
+}
+async function renderVillaBookingsList(){
+  const sel = document.getElementById('villa-bookings-select');
+  const statsEl = document.getElementById('villa-bookings-stats');
+  const listEl = document.getElementById('villa-bookings-list');
+  if(!sel || !listEl) return;
+  const villaId = sel.value;
+  if(!villaId){ listEl.innerHTML = ''; statsEl.innerHTML = ''; return; }
+  const { data: bookings, error } = await supabaseClient
+    .from('bookings')
+    .select('id, customer_name, booking_date, status, price_idr, fee_idr, villa_commissions(villa_amount_idr, rydanu_amount_idr, status)')
+    .eq('villa_partner_id', villaId)
+    .order('booking_date', { ascending:false });
+  if(error){ console.error('Villa-Buchungen konnten nicht geladen werden:', error); listEl.innerHTML = '<div class="empty-state">Fehler beim Laden.</div>'; return; }
+  const rows = bookings || [];
+  const completed = rows.filter(b=>b.status==='completed');
+  const cancelled = rows.filter(b=>b.status.startsWith('cancelled') || b.status==='no_show' || b.status==='declined_by_driver');
+  const revenue = completed.reduce((s,b)=>s+(b.price_idr||0), 0);
+  const getComm = (b) => Array.isArray(b.villa_commissions) ? b.villa_commissions[0] : b.villa_commissions;
+  const villaEarned = rows.reduce((s,b)=> { const c = getComm(b); return s + (c ? Number(c.villa_amount_idr||0) : 0); }, 0);
+  statsEl.innerHTML = `
+    <div class="stat-card"><div class="num">${completed.length}</div><div class="lbl">Abgeschlossen</div></div>
+    <div class="stat-card"><div class="num">${cancelled.length}</div><div class="lbl">Storniert/Abgelehnt</div></div>
+    <div class="stat-card"><div class="num">${rows.length}</div><div class="lbl">Buchungen insgesamt</div></div>
+    <div class="stat-card"><div class="num">${formatIDR(revenue)}</div><div class="lbl">Umsatz (abgeschlossen)</div></div>
+    <div class="stat-card"><div class="num">${formatIDR(villaEarned)}</div><div class="lbl">Villa-Provision gesamt</div></div>
+  `;
+  if(rows.length === 0){ listEl.innerHTML = '<div class="empty-state">Noch keine Buchungen für diese Villa.</div>'; return; }
+  const statusLabels = { pending:'Ausstehend', confirmed:'Bestätigt', completed:'Abgeschlossen', cancelled_by_driver:'Storniert (Fahrer)', cancelled_by_customer:'Storniert (Gast)', no_show:'No-Show', declined_by_driver:'Abgelehnt', cancel_requested:'Storno angefragt', cancelled_by_request:'Storniert' };
+  listEl.innerHTML = rows.map(b=>{
+    const comm = getComm(b);
+    return `
+    <div class="booking-row">
+      <div>
+        <div class="who">${escapeHtml(b.customer_name || '—')}</div>
+        <div class="when">${b.booking_date || '—'} · ${formatIDR(b.price_idr)} · Fahrer-Gebühr ${formatIDR(b.fee_idr)} (20%)</div>
+        ${comm ? `<div class="when">Villa: <strong>${formatIDR(comm.villa_amount_idr)}</strong> ${comm.status==='paid' ? '✓ ausgezahlt' : '(offen)'} · Rydanu: ${formatIDR(comm.rydanu_amount_idr)}</div>` : `<div class="when" style="font-style:italic;">Provision entsteht erst bei Bestätigung</div>`}
+      </div>
+      <span class="status-pill ${b.status==='completed' || b.status==='confirmed' ? 'confirmed' : ''}">${statusLabels[b.status] || b.status}</span>
+    </div>`;
+  }).join('');
+}
+// ---------- Villa-Statistik (mirrored neben Fahrer-Statistik) ----------
+async function populateVillaStatsSelect(){
+  const sel = document.getElementById('admin-villa-stats-select');
+  if(!sel) return;
+  const current = sel.value;
+  const { data, error } = await supabaseClient.from('villa_partners').select('id, name, slug').order('name');
+  if(error){ console.error('Villenliste für Villa-Statistik konnte nicht geladen werden:', error); return; }
+  sel.innerHTML = (data||[]).map(v => `<option value="${v.id}">${escapeHtml(v.name)} (${v.slug})</option>`).join('');
+  if(current && sel.querySelector(`option[value="${current}"]`)) sel.value = current;
+  renderVillaStats();
+}
+async function renderVillaStats(){
+  const el = document.getElementById('admin-villa-stats-row');
+  if(!el) return;
+  const sel = document.getElementById('admin-villa-stats-select');
+  const villaId = sel ? sel.value : '';
+  if(!villaId){ el.innerHTML = ''; return; }
+  const { data: bookings, error } = await supabaseClient.from('bookings').select('status, price_idr, fee_idr').eq('villa_partner_id', villaId);
+  if(error){ console.error('Villa-Statistik konnte nicht geladen werden:', error); return; }
+  const bkg = bookings || [];
+  const completedOnly = bkg.filter(b=>b.status==='completed');
+  const cancelledByDriver = bkg.filter(b=>b.status==='cancelled_by_driver').length;
+  const cancelledByCustomer = bkg.filter(b=>b.status==='cancelled_by_customer' || b.status==='no_show').length;
+  const revenue = completedOnly.reduce((s,b)=>s+(b.price_idr||0), 0);
+  const feeRevenue = completedOnly.reduce((s,b)=>s+(b.fee_idr||0), 0);
+  el.innerHTML = `
+    <div class="stat-card"><div class="num">${completedOnly.length}</div><div class="lbl">${t('admin_stat_driver_completed')}</div></div>
+    <div class="stat-card"><div class="num">${cancelledByDriver}</div><div class="lbl">${t('admin_stat_driver_cancelled_driver')}</div></div>
+    <div class="stat-card"><div class="num">${cancelledByCustomer}</div><div class="lbl">${t('admin_stat_driver_cancelled_customer')}</div></div>
+    <div class="stat-card"><div class="num">${bkg.length}</div><div class="lbl">${t('admin_stat_driver_total')}</div></div>
+    <div class="stat-card"><div class="num">${formatIDR(revenue)}</div><div class="lbl">${t('admin_stat_driver_revenue')}</div></div>
+    <div class="stat-card"><div class="num">${formatIDR(feeRevenue)}</div><div class="lbl">Fahrer-Gebühr gesamt</div></div>
+  `;
 }
 document.getElementById('custom-offer-modal-bg').addEventListener('click', e=>{ if(e.target.id==='custom-offer-modal-bg') closeCustomOfferModal(); });
 let pendingOfferRequestIndex = null;
@@ -8656,7 +8857,7 @@ const translations = {
     admin_confirm_reject: "Reject {name}?\n\nReason: {reason}\n\nThe driver will be notified by email & WhatsApp.",
     admin_confirm_unblock: "Unblock {name}? Their tours become publicly bookable again.",
     admin_confirm_block: "Block {name}?\n\nAll their tours disappear from the traveler view immediately and they can no longer receive bookings.", lw_number_label: "Your Rydanu number:",
- fees_listing_profile: "Listing & profile", fees_listing_desc: "Always free — create unlimited listings, no cost while you have zero bookings",
+ fees_listing_profile: "Listing & profile", fees_hero_free_label: "always free", fees_listing_desc: "Always free — create unlimited listings, no cost while you have zero bookings",
     fees_conditions_apply: "Conditions apply", fees_see_full_terms: "see full terms", fees_th_booking_value: "Booking value", fees_th_fee_charged: "Fee charged to driver", fees_row_any_booking: "Any confirmed booking", fees_row_any_booking_val: "10% of tour price", fees_conditions_apply_booking: "Conditions apply to every booking", fees_zero_bookings_note: "A driver with zero bookings this month pays nothing at all — the fee only appears once a guest actually confirms a paid trip.",
     fees_featured_placement: "Featured placement", fees_featured_desc: "Higher spot in search results this week",
     fees_open_fees_title: "Open fees this month", fees_open_fees_desc: "Pay your accumulated booking fees — an invoice is emailed to you automatically",
@@ -8971,7 +9172,7 @@ const translations = {
     admin_confirm_reject: "{name} ablehnen?\n\nGrund: {reason}\n\nDer Fahrer wird per E-Mail & WhatsApp benachrichtigt.",
     admin_confirm_unblock: "{name} entsperren? Seine/ihre Touren werden wieder öffentlich buchbar.",
     admin_confirm_block: "{name} sperren?\n\nAlle Touren verschwinden sofort aus der Reisenden-Ansicht und er/sie kann keine Buchungen mehr erhalten.", lw_number_label: "Deine Rydanu Nummer:",
- fees_listing_profile: "Listing & Profil", fees_listing_desc: "Immer kostenlos — erstelle unbegrenzt viele Angebote, keine Kosten solange du keine Buchungen hast",
+ fees_listing_profile: "Listing & Profil", fees_hero_free_label: "immer kostenlos", fees_listing_desc: "Immer kostenlos — erstelle unbegrenzt viele Angebote, keine Kosten solange du keine Buchungen hast",
     fees_conditions_apply: "Bedingungen gelten", fees_see_full_terms: "vollständige Bedingungen ansehen", fees_th_booking_value: "Buchungswert", fees_th_fee_charged: "Gebühr für Fahrer", fees_row_any_booking: "Jede bestätigte Buchung", fees_row_any_booking_val: "10% des Tourpreises", fees_conditions_apply_booking: "Bedingungen gelten für jede Buchung", fees_zero_bookings_note: "Ein Fahrer ohne Buchungen in diesem Monat zahlt gar nichts — die Gebühr entsteht erst, sobald ein Gast tatsächlich eine bezahlte Tour bestätigt.",
     fees_featured_placement: "Featured Placement", fees_featured_desc: "Höhere Platzierung in den Suchergebnissen diese Woche",
     fees_open_fees_title: "Offene Gebühren diesen Monat", fees_open_fees_desc: "Bezahle deine angesammelten Buchungsgebühren — eine Rechnung wird dir automatisch per E-Mail zugesendet",
@@ -9286,7 +9487,7 @@ const translations = {
     admin_confirm_reject: "Tolak {name}?\n\nAlasan: {reason}\n\nSopir akan diberi tahu melalui email & WhatsApp.",
     admin_confirm_unblock: "Buka blokir {name}? Tur mereka akan dapat dipesan publik kembali.",
     admin_confirm_block: "Blokir {name}?\n\nSemua tur mereka langsung hilang dari tampilan wisatawan dan mereka tidak dapat lagi menerima pemesanan.", lw_number_label: "Nomor Rydanu Anda:",
- fees_listing_profile: "Listing & profil", fees_listing_desc: "Selalu gratis — buat tur aktif tanpa batas, tanpa biaya selama Anda belum memiliki pemesanan",
+ fees_listing_profile: "Listing & profil", fees_hero_free_label: "selalu gratis", fees_listing_desc: "Selalu gratis — buat tur aktif tanpa batas, tanpa biaya selama Anda belum memiliki pemesanan",
     fees_conditions_apply: "Ketentuan berlaku", fees_see_full_terms: "lihat ketentuan lengkap", fees_th_booking_value: "Nilai pemesanan", fees_th_fee_charged: "Biaya yang dibebankan ke sopir", fees_row_any_booking: "Setiap pemesanan terkonfirmasi", fees_row_any_booking_val: "10% dari harga tur", fees_conditions_apply_booking: "Ketentuan berlaku untuk setiap pemesanan", fees_zero_bookings_note: "Sopir tanpa pemesanan bulan ini tidak membayar apa pun — biaya baru muncul setelah tamu benar-benar mengonfirmasi perjalanan berbayar.",
     fees_featured_placement: "Featured placement", fees_featured_desc: "Posisi lebih tinggi di hasil pencarian minggu ini",
     fees_open_fees_title: "Biaya terbuka bulan ini", fees_open_fees_desc: "Bayar biaya pemesanan terkumpul Anda — faktur dikirim otomatis melalui email",
@@ -12173,7 +12374,7 @@ async function rejectRealDriver(id){
   alert(msgError ? 'Fahrer abgelehnt ✓ (die Benachrichtigung konnte allerdings nicht gesendet werden)' : 'Fahrer abgelehnt ✓');
 }
 // ---- Admin: Kachelmenü <-> einzelne Abschnitte (weniger Scrollen) ----
-const ADMIN_SECTIONS = ['pending','openpay','stats','driverstats','messages','block','documents','money','villa','pwreset'];
+const ADMIN_SECTIONS = ['pending','openpay','stats','driverstats','messages','block','documents','money','villa','villabookings','pwreset'];
 function showAdminSection(id){
   const menu = document.getElementById('admin-tile-menu');
   if(menu) menu.style.display = 'none';
@@ -13541,7 +13742,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v188</div>
+<div id="version-footer" style="position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v189</div>
 
 </body>
 </html>
