@@ -8697,7 +8697,7 @@ const translations = {
     sr_open_btn: "Already traveled with this driver? Leave a review", sr_eyebrow: "Leave a review", sr_title: "How was your trip?", mb_review_title2: "Your name", sr_err_name: "Please enter your name.",
     nav_requests: "Requests", requests_title: "Custom tour requests", requests_sub: "Travelers who couldn't find exactly what they wanted asked you directly. Reply by creating a real tour offer through Rydanu.", requests_empty: "No custom tour requests yet.",
     nav_villa: "Villa Requests", villa_title: "Villa Partner requests", villa_sub: "Private booking requests from partner villas & hotels — first come, first served.", villa_empty: "No open villa requests right now.",
-    villa_claim_btn: "Accept request", villa_claimed_tag: "✓ Accepted by you", villa_claim_taken: "Sorry — another driver already accepted this request.", villa_source_tag: "Villa Partner",
+    villa_claim_btn: "Accept request", villa_claimed_tag: "⏳ Offer sent — awaiting guest confirmation", villa_claim_taken: "Sorry — another driver already accepted this request.", villa_source_tag: "Villa Partner",
     villa_push_title: "Get notified instantly", villa_push_sub: "Turn on push notifications so you never miss a new villa request.", villa_push_enable_btn: "Enable push notifications",
     villa_push_enabled: "✓ Push notifications enabled", villa_push_ios_hint: "On iPhone: add Rydanu to your Home Screen first (Share → Add to Home Screen), otherwise push notifications won't arrive.",
     villa_push_error: "Could not enable push notifications. Please check your browser permissions.", villa_push_unsupported: "Push notifications aren't supported in this browser.",
@@ -9012,7 +9012,7 @@ const translations = {
     sr_open_btn: "Schon mal mit diesem Fahrer unterwegs gewesen? Bewertung hinterlassen", sr_eyebrow: "Bewertung hinterlassen", sr_title: "Wie war deine Tour?", mb_review_title2: "Dein Name", sr_err_name: "Bitte gib deinen Namen ein.",
     nav_requests: "Anfragen", requests_title: "Individuelle Touranfragen", requests_sub: "Reisende, die nicht genau das Passende gefunden haben, haben dich direkt angefragt. Antworte, indem du über Rydanu ein echtes Tourangebot erstellst.", requests_empty: "Noch keine individuellen Touranfragen.",
     nav_villa: "Villa-Anfragen", villa_title: "Villa-Partner-Anfragen", villa_sub: "Private Buchungsanfragen von Partner-Villen & Hotels — wer zuerst übernimmt, bekommt die Anfrage.", villa_empty: "Aktuell keine offenen Villa-Anfragen.",
-    villa_claim_btn: "Anfrage übernehmen", villa_claimed_tag: "✓ Von dir übernommen", villa_claim_taken: "Schade — ein anderer Fahrer hat diese Anfrage bereits übernommen.", villa_source_tag: "Villa-Partner",
+    villa_claim_btn: "Anfrage übernehmen", villa_claimed_tag: "⏳ Angebot gesendet — wartet auf Bestätigung des Gasts", villa_claim_taken: "Schade — ein anderer Fahrer hat diese Anfrage bereits übernommen.", villa_source_tag: "Villa-Partner",
     villa_push_title: "Sofort benachrichtigt werden", villa_push_sub: "Aktiviere Push-Benachrichtigungen, damit du keine neue Villa-Anfrage verpasst.", villa_push_enable_btn: "Push-Benachrichtigungen aktivieren",
     villa_push_enabled: "✓ Push-Benachrichtigungen aktiviert", villa_push_ios_hint: "Am iPhone: Rydanu zuerst zum Homescreen hinzufügen (Teilen → Zum Home-Bildschirm), sonst kommen keine Push-Benachrichtigungen an.",
     villa_push_error: "Push-Benachrichtigungen konnten nicht aktiviert werden. Bitte Browser-Berechtigungen prüfen.", villa_push_unsupported: "Push-Benachrichtigungen werden von diesem Browser nicht unterstützt.",
@@ -9327,7 +9327,7 @@ const translations = {
     sr_open_btn: "Pernah bepergian dengan sopir ini? Tinggalkan ulasan", sr_eyebrow: "Tinggalkan ulasan", sr_title: "Bagaimana perjalanan Anda?", mb_review_title2: "Nama Anda", sr_err_name: "Mohon masukkan nama Anda.",
     nav_requests: "Permintaan", requests_title: "Permintaan tur khusus", requests_sub: "Wisatawan yang tidak menemukan yang mereka cari langsung menghubungi Anda. Balas dengan membuat penawaran tur nyata melalui Rydanu.", requests_empty: "Belum ada permintaan tur khusus.",
     nav_villa: "Permintaan Villa", villa_title: "Permintaan Villa Partner", villa_sub: "Permintaan booking pribadi dari villa & hotel mitra — siapa cepat, dia dapat.", villa_empty: "Belum ada permintaan villa yang terbuka.",
-    villa_claim_btn: "Terima permintaan", villa_claimed_tag: "✓ Diterima olehmu", villa_claim_taken: "Maaf — pengemudi lain sudah menerima permintaan ini.", villa_source_tag: "Villa Partner",
+    villa_claim_btn: "Terima permintaan", villa_claimed_tag: "⏳ Penawaran terkirim — menunggu konfirmasi tamu", villa_claim_taken: "Maaf — pengemudi lain sudah menerima permintaan ini.", villa_source_tag: "Villa Partner",
     villa_push_title: "Dapatkan notifikasi instan", villa_push_sub: "Aktifkan notifikasi push agar tidak melewatkan permintaan villa baru.", villa_push_enable_btn: "Aktifkan notifikasi push",
     villa_push_enabled: "✓ Notifikasi push aktif", villa_push_ios_hint: "Di iPhone: tambahkan Rydanu ke Layar Utama dulu (Bagikan → Tambah ke Layar Utama), jika tidak notifikasi push tidak akan masuk.",
     villa_push_error: "Notifikasi push tidak dapat diaktifkan. Silakan periksa izin browser Anda.", villa_push_unsupported: "Notifikasi push tidak didukung di browser ini.",
@@ -11218,8 +11218,32 @@ async function initOfferConfirmPage(token){
     <h2 style="font-family:'Public Sans', sans-serif;">Your tour offer from ${escapeHtml(row.driver_name)}</h2>
     ${offerDetailsHTML(row)}
     <button type="button" class="book-btn" id="offer-confirm-btn" onclick="confirmCustomOfferPublic('${token}')">Confirm this booking</button>
+    <button type="button" class="link-btn" id="offer-decline-btn" onclick="declineCustomOfferPublic('${token}')" style="margin-top:10px;">I'd like a different price or driver</button>
     <p class="note" style="margin-top:10px; font-size:0.8rem;">By confirming, you agree to arrange payment directly with your driver, as usual on Rydanu.</p>
   `;
+}
+async function declineCustomOfferPublic(token){
+  const confirmBtn = document.getElementById('offer-confirm-btn');
+  const declineBtn = document.getElementById('offer-decline-btn');
+  if(confirmBtn) confirmBtn.disabled = true;
+  if(declineBtn) declineBtn.disabled = true;
+  const { data, error } = await supabaseClient.rpc('decline_custom_tour_request', { p_token: token });
+  if(error){
+    console.error('Ablehnung fehlgeschlagen:', error);
+    alert('Something went wrong. Please try again.');
+    if(confirmBtn) confirmBtn.disabled = false;
+    if(declineBtn) declineBtn.disabled = false;
+    return;
+  }
+  const villaRequestId = data && data[0] && data[0].villa_request_id;
+  if(villaRequestId){
+    // Villa-Anfrage ist jetzt wieder offen -- alle passenden Fahrer in der Region erneut per Push benachrichtigen,
+    // nicht nur den vorherigen Fahrer.
+    supabaseClient.functions.invoke('notify-villa-request', { body: { requestId: villaRequestId } }).catch(err=>console.error('Erneute Fahrer-Benachrichtigung fehlgeschlagen:', err));
+    document.getElementById('offer-confirm-body').innerHTML = `<h2>No problem</h2><p class="note">We've let your villa know — another Rydanu driver will get back to you shortly with a new offer.</p>`;
+  } else {
+    document.getElementById('offer-confirm-body').innerHTML = `<h2>Offer declined</h2><p class="note">Your driver has been informed. Feel free to reach out to them directly if you'd like to discuss a different price.</p>`;
+  }
 }
 async function confirmCustomOfferPublic(token){
   const btn = document.getElementById('offer-confirm-btn');
@@ -13517,7 +13541,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v187</div>
+<div id="version-footer" style="position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v188</div>
 
 </body>
 </html>
