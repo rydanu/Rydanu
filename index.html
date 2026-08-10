@@ -1723,7 +1723,7 @@
             <label class="nl-service-check"><input type="checkbox" id="nl-photo"> <span data-i18n="svc_offer_photo_only">📸 Photo service</span></label>
             <label class="nl-service-check"><input type="checkbox" id="nl-drone"> <span data-i18n="svc_offer_drone_only">🚁 Drone service</span></label>
             <label class="nl-service-check"><input type="checkbox" id="nl-boat"> <span data-i18n="svc_offer_boat">🎫 Boat tickets</span></label>
-            <label class="nl-service-check nl-featured-check"><input type="checkbox" id="nl-featured"> ⭐ Featured placement (IDR 75,000/week)</label>
+            <label class="nl-service-check nl-featured-check"><input type="checkbox" id="nl-featured"> ⭐ Featured placement (IDR 100,000 / month, auto-expires)</label>
             <div class="spots-section">
               <div class="filter-group-title" data-i18n="nl_extras_title">Extra costs not included — tap all that apply</div>
               <div class="chip-row" id="nl-extras-row">
@@ -1858,19 +1858,18 @@
         </div>
 
         <div class="panel">
-          <div class="booking-row"><div><div class="who">✨ <span data-i18n="fees_featured_placement">Featured placement <em style="font-style:normal;color:var(--ink-soft);font-size:0.75rem;" data-i18n="lbl_optional_inline">(optional)</em></span></div><div class="when" data-i18n="fees_featured_desc">Higher spot in search results this week</div></div><span class="mono" style="font-weight:600;">IDR 75,000 / wk</span></div>
+          <div class="booking-row"><div><div class="who">✨ <span data-i18n="fees_featured_placement">Featured placement <em style="font-style:normal;color:var(--ink-soft);font-size:0.75rem;" data-i18n="lbl_optional_inline">(optional)</em></span></div><div class="when" data-i18n="fees_featured_desc">Higher spot in search results this week</div></div><span class="mono" style="font-weight:600;" data-i18n="fees_featured_price">IDR 75,000 / week</span></div>
           <div class="tier-note" style="font-weight:700;" data-i18n="fees_tier_note">Per confirmed booking, Rydanu charges a flat 10% commission on the tour price:</div>
           <table class="tier-table">
             <thead><tr><th data-i18n="fees_th_booking_value">Booking value</th><th data-i18n="fees_th_fee_charged">Fee charged to driver</th></tr></thead>
             <tbody>
               <tr><td>🚗 <span data-i18n="fees_row_any_booking">Any confirmed booking</span></td><td class="mono" data-i18n="fees_row_any_booking_val">10% of tour price</td></tr>
               <tr style="background:var(--gold); border-radius:6px;"><td style="font-weight:800; color:var(--ink);">🏠 <span data-i18n="villa_source_tag">Villa Partner</span></td><td class="mono" style="font-weight:800; color:var(--ink);" data-i18n="fees_overview_villa_note">20% platform fee (instead of the usual 10%)</td></tr>
-              <tr><td>✨ <span data-i18n="fees_featured_placement">Featured placement <em style="font-style:normal;color:var(--ink-soft);font-size:0.75rem;" data-i18n="lbl_optional_inline">(optional)</em></span></td><td class="mono">IDR 75,000 / wk</td></tr>
             </tbody>
           </table>
           <p class="conditions-hint" style="padding:0 20px 14px;">ⓘ <span data-i18n="fees_conditions_apply_booking">Conditions apply to every booking</span> — <a href="#" onclick="openTerms('booking'); return false;" data-i18n="fees_see_full_terms">see full terms</a></p>
           <p class="tier-footnote" data-i18n="tier_transfer_note">Transfer bookings (with or without airport pickup) use the exact same price-based fee table above — there's no separate flat rate.</p>
-          <p class="tier-footnote">💚 <span data-i18n="fees_zero_bookings_note">A driver with zero bookings this month pays nothing at all — the fee only appears once a guest actually confirms a paid trip.</span></p>
+          <p class="tier-footnote" style="background:var(--teal-soft); border-left:4px solid var(--teal); padding:10px 12px; border-radius:4px; font-weight:700; color:var(--ink);">💚 <span data-i18n="fees_zero_bookings_note">A driver with zero bookings this month pays nothing at all — the fee only appears once a guest actually confirms a paid trip.</span></p>
         </div>
 
         <div class="dash-head" style="margin-top:26px;"><div><h3 data-i18n="feestatements_title" style="margin:0;">Fee statements</h3><p data-i18n="feestatements_sub">Every paid fee generates a receipt here — also emailed to you.</p></div></div>
@@ -1999,24 +1998,24 @@
     </div>
 
     <div id="admin-sec-driverstats" style="display:none;">
-    <h2 style="margin-top:0;">Fahrer- / Villen-Statistik</h2>
-    <div class="money-panel-grid">
+    <h2 style="margin-top:0; text-align:center;">Fahrer- / Villen-Statistik</h2>
+    <div class="money-panel-grid" style="max-width:700px; margin:0 auto;">
     <div>
     <h3 data-i18n="admin_driverstats_title">Driver statistics</h3>
     <p class="dash-head" style="display:block; margin-bottom:14px;" data-i18n="admin_driverstats_sub">Select a driver to see their completed and cancelled tours.</p>
-    <div class="form-field" style="max-width:340px;">
+    <div class="form-field">
       <select id="admin-driver-stats-select" onchange="renderAdminDriverStats()"></select>
     </div>
-    <div class="stat-row" id="admin-driver-stats-row"></div>
+    <div class="stat-row" id="admin-driver-stats-row" style="grid-template-columns:repeat(2,1fr);"></div>
     </div>
 
     <div>
     <h3>🏠 Villa-Statistik</h3>
     <p class="dash-head" style="display:block; margin-bottom:14px;">Villa auswählen, um abgeschlossene und stornierte Buchungen zu sehen.</p>
-    <div class="form-field" style="max-width:340px;">
+    <div class="form-field">
       <select id="admin-villa-stats-select" onchange="renderVillaStats()"></select>
     </div>
-    <div class="stat-row" id="admin-villa-stats-row"></div>
+    <div class="stat-row" id="admin-villa-stats-row" style="grid-template-columns:repeat(2,1fr);"></div>
     </div>
     </div>
     </div>
@@ -3010,7 +3009,7 @@
       <label class="nl-service-check"><input type="checkbox" id="el-photo"> <span data-i18n="svc_offer_photo_only">📸 Photo service</span></label>
       <label class="nl-service-check"><input type="checkbox" id="el-drone"> <span data-i18n="svc_offer_drone_only">🚁 Drone service</span></label>
       <label class="nl-service-check"><input type="checkbox" id="el-boat"> <span data-i18n="svc_offer_boat">🎫 Boat tickets</span></label>
-      <label class="nl-service-check nl-featured-check"><input type="checkbox" id="el-featured"> ⭐ Featured placement (IDR 75,000/week)</label>
+      <label class="nl-service-check nl-featured-check"><input type="checkbox" id="el-featured"> ⭐ Featured placement (IDR 100,000 / month, auto-expires)</label>
       <div class="spots-section">
         <div class="filter-group-title" data-i18n="nl_extras_title">Extra costs not included — tap all that apply</div>
         <div class="chip-row" id="el-extras-row">
@@ -7188,7 +7187,12 @@ function saveEditListing(){
   l.airportRegions = airportRegions;
   l.transferRegions = transferRegions;
   l.pickupRegionPrices = pickupRegionPrices;
-  l.featured = document.getElementById('el-featured').checked;
+  // Nur abrechnen, wenn Featured Placement gerade NEU aktiviert wird (war vorher aus, ist jetzt an) --
+  // nicht bei jedem Speichern des Angebots erneut, sonst wuerde jede Bearbeitung nochmal kassieren.
+  const wasFeatured = !!l.featured;
+  const nowFeatured = document.getElementById('el-featured').checked;
+  const featuredJustActivated = !wasFeatured && nowFeatured;
+  l.featured = nowFeatured;
   l.fee = feeForPrice(price, l.spots);
   // sync the public traveler card
   const pub = drivers.find(d => d.ownerId===currentDriverId && d.tour===oldName)
@@ -7219,7 +7223,14 @@ function saveEditListing(){
       details: { services: l.services, spots: l.spots, extras: l.extras, serviceRegions: l.serviceRegions, featured: l.featured, airportRegions: l.airportRegions, transferRegions: l.transferRegions, pickupRegionPrices: l.pickupRegionPrices }
     }).eq('id', l.dbId).then(({error})=>{
       if(error){ console.error('Änderung konnte nicht gespeichert werden:', error); alert('Die Änderung konnte nicht gespeichert werden. Bitte nochmal versuchen.'); }
-      else { loadRealPublicListings(); }
+      else {
+        loadRealPublicListings();
+        if(featuredJustActivated){
+          supabaseClient.rpc('activate_featured_placement', { p_listing_id: l.dbId }).then(({error: featErr})=>{
+            if(featErr) console.error('Featured Placement konnte nicht aktiviert werden:', featErr);
+          });
+        }
+      }
     });
   }
   closeEditListing();
@@ -8164,6 +8175,13 @@ function addListing(){
     }).select().single().then(({ data, error }) => {
       if(error){ console.error('Angebot konnte nicht gespeichert werden:', error); alert('Das Angebot konnte nicht gespeichert werden. Bitte nochmal versuchen.'); return; }
       driverListings[0].dbId = data.id;
+      // Featured Placement kostet IDR 100.000/Monat und laeuft automatisch ab -- die eigentliche
+      // Berechnung + Ablaufdatum setzt die Datenbank-Funktion (bypasst RLS-Schreibschutz kontrolliert).
+      if(featured){
+        supabaseClient.rpc('activate_featured_placement', { p_listing_id: data.id }).then(({error: featErr})=>{
+          if(featErr) console.error('Featured Placement konnte nicht aktiviert werden:', featErr);
+        });
+      }
       loadRealPublicListings();
     });
   }
@@ -8859,7 +8877,7 @@ const translations = {
     admin_confirm_block: "Block {name}?\n\nAll their tours disappear from the traveler view immediately and they can no longer receive bookings.", lw_number_label: "Your Rydanu number:",
  fees_listing_profile: "Listing & profile", fees_hero_free_label: "always free", fees_listing_desc: "Always free — create unlimited listings, no cost while you have zero bookings",
     fees_conditions_apply: "Conditions apply", fees_see_full_terms: "see full terms", fees_th_booking_value: "Booking value", fees_th_fee_charged: "Fee charged to driver", fees_row_any_booking: "Any confirmed booking", fees_row_any_booking_val: "10% of tour price", fees_conditions_apply_booking: "Conditions apply to every booking", fees_zero_bookings_note: "A driver with zero bookings this month pays nothing at all — the fee only appears once a guest actually confirms a paid trip.",
-    fees_featured_placement: "Featured placement", fees_featured_desc: "Higher spot in search results this week",
+    fees_featured_placement: "Featured placement", fees_featured_desc: "Higher spot in search results — auto-expires after 1 month", fees_featured_price: "IDR 100,000 / month",
     fees_open_fees_title: "Open fees this month", fees_open_fees_desc: "Pay your accumulated booking fees — an invoice is emailed to you automatically",
     fees_cancellation_title: "Includes a cancellation fee", fees_cancellation_desc: "For tours you cancelled yourself — see Bookings for details",
     cancel_outcome_customer_1: "Cancelled —", cancel_outcome_customer_2: "Since the customer didn't show up, there's no further payout — the platform fee already charged for this booking is not refunded. The customer has been informed by email.",
@@ -9174,7 +9192,7 @@ const translations = {
     admin_confirm_block: "{name} sperren?\n\nAlle Touren verschwinden sofort aus der Reisenden-Ansicht und er/sie kann keine Buchungen mehr erhalten.", lw_number_label: "Deine Rydanu Nummer:",
  fees_listing_profile: "Listing & Profil", fees_hero_free_label: "immer kostenlos", fees_listing_desc: "Immer kostenlos — erstelle unbegrenzt viele Angebote, keine Kosten solange du keine Buchungen hast",
     fees_conditions_apply: "Bedingungen gelten", fees_see_full_terms: "vollständige Bedingungen ansehen", fees_th_booking_value: "Buchungswert", fees_th_fee_charged: "Gebühr für Fahrer", fees_row_any_booking: "Jede bestätigte Buchung", fees_row_any_booking_val: "10% des Tourpreises", fees_conditions_apply_booking: "Bedingungen gelten für jede Buchung", fees_zero_bookings_note: "Ein Fahrer ohne Buchungen in diesem Monat zahlt gar nichts — die Gebühr entsteht erst, sobald ein Gast tatsächlich eine bezahlte Tour bestätigt.",
-    fees_featured_placement: "Featured Placement", fees_featured_desc: "Höhere Platzierung in den Suchergebnissen diese Woche",
+    fees_featured_placement: "Featured Placement", fees_featured_desc: "Höhere Platzierung in den Suchergebnissen — läuft automatisch nach 1 Monat aus", fees_featured_price: "IDR 100.000 / Monat",
     fees_open_fees_title: "Offene Gebühren diesen Monat", fees_open_fees_desc: "Bezahle deine angesammelten Buchungsgebühren — eine Rechnung wird dir automatisch per E-Mail zugesendet",
     fees_cancellation_title: "Enthält eine Stornogebühr", fees_cancellation_desc: "Für Touren, die du selbst storniert hast — Details unter Buchungen",
     cancel_outcome_customer_1: "Storniert —", cancel_outcome_customer_2: "Da der Kunde nicht erschienen ist, gibt es keine weitere Auszahlung — die bereits belastete Plattformgebühr für diese Buchung wird nicht erstattet. Der Kunde wurde per E-Mail informiert.",
@@ -9489,7 +9507,7 @@ const translations = {
     admin_confirm_block: "Blokir {name}?\n\nSemua tur mereka langsung hilang dari tampilan wisatawan dan mereka tidak dapat lagi menerima pemesanan.", lw_number_label: "Nomor Rydanu Anda:",
  fees_listing_profile: "Listing & profil", fees_hero_free_label: "selalu gratis", fees_listing_desc: "Selalu gratis — buat tur aktif tanpa batas, tanpa biaya selama Anda belum memiliki pemesanan",
     fees_conditions_apply: "Ketentuan berlaku", fees_see_full_terms: "lihat ketentuan lengkap", fees_th_booking_value: "Nilai pemesanan", fees_th_fee_charged: "Biaya yang dibebankan ke sopir", fees_row_any_booking: "Setiap pemesanan terkonfirmasi", fees_row_any_booking_val: "10% dari harga tur", fees_conditions_apply_booking: "Ketentuan berlaku untuk setiap pemesanan", fees_zero_bookings_note: "Sopir tanpa pemesanan bulan ini tidak membayar apa pun — biaya baru muncul setelah tamu benar-benar mengonfirmasi perjalanan berbayar.",
-    fees_featured_placement: "Featured placement", fees_featured_desc: "Posisi lebih tinggi di hasil pencarian minggu ini",
+    fees_featured_placement: "Featured placement", fees_featured_desc: "Posisi lebih tinggi di hasil pencarian — otomatis berakhir setelah 1 bulan", fees_featured_price: "IDR 100.000 / bulan",
     fees_open_fees_title: "Biaya terbuka bulan ini", fees_open_fees_desc: "Bayar biaya pemesanan terkumpul Anda — faktur dikirim otomatis melalui email",
     fees_cancellation_title: "Termasuk biaya pembatalan", fees_cancellation_desc: "Untuk tur yang Anda batalkan sendiri — lihat Pemesanan untuk detail",
     cancel_outcome_customer_1: "Dibatalkan —", cancel_outcome_customer_2: "Karena pelanggan tidak datang, tidak ada pembayaran lebih lanjut — biaya platform yang sudah dibebankan untuk pemesanan ini tidak dikembalikan. Pelanggan telah diberi tahu melalui email.",
@@ -10228,7 +10246,7 @@ const termsContent = {
         <thead><tr><th>Booking value</th><th>Fee</th></tr></thead>
         <tbody>
           <tr><td>Any confirmed booking</td><td class="mono">10% of tour price</td></tr>
-          <tr><td>Featured placement (optional)</td><td class="mono">IDR 75,000 / wk</td></tr>
+          <tr><td>Featured placement (optional, auto-expires after 1 month)</td><td class="mono">IDR 100,000 / month</td></tr>
         </tbody>
       </table>
       <ul>
@@ -13742,7 +13760,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v189</div>
+<div id="version-footer" style="position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v191</div>
 
 </body>
 </html>
