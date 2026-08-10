@@ -2263,9 +2263,15 @@
     <h2 style="margin-top:0;">📖 Villa-Buchungen</h2>
     <p class="dash-head" style="display:block; margin-bottom:14px;">Villa auswählen, um alle ihre Buchungen mit Provisions-/Gebührenaufteilung einzusehen.</p>
     <div class="form-field" style="max-width:340px;">
-      <select id="villa-bookings-select" onchange="renderVillaBookingsList()"></select>
+      <select id="villa-bookings-select" onchange="renderVillaBookingsList(); renderVillaRequestsAdminList();"></select>
     </div>
     <div class="stat-row" id="villa-bookings-stats"></div>
+
+    <h3 style="margin-top:26px;">Laufende Anfragen</h3>
+    <p class="dash-head" style="display:block; margin-bottom:10px;">Offene / gerade in Bearbeitung befindliche Anfragen dieser Villa — u.a. zum Aufräumen von Testdaten.</p>
+    <div class="panel" id="villa-requests-admin-list"></div>
+
+    <h3 style="margin-top:26px;">Abgeschlossene Buchungen</h3>
     <div class="panel" id="villa-bookings-list"></div>
     </div>
 
@@ -7416,17 +7422,31 @@ function markRequestsSeen(){
 // plus seine eigenen bereits uebernommenen Anfragen -- nie oeffentlich, nie alle Anfragen aller Villen.
 // ============================================
 let realVillaRequests = [];
+let villaDismissedIds = [];
 async function loadVillaRequests(){
   if(!realDriverProfile) return;
-  const { data, error } = await supabaseClient
-    .from('villa_requests')
-    .select('*, villa_partners(name)')
-    .order('created_at', {ascending:false});
+  const [{ data, error }, { data: dismissed }] = await Promise.all([
+    supabaseClient.from('villa_requests').select('*, villa_partners(name)').order('created_at', {ascending:false}),
+    supabaseClient.from('villa_request_dismissals').select('villa_request_id').eq('driver_id', realDriverProfile.id)
+  ]);
   if(error){ console.error('Villa-Anfragen konnten nicht geladen werden:', error); return; }
-  realVillaRequests = data || [];
+  villaDismissedIds = (dismissed || []).map(d=>d.villa_request_id);
+  // Ausgeblendete offene Anfragen ("Nicht interessiert") nicht mehr anzeigen -- betrifft nur
+  // Anfragen, die dieser Fahrer selbst noch nicht uebernommen hat.
+  realVillaRequests = (data || []).filter(r => !(r.status === 'open' && villaDismissedIds.includes(r.id)));
   renderVillaRequests();
   updateVillaDot();
   refreshVillaPushPanelVisibility();
+}
+async function dismissVillaRequest(requestId){
+  if(!realDriverProfile) return;
+  const { error } = await supabaseClient.from('villa_request_dismissals').upsert({
+    driver_id: realDriverProfile.id, villa_request_id: requestId
+  });
+  if(error){ console.error('Ausblenden fehlgeschlagen:', error); return; }
+  realVillaRequests = realVillaRequests.filter(r => r.id !== requestId);
+  renderVillaRequests();
+  updateVillaDot();
 }
 function renderVillaRequests(){
   const el = document.getElementById('villa-requests-list');
@@ -7441,9 +7461,16 @@ function renderVillaRequests(){
     const whenText = r.request_date ? `${r.request_date}${r.request_time ? ' ' + r.request_time : ''}` : '—';
     let actionHtml;
     if(r.status === 'open'){
-      actionHtml = `<button type="button" class="accept-btn" onclick="claimVillaRequest('${r.id}')">✨ ${t('villa_claim_btn')}</button>`;
+      actionHtml = `
+        <button type="button" class="accept-btn" onclick="claimVillaRequest('${r.id}')">✨ ${t('villa_claim_btn')}</button>
+        <button type="button" class="link-btn" style="width:auto; margin-top:6px;" onclick="dismissVillaRequest('${r.id}')">${t('villa_dismiss_btn')}</button>
+      `;
     } else if(isMine){
-      actionHtml = `<span class="mailbox-replied-tag">${t('villa_claimed_tag')}</span>`;
+      actionHtml = `
+        <span class="mailbox-replied-tag">${t('villa_claimed_tag')}</span>
+        <button type="button" class="link-btn" style="width:auto; margin-top:6px;" onclick="editAndResendVillaOffer('${r.id}')">${t('villa_edit_resend_btn')}</button>
+        <button type="button" class="link-btn" style="width:auto; margin-top:4px; color:var(--danger);" onclick="withdrawVillaOffer('${r.id}')">${t('villa_withdraw_btn')}</button>
+      `;
     } else {
       return ''; // schon von anderem Fahrer uebernommen -- durch RLS ohnehin meist gar nicht sichtbar
     }
@@ -7457,7 +7484,7 @@ function renderVillaRequests(){
           ${r.notes ? `<div class="when" style="font-style:italic;">"${escapeHtml(r.notes)}"</div>` : ''}
           <span class="status-pill" style="background:var(--accent-light,#eef4ee);">${t('villa_source_tag')}</span>
         </div>
-        <div class="row-actions">${actionHtml}</div>
+        <div class="row-actions" style="display:flex; flex-direction:column; align-items:flex-end;">${actionHtml}</div>
       </div>
     `;
   }).join('');
@@ -7490,6 +7517,68 @@ async function claimVillaRequest(requestId){
     document.getElementById('co-pickup-hint').style.display = 'block';
   }
   document.getElementById('co-notes').value = r.notes ? (t('co_prefill_from_request') + ' "' + r.notes + '"') : '';
+}
+// Fahrer zieht sein eigenes, bereits gesendetes Angebot zurueck -- Anfrage geht zurueck auf "open"
+// und alle passenden Fahrer der Region werden erneut per Push benachrichtigt (gleiche Logik wie
+// wenn der GAST ablehnt, siehe decline_custom_tour_request).
+async function withdrawVillaOffer(villaRequestId){
+  if(!realDriverProfile) return;
+  if(!confirm(t('villa_withdraw_confirm'))) return;
+  const { data: offerRow, error: findErr } = await supabaseClient
+    .from('custom_tour_requests')
+    .select('token')
+    .eq('villa_request_id', villaRequestId)
+    .eq('driver_id', realDriverProfile.id)
+    .eq('status', 'offered')
+    .order('created_at', { ascending:false })
+    .limit(1)
+    .maybeSingle();
+  if(findErr || !offerRow){ console.error('Eigenes Angebot nicht gefunden:', findErr); alert(t('villa_action_err')); return; }
+  const { data: declineResult, error: declineErr } = await supabaseClient.rpc('decline_custom_tour_request', { p_token: offerRow.token });
+  if(declineErr){ console.error('Zurueckziehen fehlgeschlagen:', declineErr); alert(t('villa_action_err')); return; }
+  const releasedVillaRequestId = declineResult && declineResult[0] && declineResult[0].villa_request_id;
+  if(releasedVillaRequestId){
+    supabaseClient.functions.invoke('notify-villa-request', { body: { requestId: releasedVillaRequestId } }).catch(err=>console.error('Erneute Fahrer-Benachrichtigung fehlgeschlagen:', err));
+  }
+  await loadVillaRequests();
+}
+// Fahrer will sein Angebot aendern (z.B. Preis anpassen) und erneut senden -- das alte Angebot wird
+// storniert (verhindert doppelte Buchung, falls der Gast noch den alten Link anklickt), ein neues
+// wird ueber den bestehenden Angebots-Dialog erstellt.
+async function editAndResendVillaOffer(villaRequestId){
+  if(!realDriverProfile) return;
+  const r = realVillaRequests.find(x=>x.id===villaRequestId);
+  if(!r) return;
+  const { data: offerRow, error: findErr } = await supabaseClient
+    .from('custom_tour_requests')
+    .select('id, token, price_idr, notes, proposed_date')
+    .eq('villa_request_id', villaRequestId)
+    .eq('driver_id', realDriverProfile.id)
+    .eq('status', 'offered')
+    .order('created_at', { ascending:false })
+    .limit(1)
+    .maybeSingle();
+  if(findErr || !offerRow){ console.error('Eigenes Angebot nicht gefunden:', findErr); alert(t('villa_action_err')); return; }
+  const { error: cancelErr } = await supabaseClient.from('custom_tour_requests').update({ status:'cancelled' }).eq('id', offerRow.id);
+  if(cancelErr){ console.error('Altes Angebot konnte nicht storniert werden:', cancelErr); alert(t('villa_action_err')); return; }
+
+  const villaName = (r.villa_partners && r.villa_partners.name) || t('villa_source_tag');
+  pendingVillaRequest = { villaRequestId: r.id, villaPartnerId: r.villa_partner_id };
+  openCustomOfferModal._keepVillaContext = true;
+  openCustomOfferModal();
+  document.getElementById('co-name').value = r.customer_name || '';
+  document.getElementById('co-email').value = r.customer_email || '';
+  document.getElementById('co-phone').value = r.customer_phone || '';
+  document.getElementById('co-desc').value = `${villaName}: ${r.destination}`;
+  document.getElementById('co-price').value = offerRow.price_idr || '';
+  if(offerRow.proposed_date) document.getElementById('co-date').value = offerRow.proposed_date;
+  const coPickup = document.getElementById('co-pickup');
+  if(r.pickup){
+    coPickup.value = r.pickup;
+    coPickup.readOnly = true;
+    document.getElementById('co-pickup-hint').style.display = 'block';
+  }
+  document.getElementById('co-notes').value = offerRow.notes || '';
 }
 function updateVillaDot(){
   const openCount = realVillaRequests.filter(r=>r.status==='open').length;
@@ -7729,6 +7818,41 @@ async function populateVillaBookingsSelect(){
   sel.innerHTML = (data||[]).map(v => `<option value="${v.id}">${escapeHtml(v.name)} (${v.slug})</option>`).join('');
   if(current && sel.querySelector(`option[value="${current}"]`)) sel.value = current;
   renderVillaBookingsList();
+  renderVillaRequestsAdminList();
+}
+// Laufende (nicht abgeschlossene) Villa-Anfragen mit Loeschen-Option -- vor allem zum Aufraeumen
+// von Testdaten waehrend der Testphase gedacht.
+async function renderVillaRequestsAdminList(){
+  const sel = document.getElementById('villa-bookings-select');
+  const listEl = document.getElementById('villa-requests-admin-list');
+  if(!sel || !listEl) return;
+  const villaId = sel.value;
+  if(!villaId){ listEl.innerHTML = ''; return; }
+  const { data, error } = await supabaseClient
+    .from('villa_requests')
+    .select('id, status, pickup, destination, customer_name, customer_phone, request_date, created_at')
+    .eq('villa_partner_id', villaId)
+    .order('created_at', { ascending:false });
+  if(error){ console.error('Anfragen konnten nicht geladen werden:', error); listEl.innerHTML = '<div class="empty-state">Fehler beim Laden.</div>'; return; }
+  const rows = (data||[]).filter(r => r.status !== 'booked' && r.status !== 'cancelled');
+  if(rows.length === 0){ listEl.innerHTML = '<div class="empty-state">Keine laufenden Anfragen.</div>'; return; }
+  const statusLabels = { open:'Offen', claimed:'In Bearbeitung', expired:'Abgelaufen' };
+  listEl.innerHTML = rows.map(r => `
+    <div class="booking-row">
+      <div>
+        <div class="who">${escapeHtml(r.destination)}${r.pickup ? ' ← ' + escapeHtml(r.pickup) : ''}</div>
+        <div class="when">${escapeHtml(r.customer_name || '—')}${r.customer_phone ? ' · 📞 ' + escapeHtml(r.customer_phone) : ''} · ${r.request_date || '—'}</div>
+        <span class="status-pill">${statusLabels[r.status] || r.status}</span>
+      </div>
+      <button type="button" class="link-btn" style="width:auto; color:var(--danger);" onclick="deleteVillaRequestAdmin('${r.id}')">🗑 Löschen</button>
+    </div>
+  `).join('');
+}
+async function deleteVillaRequestAdmin(requestId){
+  if(!confirm('Diese Anfrage endgültig löschen? Das kann nicht rückgängig gemacht werden.')) return;
+  const { error } = await supabaseClient.from('villa_requests').delete().eq('id', requestId);
+  if(error){ console.error('Löschen fehlgeschlagen:', error); alert('Fehler beim Löschen.'); return; }
+  renderVillaRequestsAdminList();
 }
 async function renderVillaBookingsList(){
   const sel = document.getElementById('villa-bookings-select');
@@ -8955,7 +9079,7 @@ const translations = {
     sr_open_btn: "Already traveled with this driver? Leave a review", sr_eyebrow: "Leave a review", sr_title: "How was your trip?", mb_review_title2: "Your name", sr_err_name: "Please enter your name.",
     nav_requests: "Requests", requests_title: "Custom tour requests", requests_sub: "Travelers who couldn't find exactly what they wanted asked you directly. Reply by creating a real tour offer through Rydanu.", requests_empty: "No custom tour requests yet.",
     nav_villa: "Villa Requests", villa_title: "Villa Partner requests", villa_sub: "Private booking requests from partner villas & hotels — first come, first served.", villa_empty: "No open villa requests right now.",
-    villa_claim_btn: "Accept request", villa_claimed_tag: "⏳ Offer sent — awaiting guest confirmation", villa_claim_taken: "Sorry — another driver already accepted this request.", villa_source_tag: "Villa Partner",
+    villa_claim_btn: "Accept request", villa_claimed_tag: "⏳ Offer sent — awaiting guest confirmation", villa_claim_taken: "Sorry — another driver already accepted this request.", villa_source_tag: "Villa Partner", villa_dismiss_btn: "Not for me", villa_edit_resend_btn: "Edit & resend offer", villa_withdraw_btn: "Withdraw offer", villa_withdraw_confirm: "Withdraw this offer? The request goes back to open and other drivers in the area will be notified again.", villa_action_err: "Something went wrong. Please try again.",
     villa_push_title: "Get notified instantly", villa_push_sub: "Turn on push notifications so you never miss a new villa request.", villa_push_enable_btn: "Enable push notifications",
     villa_push_enabled: "✓ Push notifications enabled", villa_push_ios_hint: "On iPhone: add Rydanu to your Home Screen first (Share → Add to Home Screen), otherwise push notifications won't arrive.",
     villa_push_error: "Could not enable push notifications. Please check your browser permissions.", villa_push_unsupported: "Push notifications aren't supported in this browser.",
@@ -9279,7 +9403,7 @@ const translations = {
     sr_open_btn: "Schon mal mit diesem Fahrer unterwegs gewesen? Bewertung hinterlassen", sr_eyebrow: "Bewertung hinterlassen", sr_title: "Wie war deine Tour?", mb_review_title2: "Dein Name", sr_err_name: "Bitte gib deinen Namen ein.",
     nav_requests: "Anfragen", requests_title: "Individuelle Touranfragen", requests_sub: "Reisende, die nicht genau das Passende gefunden haben, haben dich direkt angefragt. Antworte, indem du über Rydanu ein echtes Tourangebot erstellst.", requests_empty: "Noch keine individuellen Touranfragen.",
     nav_villa: "Villa-Anfragen", villa_title: "Villa-Partner-Anfragen", villa_sub: "Private Buchungsanfragen von Partner-Villen & Hotels — wer zuerst übernimmt, bekommt die Anfrage.", villa_empty: "Aktuell keine offenen Villa-Anfragen.",
-    villa_claim_btn: "Anfrage übernehmen", villa_claimed_tag: "⏳ Angebot gesendet — wartet auf Bestätigung des Gasts", villa_claim_taken: "Schade — ein anderer Fahrer hat diese Anfrage bereits übernommen.", villa_source_tag: "Villa-Partner",
+    villa_claim_btn: "Anfrage übernehmen", villa_claimed_tag: "⏳ Angebot gesendet — wartet auf Bestätigung des Gasts", villa_claim_taken: "Schade — ein anderer Fahrer hat diese Anfrage bereits übernommen.", villa_source_tag: "Villa-Partner", villa_dismiss_btn: "Nicht für mich", villa_edit_resend_btn: "Angebot bearbeiten & erneut senden", villa_withdraw_btn: "Angebot zurückziehen", villa_withdraw_confirm: "Dieses Angebot zurückziehen? Die Anfrage wird wieder offen und andere Fahrer in der Region werden erneut benachrichtigt.", villa_action_err: "Etwas ist schiefgelaufen. Bitte nochmal versuchen.",
     villa_push_title: "Sofort benachrichtigt werden", villa_push_sub: "Aktiviere Push-Benachrichtigungen, damit du keine neue Villa-Anfrage verpasst.", villa_push_enable_btn: "Push-Benachrichtigungen aktivieren",
     villa_push_enabled: "✓ Push-Benachrichtigungen aktiviert", villa_push_ios_hint: "Am iPhone: Rydanu zuerst zum Homescreen hinzufügen (Teilen → Zum Home-Bildschirm), sonst kommen keine Push-Benachrichtigungen an.",
     villa_push_error: "Push-Benachrichtigungen konnten nicht aktiviert werden. Bitte Browser-Berechtigungen prüfen.", villa_push_unsupported: "Push-Benachrichtigungen werden von diesem Browser nicht unterstützt.",
@@ -9603,7 +9727,7 @@ const translations = {
     sr_open_btn: "Pernah bepergian dengan sopir ini? Tinggalkan ulasan", sr_eyebrow: "Tinggalkan ulasan", sr_title: "Bagaimana perjalanan Anda?", mb_review_title2: "Nama Anda", sr_err_name: "Mohon masukkan nama Anda.",
     nav_requests: "Permintaan", requests_title: "Permintaan tur khusus", requests_sub: "Wisatawan yang tidak menemukan yang mereka cari langsung menghubungi Anda. Balas dengan membuat penawaran tur nyata melalui Rydanu.", requests_empty: "Belum ada permintaan tur khusus.",
     nav_villa: "Permintaan Villa", villa_title: "Permintaan Villa Partner", villa_sub: "Permintaan booking pribadi dari villa & hotel mitra — siapa cepat, dia dapat.", villa_empty: "Belum ada permintaan villa yang terbuka.",
-    villa_claim_btn: "Terima permintaan", villa_claimed_tag: "⏳ Penawaran terkirim — menunggu konfirmasi tamu", villa_claim_taken: "Maaf — pengemudi lain sudah menerima permintaan ini.", villa_source_tag: "Villa Partner",
+    villa_claim_btn: "Terima permintaan", villa_claimed_tag: "⏳ Penawaran terkirim — menunggu konfirmasi tamu", villa_claim_taken: "Maaf — pengemudi lain sudah menerima permintaan ini.", villa_source_tag: "Villa Partner", villa_dismiss_btn: "Bukan untuk saya", villa_edit_resend_btn: "Edit & kirim ulang penawaran", villa_withdraw_btn: "Tarik penawaran", villa_withdraw_confirm: "Tarik penawaran ini? Permintaan akan terbuka kembali dan pengemudi lain di area tersebut akan diberi tahu lagi.", villa_action_err: "Terjadi kesalahan. Silakan coba lagi.",
     villa_push_title: "Dapatkan notifikasi instan", villa_push_sub: "Aktifkan notifikasi push agar tidak melewatkan permintaan villa baru.", villa_push_enable_btn: "Aktifkan notifikasi push",
     villa_push_enabled: "✓ Notifikasi push aktif", villa_push_ios_hint: "Di iPhone: tambahkan Rydanu ke Layar Utama dulu (Bagikan → Tambah ke Layar Utama), jika tidak notifikasi push tidak akan masuk.",
     villa_push_error: "Notifikasi push tidak dapat diaktifkan. Silakan periksa izin browser Anda.", villa_push_unsupported: "Notifikasi push tidak didukung di browser ini.",
@@ -13919,7 +14043,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v193</div>
+<div id="version-footer" style="position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v194</div>
 
 </body>
 </html>
