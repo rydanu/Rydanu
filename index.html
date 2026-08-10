@@ -7641,14 +7641,24 @@ async function refreshVillaPushPanelVisibility(){
   }catch(e){ /* still fine, Button bleibt aktiv */ }
 }
 async function enableVillaPush(){
-  if(!realDriverProfile) return;
+  // TEMPORAER: sichtbare Diagnose-Meldungen bei jedem Schritt, um herauszufinden, wo es auf
+  // Jörgs iPhone haengen bleibt (kein Devtools-Zugriff moeglich). Wird nach der Fehlersuche
+  // wieder entfernt.
+  alert('DEBUG 1/6: Button-Klick erkannt.');
+  if(!realDriverProfile){ alert('DEBUG ABBRUCH: realDriverProfile ist leer -- App denkt, du bist nicht eingeloggt.'); return; }
+  alert('DEBUG 2/6: realDriverProfile vorhanden (' + realDriverProfile.name + ').');
   const btn = document.getElementById('villa-push-btn');
-  if(!('serviceWorker' in navigator) || !('PushManager' in window)){
+  const hasSW = ('serviceWorker' in navigator);
+  const hasPM = ('PushManager' in window);
+  alert('DEBUG 3/6: serviceWorker verfuegbar=' + hasSW + ', PushManager verfuegbar=' + hasPM);
+  if(!hasSW || !hasPM){
     alert(t('villa_push_unsupported'));
     return;
   }
   try{
+    alert('DEBUG 4/6: rufe jetzt Notification.requestPermission() auf...');
     const permission = await Notification.requestPermission();
+    alert('DEBUG 5/6: Ergebnis der Berechtigungsanfrage = "' + permission + '"');
     if(permission !== 'granted'){ alert(t('villa_push_error')); return; }
     const reg = await navigator.serviceWorker.ready;
     let sub = await reg.pushManager.getSubscription();
@@ -7658,6 +7668,7 @@ async function enableVillaPush(){
         applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
       });
     }
+    alert('DEBUG 6/6: Subscription erstellt, speichere in Datenbank...');
     const subJson = sub.toJSON();
     const { error } = await supabaseClient.from('push_subscriptions').upsert({
       driver_id: realDriverProfile.id,
@@ -7666,7 +7677,7 @@ async function enableVillaPush(){
       auth: subJson.keys.auth,
       active: true
     }, { onConflict: 'endpoint' });
-    if(error){ console.error('Push-Subscription konnte nicht gespeichert werden:', error); alert(t('villa_push_error')); return; }
+    if(error){ console.error('Push-Subscription konnte nicht gespeichert werden:', error); alert('DEBUG FEHLER beim Speichern: ' + error.message); return; }
     if(btn){
       btn.textContent = t('villa_push_enabled');
       btn.disabled = true;
@@ -14054,7 +14065,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v195</div>
+<div id="version-footer" style="position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v196</div>
 
 </body>
 </html>
