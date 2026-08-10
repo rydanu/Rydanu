@@ -344,8 +344,8 @@
   .form-field label{ display:block; font-size:0.78rem; font-weight:600; margin-bottom:6px; color:var(--ink-soft); }
   .form-field label .optional{ font-weight:400; color:var(--ink-soft); opacity:0.7; }
   .form-field input, .form-field select, .form-field textarea{
-    width:100%; padding:11px 12px; border:1px solid var(--line); border-radius:5px;
-    font-family:'Public Sans'; font-size:0.9rem; background:#fff; color:var(--ink); outline:none;
+    width:100%; padding:13px 12px; border:1px solid var(--line); border-radius:5px;
+    font-family:'Public Sans'; font-size:0.95rem; line-height:1.4; background:#fff; color:var(--ink); outline:none;
   }
   .form-field input:focus, .form-field select:focus, .form-field textarea:focus{ border-color:var(--teal); }
   .form-field textarea{ resize:vertical; }
@@ -425,7 +425,7 @@
   .dash-wrap{ display:grid; grid-template-columns:220px 1fr; min-height:calc(100vh - 73px); }
   .driver-auth-gate{ display:flex; align-items:center; justify-content:center; min-height:60vh; padding:20px; }
   .auth-box{ width:100%; max-width:360px; background:#fff; border:1px solid var(--line); border-radius:14px; padding:32px 28px; box-shadow:0 4px 18px rgba(0,0,0,0.06); }
-  .auth-input{ width:100%; box-sizing:border-box; padding:12px 14px; margin-bottom:12px; border:1px solid var(--line); border-radius:8px; font-size:0.95rem; font-family:inherit; }
+  .auth-input{ width:100%; box-sizing:border-box; padding:13px 14px; margin-bottom:12px; border:1px solid var(--line); border-radius:8px; font-size:0.98rem; line-height:1.4; font-family:inherit; }
   .auth-submit-btn{ width:100%; padding:13px; }
   .driver-pending-banner{ background:#FFF6DD; color:#7A5B00; border-bottom:1px solid #F0DFA0; padding:12px 20px; font-size:0.9rem; text-align:center; }
   .new-booking-banner{
@@ -715,6 +715,8 @@
   .money-panel-grid{ display:grid; grid-template-columns:1fr 1fr; gap:24px; align-items:start; }
   .money-panel-grid h3{ margin-top:0; }
   @media (max-width:860px){ .money-panel-grid{ grid-template-columns:1fr; gap:0; } }
+  .villa-stats-col{ padding-left:24px; border-left:1px solid var(--line); }
+  @media (max-width:860px){ .villa-stats-col{ padding-left:0; border-left:none; margin-top:28px; padding-top:20px; border-top:1px solid var(--line); } }
   .stat-card .num{ font-family:'Public Sans', sans-serif; font-size:1.7rem; font-weight:700; }
   .stat-card .lbl{ font-family:'JetBrains Mono'; font-size:0.68rem; text-transform:uppercase; letter-spacing:0.08em; color:var(--ink-soft); margin-top:4px; }
 
@@ -933,6 +935,10 @@
   .tier-table td{ padding:9px 10px; border-bottom:1px solid var(--line); }
   .tier-table tr:last-child td{ border-bottom:none; }
   .tier-table td:last-child{ font-weight:600; text-align:right; }
+  @media (max-width:480px){
+    .tier-table th:last-child{ text-align:left; }
+    .tier-table td:last-child{ text-align:left; }
+  }
   .tier-footnote{ padding:0 20px 18px; font-size:0.78rem; color:var(--ink-soft); line-height:1.4; }
   .fee-badge{ font-family:'JetBrains Mono'; font-size:0.68rem; background:var(--paper-dim); color:var(--teal); padding:3px 7px; border-radius:3px; margin-left:8px; white-space:nowrap; display:inline-block; }
 
@@ -1389,13 +1395,13 @@
         <input type="email" id="f-email" placeholder="you@email.com">
       </div>
       <div class="form-field">
-        <label data-i18n-html="lbl_whatsapp">WhatsApp number <span class="optional">(for booking confirmation)</span></label>
-        <input type="tel" id="f-phone" placeholder="+62 812 3456 7890">
+        <label data-i18n="lbl_whatsapp">WhatsApp number</label>
+        <input type="tel" id="f-phone" required placeholder="+62 812 3456 7890">
       </div>
       <div class="form-row">
         <div class="form-field">
           <label>Date</label>
-          <input type="date" id="f-date">
+          <input type="date" id="f-date" required>
         </div>
         <div class="form-field">
           <label>Guests</label>
@@ -1495,7 +1501,7 @@
       <h2 style="font-family:'Public Sans', sans-serif; font-weight:700; margin-top:0;">🚗 Fahrer-Bereich</h2>
 
       <div id="auth-login-form">
-        <p class="note" style="margin-top:0;">Anmeldung mit Telefonnummer (0062 / +62) oder E-Mail und Passwort.</p>
+        <p class="note" style="margin-top:0;">Anmeldung mit Telefonnummer&nbsp;(0062&nbsp;/&nbsp;+62) oder E-Mail und Passwort.</p>
         <input type="text" id="auth-login-email" placeholder="Telefonnummer oder E-Mail" class="auth-input">
         <input type="password" id="auth-login-password" placeholder="Passwort" class="auth-input">
         <button type="button" class="btn-primary auth-submit-btn" onclick="handleDriverLogin()">Anmelden</button>
@@ -2002,7 +2008,7 @@
 
     <div id="admin-sec-driverstats" style="display:none;">
     <h2 style="margin-top:0; text-align:center;">Fahrer- / Villen-Statistik</h2>
-    <div class="money-panel-grid" style="max-width:100%; margin:0 auto; gap:56px; grid-template-columns:1fr 1fr;">
+    <div class="money-panel-grid" style="max-width:100%; margin:0 auto; gap:56px;">
     <div>
     <h3 data-i18n="admin_driverstats_title">Driver statistics</h3>
     <p class="dash-head" style="display:block; margin-bottom:14px;" data-i18n="admin_driverstats_sub">Select a driver to see their completed and cancelled tours.</p>
@@ -2012,7 +2018,7 @@
     <div class="stat-row" id="admin-driver-stats-row" style="grid-template-columns:repeat(2,1fr); gap:14px;"></div>
     </div>
 
-    <div style="padding-left:24px; border-left:1px solid var(--line);">
+    <div class="villa-stats-col">
     <h3>🏠 Villa-Statistik</h3>
     <p class="dash-head" style="display:block; margin-bottom:14px;">Villa auswählen, um abgeschlossene und stornierte Buchungen zu sehen.</p>
     <div class="form-field">
@@ -9078,7 +9084,7 @@ const translations = {
     reg_terms_checkbox_label: "I have read and accept the Rydanu driver terms & conditions.", reg_terms_submit_btn: "Accept & submit registration",
     ep_err_name: "Name cannot be empty.",
     map_note_dropoff_booking: "Marker shows the general drop-off area — your driver will confirm the exact address after booking.", map_note_dropoff_general: "Marker shows the general drop-off area.",
-    form_err_name_email: "Please enter your name and email to continue.", form_err_pickup: "Please enter your pickup location (hotel or address) before continuing — your driver needs it to plan the tour.",
+    form_err_name_email: "Please enter your name and email to continue.", form_err_pickup: "Please enter your pickup location (hotel or address) before continuing — your driver needs it to plan the tour.", form_err_required_all: "Please fill in all fields (WhatsApp number, date and pickup location) — only luggage and notes are optional.",
     eyebrow_profile: "Driver profile", eyebrow_trip: "Trip details", eyebrow_payment: "Payment", eyebrow_confirm: "All set",
     status_sending: "Sending…", status_sent: "Sent ✓", status_delivered: "Delivered ✓",
     confirm_reset_demo: "Reset the whole demo back to its original starting data? This cannot be undone.",
@@ -9402,7 +9408,7 @@ const translations = {
     reg_terms_checkbox_label: "Ich habe die Rydanu-Nutzungsbedingungen für Fahrer gelesen und akzeptiere sie.", reg_terms_submit_btn: "Akzeptieren & Registrierung absenden",
     ep_err_name: "Der Name darf nicht leer sein.",
     map_note_dropoff_booking: "Der Marker zeigt den ungefähren Abholbereich — dein Fahrer bestätigt die genaue Adresse nach der Buchung.", map_note_dropoff_general: "Der Marker zeigt den ungefähren Abholbereich.",
-    form_err_name_email: "Bitte gib deinen Namen und deine E-Mail-Adresse ein, um fortzufahren.", form_err_pickup: "Bitte gib deinen Abholort ein (Hotel oder Adresse), bevor du fortfährst — dein Fahrer braucht diese Angabe zur Planung der Tour.",
+    form_err_name_email: "Bitte gib deinen Namen und deine E-Mail-Adresse ein, um fortzufahren.", form_err_pickup: "Bitte gib deinen Abholort ein (Hotel oder Adresse), bevor du fortfährst — dein Fahrer braucht diese Angabe zur Planung der Tour.", form_err_required_all: "Bitte fülle alle Felder aus (WhatsApp-Nummer, Datum und Abholort) — nur Gepäck und Notizen sind optional.",
     eyebrow_profile: "Fahrerprofil", eyebrow_trip: "Reisedetails", eyebrow_payment: "Zahlung", eyebrow_confirm: "Fertig",
     status_sending: "Wird gesendet…", status_sent: "Gesendet ✓", status_delivered: "Zugestellt ✓",
     confirm_reset_demo: "Die komplette Demo auf den ursprünglichen Startzustand zurücksetzen? Das kann nicht rückgängig gemacht werden.",
@@ -9726,7 +9732,7 @@ const translations = {
     reg_terms_checkbox_label: "Saya telah membaca dan menerima syarat & ketentuan sopir Rydanu.", reg_terms_submit_btn: "Terima & kirim pendaftaran",
     ep_err_name: "Nama tidak boleh kosong.",
     map_note_dropoff_booking: "Penanda menunjukkan area penjemputan umum — sopir Anda akan mengonfirmasi alamat pastinya setelah pemesanan.", map_note_dropoff_general: "Penanda menunjukkan area penjemputan umum.",
-    form_err_name_email: "Mohon masukkan nama dan email Anda untuk melanjutkan.", form_err_pickup: "Mohon masukkan lokasi penjemputan Anda (hotel atau alamat) sebelum melanjutkan — sopir Anda memerlukannya untuk merencanakan tur.",
+    form_err_name_email: "Mohon masukkan nama dan email Anda untuk melanjutkan.", form_err_pickup: "Mohon masukkan lokasi penjemputan Anda (hotel atau alamat) sebelum melanjutkan — sopir Anda memerlukannya untuk merencanakan tur.", form_err_required_all: "Mohon isi semua kolom (nomor WhatsApp, tanggal, dan lokasi penjemputan) — hanya bagasi dan catatan yang opsional.",
     eyebrow_profile: "Profil sopir", eyebrow_trip: "Detail perjalanan", eyebrow_payment: "Pembayaran", eyebrow_confirm: "Selesai",
     status_sending: "Mengirim…", status_sent: "Terkirim ✓", status_delivered: "Terkirim ✓",
     confirm_reset_demo: "Reset seluruh demo ke data awal? Ini tidak dapat dibatalkan.",
@@ -11113,7 +11119,8 @@ function fillTemplate(str, vars){
 function confirmPayment(){
   const name = document.getElementById('f-name').value.trim() || 'Guest';
   const email = document.getElementById('f-email').value.trim() || 'you@email.com';
-  const phone = document.getElementById('f-phone').value.trim() || '+62 —';
+  const phoneRaw = document.getElementById('f-phone').value.trim();
+  const phone = phoneRaw || '+62 —';
   const pickup = document.getElementById('f-pickup').value.trim() || 'To be confirmed with driver';
   const date = document.getElementById('pay-date').textContent;
   const ref = 'RY-' + Math.floor(10000 + Math.random()*89999);
@@ -11228,7 +11235,7 @@ ${bpt('driverFeeLine')}</div>`;
         driver_id: bookingDriverId,
         customer_name: name,
         customer_email: email,
-        customer_phone: phone,
+        customer_phone: phoneRaw || null,
         pickup: pickup,
         booking_date: bookingDate,
         status: 'pending',
@@ -11267,16 +11274,21 @@ function togglePreview(type){
 }
 
 function validateAndGoToPayment(){
+  const err = document.getElementById('bk-error');
+  const phoneEl = document.getElementById('f-phone');
+  const phone = phoneEl.value.trim();
+  phoneEl.classList.toggle('field-error', !phone);
+  const dateEl = document.getElementById('f-date');
+  const dateVal = dateEl.value.trim();
+  dateEl.classList.toggle('field-error', !dateVal);
   const pickupEl = document.getElementById('f-pickup');
   const pickup = pickupEl.value.trim();
   pickupEl.classList.toggle('field-error', !pickup);
-  const err = document.getElementById('bk-error');
-  if(!pickup){
-    err.textContent = t('form_err_pickup');
+  if(!phone || !dateVal || !pickup){
+    err.textContent = t('form_err_required_all');
     return;
   }
   err.textContent = '';
-  pickupEl.classList.remove('field-error');
   goToStep('payment');
 }
 function viewAsDriver(){
@@ -11676,22 +11688,22 @@ async function initVillaRequestPage(slug){
       </div>
       <div style="display:flex; gap:10px;">
         <label style="flex:1; display:block; margin-bottom:12px;">${t('vr_date')}
-          <input type="date" id="vr-date" style="width:100%; margin-top:4px;">
+          <input type="date" id="vr-date" required style="width:100%; margin-top:4px;">
         </label>
         <label style="flex:1; display:block; margin-bottom:12px;">${t('vr_time')}
-          <input type="time" id="vr-time" style="width:100%; margin-top:4px;">
+          <input type="time" id="vr-time" required style="width:100%; margin-top:4px;">
         </label>
       </div>
       <div style="display:flex; gap:10px;">
         <label style="flex:1; display:block; margin-bottom:12px;">${t('vr_passengers')}
-          <input type="text" id="vr-guests" placeholder="2" style="width:100%; margin-top:4px;">
+          <input type="text" id="vr-guests" required placeholder="2" style="width:100%; margin-top:4px;">
         </label>
-        <label style="flex:1; display:block; margin-bottom:12px;">${t('vr_luggage')}
+        <label style="flex:1; display:block; margin-bottom:12px;">${t('vr_luggage')} <span style="font-weight:400; opacity:0.7;">${t('vr_optional')}</span>
           <input type="text" id="vr-luggage" style="width:100%; margin-top:4px;">
         </label>
       </div>
       <label style="display:block; margin-bottom:12px;">${t('vr_name')}
-        <input type="text" id="vr-name" style="width:100%; margin-top:4px;">
+        <input type="text" id="vr-name" required style="width:100%; margin-top:4px;">
       </label>
       <label style="display:block; margin-bottom:12px;">${t('vr_phone')}
         <input type="tel" id="vr-phone" required style="width:100%; margin-top:4px;">
@@ -11712,8 +11724,12 @@ async function submitVillaRequest(slug){
   const destination = document.getElementById('vr-destination').value.trim();
   const email = document.getElementById('vr-email').value.trim();
   const phone = document.getElementById('vr-phone').value.trim();
+  const name = document.getElementById('vr-name').value.trim();
+  const dateVal = document.getElementById('vr-date').value.trim();
+  const timeVal = document.getElementById('vr-time').value.trim();
+  const guests = document.getElementById('vr-guests').value.trim();
   const errEl = document.getElementById('vr-error');
-  if(!destination || !email || !phone){
+  if(!pickup || !destination || !email || !phone || !name || !dateVal || !timeVal || !guests){
     errEl.textContent = t('vr_err_required');
     return;
   }
@@ -14099,7 +14115,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v198</div>
+<div id="version-footer" style="position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v201</div>
 
 </body>
 </html>
