@@ -1,5 +1,5 @@
-// Ryvio — simple offline-friendly cache-first service worker
-const CACHE_NAME = 'rydanu-cache-v185';
+// Rydanu — simple offline-friendly cache-first service worker
+const CACHE_NAME = 'rydanu-cache-v187';
 const CORE_ASSETS = [
   './',
   './manifest.json'
@@ -60,6 +60,46 @@ self.addEventListener('fetch', (event) => {
         })
         .catch(() => cached);
       return cached || fetchPromise;
+    })
+  );
+});
+
+// ============================================================
+// Villa Partner Phase 1 — Push-Benachrichtigungen
+// Wird von der Edge Function notify-villa-request ausgeloest, sobald eine neue Villa-Anfrage
+// zu einem passenden Fahrer passt. Payload-Form (siehe Edge Function): { title, body, url, requestId }
+// ============================================================
+self.addEventListener('push', (event) => {
+  let payload = {};
+  try {
+    payload = event.data ? event.data.json() : {};
+  } catch (e) {
+    payload = { title: 'Rydanu', body: event.data ? event.data.text() : 'Neue Benachrichtigung' };
+  }
+  const title = payload.title || 'Rydanu';
+  const options = {
+    body: payload.body || '',
+    icon: './apple-touch-icon.png',
+    badge: './apple-touch-icon.png',
+    data: { url: payload.url || './', requestId: payload.requestId || null },
+    tag: payload.requestId ? ('villa-' + payload.requestId) : undefined
+  };
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const targetUrl = (event.notification.data && event.notification.data.url) || './';
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      for (const client of clientList) {
+        if ('focus' in client) {
+          client.focus();
+          if ('navigate' in client) client.navigate(targetUrl);
+          return;
+        }
+      }
+      if (clients.openWindow) return clients.openWindow(targetUrl);
     })
   );
 });
