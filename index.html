@@ -2677,6 +2677,9 @@
         <input type="text" id="ep-paylink" placeholder="e.g. https://wise.com/pay/yourname">
       </div>
       <label class="nl-service-check" style="margin-bottom:12px;"><input type="checkbox" id="ep-qris"> <span data-i18n="rd_qris_label">I accept QRIS (GoPay / OVO / DANA)</span></label>
+      <div class="form-field" id="ep-push-field" style="display:none;">
+        <label class="nl-service-check" style="margin-bottom:4px;"><input type="checkbox" id="ep-push-toggle"> <span data-i18n="ep_push_toggle_label">Push notifications for new requests (e.g. Villa Partner bookings)</span></label>
+      </div>
       <p class="form-error" id="ep-error"></p>
       <button class="book-btn" onclick="saveEditProfile()">Save changes</button>
     </div>
@@ -7629,46 +7632,50 @@ async function refreshVillaPushPanelVisibility(){
     return;
   }
   panel.style.display = 'block';
+  // Wichtig: NICHT nur die lokale Browser-Subscription pruefen -- die kann von einem
+  // fehlgeschlagenen frueheren Versuch als "vorhanden" im Browser haengen bleiben, obwohl nie
+  // erfolgreich in der Datenbank gespeichert wurde. Deshalb den echten Datenbank-Stand pruefen.
   try{
-    const reg = await navigator.serviceWorker.ready;
-    const sub = await reg.pushManager.getSubscription();
+    const { data: dbSub } = await supabaseClient
+      .from('push_subscriptions')
+      .select('id')
+      .eq('driver_id', realDriverProfile.id)
+      .eq('active', true)
+      .limit(1)
+      .maybeSingle();
     const btn = document.getElementById('villa-push-btn');
-    if(sub && btn){
+    if(dbSub && btn){
       btn.textContent = t('villa_push_enabled');
       btn.disabled = true;
       btn.classList.add('mailbox-replied-tag');
+    } else if(btn){
+      btn.textContent = t('villa_push_enable_btn');
+      btn.disabled = false;
+      btn.classList.remove('mailbox-replied-tag');
     }
   }catch(e){ /* still fine, Button bleibt aktiv */ }
 }
-async function enableVillaPush(){
-  // TEMPORAER: sichtbare Diagnose-Meldungen bei jedem Schritt, um herauszufinden, wo es auf
-  // Jörgs iPhone haengen bleibt (kein Devtools-Zugriff moeglich). Wird nach der Fehlersuche
-  // wieder entfernt.
-  alert('DEBUG 1/6: Button-Klick erkannt.');
-  if(!realDriverProfile){ alert('DEBUG ABBRUCH: realDriverProfile ist leer -- App denkt, du bist nicht eingeloggt.'); return; }
-  alert('DEBUG 2/6: realDriverProfile vorhanden (' + realDriverProfile.name + ').');
+async function enableVillaPush(silent){
+  if(!realDriverProfile) return false;
   const btn = document.getElementById('villa-push-btn');
-  const hasSW = ('serviceWorker' in navigator);
-  const hasPM = ('PushManager' in window);
-  alert('DEBUG 3/6: serviceWorker verfuegbar=' + hasSW + ', PushManager verfuegbar=' + hasPM);
-  if(!hasSW || !hasPM){
-    alert(t('villa_push_unsupported'));
-    return;
+  if(!('serviceWorker' in navigator) || !('PushManager' in window)){
+    if(!silent) alert(t('villa_push_unsupported'));
+    return false;
   }
   try{
-    alert('DEBUG 4/6: rufe jetzt Notification.requestPermission() auf...');
     const permission = await Notification.requestPermission();
-    alert('DEBUG 5/6: Ergebnis der Berechtigungsanfrage = "' + permission + '"');
-    if(permission !== 'granted'){ alert(t('villa_push_error')); return; }
+    if(permission !== 'granted'){ if(!silent) alert(t('villa_push_error')); return false; }
     const reg = await navigator.serviceWorker.ready;
     let sub = await reg.pushManager.getSubscription();
-    if(!sub){
-      sub = await reg.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
-      });
+    if(sub){
+      // Sauberer Neustart statt einer moeglicherweise verwaisten alten Anmeldung zu vertrauen.
+      await sub.unsubscribe();
+      sub = null;
     }
-    alert('DEBUG 6/6: Subscription erstellt, speichere in Datenbank...');
+    sub = await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+    });
     const subJson = sub.toJSON();
     const { error } = await supabaseClient.from('push_subscriptions').upsert({
       driver_id: realDriverProfile.id,
@@ -7677,15 +7684,17 @@ async function enableVillaPush(){
       auth: subJson.keys.auth,
       active: true
     }, { onConflict: 'endpoint' });
-    if(error){ console.error('Push-Subscription konnte nicht gespeichert werden:', error); alert('DEBUG FEHLER beim Speichern: ' + error.message); return; }
+    if(error){ console.error('Push-Subscription konnte nicht gespeichert werden:', error); if(!silent) alert(t('villa_push_error')); return false; }
     if(btn){
       btn.textContent = t('villa_push_enabled');
       btn.disabled = true;
       btn.classList.add('mailbox-replied-tag');
     }
+    return true;
   }catch(e){
     console.error('Push-Aktivierung fehlgeschlagen:', e);
-    alert(t('villa_push_error'));
+    if(!silent) alert(t('villa_push_error'));
+    return false;
   }
 }
 // ============================================
@@ -8865,6 +8874,10 @@ function openEditProfileReal(){
   document.getElementById('ep-qris').checked = pay.qris !== false;
   document.getElementById('ep-phone').value = d.phone || '';
   document.getElementById('ep-error').textContent = '';
+  document.getElementById('ep-push-field').style.display = ('serviceWorker' in navigator && 'PushManager' in window) ? 'block' : 'none';
+  supabaseClient.from('push_subscriptions').select('id').eq('driver_id', d.id).eq('active', true).limit(1).maybeSingle().then(({data})=>{
+    document.getElementById('ep-push-toggle').checked = !!data;
+  });
   document.getElementById('edit-profile-modal-bg').classList.add('active');
 }
 function closeEditProfile(){ document.getElementById('edit-profile-modal-bg').classList.remove('active'); }
@@ -8983,6 +8996,19 @@ async function saveEditProfileReal(){
   closeEditProfile();
   // Suche neu laden, damit Sprachen/Fahrzeug/Merkmale sofort auch in der Kundensuche stimmen
   loadRealPublicListings();
+
+  // Push-Schalter auswerten -- an: normale (nicht-stille) Aktivierung, damit bei Bedarf der
+  // iOS/Browser-Dialog erscheint. Aus: bestehende Anmeldungen serverseitig deaktivieren + lokal
+  // abmelden, damit wirklich keine Nachrichten mehr ankommen.
+  const wantsPush = document.getElementById('ep-push-toggle').checked;
+  if(wantsPush){
+    enableVillaPush(false);
+  } else {
+    supabaseClient.from('push_subscriptions').update({ active:false }).eq('driver_id', realDriverProfile.id).then(()=>{});
+    if('serviceWorker' in navigator){
+      navigator.serviceWorker.ready.then(reg => reg.pushManager.getSubscription()).then(sub => { if(sub) sub.unsubscribe(); }).catch(()=>{});
+    }
+  }
 }
 
 // ---- language switch (DE / EN / ID) ----
@@ -9231,7 +9257,7 @@ const translations = {
     pay_link_label: "Open driver's payment link",
     
     rd_paylink_label: "Payment link for customers who prefer to pay digitally (Wise / Revolut / PayPal) — optional",
-    rd_qris_label: "I accept QRIS (GoPay / OVO / DANA)",
+    rd_qris_label: "I accept QRIS (GoPay / OVO / DANA)", ep_push_toggle_label: "Push notifications for new requests (e.g. Villa Partner bookings)",
     pay_confirm_btn: "Submit booking request",
     rd_name_label: "Full name",
     rd_homeregion_label: "Home region", rd_serviceregions_label: "Regions you serve", rd_serviceregions_hint: "Used to match you with nearby pickup requests — including Villa Partner bookings.", rd_serviceregions_err: "Please select at least one region.",
@@ -9555,7 +9581,7 @@ const translations = {
     pay_link_label: "Zahlungslink des Fahrers öffnen",
     
     rd_paylink_label: "Zahlungslink für Gäste, die lieber digital bezahlen (Wise / Revolut / PayPal) — optional",
-    rd_qris_label: "Ich akzeptiere QRIS (GoPay / OVO / DANA)",
+    rd_qris_label: "Ich akzeptiere QRIS (GoPay / OVO / DANA)", ep_push_toggle_label: "Push-Benachrichtigungen für neue Anfragen (z.B. Villa-Partner-Buchungen)",
     pay_confirm_btn: "Buchungsanfrage absenden",
     rd_name_label: "Vollständiger Name",
     rd_homeregion_label: "Heimatregion", rd_serviceregions_label: "Regionen, die du bedienst", rd_serviceregions_hint: "Wird genutzt, um dich mit passenden Abholanfragen in der Nähe zu matchen — auch Villa-Partner-Buchungen.", rd_serviceregions_err: "Bitte mindestens eine Region auswählen.",
@@ -9879,7 +9905,7 @@ const translations = {
     pay_link_label: "Buka tautan pembayaran sopir",
     
     rd_paylink_label: "Tautan pembayaran untuk tamu yang lebih suka membayar secara digital (Wise / Revolut / PayPal) — opsional",
-    rd_qris_label: "Saya menerima QRIS (GoPay / OVO / DANA)",
+    rd_qris_label: "Saya menerima QRIS (GoPay / OVO / DANA)", ep_push_toggle_label: "Notifikasi push untuk permintaan baru (mis. booking Villa Partner)",
     pay_confirm_btn: "Kirim permintaan pemesanan",
     rd_name_label: "Nama lengkap",
     rd_homeregion_label: "Wilayah asal", rd_serviceregions_label: "Wilayah yang Anda layani", rd_serviceregions_hint: "Digunakan untuk mencocokkan Anda dengan permintaan penjemputan terdekat — termasuk booking Villa Partner.", rd_serviceregions_err: "Silakan pilih setidaknya satu wilayah.",
@@ -12215,6 +12241,14 @@ async function checkDriverAuthState(silent){
   const villaNavItem = document.getElementById('nav-villa-item');
   if(villaNavItem) villaNavItem.style.display = driverRow.status === 'approved' ? 'flex' : 'none';
   if(driverRow.status === 'approved') loadVillaRequests();
+  // Push automatisch anbieten, sobald der Fahrer freigeschaltet ist -- kein extra Klick in
+  // "Villa Requests" noetig. Fragt aber NUR, wenn der Fahrer noch nie gefragt wurde
+  // (Notification.permission === 'default'); wurde einmal abgelehnt, respektieren wir das und
+  // fragen nicht erneut ungefragt -- der Fahrer kann es jederzeit selbst in "Profil bearbeiten"
+  // wieder anschalten.
+  if(driverRow.status === 'approved' && 'Notification' in window && Notification.permission === 'default'){
+    setTimeout(()=>{ enableVillaPush(true); }, 800);
+  }
 }
 // Fragt den Fahrer-Status automatisch neu ab, wenn die Seite wieder aktiv wird (z.B. nach
 // Tab-Wechsel) - so verschwindet der "wartet auf Freischaltung"-Hinweis von selbst, sobald
@@ -14065,7 +14099,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v196</div>
+<div id="version-footer" style="position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v198</div>
 
 </body>
 </html>
