@@ -82,6 +82,9 @@
     --lime:#8ED928;
     --line: rgba(11,61,34,0.14);
     --radius: 3px;
+    --radius-card: 12px;
+    --shadow-card: 0 1px 3px rgba(11,61,34,0.06), 0 1px 2px rgba(11,61,34,0.04);
+    --shadow-card-hover: 0 8px 20px rgba(11,61,34,0.10);
   }
   html{ color-scheme: light; background:#F7FAF4; }
   *{box-sizing:border-box; margin:0; padding:0;}
@@ -259,11 +262,11 @@
     gap:20px; padding:0 32px 56px;
   }
   .driver-card{
-    background:#fff; border:1px solid var(--line); border-radius:6px; overflow:hidden;
-    cursor:pointer; transition:transform .15s ease, box-shadow .15s ease;
+    background:#fff; border:1px solid var(--line); border-radius:var(--radius-card); overflow:hidden;
+    cursor:pointer; transition:transform .15s ease, box-shadow .15s ease; box-shadow:var(--shadow-card);
     display:flex; flex-direction:column;
   }
-  .driver-card:hover{ transform:translateY(-3px); box-shadow:0 10px 24px rgba(11,61,34,0.12); }
+  .driver-card:hover{ transform:translateY(-3px); box-shadow:var(--shadow-card-hover); }
   .driver-card-header{
     background:linear-gradient(135deg, var(--teal-soft), var(--paper-dim));
     padding:16px 16px 14px; position:relative;
@@ -313,8 +316,8 @@
     gleichzeitigen "active"-Zustand trotz identischem z-index vom Kalender optisch ueberdeckt — sah
     fuer den Fahrer wie ein sofortiges Zuklappen des Kalenders aus, statt der gewuenschten Tagesansicht. */
   .modal{
-    background:var(--paper); max-width:560px; width:100%; border-radius:8px; overflow:hidden;
-    border:1px solid var(--line);
+    background:var(--paper); max-width:560px; width:100%; border-radius:var(--radius-card); overflow:hidden;
+    border:1px solid var(--line); box-shadow:0 20px 50px rgba(11,61,34,0.22);
   }
   .modal-header{ background:var(--ink); color:var(--paper); padding:28px 28px 22px; position:relative; }
   .modal-close{
@@ -424,7 +427,7 @@
   /* ===== DRIVER DASHBOARD VIEW ===== */
   .dash-wrap{ display:grid; grid-template-columns:220px 1fr; min-height:calc(100vh - 73px); }
   .driver-auth-gate{ display:flex; align-items:center; justify-content:center; min-height:60vh; padding:20px; }
-  .auth-box{ width:100%; max-width:360px; background:#fff; border:1px solid var(--line); border-radius:14px; padding:32px 28px; box-shadow:0 4px 18px rgba(0,0,0,0.06); }
+  .auth-box{ width:100%; max-width:360px; background:#fff; border:1px solid var(--line); border-radius:var(--radius-card); padding:32px 28px; box-shadow:var(--shadow-card-hover); }
   .auth-input{ width:100%; box-sizing:border-box; padding:13px 14px; margin-bottom:12px; border:1px solid var(--line); border-radius:8px; font-size:0.98rem; line-height:1.4; font-family:inherit; }
   .auth-submit-btn{ width:100%; padding:13px; }
   .driver-pending-banner{ background:#FFF6DD; color:#7A5B00; border-bottom:1px solid #F0DFA0; padding:12px 20px; font-size:0.9rem; text-align:center; }
@@ -690,14 +693,14 @@
   .fee-rate-badge-vip .fee-rate-badge-label{ font-size:0.95rem; }
 
   .stat-row{ display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:32px; }
-  .stat-card{ background:#fff; border:1px solid var(--line); border-radius:6px; padding:18px; }
+  .stat-card{ background:#fff; border:1px solid var(--line); border-radius:10px; padding:18px; box-shadow:var(--shadow-card); }
   .admin-tile-grid{ display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:8px; }
   .admin-tile{
-    border:1px solid var(--line); border-radius:10px; padding:18px 16px; cursor:pointer;
-    background:#fff; transition:background .15s ease, border-color .15s ease; text-align:left;
-    display:block; width:100%; font-family:'Public Sans';
+    border:1px solid var(--line); border-radius:var(--radius-card); padding:18px 16px; cursor:pointer;
+    background:#fff; transition:background .15s ease, border-color .15s ease, box-shadow .15s ease; text-align:left;
+    display:block; width:100%; font-family:'Public Sans'; box-shadow:var(--shadow-card);
   }
-  .admin-tile:hover{ background:var(--teal-soft); border-color:var(--teal); }
+  .admin-tile:hover{ background:var(--teal-soft); border-color:var(--teal); box-shadow:var(--shadow-card-hover); }
   .admin-tile .at-icon{ font-size:1.5rem; margin-bottom:8px; display:block; }
   .admin-tile .at-title{ font-weight:700; font-size:0.92rem; margin-bottom:4px; color:var(--ink); }
   .admin-tile .at-sub{ font-size:0.76rem; color:var(--ink-soft); line-height:1.4; }
@@ -720,7 +723,7 @@
   .stat-card .num{ font-family:'Public Sans', sans-serif; font-size:1.7rem; font-weight:700; }
   .stat-card .lbl{ font-family:'JetBrains Mono'; font-size:0.68rem; text-transform:uppercase; letter-spacing:0.08em; color:var(--ink-soft); margin-top:4px; }
 
-  .panel{ background:#fff; border:1px solid var(--line); border-radius:6px; margin-bottom:24px; }
+  .panel{ background:#fff; border:1px solid var(--line); border-radius:var(--radius-card); margin-bottom:24px; box-shadow:var(--shadow-card); }
   .panel-head{ padding:16px 20px; border-bottom:1px solid var(--line); display:flex; justify-content:space-between; align-items:center; }
   .panel-head h3{ font-size:1rem; font-weight:600; font-family:'Public Sans'; }
   .add-btn{ background:var(--ink); color:var(--paper); border:none; padding:7px 14px; border-radius:4px; font-size:0.78rem; font-weight:600; cursor:pointer; }
@@ -2029,7 +2032,7 @@
     </div>
 
     <div class="villa-stats-col">
-    <h3>🏠 Villa-Statistik</h3>
+    <h3>Villa-Statistik</h3>
     <p class="dash-head" style="display:block; margin-bottom:14px;">Villa auswählen, um abgeschlossene und stornierte Buchungen zu sehen.</p>
     <div class="form-field">
       <select id="admin-villa-stats-select" onchange="renderVillaStats()"></select>
@@ -2167,7 +2170,7 @@
     </div>
 
     <div id="admin-sec-villa" style="display:none;">
-    <h2 style="margin-top:0;">🏠 Villa-Partner</h2>
+    <h2 style="margin-top:0;">Villa-Partner</h2>
     <p class="dash-head" style="display:block; margin-bottom:20px;">Villen &amp; Hotels anlegen, die ihren Gästen über einen persönlichen Link Transfers anfragen lassen können. Fahrer zahlen bei Villa-Buchungen pauschal 20% (statt normal 10%) — die Villa bekommt davon ihren festgelegten Anteil, Rydanu die Differenz.</p>
 
     <div class="panel" style="padding:16px; margin-bottom:20px;">
@@ -7846,7 +7849,7 @@ async function loadVillaApplications(){
   listEl.innerHTML = villaApplicationsCache.map(a => `
     <div class="booking-row">
       <div>
-        <div class="who">🏠 ${escapeHtml(a.name)}</div>
+        <div class="who">${escapeHtml(a.name)}</div>
         <div class="when">${a.contact_name ? escapeHtml(a.contact_name) + ' · ' : ''}${escapeHtml(a.contact_phone)} · ${escapeHtml(a.contact_email)}</div>
         <div class="when">Region: ${a.region === 'lombok' ? 'Lombok' : 'Bali'}</div>
         ${a.message ? `<div class="when" style="font-style:italic;">"${escapeHtml(a.message)}"</div>` : ''}
@@ -12906,6 +12909,8 @@ let isAdminSession = false;
 async function updateIsAdminSession(){
   const { data: { session } } = await supabaseClient.auth.getSession();
   isAdminSession = !!(session && session.user && session.user.user_metadata && session.user.user_metadata.role === 'admin');
+  const versionFooter = document.getElementById('version-footer');
+  if(versionFooter) versionFooter.style.display = isAdminSession ? 'block' : 'none';
   const el = document.getElementById('admin-current-account');
   const settlementBtn = document.getElementById('admin-run-settlement-btn');
   if(settlementBtn) settlementBtn.style.display = (session) ? 'none' : '';
@@ -14368,7 +14373,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v204</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v205</div>
 
 </body>
 </html>
