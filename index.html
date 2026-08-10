@@ -1510,14 +1510,14 @@
     <div class="auth-box">
       <h2 style="font-family:'Public Sans', sans-serif; font-weight:700; margin-top:0;">🚗 Fahrer-Bereich</h2>
 
-      <div id="auth-login-form">
+      <form id="auth-login-form" onsubmit="return false;">
         <p class="note" style="margin-top:0;">Anmeldung mit Telefonnummer&nbsp;(0062&nbsp;/&nbsp;+62) oder E-Mail und Passwort.</p>
-        <input type="text" id="auth-login-email" placeholder="Telefonnummer oder E-Mail" class="auth-input">
-        <input type="password" id="auth-login-password" placeholder="Passwort" class="auth-input">
+        <input type="text" id="auth-login-email" name="username" autocomplete="username" placeholder="Telefonnummer oder E-Mail" class="auth-input">
+        <input type="password" id="auth-login-password" name="password" autocomplete="current-password" placeholder="Passwort" class="auth-input">
         <button type="button" class="btn-primary auth-submit-btn" onclick="handleDriverLogin()">Anmelden</button>
         <p class="note" style="text-align:center;"><a href="#" onclick="openForgotPassword(); return false;">Passwort vergessen?</a></p>
         <p class="note" style="text-align:center;">Noch kein Konto? <a href="#" onclick="toggleAuthForm('signup'); return false;">Jetzt registrieren</a></p>
-      </div>
+      </form>
 
       <div id="auth-signup-form" style="display:none;">
         <p class="note" style="margin-top:0;">Neues Fahrerkonto anlegen.</p>
@@ -14368,7 +14368,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v203</div>
+<div id="version-footer" style="position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v204</div>
 
 </body>
 </html>
