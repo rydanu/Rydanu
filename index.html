@@ -1524,7 +1524,7 @@
         <input type="password" id="auth-signup-password" placeholder="Passwort (mind. 6 Zeichen) *" class="auth-input">
         <input type="email" id="auth-signup-email" placeholder="E-Mail (optional)" class="auth-input">
         <div class="form-field" style="margin-top:8px;">
-          <label data-i18n="rd_region_label">Region</label>
+          <label data-i18n="rd_homeregion_label">Region</label>
           <select id="auth-signup-region" class="auth-input">
             <option value="bali">Bali</option>
             <option value="lombok">Lombok</option>
@@ -2393,7 +2393,7 @@
         <input type="text" id="rd-name" placeholder="e.g. Made Suarsana">
       </div>
       <div class="form-field">
-        <label data-i18n="rd_region_label">Home region</label>
+        <label data-i18n="rd_homeregion_label">Home region</label>
         <select id="rd-region">
           <option value="Kuta">Kuta</option>
           <option value="Uluwatu">Uluwatu</option>
@@ -2606,15 +2606,16 @@
         <input type="tel" id="ep-phone" placeholder="+62 812 3456 7890">
       </div>
       <div class="form-field">
-        <label data-i18n="rd_region_label">Home region</label>
-        <select id="ep-region">
-          <option value="Kuta">Kuta</option>
-          <option value="Uluwatu">Uluwatu</option>
-          <option value="Lovina">Lovina</option>
-          <option value="Sidemen">Sidemen</option>
-          <option value="Ubud">Ubud</option>
-          <option value="Amed">Amed</option>
-        </select>
+        <label data-i18n="rd_serviceregions_label">Regions you serve</label>
+        <div class="chip-row" data-group="ep-serviceregions">
+          <button type="button" class="chip" data-value="Kuta">Kuta</button>
+          <button type="button" class="chip" data-value="Uluwatu">Uluwatu</button>
+          <button type="button" class="chip" data-value="Lovina">Lovina</button>
+          <button type="button" class="chip" data-value="Sidemen">Sidemen</button>
+          <button type="button" class="chip" data-value="Ubud">Ubud</button>
+          <button type="button" class="chip" data-value="Amed">Amed</button>
+        </div>
+        <p class="conditions-hint" style="margin-top:6px;" data-i18n="rd_serviceregions_hint">Used to match you with nearby pickup requests — including Villa Partner bookings.</p>
       </div>
       <div class="form-field">
         <label data-i18n="rd_lang_label">Languages spoken</label>
@@ -8644,11 +8645,15 @@ function closeRegisterAfterPending(){
 
 // ---- edit profile ----
 let epSelectedLangs = [];
+let epSelectedServiceRegions = [];
 function openEditProfile(){
   if(realDriverProfile){ openEditProfileReal(); return; }
   const p = driverProfiles[currentDriverId];
   document.getElementById('ep-name').value = p.fullName;
-  document.getElementById('ep-region').value = p.region;
+  epSelectedServiceRegions = p.serviceRegions ? [...p.serviceRegions] : (p.region ? [p.region] : []);
+  document.querySelectorAll('[data-group="ep-serviceregions"] .chip').forEach(c=>{
+    c.classList.toggle('chip-active', epSelectedServiceRegions.includes(c.dataset.value));
+  });
   epSelectedLangs = [...p.langs];
   document.querySelectorAll('[data-group="ep-lang"] .chip').forEach(c=>{
     c.classList.toggle('chip-active', epSelectedLangs.includes(c.dataset.value));
@@ -8674,7 +8679,10 @@ function openEditProfile(){
 function openEditProfileReal(){
   const d = realDriverProfile;
   document.getElementById('ep-name').value = d.name || '';
-  document.getElementById('ep-region').value = d.home_area || 'Ubud';
+  epSelectedServiceRegions = (d.service_regions && d.service_regions.length) ? [...d.service_regions] : (d.home_area ? [d.home_area] : []);
+  document.querySelectorAll('[data-group="ep-serviceregions"] .chip').forEach(c=>{
+    c.classList.toggle('chip-active', epSelectedServiceRegions.includes(c.dataset.value));
+  });
   const langs = (d.languages && d.languages.length) ? d.languages : ['EN'];
   epSelectedLangs = [...langs];
   document.querySelectorAll('[data-group="ep-lang"] .chip').forEach(c=>{
@@ -8708,10 +8716,17 @@ document.querySelectorAll('[data-group="ep-lang"] .chip').forEach(chip=>{
     else { epSelectedLangs.splice(idx,1); chip.classList.remove('chip-active'); }
   });
 });
+document.querySelectorAll('[data-group="ep-serviceregions"] .chip').forEach(chip=>{
+  chip.addEventListener('click', ()=>{
+    const val = chip.dataset.value;
+    const idx = epSelectedServiceRegions.indexOf(val);
+    if(idx===-1){ epSelectedServiceRegions.push(val); chip.classList.add('chip-active'); }
+    else { epSelectedServiceRegions.splice(idx,1); chip.classList.remove('chip-active'); }
+  });
+});
 function saveEditProfile(){
   if(realDriverProfile){ saveEditProfileReal(); return; }
   const name = document.getElementById('ep-name').value.trim();
-  const region = document.getElementById('ep-region').value;
   if(!name){
     document.getElementById('ep-error').textContent = t('ep_err_name');
     return;
@@ -8719,7 +8734,8 @@ function saveEditProfile(){
   const p = driverProfiles[currentDriverId];
   p.fullName = name;
   p.name = name.split(' ')[0];
-  p.region = region;
+  p.serviceRegions = [...epSelectedServiceRegions];
+  if(epSelectedServiceRegions.length) p.region = epSelectedServiceRegions[0];
   p.langs = epSelectedLangs.length ? [...epSelectedLangs] : ['EN'];
   p.vehicle = {
     vtype: document.getElementById('ep-vtype').value,
@@ -8761,7 +8777,15 @@ async function saveEditProfileReal(){
     document.getElementById('ep-error').textContent = t('ep_err_name');
     return;
   }
-  const home_area = document.getElementById('ep-region').value;
+  if(epSelectedServiceRegions.length === 0){
+    document.getElementById('ep-error').textContent = t('rd_serviceregions_err');
+    return;
+  }
+  // service_regions ist jetzt die Quelle fuer echtes Matching (auch Villa-Partner-Anfragen);
+  // home_area bleibt als einzelner Anzeige-Wert bestehen (erste gewaehlte Region), damit bestehende
+  // Anzeigen (z.B. "🚩 Ubud" auf dem Profil) weiterhin funktionieren.
+  const service_regions = [...epSelectedServiceRegions];
+  const home_area = service_regions[0] || null;
   const languages = epSelectedLangs.length ? [...epSelectedLangs] : ['EN'];
   const services = [];
   if(document.getElementById('ep-female').checked) services.push('female_driver');
@@ -8784,7 +8808,7 @@ async function saveEditProfileReal(){
   document.getElementById('ep-error').textContent = '';
   const { data, error } = await supabaseClient
     .from('drivers')
-    .update({ name, home_area, languages, services, vehicle, payment, phone })
+    .update({ name, home_area, service_regions, languages, services, vehicle, payment, phone })
     .eq('id', realDriverProfile.id)
     .select()
     .single();
@@ -8920,6 +8944,15 @@ const translations = {
     villa_push_title: "Get notified instantly", villa_push_sub: "Turn on push notifications so you never miss a new villa request.", villa_push_enable_btn: "Enable push notifications",
     villa_push_enabled: "✓ Push notifications enabled", villa_push_ios_hint: "On iPhone: add Rydanu to your Home Screen first (Share → Add to Home Screen), otherwise push notifications won't arrive.",
     villa_push_error: "Could not enable push notifications. Please check your browser permissions.", villa_push_unsupported: "Push notifications aren't supported in this browser.",
+    vr_title: "Book your Rydanu transfer", vr_intro: "{villa} has partnered with Rydanu to arrange reliable drivers for you.",
+    vr_pickup: "Pickup location", vr_destination: "Destination", vr_date: "Date", vr_time: "Time",
+    vr_passengers: "Passengers", vr_luggage: "Luggage", vr_name: "Your name", vr_email: "Your email",
+    vr_email_hint: "so we can reach you about this request", vr_notes: "Notes", vr_optional: "(optional)",
+    vr_submit_btn: "Request transfer", vr_err_required: "Please fill in destination and email.",
+    vr_err_generic: "Something went wrong. Please try again or contact the villa directly.",
+    vr_not_found_title: "Link not found", vr_not_found_body: "This booking link doesn't seem to be active anymore. Please contact your villa or hotel directly.",
+    vr_sent_title: "Request sent!", vr_sent_body: "Thanks — a Rydanu driver will pick this up shortly. We'll reach out to {email} with the details.",
+    vr_matched_to: "✓ Matched to {area} on the map",
     fees_overview_new_title: "Fees this month", fees_overview_villa_note: "Villa Partner bookings: 20% platform fee (instead of the usual 10%)", fees_how_it_works_title: "How fees work",
     requests_tab_open: "Open", requests_tab_offered: "Completed", requests_empty_offered: "No completed requests yet.", requests_tab_declined: "Declined", requests_empty_declined: "No declined requests.",
     co_open_btn_standalone: "✨ Or create a custom offer without a request",
@@ -9040,7 +9073,7 @@ const translations = {
     rd_qris_label: "I accept QRIS (GoPay / OVO / DANA)",
     pay_confirm_btn: "Submit booking request",
     rd_name_label: "Full name",
-    rd_region_label: "Home region",
+    rd_homeregion_label: "Home region", rd_serviceregions_label: "Regions you serve", rd_serviceregions_hint: "Used to match you with nearby pickup requests — including Villa Partner bookings.", rd_serviceregions_err: "Please select at least one region.",
     rd_lang_label: "Languages spoken",
     rd_docs_title: "Upload your documents — all 4 are mandatory. Your registration is only forwarded once everything is uploaded.",
     rd_doc_license: "Driver's license *",
@@ -9235,6 +9268,15 @@ const translations = {
     villa_push_title: "Sofort benachrichtigt werden", villa_push_sub: "Aktiviere Push-Benachrichtigungen, damit du keine neue Villa-Anfrage verpasst.", villa_push_enable_btn: "Push-Benachrichtigungen aktivieren",
     villa_push_enabled: "✓ Push-Benachrichtigungen aktiviert", villa_push_ios_hint: "Am iPhone: Rydanu zuerst zum Homescreen hinzufügen (Teilen → Zum Home-Bildschirm), sonst kommen keine Push-Benachrichtigungen an.",
     villa_push_error: "Push-Benachrichtigungen konnten nicht aktiviert werden. Bitte Browser-Berechtigungen prüfen.", villa_push_unsupported: "Push-Benachrichtigungen werden von diesem Browser nicht unterstützt.",
+    vr_title: "Buchen Sie Ihren Rydanu-Transfer", vr_intro: "{villa} arbeitet mit Rydanu zusammen, um Ihnen zuverlässige Fahrer zu vermitteln.",
+    vr_pickup: "Abholort", vr_destination: "Ziel", vr_date: "Datum", vr_time: "Zeit",
+    vr_passengers: "Passagiere", vr_luggage: "Gepäck", vr_name: "Ihr Name", vr_email: "Ihre E-Mail-Adresse",
+    vr_email_hint: "damit wir Sie bezüglich dieser Anfrage kontaktieren können", vr_notes: "Anmerkungen", vr_optional: "(optional)",
+    vr_submit_btn: "Transfer anfragen", vr_err_required: "Bitte Ziel und E-Mail-Adresse ausfüllen.",
+    vr_err_generic: "Etwas ist schiefgelaufen. Bitte nochmal versuchen oder direkt die Villa kontaktieren.",
+    vr_not_found_title: "Link nicht gefunden", vr_not_found_body: "Dieser Buchungslink scheint nicht mehr aktiv zu sein. Bitte kontaktieren Sie Ihre Villa oder Ihr Hotel direkt.",
+    vr_sent_title: "Anfrage gesendet!", vr_sent_body: "Danke — ein Rydanu-Fahrer meldet sich in Kürze bei Ihnen. Wir kontaktieren {email} mit den Details.",
+    vr_matched_to: "✓ {area} auf der Karte gefunden",
     fees_overview_new_title: "Gebühren diesen Monat", fees_overview_villa_note: "Villa-Partner-Buchungen: 20% Plattformgebühr (statt sonst 10%)", fees_how_it_works_title: "So funktionieren Gebühren",
     requests_tab_open: "Offen", requests_tab_offered: "Abgeschlossen", requests_empty_offered: "Noch keine abgeschlossenen Anfragen.", requests_tab_declined: "Abgelehnt", requests_empty_declined: "Keine abgelehnten Anfragen.",
     co_open_btn_standalone: "✨ Oder individuelles Angebot ohne Anfrage erstellen",
@@ -9355,7 +9397,7 @@ const translations = {
     rd_qris_label: "Ich akzeptiere QRIS (GoPay / OVO / DANA)",
     pay_confirm_btn: "Buchungsanfrage absenden",
     rd_name_label: "Vollständiger Name",
-    rd_region_label: "Heimatregion",
+    rd_homeregion_label: "Heimatregion", rd_serviceregions_label: "Regionen, die du bedienst", rd_serviceregions_hint: "Wird genutzt, um dich mit passenden Abholanfragen in der Nähe zu matchen — auch Villa-Partner-Buchungen.", rd_serviceregions_err: "Bitte mindestens eine Region auswählen.",
     rd_lang_label: "Gesprochene Sprachen",
     rd_docs_title: "Hier deine Dokumente hochladen — alle 4 sind verpflichtend. Erst wenn alles hochgeladen ist, wird die Registrierung weitergeleitet.",
     rd_doc_license: "Führerschein *",
@@ -9550,6 +9592,15 @@ const translations = {
     villa_push_title: "Dapatkan notifikasi instan", villa_push_sub: "Aktifkan notifikasi push agar tidak melewatkan permintaan villa baru.", villa_push_enable_btn: "Aktifkan notifikasi push",
     villa_push_enabled: "✓ Notifikasi push aktif", villa_push_ios_hint: "Di iPhone: tambahkan Rydanu ke Layar Utama dulu (Bagikan → Tambah ke Layar Utama), jika tidak notifikasi push tidak akan masuk.",
     villa_push_error: "Notifikasi push tidak dapat diaktifkan. Silakan periksa izin browser Anda.", villa_push_unsupported: "Notifikasi push tidak didukung di browser ini.",
+    vr_title: "Pesan Transfer Rydanu Anda", vr_intro: "{villa} bekerja sama dengan Rydanu untuk menyediakan pengemudi terpercaya untuk Anda.",
+    vr_pickup: "Lokasi penjemputan", vr_destination: "Tujuan", vr_date: "Tanggal", vr_time: "Waktu",
+    vr_passengers: "Penumpang", vr_luggage: "Bagasi", vr_name: "Nama Anda", vr_email: "Email Anda",
+    vr_email_hint: "agar kami dapat menghubungi Anda mengenai permintaan ini", vr_notes: "Catatan", vr_optional: "(opsional)",
+    vr_submit_btn: "Ajukan permintaan transfer", vr_err_required: "Silakan isi tujuan dan email.",
+    vr_err_generic: "Terjadi kesalahan. Silakan coba lagi atau hubungi villa langsung.",
+    vr_not_found_title: "Tautan tidak ditemukan", vr_not_found_body: "Tautan pemesanan ini sepertinya sudah tidak aktif. Silakan hubungi villa atau hotel Anda langsung.",
+    vr_sent_title: "Permintaan terkirim!", vr_sent_body: "Terima kasih — pengemudi Rydanu akan segera menghubungi Anda. Kami akan menghubungi {email} dengan detailnya.",
+    vr_matched_to: "✓ Cocok dengan {area} di peta",
     fees_overview_new_title: "Biaya bulan ini", fees_overview_villa_note: "Booking Villa Partner: biaya platform 20% (bukan 10% seperti biasa)", fees_how_it_works_title: "Cara kerja biaya",
     requests_tab_open: "Terbuka", requests_tab_offered: "Selesai", requests_empty_offered: "Belum ada permintaan yang selesai.", requests_tab_declined: "Ditolak", requests_empty_declined: "Tidak ada permintaan yang ditolak.",
     co_open_btn_standalone: "✨ Atau buat penawaran khusus tanpa permintaan",
@@ -9670,7 +9721,7 @@ const translations = {
     rd_qris_label: "Saya menerima QRIS (GoPay / OVO / DANA)",
     pay_confirm_btn: "Kirim permintaan pemesanan",
     rd_name_label: "Nama lengkap",
-    rd_region_label: "Wilayah asal",
+    rd_homeregion_label: "Wilayah asal", rd_serviceregions_label: "Wilayah yang Anda layani", rd_serviceregions_hint: "Digunakan untuk mencocokkan Anda dengan permintaan penjemputan terdekat — termasuk booking Villa Partner.", rd_serviceregions_err: "Silakan pilih setidaknya satu wilayah.",
     rd_lang_label: "Bahasa yang dikuasai",
     rd_docs_title: "Unggah dokumen Anda — keempatnya wajib. Pendaftaran baru diteruskan setelah semuanya diunggah.",
     rd_doc_license: "SIM *",
@@ -11328,53 +11379,140 @@ function offerDetailsHTML(row){
 // Kein Login, kein Rydanu-Konto noetig. Legt eine private villa_requests-Zeile an (nie oeffentlich
 // sichtbar, siehe RLS aus Schritt 1) und stoesst danach die Push-Benachrichtigung an passende
 // Fahrer an (Edge Function notify-villa-request aus Schritt 2).
+//
+// WICHTIG (nach Ruecksprache mit Joerg): frueher hardcoded Englisch -- der Browser hat das dann
+// teils falsch automatisch uebersetzt ("Request transfer" -> "Überweisung beantragen" o.ae.).
+// Jetzt: echte Uebersetzung ueber t()/currentLang wie im Rest der App, Sprache wird beim Laden
+// dieser Seite aus der Browser-Spracheinstellung des Gasts geraten (kein Login, also keine
+// gespeicherte Praeferenz vorhanden).
 // ============================================
+
+// Grobe, redaktionell gepflegte Zuordnung bekannter Orte/Unterregionen zu den 6 Rydanu-Pickup-Regionen
+// (dieselbe Taxonomie wie bei Touren/Fahrerprofil). Wird gegen den von Nominatim/OpenStreetMap
+// zurueckgegebenen Orts-/Stadtteilnamen der gewaehlten Adresse geprueft (Teilstring-Suche,
+// unabhaengig von Gross-/Kleinschreibung). Nicht perfekt, deckt aber die gaengigsten Gegenden ab.
+const REGION_KEYWORDS = {
+  'Kuta': ['kuta','legian','seminyak','canggu','denpasar','tuban','kerobokan','sanur','petitenget','umalas'],
+  'Uluwatu': ['uluwatu','jimbaran','nusa dua','ungasan','pecatu','bingin','padang padang','balangan','bukit'],
+  'Ubud': ['ubud','tegalalang','payangan','mas','peliatan','gianyar','kedewatan'],
+  'Amed': ['amed','tulamben','culik','kubu','karangasem'],
+  'Sidemen': ['sidemen','rendang','selat','besakih'],
+  'Lovina': ['lovina','singaraja','seririt','munduk','buleleng']
+};
+function resolveRegionFromArea(areaText, fullText){
+  const hay = ((areaText||'') + ' ' + (fullText||'')).toLowerCase();
+  for(const region in REGION_KEYWORDS){
+    if(REGION_KEYWORDS[region].some(kw => hay.includes(kw))) return region;
+  }
+  return null;
+}
+let vrPickupRegion = null;
+let vrPickupSearchDebounce = null;
+let vrPickupSearchToken = 0;
+function vrRunAddressSearch(inputId, boxId, confirmedId){
+  const box = document.getElementById(boxId);
+  const input = document.getElementById(inputId);
+  const q = input.value.trim();
+  const confirmedEl = document.getElementById(confirmedId);
+  if(inputId === 'vr-pickup'){ vrPickupRegion = null; }
+  if(!q){ box.classList.remove('open'); box.innerHTML=''; if(confirmedEl) confirmedEl.textContent=''; return; }
+  clearTimeout(vrPickupSearchDebounce);
+  if(q.length < 3) return;
+  const myToken = ++vrPickupSearchToken;
+  vrPickupSearchDebounce = setTimeout(async ()=>{
+    const live = await searchNominatimBali(q);
+    if(myToken !== vrPickupSearchToken) return;
+    if(input.value.trim() !== q) return;
+    if(live.length === 0){ box.classList.remove('open'); return; }
+    box.innerHTML = live.slice(0,6).map((p,i) => `
+      <div class="suggestion-item" onclick="vrSelectAddress('${inputId}','${boxId}','${confirmedId}',${i})">
+        <svg width="14" height="14" viewBox="0 0 24 24"><path fill="var(--teal)" d="M12 2C7.6 2 4 5.6 4 10c0 6 8 12 8 12s8-6 8-12c0-4.4-3.6-8-8-8zm0 11a3 3 0 110-6 3 3 0 010 6z"/></svg>
+        <div><div class="s-name">${escapeHtml(p.name)}</div><div class="s-area">${escapeHtml(p.area||'')}${p.area ? ', ' : ''}Bali</div></div>
+      </div>
+    `).join('');
+    box.dataset.results = JSON.stringify(live.slice(0,6));
+    box.classList.add('open');
+  }, 450);
+}
+function vrSelectAddress(inputId, boxId, confirmedId, idx){
+  const box = document.getElementById(boxId);
+  const results = JSON.parse(box.dataset.results || '[]');
+  const p = results[idx];
+  if(!p) return;
+  document.getElementById(inputId).value = p.area ? (p.name + ', ' + p.area) : p.name;
+  box.classList.remove('open');
+  const region = resolveRegionFromArea(p.area, p.name);
+  const confirmedEl = document.getElementById(confirmedId);
+  if(inputId === 'vr-pickup'){
+    vrPickupRegion = region;
+    if(confirmedEl) confirmedEl.textContent = region ? t('vr_matched_to').replace('{area}', region) : '';
+  }
+}
+document.addEventListener('click', e=>{
+  if(!e.target.closest('.autocomplete-wrap')){
+    ['vr-pickup-suggestions','vr-destination-suggestions'].forEach(id=>{
+      const box = document.getElementById(id);
+      if(box) box.classList.remove('open');
+    });
+  }
+});
 async function initVillaRequestPage(slug){
+  // Sprache anhand der Browser-Einstellung raten -- der Gast hat kein Konto, also keine gespeicherte
+  // Praeferenz. Faellt auf Englisch zurueck, wenn weder Deutsch noch Indonesisch erkannt wird.
+  const browserLang = (navigator.language || 'en').toLowerCase();
+  currentLang = browserLang.startsWith('de') ? 'de' : (browserLang.startsWith('id') ? 'id' : 'en');
+
   const page = document.getElementById('villa-request-page');
   const body = document.getElementById('villa-request-body');
   page.style.display = 'flex';
   const { data, error } = await supabaseClient.rpc('get_villa_partner_by_slug', { p_slug: slug });
   const villa = (data && data[0]) || null;
   if(error || !villa){
-    body.innerHTML = `<h2>Link not found</h2><p class="note">This booking link doesn't seem to be active anymore. Please contact your villa or hotel directly.</p>`;
+    body.innerHTML = `<h2>${t('vr_not_found_title')}</h2><p class="note">${t('vr_not_found_body')}</p>`;
     return;
   }
   body.innerHTML = `
-    <h2>Book your Rydanu transfer</h2>
-    <p class="note" style="margin-bottom:18px;">${escapeHtml(villa.name)} has partnered with Rydanu to arrange reliable drivers for you.</p>
+    <h2>${t('vr_title')}</h2>
+    <p class="note" style="margin-bottom:18px;">${t('vr_intro').replace('{villa}', escapeHtml(villa.name))}</p>
     <form id="villa-request-form" onsubmit="return false;" style="text-align:left;">
-      <label style="display:block; margin-bottom:12px;">Pickup location
-        <input type="text" id="vr-pickup" required style="width:100%; margin-top:4px;">
-      </label>
-      <label style="display:block; margin-bottom:12px;">Destination
-        <input type="text" id="vr-destination" required style="width:100%; margin-top:4px;">
-      </label>
+      <div class="form-field autocomplete-wrap" style="margin-bottom:12px;">
+        <label>${t('vr_pickup')}</label>
+        <input type="text" id="vr-pickup" required autocomplete="off" oninput="vrRunAddressSearch('vr-pickup','vr-pickup-suggestions','vr-pickup-confirmed')" onfocus="vrRunAddressSearch('vr-pickup','vr-pickup-suggestions','vr-pickup-confirmed')" style="width:100%; margin-top:4px;">
+        <div class="pickup-suggestions" id="vr-pickup-suggestions"></div>
+        <p class="map-hint" id="vr-pickup-confirmed"></p>
+      </div>
+      <div class="form-field autocomplete-wrap" style="margin-bottom:12px;">
+        <label>${t('vr_destination')}</label>
+        <input type="text" id="vr-destination" required autocomplete="off" oninput="vrRunAddressSearch('vr-destination','vr-destination-suggestions','vr-destination-confirmed')" onfocus="vrRunAddressSearch('vr-destination','vr-destination-suggestions','vr-destination-confirmed')" style="width:100%; margin-top:4px;">
+        <div class="pickup-suggestions" id="vr-destination-suggestions"></div>
+        <p class="map-hint" id="vr-destination-confirmed"></p>
+      </div>
       <div style="display:flex; gap:10px;">
-        <label style="flex:1; display:block; margin-bottom:12px;">Date
+        <label style="flex:1; display:block; margin-bottom:12px;">${t('vr_date')}
           <input type="date" id="vr-date" style="width:100%; margin-top:4px;">
         </label>
-        <label style="flex:1; display:block; margin-bottom:12px;">Time
+        <label style="flex:1; display:block; margin-bottom:12px;">${t('vr_time')}
           <input type="time" id="vr-time" style="width:100%; margin-top:4px;">
         </label>
       </div>
       <div style="display:flex; gap:10px;">
-        <label style="flex:1; display:block; margin-bottom:12px;">Passengers
-          <input type="text" id="vr-guests" placeholder="e.g. 2" style="width:100%; margin-top:4px;">
+        <label style="flex:1; display:block; margin-bottom:12px;">${t('vr_passengers')}
+          <input type="text" id="vr-guests" placeholder="2" style="width:100%; margin-top:4px;">
         </label>
-        <label style="flex:1; display:block; margin-bottom:12px;">Luggage
-          <input type="text" id="vr-luggage" placeholder="e.g. 2 suitcases" style="width:100%; margin-top:4px;">
+        <label style="flex:1; display:block; margin-bottom:12px;">${t('vr_luggage')}
+          <input type="text" id="vr-luggage" style="width:100%; margin-top:4px;">
         </label>
       </div>
-      <label style="display:block; margin-bottom:12px;">Your name
+      <label style="display:block; margin-bottom:12px;">${t('vr_name')}
         <input type="text" id="vr-name" style="width:100%; margin-top:4px;">
       </label>
-      <label style="display:block; margin-bottom:12px;">Your email <span style="font-weight:400; opacity:0.7;">(so we can reach you about this request)</span>
+      <label style="display:block; margin-bottom:12px;">${t('vr_email')} <span style="font-weight:400; opacity:0.7;">(${t('vr_email_hint')})</span>
         <input type="email" id="vr-email" required style="width:100%; margin-top:4px;">
       </label>
-      <label style="display:block; margin-bottom:16px;">Notes <span style="font-weight:400; opacity:0.7;">(optional)</span>
+      <label style="display:block; margin-bottom:16px;">${t('vr_notes')} <span style="font-weight:400; opacity:0.7;">${t('vr_optional')}</span>
         <textarea id="vr-notes" rows="2" style="width:100%; margin-top:4px;"></textarea>
       </label>
-      <button type="button" class="book-btn" id="vr-submit-btn" onclick="submitVillaRequest('${slug}')" style="width:100%;">Request transfer</button>
+      <button type="button" class="book-btn" id="vr-submit-btn" onclick="submitVillaRequest('${slug}')" style="width:100%;">${t('vr_submit_btn')}</button>
       <p class="note" id="vr-error" style="color:var(--danger); margin-top:10px;"></p>
     </form>
   `;
@@ -11385,7 +11523,7 @@ async function submitVillaRequest(slug){
   const email = document.getElementById('vr-email').value.trim();
   const errEl = document.getElementById('vr-error');
   if(!destination || !email){
-    errEl.textContent = 'Please fill in destination and email.';
+    errEl.textContent = t('vr_err_required');
     return;
   }
   const btn = document.getElementById('vr-submit-btn');
@@ -11401,18 +11539,19 @@ async function submitVillaRequest(slug){
     p_request_time: document.getElementById('vr-time').value || null,
     p_guests: document.getElementById('vr-guests').value.trim() || null,
     p_luggage: document.getElementById('vr-luggage').value.trim() || null,
-    p_notes: document.getElementById('vr-notes').value.trim() || null
+    p_notes: document.getElementById('vr-notes').value.trim() || null,
+    p_pickup_region: vrPickupRegion
   });
   if(error){
     console.error('Villa-Anfrage fehlgeschlagen:', error);
-    errEl.textContent = 'Something went wrong. Please try again or contact the villa directly.';
+    errEl.textContent = t('vr_err_generic');
     btn.disabled = false;
     return;
   }
   // Push-Benachrichtigung an passende Fahrer -- ein Fehlschlag hier soll die bereits erfolgreich
   // angelegte Anfrage nicht verderben (Fallback-Alert-Kachel deckt das ohnehin ab).
   supabaseClient.functions.invoke('notify-villa-request', { body: { requestId } }).catch(err=>console.error('Fahrer-Benachrichtigung fehlgeschlagen:', err));
-  document.getElementById('villa-request-body').innerHTML = `<h2>✓ Request sent!</h2><p class="note">Thanks — a Rydanu driver will pick this up shortly. We'll reach out to ${escapeHtml(email)} with the details.</p>`;
+  document.getElementById('villa-request-body').innerHTML = `<h2>✓ ${t('vr_sent_title')}</h2><p class="note">${t('vr_sent_body').replace('{email}', escapeHtml(email))}</p>`;
 }
 async function initOfferConfirmPage(token){
   const page = document.getElementById('offer-confirm-page');
@@ -13760,7 +13899,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v191</div>
+<div id="version-footer" style="position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v192</div>
 
 </body>
 </html>
