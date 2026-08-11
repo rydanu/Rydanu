@@ -7514,10 +7514,9 @@ async function loadVillaRequests(){
   ]);
   if(error){ console.error('Villa-Anfragen konnten nicht geladen werden:', error); return; }
   villaDismissedIds = (dismissed || []).map(d=>d.villa_request_id);
-  // Ausgeblendete Anfragen nicht mehr anzeigen: entweder eine offene Anfrage, die dieser Fahrer
-  // nicht will ("Nicht fuer mich"), oder eine vom Kunden abgelehnte eigene Anfrage, die er mit
-  // "OK, verstanden" quittiert hat (v215) -- beides nutzt denselben Dismiss-Mechanismus.
-  realVillaRequests = (data || []).filter(r => !((r.status === 'open' || r.status === 'cancelled') && villaDismissedIds.includes(r.id)));
+  // Ausgeblendete offene Anfragen ("Nicht interessiert") nicht mehr anzeigen -- betrifft nur
+  // Anfragen, die dieser Fahrer selbst noch nicht uebernommen hat.
+  realVillaRequests = (data || []).filter(r => !(r.status === 'open' && villaDismissedIds.includes(r.id)));
   renderVillaRequests();
   updateVillaDot();
   refreshVillaPushPanelVisibility();
@@ -7549,16 +7548,11 @@ function renderVillaRequests(){
         <button type="button" class="accept-btn" onclick="claimVillaRequest('${r.id}')">✨ ${t('villa_claim_btn')}</button>
         <button type="button" class="link-btn" style="width:auto; margin-top:6px;" onclick="dismissVillaRequest('${r.id}')">${t('villa_dismiss_btn')}</button>
       `;
-    } else if(isMine && r.status === 'cancelled'){
-      // Bugfix (11. August, v215): Kunde hat das Angebot abgelehnt -- vorher landete dieser Fall
-      // faelschlich im "isMine"-Zweig unten und zeigte "In Bearbeitung" mit Bearbeiten/Zurueckziehen-
-      // Buttons an, obwohl das Angebot laengst erledigt war. Jetzt eindeutig als abgelehnt markiert,
-      // mit Dismiss-Button (gleicher Mechanismus wie "Nicht fuer mich"), damit es nach Kenntnisnahme
-      // aus der Liste verschwindet statt dauerhaft haengen zu bleiben.
-      actionHtml = `
-        <span class="mailbox-replied-tag" style="color:var(--danger);">${t('villa_declined_tag')}</span>
-        <button type="button" class="link-btn" style="width:auto; margin-top:6px;" onclick="dismissVillaRequest('${r.id}')">${t('villa_declined_ok_btn')}</button>
-      `;
+    } else if(r.status === 'declined'){
+      // Kunde hat das Angebot endgueltig abgelehnt (siehe decline_custom_tour_request_by_customer) --
+      // nichts mehr zu tun fuer diesen Fahrer, nur noch fuer den Fahrer sichtbar der es hatte.
+      if(!isMine) return '';
+      actionHtml = `<span class="mailbox-replied-tag" style="color:var(--danger);">✕ ${t('villa_declined_tag')}</span>`;
     } else if(isMine){
       actionHtml = `
         <span class="mailbox-replied-tag">${t('villa_claimed_tag')}</span>
@@ -8089,9 +8083,9 @@ async function renderVillaRequestsAdminList(){
     .eq('villa_partner_id', villaId)
     .order('created_at', { ascending:false });
   if(error){ console.error('Anfragen konnten nicht geladen werden:', error); listEl.innerHTML = '<div class="empty-state">Fehler beim Laden.</div>'; return; }
-  const rows = (data||[]).filter(r => r.status !== 'booked' && r.status !== 'cancelled');
+  const rows = (data||[]).filter(r => r.status !== 'booked' && r.status !== 'cancelled' && r.status !== 'declined');
   if(rows.length === 0){ listEl.innerHTML = '<div class="empty-state">Keine laufenden Anfragen.</div>'; return; }
-  const statusLabels = { open:'Offen', claimed:'In Bearbeitung', expired:'Abgelaufen' };
+  const statusLabels = { open:'Offen', claimed:'In Bearbeitung', expired:'Abgelaufen', declined:'Vom Kunden abgelehnt' };
   listEl.innerHTML = rows.map(r => `
     <div class="booking-row">
       <div>
@@ -9351,7 +9345,7 @@ const translations = {
     sr_open_btn: "Already traveled with this driver? Leave a review", sr_eyebrow: "Leave a review", sr_title: "How was your trip?", mb_review_title2: "Your name", sr_err_name: "Please enter your name.",
     nav_requests: "Requests", requests_title: "Custom tour requests", requests_sub: "Travelers who couldn't find exactly what they wanted asked you directly. Reply by creating a real tour offer through Rydanu.", requests_empty: "No custom tour requests yet.",
     nav_villa: "Villa Requests", villa_title: "Villa Partner requests", villa_sub: "Private booking requests from partner villas & hotels — first come, first served.", villa_empty: "No open villa requests right now.",
-    villa_claim_btn: "Accept request", villa_claimed_tag: "⏳ Offer sent — awaiting guest confirmation", villa_claim_taken: "Sorry — another driver already accepted this request.", villa_source_tag: "Villa Partner", villa_dismiss_btn: "Not for me", villa_edit_resend_btn: "Edit & resend offer", villa_withdraw_btn: "Withdraw offer", villa_withdraw_confirm: "Withdraw this offer? The request goes back to open and other drivers in the area will be notified again.", villa_action_err: "Something went wrong. Please try again.", villa_declined_tag: "✕ Guest declined your offer", villa_declined_ok_btn: "OK, got it",
+    villa_claim_btn: "Accept request", villa_claimed_tag: "⏳ Offer sent — awaiting guest confirmation", villa_claim_taken: "Sorry — another driver already accepted this request.", villa_source_tag: "Villa Partner", villa_dismiss_btn: "Not for me", villa_edit_resend_btn: "Edit & resend offer", villa_withdraw_btn: "Withdraw offer", villa_withdraw_confirm: "Withdraw this offer? The request goes back to open and other drivers in the area will be notified again.", villa_action_err: "Something went wrong. Please try again.", villa_declined_tag: "Guest declined this offer — no action needed. If they still want a transfer, they'll submit a new request.",
     villa_push_title: "Get notified instantly", villa_push_sub: "Turn on push notifications so you never miss a new villa request.", villa_push_enable_btn: "Enable push notifications",
     villa_push_enabled: "✓ Push notifications enabled", villa_push_ios_hint: "On iPhone: add Rydanu to your Home Screen first (Share → Add to Home Screen), otherwise push notifications won't arrive.",
     villa_push_error: "Could not enable push notifications. Please check your browser permissions.", villa_push_unsupported: "Push notifications aren't supported in this browser.",
@@ -9676,7 +9670,7 @@ const translations = {
     sr_open_btn: "Schon mal mit diesem Fahrer unterwegs gewesen? Bewertung hinterlassen", sr_eyebrow: "Bewertung hinterlassen", sr_title: "Wie war deine Tour?", mb_review_title2: "Dein Name", sr_err_name: "Bitte gib deinen Namen ein.",
     nav_requests: "Anfragen", requests_title: "Individuelle Touranfragen", requests_sub: "Reisende, die nicht genau das Passende gefunden haben, haben dich direkt angefragt. Antworte, indem du über Rydanu ein echtes Tourangebot erstellst.", requests_empty: "Noch keine individuellen Touranfragen.",
     nav_villa: "Villa-Anfragen", villa_title: "Villa-Partner-Anfragen", villa_sub: "Private Buchungsanfragen von Partner-Villen & Hotels — wer zuerst übernimmt, bekommt die Anfrage.", villa_empty: "Aktuell keine offenen Villa-Anfragen.",
-    villa_claim_btn: "Anfrage übernehmen", villa_claimed_tag: "⏳ Angebot gesendet — wartet auf Bestätigung des Gasts", villa_claim_taken: "Schade — ein anderer Fahrer hat diese Anfrage bereits übernommen.", villa_source_tag: "Villa-Partner", villa_dismiss_btn: "Nicht für mich", villa_edit_resend_btn: "Angebot bearbeiten & erneut senden", villa_withdraw_btn: "Angebot zurückziehen", villa_withdraw_confirm: "Dieses Angebot zurückziehen? Die Anfrage wird wieder offen und andere Fahrer in der Region werden erneut benachrichtigt.", villa_action_err: "Etwas ist schiefgelaufen. Bitte nochmal versuchen.", villa_declined_tag: "✕ Gast hat dein Angebot abgelehnt", villa_declined_ok_btn: "OK, verstanden",
+    villa_claim_btn: "Anfrage übernehmen", villa_claimed_tag: "⏳ Angebot gesendet — wartet auf Bestätigung des Gasts", villa_claim_taken: "Schade — ein anderer Fahrer hat diese Anfrage bereits übernommen.", villa_source_tag: "Villa-Partner", villa_dismiss_btn: "Nicht für mich", villa_edit_resend_btn: "Angebot bearbeiten & erneut senden", villa_withdraw_btn: "Angebot zurückziehen", villa_withdraw_confirm: "Dieses Angebot zurückziehen? Die Anfrage wird wieder offen und andere Fahrer in der Region werden erneut benachrichtigt.", villa_action_err: "Etwas ist schiefgelaufen. Bitte nochmal versuchen.", villa_declined_tag: "Gast hat das Angebot abgelehnt — keine Aktion nötig. Falls weiterhin ein Transfer gewünscht ist, stellt der Gast eine neue Anfrage.",
     villa_push_title: "Sofort benachrichtigt werden", villa_push_sub: "Aktiviere Push-Benachrichtigungen, damit du keine neue Villa-Anfrage verpasst.", villa_push_enable_btn: "Push-Benachrichtigungen aktivieren",
     villa_push_enabled: "✓ Push-Benachrichtigungen aktiviert", villa_push_ios_hint: "Am iPhone: Rydanu zuerst zum Homescreen hinzufügen (Teilen → Zum Home-Bildschirm), sonst kommen keine Push-Benachrichtigungen an.",
     villa_push_error: "Push-Benachrichtigungen konnten nicht aktiviert werden. Bitte Browser-Berechtigungen prüfen.", villa_push_unsupported: "Push-Benachrichtigungen werden von diesem Browser nicht unterstützt.",
@@ -10001,7 +9995,7 @@ const translations = {
     sr_open_btn: "Pernah bepergian dengan sopir ini? Tinggalkan ulasan", sr_eyebrow: "Tinggalkan ulasan", sr_title: "Bagaimana perjalanan Anda?", mb_review_title2: "Nama Anda", sr_err_name: "Mohon masukkan nama Anda.",
     nav_requests: "Permintaan", requests_title: "Permintaan tur khusus", requests_sub: "Wisatawan yang tidak menemukan yang mereka cari langsung menghubungi Anda. Balas dengan membuat penawaran tur nyata melalui Rydanu.", requests_empty: "Belum ada permintaan tur khusus.",
     nav_villa: "Permintaan Villa", villa_title: "Permintaan Villa Partner", villa_sub: "Permintaan booking pribadi dari villa & hotel mitra — siapa cepat, dia dapat.", villa_empty: "Belum ada permintaan villa yang terbuka.",
-    villa_claim_btn: "Terima permintaan", villa_claimed_tag: "⏳ Penawaran terkirim — menunggu konfirmasi tamu", villa_claim_taken: "Maaf — pengemudi lain sudah menerima permintaan ini.", villa_source_tag: "Villa Partner", villa_dismiss_btn: "Bukan untuk saya", villa_edit_resend_btn: "Edit & kirim ulang penawaran", villa_withdraw_btn: "Tarik penawaran", villa_withdraw_confirm: "Tarik penawaran ini? Permintaan akan terbuka kembali dan pengemudi lain di area tersebut akan diberi tahu lagi.", villa_action_err: "Terjadi kesalahan. Silakan coba lagi.", villa_declined_tag: "✕ Tamu menolak penawaran Anda", villa_declined_ok_btn: "OK, mengerti",
+    villa_claim_btn: "Terima permintaan", villa_claimed_tag: "⏳ Penawaran terkirim — menunggu konfirmasi tamu", villa_claim_taken: "Maaf — pengemudi lain sudah menerima permintaan ini.", villa_source_tag: "Villa Partner", villa_dismiss_btn: "Bukan untuk saya", villa_edit_resend_btn: "Edit & kirim ulang penawaran", villa_withdraw_btn: "Tarik penawaran", villa_withdraw_confirm: "Tarik penawaran ini? Permintaan akan terbuka kembali dan pengemudi lain di area tersebut akan diberi tahu lagi.", villa_action_err: "Terjadi kesalahan. Silakan coba lagi.", villa_declined_tag: "Tamu menolak penawaran ini — tidak perlu tindakan. Jika masih ingin transfer, tamu akan mengirim permintaan baru.",
     villa_push_title: "Dapatkan notifikasi instan", villa_push_sub: "Aktifkan notifikasi push agar tidak melewatkan permintaan villa baru.", villa_push_enable_btn: "Aktifkan notifikasi push",
     villa_push_enabled: "✓ Notifikasi push aktif", villa_push_ios_hint: "Di iPhone: tambahkan Rydanu ke Layar Utama dulu (Bagikan → Tambah ke Layar Utama), jika tidak notifikasi push tidak akan masuk.",
     villa_push_error: "Notifikasi push tidak dapat diaktifkan. Silakan periksa izin browser Anda.", villa_push_unsupported: "Notifikasi push tidak didukung di browser ini.",
@@ -12125,16 +12119,24 @@ async function initOfferConfirmPage(token){
     <h2 style="font-family:'Public Sans', sans-serif;">Your tour offer from ${escapeHtml(row.driver_name)}</h2>
     ${offerDetailsHTML(row)}
     <button type="button" class="book-btn" id="offer-confirm-btn" onclick="confirmCustomOfferPublic('${token}')">Confirm this booking</button>
-    <button type="button" class="link-btn" id="offer-decline-btn" onclick="declineCustomOfferPublic('${token}')" style="margin-top:10px;">I'd like a different price or driver</button>
     <p class="note" style="margin-top:10px; font-size:0.8rem;">By confirming, you agree to arrange payment directly with your driver, as usual on Rydanu.</p>
+    <button type="button" class="link-btn" id="offer-decline-btn" onclick="declineCustomOfferPublic('${token}')" style="margin-top:22px; color:var(--danger); font-size:0.85rem;">Decline this offer</button>
   `;
 }
+// Baustein "Villa-Ablehnung endgueltig" (11. August, nach Ruecksprache mit Joerg): frueher fuehrte
+// eine Ablehnung durch den Kunden dazu, dass die Villa-Anfrage automatisch wieder offen ging und
+// erneut an alle passenden Fahrer verteilt wurde -- das konnte zu endlosem Hin-und-Her zwischen
+// Kunde und wechselnden Fahrern/Preisen fuehren. Jetzt ist eine Ablehnung ENDGUELTIG: die eigene
+// RPC decline_custom_tour_request_by_customer schliesst Angebot UND (falls vorhanden) die
+// Villa-Anfrage ab, OHNE sie erneut zu verteilen. Der Kunde muss aktiv eine neue Anfrage stellen.
+// Kunde bekommt eine E-Mail dazu, der Fahrer eine Push-/Dashboard-Benachrichtigung.
 async function declineCustomOfferPublic(token){
+  if(!confirm('Decline this offer? This offer will be closed and cannot be un-declined — if you still want a transfer, you will need to submit a new request.')) return;
   const confirmBtn = document.getElementById('offer-confirm-btn');
   const declineBtn = document.getElementById('offer-decline-btn');
   if(confirmBtn) confirmBtn.disabled = true;
   if(declineBtn) declineBtn.disabled = true;
-  const { data, error } = await supabaseClient.rpc('decline_custom_tour_request', { p_token: token });
+  const { error } = await supabaseClient.rpc('decline_custom_tour_request_by_customer', { p_token: token });
   if(error){
     console.error('Ablehnung fehlgeschlagen:', error);
     alert('Something went wrong. Please try again.');
@@ -12142,21 +12144,11 @@ async function declineCustomOfferPublic(token){
     if(declineBtn) declineBtn.disabled = false;
     return;
   }
-  // Bugfix (11. August, v215): die 'offer_declined'-Mail existiert serverseitig in send-tour-offer-email
-  // bereits seit dem 11. August, wurde hier aber nie tatsaechlich ausgeloest -- der Kunde bekam bisher NIE
-  // eine Bestaetigung, dass seine Ablehnung angekommen ist. Ein Fehlschlag hier soll die bereits erfolgreich
-  // verarbeitete Ablehnung nicht verderben, deshalb nur geloggt statt den Nutzer zu blockieren.
-  supabaseClient.functions.invoke('send-tour-offer-email', { body: { type: 'offer_declined', token, origin: location.origin } }).catch(err=>console.error('Ablehnungsmail fehlgeschlagen:', err));
-  // Gleicher Bug, gleiche Ursache: notify-driver-booking unterstuetzt eventType:'declined' bereits seit
-  // dem 11. August (Push + Eintrag im Fahrer-Postfach als Fallback), wurde hier aber ebenfalls nie
-  // aufgerufen -- der Fahrer bekam bisher NIE mit, dass ein Kunde sein Angebot abgelehnt hat.
-  supabaseClient.functions.invoke('notify-driver-booking', { body: { token, eventType: 'declined' } }).catch(err=>console.error('Fahrer-Push (Angebot abgelehnt) fehlgeschlagen:', err));
-  const villaRequestId = data && data[0] && data[0].villa_request_id;
-  if(villaRequestId){
-    document.getElementById('offer-confirm-body').innerHTML = `<h2>No problem</h2><p class="note">Your driver has been informed. If you'd still like a transfer or tour, please get in touch with your villa again or submit a new request.</p>`;
-  } else {
-    document.getElementById('offer-confirm-body').innerHTML = `<h2>Offer declined</h2><p class="note">Your driver has been informed. Feel free to reach out to them directly if you'd like to discuss a different price.</p>`;
-  }
+  // Kunden-Mail (Hinweis: neue Anfrage noetig) + Fahrer-Benachrichtigung (Push/Dashboard) im
+  // Hintergrund anstossen -- die Ablehnung ist unabhaengig davon bereits final gespeichert.
+  supabaseClient.functions.invoke('send-tour-offer-email', { body: { type: 'offer_declined', token, origin: location.origin } }).catch(err=>console.error('Ablehnungs-Mail fehlgeschlagen:', err));
+  supabaseClient.functions.invoke('notify-driver-booking', { body: { token, eventType: 'declined' } }).catch(err=>console.error('Fahrer-Benachrichtigung (Ablehnung) fehlgeschlagen:', err));
+  document.getElementById('offer-confirm-body').innerHTML = `<h2>Offer declined</h2><p class="note">Your driver has been informed. This offer is now closed and can't be confirmed later — if you'd still like a transfer or tour, please submit a new request and a driver will get back to you with a fresh offer.</p>`;
 }
 async function confirmCustomOfferPublic(token){
   const btn = document.getElementById('offer-confirm-btn');
@@ -14471,7 +14463,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v215</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v216</div>
 
 </body>
 </html>
