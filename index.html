@@ -332,10 +332,10 @@
   }
   .modal-header h2{ margin-top:8px; }
   .modal-body{ padding:24px 28px 28px; }
-  .modal-body .row{ display:flex; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--line); font-size:0.9rem; }
+  .modal-body .row{ display:flex; flex-wrap:wrap; justify-content:space-between; gap:4px 12px; padding:12px 0; border-bottom:1px solid var(--line); font-size:0.9rem; }
   .modal-body .row:last-of-type{ border-bottom:none; }
-  .modal-body .row .k{ color:var(--ink-soft); }
-  .modal-body .row .v{ font-weight:600; }
+  .modal-body .row .k{ color:var(--ink-soft); flex:0 0 auto; }
+  .modal-body .row .v{ font-weight:600; flex:1 1 auto; min-width:0; text-align:right; word-break:break-word; overflow-wrap:break-word; }
   #modal-airport-region-select{ font-family:'Public Sans'; font-size:0.85rem; font-weight:600; padding:5px 8px; border-radius:4px; border:1px solid var(--line); background:var(--paper); color:var(--ink); }
   .book-btn{
     width:100%; margin-top:20px; background:var(--gold); border:none; color:var(--ink);
@@ -11445,6 +11445,11 @@ ${bpt('driverFeeLine')}</div>`;
       // Baustein E: bestaetigt dem Kunden per Mail, dass die Buchungsanfrage angekommen ist
       supabaseClient.functions.invoke('send-tour-offer-email', { body: { type: 'booking_received', bookingId: newBookingId } })
         .catch(err=>console.error('Bestaetigungs-Mail (Buchung erhalten) fehlgeschlagen:', err));
+      // Push-Benachrichtigung an den Fahrer bei neuer Buchung (11. August) -- bisher gab es das nur
+      // bei Villa-Anfragen, jetzt genauso bei ganz normalen Buchungen ueber die eigene Web-Push-
+      // Implementierung (notify-driver-booking, gleiches Muster wie notify-villa-request).
+      supabaseClient.functions.invoke('notify-driver-booking', { body: { bookingId: newBookingId } })
+        .catch(err=>console.error('Fahrer-Push (neue Buchung) fehlgeschlagen:', err));
     })();
     lastBookingRef = ref;
     return;
@@ -14393,7 +14398,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v209</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v211</div>
 
 </body>
 </html>
