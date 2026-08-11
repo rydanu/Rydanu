@@ -9340,6 +9340,7 @@ const translations = {
     vr_passengers: "Passengers", vr_luggage: "Luggage", vr_name: "Your name", vr_phone: "Your phone number", vr_email: "Your email",
     vr_email_hint: "so we can reach you about this request", vr_notes: "Notes", vr_optional: "(optional)",
     vr_submit_btn: "Request transfer", vr_err_required: "Please fill in destination and email.",
+    vr_err_required_list: "Please fill in: {fields}", vr_err_phone_format: "Please enter your phone number with country code, e.g. +49... or 0049... (Germany as an example).", vr_phone_placeholder: "e.g. +49 176 12345678",
     vr_err_generic: "Something went wrong. Please try again or contact the villa directly.",
     vr_not_found_title: "Link not found", vr_not_found_body: "This booking link doesn't seem to be active anymore. Please contact your villa or hotel directly.",
     vr_sent_title: "Request sent!", vr_sent_body: "Thanks — a Rydanu driver will pick this up shortly. We'll reach out to {email} with the details.",
@@ -9664,6 +9665,7 @@ const translations = {
     vr_passengers: "Passagiere", vr_luggage: "Gepäck", vr_name: "Ihr Name", vr_phone: "Ihre Telefonnummer", vr_email: "Ihre E-Mail-Adresse",
     vr_email_hint: "damit wir Sie bezüglich dieser Anfrage kontaktieren können", vr_notes: "Anmerkungen", vr_optional: "(optional)",
     vr_submit_btn: "Transfer anfragen", vr_err_required: "Bitte Ziel und E-Mail-Adresse ausfüllen.",
+    vr_err_required_list: "Bitte ausfüllen: {fields}", vr_err_phone_format: "Bitte gib deine Telefonnummer mit Landesvorwahl an, z. B. +49... oder 0049... (Deutschland als Beispiel).", vr_phone_placeholder: "z.B. +49 176 12345678",
     vr_err_generic: "Etwas ist schiefgelaufen. Bitte nochmal versuchen oder direkt die Villa kontaktieren.",
     vr_not_found_title: "Link nicht gefunden", vr_not_found_body: "Dieser Buchungslink scheint nicht mehr aktiv zu sein. Bitte kontaktieren Sie Ihre Villa oder Ihr Hotel direkt.",
     vr_sent_title: "Anfrage gesendet!", vr_sent_body: "Danke — ein Rydanu-Fahrer meldet sich in Kürze bei Ihnen. Wir kontaktieren {email} mit den Details.",
@@ -9988,6 +9990,7 @@ const translations = {
     vr_passengers: "Penumpang", vr_luggage: "Bagasi", vr_name: "Nama Anda", vr_phone: "Nomor telepon Anda", vr_email: "Email Anda",
     vr_email_hint: "agar kami dapat menghubungi Anda mengenai permintaan ini", vr_notes: "Catatan", vr_optional: "(opsional)",
     vr_submit_btn: "Ajukan permintaan transfer", vr_err_required: "Silakan isi tujuan dan email.",
+    vr_err_required_list: "Silakan isi: {fields}", vr_err_phone_format: "Silakan masukkan nomor telepon Anda dengan kode negara, mis. +49... atau 0049... (Jerman sebagai contoh).", vr_phone_placeholder: "mis. +49 176 12345678",
     vr_err_generic: "Terjadi kesalahan. Silakan coba lagi atau hubungi villa langsung.",
     vr_not_found_title: "Tautan tidak ditemukan", vr_not_found_body: "Tautan pemesanan ini sepertinya sudah tidak aktif. Silakan hubungi villa atau hotel Anda langsung.",
     vr_sent_title: "Permintaan terkirim!", vr_sent_body: "Terima kasih — pengemudi Rydanu akan segera menghubungi Anda. Kami akan menghubungi {email} dengan detailnya.",
@@ -11899,7 +11902,7 @@ async function initVillaRequestPage(slug){
       </div>
       <div style="display:flex; gap:10px;">
         <label style="flex:1; display:block; margin-bottom:12px;">${t('vr_passengers')}
-          <input type="text" id="vr-guests" required placeholder="2" style="width:100%; margin-top:4px;">
+          <input type="text" id="vr-guests" required value="2" style="width:100%; margin-top:4px;">
         </label>
         <label style="flex:1; display:block; margin-bottom:12px;">${t('vr_luggage')} <span style="font-weight:400; opacity:0.7;">${t('vr_optional')}</span>
           <input type="text" id="vr-luggage" style="width:100%; margin-top:4px;">
@@ -11909,7 +11912,7 @@ async function initVillaRequestPage(slug){
         <input type="text" id="vr-name" required style="width:100%; margin-top:4px;">
       </label>
       <label style="display:block; margin-bottom:12px;">${t('vr_phone')}
-        <input type="tel" id="vr-phone" required style="width:100%; margin-top:4px;">
+        <input type="tel" id="vr-phone" required placeholder="${t('vr_phone_placeholder')}" style="width:100%; margin-top:4px;">
       </label>
       <label style="display:block; margin-bottom:12px;">${t('vr_email')} <span style="font-weight:400; opacity:0.7;">(${t('vr_email_hint')})</span>
         <input type="email" id="vr-email" required style="width:100%; margin-top:4px;">
@@ -11922,18 +11925,45 @@ async function initVillaRequestPage(slug){
     </form>
   `;
 }
+// Akzeptiert internationale Telefonnummern im Format "+49..." oder "0049..." (00 = internationale
+// Vorwahl, gleichbedeutend mit +) -- eine reine Ortsnummer ohne Landesvorwahl kann bei Gästen aus
+// aller Welt nicht sicher zugeordnet werden, deshalb wird hier bewusst eine der beiden Formen
+// verlangt statt (wie beim Fahrer-Signup) eine Landesvorwahl per Dropdown zu erraten.
+function normalizeVrPhone(raw){
+  let s = String(raw || '').trim().replace(/[\s\-()]/g, '');
+  if(s.startsWith('00')) s = '+' + s.slice(2);
+  if(!/^\+[1-9]\d{6,14}$/.test(s)) return null;
+  return s;
+}
 async function submitVillaRequest(slug){
   const pickup = document.getElementById('vr-pickup').value.trim();
   const destination = document.getElementById('vr-destination').value.trim();
   const email = document.getElementById('vr-email').value.trim();
-  const phone = document.getElementById('vr-phone').value.trim();
+  const phoneRaw = document.getElementById('vr-phone').value.trim();
   const name = document.getElementById('vr-name').value.trim();
   const dateVal = document.getElementById('vr-date').value.trim();
   const timeVal = document.getElementById('vr-time').value.trim();
   const guests = document.getElementById('vr-guests').value.trim();
   const errEl = document.getElementById('vr-error');
-  if(!pickup || !destination || !email || !phone || !name || !dateVal || !timeVal || !guests){
-    errEl.textContent = t('vr_err_required');
+  // Bugfix (11. August): die Fehlermeldung war fest auf "Ziel und E-Mail-Adresse" verdrahtet, egal
+  // welches Pflichtfeld tatsaechlich leer war -- z.B. wurde "Passagiere" (nur Platzhalter "2",
+  // kein echter Wert) faelschlich nie erwaehnt. Jetzt werden die wirklich fehlenden Felder benannt.
+  const missing = [];
+  if(!pickup) missing.push(t('vr_pickup'));
+  if(!destination) missing.push(t('vr_destination'));
+  if(!dateVal) missing.push(t('vr_date'));
+  if(!timeVal) missing.push(t('vr_time'));
+  if(!guests) missing.push(t('vr_passengers'));
+  if(!name) missing.push(t('vr_name'));
+  if(!phoneRaw) missing.push(t('vr_phone'));
+  if(!email) missing.push(t('vr_email'));
+  if(missing.length){
+    errEl.textContent = t('vr_err_required_list').replace('{fields}', missing.join(', '));
+    return;
+  }
+  const phone = normalizeVrPhone(phoneRaw);
+  if(!phone){
+    errEl.textContent = t('vr_err_phone_format');
     return;
   }
   const btn = document.getElementById('vr-submit-btn');
@@ -12101,6 +12131,9 @@ async function confirmCustomOfferPublic(token){
   // Bestaetigungsmail im Hintergrund anstossen -- die Buchung ist unabhaengig davon bereits angelegt,
   // ein Fehlschlag hier soll dem Kunden die erfolgreiche Bestaetigung nicht verderben.
   supabaseClient.functions.invoke('send-tour-offer-email', { body: { type: 'offer_confirmed', token, origin: location.origin } }).catch(err=>console.error('Bestaetigungsmail fehlgeschlagen:', err));
+  // Push-Benachrichtigung an den Fahrer (11. August): der Kunde hat gerade sein individuelles
+  // Tourangebot bestaetigt -- genauso wichtig fuer den Fahrer wie ein normaler Buchungseingang.
+  supabaseClient.functions.invoke('notify-driver-booking', { body: { token } }).catch(err=>console.error('Fahrer-Push (Angebot bestaetigt) fehlgeschlagen:', err));
   document.getElementById('offer-confirm-body').innerHTML = `<h2>✓ Booking confirmed!</h2><p class="note">Thanks — your driver is looking forward to it. A confirmation email is on its way to you.</p>`;
 }
 // Baustein D: ein Kunde, der auf den Bestaetigungs-Link in der Angebots-Mail klickt, hat kein
@@ -14398,7 +14431,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v211</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v213</div>
 
 </body>
 </html>
