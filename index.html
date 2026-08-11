@@ -1119,6 +1119,15 @@
     .searchbar{ flex-direction:column; }
     .filter-toggle-btn{ border-left:none; border-top:1px solid rgba(242,236,216,0.15); }
   }
+
+  /* v214: iOS zoomt beim Antippen eines Formularfelds automatisch rein, sobald dessen Schriftgroesse
+     unter 16px liegt (Safari-Eigenheit, nicht per Meta-Tag abschaltbar). Betrifft auf Mobilgeraeten
+     alle Eingabefelder, unabhaengig von sonstigen (teils bewusst nicht vereinheitlichten) Schriftgroessen
+     im Rest der App -- deshalb hier gezielt nur fuer Formularfelder auf schmalen Bildschirmen erzwungen,
+     mit !important, damit auch verstreute Inline-/Klassen-Werte sicher ueberschrieben werden. */
+  @media (max-width:800px){
+    input, select, textarea{ font-size:16px !important; }
+  }
 </style>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -9340,7 +9349,7 @@ const translations = {
     vr_passengers: "Passengers", vr_luggage: "Luggage", vr_name: "Your name", vr_phone: "Your phone number", vr_email: "Your email",
     vr_email_hint: "so we can reach you about this request", vr_notes: "Notes", vr_optional: "(optional)",
     vr_submit_btn: "Request transfer", vr_err_required: "Please fill in destination and email.",
-    vr_err_required_list: "Please fill in: {fields}", vr_err_phone_format: "Please enter your phone number with country code, e.g. +49... or 0049... (Germany as an example).", vr_phone_placeholder: "e.g. +49 176 12345678",
+    vr_err_required_list: "Please fill in: {fields}", vr_err_phone_format: "Please select your country code and enter a valid phone number.", vr_phone_placeholder: "e.g. 812 345 6789",
     vr_err_generic: "Something went wrong. Please try again or contact the villa directly.",
     vr_not_found_title: "Link not found", vr_not_found_body: "This booking link doesn't seem to be active anymore. Please contact your villa or hotel directly.",
     vr_sent_title: "Request sent!", vr_sent_body: "Thanks — a Rydanu driver will pick this up shortly. We'll reach out to {email} with the details.",
@@ -9665,7 +9674,7 @@ const translations = {
     vr_passengers: "Passagiere", vr_luggage: "Gepäck", vr_name: "Ihr Name", vr_phone: "Ihre Telefonnummer", vr_email: "Ihre E-Mail-Adresse",
     vr_email_hint: "damit wir Sie bezüglich dieser Anfrage kontaktieren können", vr_notes: "Anmerkungen", vr_optional: "(optional)",
     vr_submit_btn: "Transfer anfragen", vr_err_required: "Bitte Ziel und E-Mail-Adresse ausfüllen.",
-    vr_err_required_list: "Bitte ausfüllen: {fields}", vr_err_phone_format: "Bitte gib deine Telefonnummer mit Landesvorwahl an, z. B. +49... oder 0049... (Deutschland als Beispiel).", vr_phone_placeholder: "z.B. +49 176 12345678",
+    vr_err_required_list: "Bitte ausfüllen: {fields}", vr_err_phone_format: "Bitte Landesvorwahl auswählen und eine gültige Telefonnummer eingeben.", vr_phone_placeholder: "z.B. 812 345 6789",
     vr_err_generic: "Etwas ist schiefgelaufen. Bitte nochmal versuchen oder direkt die Villa kontaktieren.",
     vr_not_found_title: "Link nicht gefunden", vr_not_found_body: "Dieser Buchungslink scheint nicht mehr aktiv zu sein. Bitte kontaktieren Sie Ihre Villa oder Ihr Hotel direkt.",
     vr_sent_title: "Anfrage gesendet!", vr_sent_body: "Danke — ein Rydanu-Fahrer meldet sich in Kürze bei Ihnen. Wir kontaktieren {email} mit den Details.",
@@ -9990,7 +9999,7 @@ const translations = {
     vr_passengers: "Penumpang", vr_luggage: "Bagasi", vr_name: "Nama Anda", vr_phone: "Nomor telepon Anda", vr_email: "Email Anda",
     vr_email_hint: "agar kami dapat menghubungi Anda mengenai permintaan ini", vr_notes: "Catatan", vr_optional: "(opsional)",
     vr_submit_btn: "Ajukan permintaan transfer", vr_err_required: "Silakan isi tujuan dan email.",
-    vr_err_required_list: "Silakan isi: {fields}", vr_err_phone_format: "Silakan masukkan nomor telepon Anda dengan kode negara, mis. +49... atau 0049... (Jerman sebagai contoh).", vr_phone_placeholder: "mis. +49 176 12345678",
+    vr_err_required_list: "Silakan isi: {fields}", vr_err_phone_format: "Silakan pilih kode negara dan masukkan nomor telepon yang valid.", vr_phone_placeholder: "mis. 812 345 6789",
     vr_err_generic: "Terjadi kesalahan. Silakan coba lagi atau hubungi villa langsung.",
     vr_not_found_title: "Tautan tidak ditemukan", vr_not_found_body: "Tautan pemesanan ini sepertinya sudah tidak aktif. Silakan hubungi villa atau hotel Anda langsung.",
     vr_sent_title: "Permintaan terkirim!", vr_sent_body: "Terima kasih — pengemudi Rydanu akan segera menghubungi Anda. Kami akan menghubungi {email} dengan detailnya.",
@@ -11912,7 +11921,21 @@ async function initVillaRequestPage(slug){
         <input type="text" id="vr-name" required style="width:100%; margin-top:4px;">
       </label>
       <label style="display:block; margin-bottom:12px;">${t('vr_phone')}
-        <input type="tel" id="vr-phone" required placeholder="${t('vr_phone_placeholder')}" style="width:100%; margin-top:4px;">
+        <div style="display:flex; gap:8px; margin-top:4px;">
+          <select id="vr-country" style="flex:0 0 92px;">
+            <option value="62" selected>🇮🇩 +62</option>
+            <option value="49">🇩🇪 +49</option>
+            <option value="61">🇦🇺 +61</option>
+            <option value="65">🇸🇬 +65</option>
+            <option value="60">🇲🇾 +60</option>
+            <option value="1">🇺🇸 +1</option>
+            <option value="44">🇬🇧 +44</option>
+            <option value="33">🇫🇷 +33</option>
+            <option value="81">🇯🇵 +81</option>
+            <option value="86">🇨🇳 +86</option>
+          </select>
+          <input type="tel" id="vr-phone" required inputmode="tel" placeholder="${t('vr_phone_placeholder')}" style="flex:1;">
+        </div>
       </label>
       <label style="display:block; margin-bottom:12px;">${t('vr_email')} <span style="font-weight:400; opacity:0.7;">(${t('vr_email_hint')})</span>
         <input type="email" id="vr-email" required style="width:100%; margin-top:4px;">
@@ -11925,15 +11948,14 @@ async function initVillaRequestPage(slug){
     </form>
   `;
 }
-// Akzeptiert internationale Telefonnummern im Format "+49..." oder "0049..." (00 = internationale
-// Vorwahl, gleichbedeutend mit +) -- eine reine Ortsnummer ohne Landesvorwahl kann bei Gästen aus
-// aller Welt nicht sicher zugeordnet werden, deshalb wird hier bewusst eine der beiden Formen
-// verlangt statt (wie beim Fahrer-Signup) eine Landesvorwahl per Dropdown zu erraten.
-function normalizeVrPhone(raw){
-  let s = String(raw || '').trim().replace(/[\s\-()]/g, '');
-  if(s.startsWith('00')) s = '+' + s.slice(2);
-  if(!/^\+[1-9]\d{6,14}$/.test(s)) return null;
-  return s;
+// v214: statt vom Gast zu verlangen, die Landesvorwahl selbst als "+49..." oder "0049..." einzutippen
+// (fehleranfaellig, siehe z.B. abgelehnte "0049..."-Eingaben in der Praxis), gibt es jetzt denselben
+// Vorwahl-Dropdown wie bei der Fahrer-Registrierung ("vr-country") -- der Gast tippt nur noch seine
+// lokale Nummer ein, die Vorwahl kommt aus der Auswahl. normalizePhoneE164/isValidE164 (siehe unten,
+// bereits fuer den Fahrer-Signup im Einsatz) uebernehmen die eigentliche Normalisierung/Pruefung.
+function normalizeVrPhone(raw, countryCode){
+  const phone = normalizePhoneE164(raw, countryCode);
+  return isValidE164(phone) ? phone : null;
 }
 async function submitVillaRequest(slug){
   const pickup = document.getElementById('vr-pickup').value.trim();
@@ -11961,7 +11983,8 @@ async function submitVillaRequest(slug){
     errEl.textContent = t('vr_err_required_list').replace('{fields}', missing.join(', '));
     return;
   }
-  const phone = normalizeVrPhone(phoneRaw);
+  const vrCountry = document.getElementById('vr-country').value;
+  const phone = normalizeVrPhone(phoneRaw, vrCountry);
   if(!phone){
     errEl.textContent = t('vr_err_phone_format');
     return;
@@ -14431,7 +14454,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v213</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v214</div>
 
 </body>
 </html>
