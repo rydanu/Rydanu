@@ -954,8 +954,8 @@
   }
   .listing-delete-x:hover{ color:var(--danger); background:var(--paper-dim); opacity:1; }
   .listing-row:last-child{ border-bottom:none; }
-  .listing-row .lname{ font-weight:600; margin-bottom:2px; }
-  .listing-row .lmeta{ font-family:'JetBrains Mono'; font-size:0.72rem; color:var(--ink-soft); display:flex; flex-wrap:wrap; align-items:center; gap:4px 0; row-gap:4px; }
+  .listing-row .lname{ font-weight:600; margin-bottom:4px; }
+  .listing-row .lmeta{ font-family:'JetBrains Mono'; font-size:0.72rem; color:var(--ink-soft); display:flex; flex-wrap:wrap; align-items:center; gap:4px 0; row-gap:4px; margin-top:4px; }
   .toggle{ width:36px; height:20px; background:var(--teal); border-radius:20px; position:relative; cursor:pointer; transition:background .15s ease; flex-shrink:0; }
   .toggle::after{ content:''; position:absolute; width:16px; height:16px; background:#fff; border-radius:50%; top:2px; right:2px; transition:right .15s ease, left .15s ease; box-shadow:0 1px 3px rgba(0,0,0,0.35); }
   .toggle.off{ background:#c9c2ab; }
@@ -974,14 +974,14 @@
   .add-listing-form input[type="checkbox"]{ flex:0 0 auto; width:auto; }
   .nl-service-check{ display:flex; align-items:center; gap:8px; font-size:0.78rem; color:var(--ink-soft); white-space:normal; width:100%; box-sizing:border-box; }
   .spots-section{ width:100%; background:#fff; border:1px solid var(--line); border-radius:6px; padding:12px; margin:4px 0; }
-  .spots-line{ font-size:0.72rem; color:var(--teal); margin-top:2px; line-height:1.4; }
+  .spots-line{ font-size:0.72rem; color:var(--teal); margin-top:4px; line-height:1.4; }
   .airport-price-lines{ color:var(--teal); }
   .airport-price-lines strong{ font-family:'JetBrains Mono'; font-weight:600; }
   .region-price-row{ display:flex; justify-content:space-between; align-items:baseline; gap:10px; }
   .region-price-row .rp-label{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .region-price-row .rp-value{ font-family:'JetBrains Mono'; font-weight:600; white-space:nowrap; text-align:right; flex:0 0 auto; }
   .extras-line{ font-size:0.7rem; color:#B3541E; margin-top:2px; line-height:1.4; }
-  .period-tabs{ display:flex; gap:6px; margin-bottom:14px; }
+  .period-tabs{ display:flex; gap:10px; margin-bottom:14px; }
   .period-btn{
     background:#fff; border:1.5px solid var(--line); border-radius:16px; padding:6px 14px; cursor:pointer;
     font-family:'Public Sans'; font-size:0.78rem; font-weight:600; color:var(--ink-soft);
@@ -1808,7 +1808,7 @@
             <p class="form-error" id="nl-error" style="width:100%;"></p>
             <button class="add-btn" onclick="addListing()">Save</button>
           </div>
-          <div class="period-tabs" id="listings-view-tabs" style="margin-bottom:14px;">
+          <div class="period-tabs" id="listings-view-tabs" style="margin:16px 20px 14px;">
             <button type="button" class="period-btn active" data-view="active" onclick="setListingsViewTab('active')" data-i18n="listings_tab_active">Active</button>
             <button type="button" class="period-btn" data-view="paused" onclick="setListingsViewTab('paused')" data-i18n="listings_tab_paused">Paused</button>
           </div>
@@ -1830,8 +1830,8 @@
       </div>
 
       <div class="dash-section" id="sec-requests" style="display:none;">
-        <div class="dash-head"><div><h2 data-i18n="requests_title">Custom tour requests</h2><p data-i18n="requests_sub">Travelers who couldn't find exactly what they wanted asked you directly. Reply by creating a real tour offer through Rydanu.</p></div></div>
-        <p class="note" style="margin:-8px 20px 16px; color:var(--danger);" data-i18n="requests_rule_note">⚠️ All requests must be answered with a tour offer created here. Arranging payment or bookings privately, outside Rydanu, is not allowed and may lead to account suspension.</p>
+        <div class="dash-head"><div><h2 data-i18n="requests_title">Custom tour requests</h2><p style="line-height:1.5;" data-i18n="requests_sub">Travelers who couldn't find exactly what they wanted asked you directly. Reply by creating a real tour offer through Rydanu.</p></div></div>
+        <p class="note" style="margin:-8px 0 16px; color:var(--danger); line-height:1.5;" data-i18n="requests_rule_note">⚠️ All requests must be answered with a tour offer created here. Arranging payment or bookings privately, outside Rydanu, is not allowed and may lead to account suspension.</p>
         <div class="period-tabs" id="requests-view-tabs">
           <button type="button" class="period-btn active" data-view="open" onclick="setRequestsViewTab('open')" data-i18n="requests_tab_open">Open</button>
           <button type="button" class="period-btn" data-view="offered" onclick="setRequestsViewTab('offered')" data-i18n="requests_tab_offered">Completed</button>
@@ -1867,7 +1867,6 @@
           <div>
             <div style="font-size:1.15rem; font-weight:800; color:var(--ink);">🎉 <span data-i18n="fees_listing_profile">Listing & profile</span></div>
             <div class="when" style="margin-top:4px;" data-i18n="fees_listing_desc">Create unlimited listings, no cost while you have zero bookings</div>
-            <div class="conditions-hint" style="margin-top:6px;">ⓘ <span data-i18n="fees_conditions_apply">Conditions apply</span> — <a href="#" onclick="openTerms('listing'); return false;" data-i18n="fees_see_full_terms">see full terms</a></div>
           </div>
           <span class="mono" style="font-weight:800; font-size:1.3rem; color:var(--teal); white-space:nowrap;">IDR 0</span>
         </div>
@@ -1875,7 +1874,7 @@
         <div class="panel" style="margin-bottom:14px;">
           <div class="booking-row" style="border-bottom:none;">
             <div>
-              <div class="who">✨ <span data-i18n="fees_featured_placement">Featured Placement <em style="font-style:normal;color:var(--ink-soft);font-size:0.75rem;" data-i18n="lbl_optional_inline">(optional)</em></span></div>
+              <div style="font-size:1.15rem; font-weight:800; color:var(--ink);">✨ <span data-i18n="fees_featured_placement">Featured Placement <em style="font-style:normal;color:var(--ink-soft);font-size:0.75rem;" data-i18n="lbl_optional_inline">(optional)</em></span></div>
               <div class="when" data-i18n="fees_featured_desc">Higher spot in search results — auto-expires after 1 month</div>
             </div>
             <span class="mono" style="font-weight:600; white-space:nowrap;" data-i18n="fees_featured_price">IDR 100,000 / month</span>
@@ -1887,7 +1886,6 @@
           <div>
             <div style="font-size:1.15rem; font-weight:800; color:var(--ink);">🏠 <span data-i18n="villa_source_tag">Villa Partner</span></div>
             <div class="when" style="margin-top:4px;" data-i18n="fees_overview_villa_note">Platform fee for Villa Partner bookings (instead of the usual 10%)</div>
-            <div class="conditions-hint" style="margin-top:6px;">ⓘ <span data-i18n="fees_conditions_apply_booking">Conditions apply to every booking</span> — <a href="#" onclick="openTerms('booking'); return false;" data-i18n="fees_see_full_terms">see full terms</a></div>
           </div>
           <span class="mono" style="font-weight:800; font-size:1.3rem; color:var(--teal); white-space:nowrap;">20%</span>
         </div>
@@ -1895,13 +1893,14 @@
         <div class="panel" style="margin-bottom:14px;">
           <div class="booking-row" style="border-bottom:none;">
             <div>
-              <div class="who">🚗 <span data-i18n="fees_row_any_booking">Any confirmed booking</span></div>
+              <div style="font-size:1.15rem; font-weight:800; color:var(--ink);">🚗 <span data-i18n="fees_row_any_booking">Any confirmed booking</span></div>
             </div>
             <span class="mono" style="font-weight:600; white-space:nowrap;" data-i18n="fees_row_any_booking_val">10% of tour price</span>
           </div>
         </div>
 
         <p class="tier-footnote" style="padding:0 0 6px;" data-i18n="tier_transfer_note">Transfer bookings (with or without airport pickup) use the exact same price-based fee table above — there's no separate flat rate.</p>
+        <p class="conditions-hint" style="margin-bottom:8px;">ⓘ <span data-i18n="fees_conditions_apply_booking">Conditions apply to every booking</span> — <a href="#" onclick="openTerms('booking'); return false;" data-i18n="fees_see_full_terms">see full terms</a></p>
 
         <div class="dash-head" style="margin-top:26px;"><div><h3 data-i18n="feestatements_title" style="margin:0;">Fee statements</h3><p data-i18n="feestatements_sub">Every paid fee generates a receipt here — also emailed to you.</p></div></div>
         <div class="panel" id="feestatements-list"></div>
@@ -2013,7 +2012,7 @@
     </div>
 
     <div id="admin-sec-stats" style="display:none;">
-    <h2 style="margin-top:0;" data-i18n="admin_stats_title">Business overview</h2>
+    <h2 style="margin-top:0; margin-bottom:16px;" data-i18n="admin_stats_title">Business overview</h2>
     <div class="period-tabs" id="admin-period-tabs">
       <button type="button" class="period-btn active" data-period="day" onclick="setAdminPeriod('day')" data-i18n="period_day">Daily</button>
       <button type="button" class="period-btn" data-period="month" onclick="setAdminPeriod('month')" data-i18n="period_month">Monthly</button>
@@ -2052,8 +2051,8 @@
     </div>
 
     <div id="admin-sec-messages" style="display:none;">
-    <h2 style="margin-top:0;" data-i18n="admin_messages_title">Messages from drivers</h2>
-    <button type="button" class="period-btn" onclick="openAdminComposeMsg()" style="margin-bottom:14px; background:var(--gold); border-color:var(--gold); color:var(--ink); font-weight:700;">✉️ <span data-i18n="admin_compose_btn">Message a driver</span></button>
+    <h2 style="margin-top:0; margin-bottom:16px;" data-i18n="admin_messages_title">Messages from drivers</h2>
+    <button type="button" class="period-btn" onclick="openAdminComposeMsg()" style="margin-bottom:16px; background:var(--gold); border-color:var(--gold); color:var(--ink); font-weight:700;">✉️ <span data-i18n="admin_compose_btn">Message a driver</span></button>
     <div class="period-tabs" id="admin-msg-view-tabs">
       <button type="button" class="period-btn active" data-view="inbox" onclick="setAdminMsgViewTab('inbox')" data-i18n="mailbox_tab_inbox">Inbox</button>
       <button type="button" class="period-btn" data-view="archive" onclick="setAdminMsgViewTab('archive')" data-i18n="mailbox_tab_archive">Archive</button>
@@ -2670,6 +2669,9 @@
         <label data-i18n-html="lbl_whatsapp">WhatsApp number <span class="optional">(for booking confirmation)</span></label>
         <input type="tel" id="ep-phone" placeholder="+62 812 3456 7890">
       </div>
+      <div class="form-field" id="ep-push-field" style="display:none; background:var(--teal-soft); border:1px solid var(--teal); border-radius:10px; padding:12px 14px;">
+        <label class="nl-service-check" style="margin-bottom:0;"><input type="checkbox" id="ep-push-toggle"> <span data-i18n-html="ep_push_toggle_label">Push notifications for new requests (e.g. <span style="white-space:nowrap;">Villa Partner bookings</span>)</span></label>
+      </div>
       <div class="form-field">
         <label data-i18n="rd_serviceregions_label">Regions you serve</label>
         <div class="chip-row" data-group="ep-serviceregions">
@@ -2733,9 +2735,6 @@
         <input type="text" id="ep-paylink" placeholder="e.g. https://wise.com/pay/yourname">
       </div>
       <label class="nl-service-check" style="margin-bottom:12px;"><input type="checkbox" id="ep-qris"> <span data-i18n="rd_qris_label">I accept QRIS (GoPay / OVO / DANA)</span></label>
-      <div class="form-field" id="ep-push-field" style="display:none;">
-        <label class="nl-service-check" style="margin-bottom:4px;"><input type="checkbox" id="ep-push-toggle"> <span data-i18n="ep_push_toggle_label">Push notifications for new requests (e.g. Villa Partner bookings)</span></label>
-      </div>
       <p class="form-error" id="ep-error"></p>
       <button class="book-btn" onclick="saveEditProfile()">Save changes</button>
     </div>
@@ -7054,7 +7053,7 @@ function renderListings(){
     <div class="listing-row ${l.active?'':'paused'}" style="cursor:pointer;" onclick="openEditListing(${i})">
       <div>
         <div class="lname">${l.name} ${driverRankBadgeHTML(realDriverProfile ? realDriverProfile.id : currentDriverId, 'sm')}</div>
-        <div class="lmeta">${l.price} · ${spotLabel(l.duration)} · ${l.bookings} bookings <span class="fee-badge">${l.fee} / booking</span></div>
+        <div class="lmeta">${l.price} · ${spotLabel(l.duration)} · <span style="white-space:nowrap;">${l.bookings} bookings</span> <span class="fee-badge">${l.fee} / booking</span></div>
         <div class="lmeta">${l.region ? '🚩 '+l.region : '<em>No starting point set</em>'} ${l.services && l.services.length ? '· '+serviceLabel(l.services) : ''}</div>
         ${l.spots && l.spots.length ? `<div class="spots-line">✦ ${l.spots.map(spotLabel).join(' · ')}</div>` : ''}
         ${l.extras && l.extras.length ? `<div class="extras-line">⚠ Not included: ${l.extras.join(', ')}</div>` : ''}
@@ -7063,7 +7062,7 @@ function renderListings(){
         ${l.transferRegions && Object.keys(l.transferRegions).length ? `<div class="spots-line" style="color:var(--teal);">🚐 ${Object.entries(l.transferRegions).map(([r,p])=>r+': '+p).join(' · ')}</div>` : ''}
         ${l.pickupRegionPrices && Object.keys(l.pickupRegionPrices).length ? `<div class="spots-line" style="color:var(--teal);">🚩 ${Object.entries(l.pickupRegionPrices).map(([r,p])=>r+': '+p).join(' · ')}</div>` : ''}
       </div>
-      <div style="display:flex; flex-direction:column; align-items:center; gap:10px;">
+      <div style="display:flex; flex-direction:column; align-items:center; justify-content:space-between; align-self:stretch; gap:16px; padding:2px 0;">
         <div class="toggle ${l.active?'':'off'}" onclick="event.stopPropagation(); toggleListing(${i})"></div>
         <button type="button" class="listing-delete-x" title="${t('el_delete_btn')}" onclick="event.stopPropagation(); deleteListingFromRow(${i})">🗑️</button>
       </div>
@@ -7442,7 +7441,7 @@ async function declineTourRequest(i){
   if(!confirm(t('confirm_decline_request') + ' ' + (r.name || r.customer_name) + '?')) return;
   if(realDriverProfile){
     const { error } = await supabaseClient.from('tour_inquiries').update({status:'declined'}).eq('id', r.id);
-    if(error){ console.error('Konnte nicht abgelehnt werden:', error); return; }
+    if(error){ console.error('Konnte nicht abgelehnt werden:', error); alert(t('villa_action_err')); return; }
     r.status = 'declined';
     renderTourRequests();
     return;
@@ -9462,7 +9461,7 @@ const translations = {
     pay_link_label: "Open driver's payment link",
     
     rd_paylink_label: "Payment link for customers who prefer to pay digitally (Wise / Revolut / PayPal) — optional",
-    rd_qris_label: "I accept QRIS (GoPay / OVO / DANA)", ep_push_toggle_label: "Push notifications for new requests (e.g. Villa Partner bookings)",
+    rd_qris_label: "I accept QRIS (GoPay / OVO / DANA)", ep_push_toggle_label: "Push notifications for new requests (e.g. <span style=\"white-space:nowrap;\">Villa Partner bookings</span>)",
     pay_confirm_btn: "Submit booking request",
     rd_name_label: "Full name",
     rd_homeregion_label: "Home region", rd_serviceregions_label: "Regions you serve", rd_serviceregions_hint: "Used to match you with nearby pickup requests — including Villa Partner bookings.", rd_serviceregions_err: "Please select at least one region.",
@@ -9615,7 +9614,7 @@ const translations = {
     admin_confirm_reject: "{name} ablehnen?\n\nGrund: {reason}\n\nDer Fahrer wird per E-Mail & WhatsApp benachrichtigt.",
     admin_confirm_unblock: "{name} entsperren? Seine/ihre Touren werden wieder öffentlich buchbar.",
     admin_confirm_block: "{name} sperren?\n\nAlle Touren verschwinden sofort aus der Reisenden-Ansicht und er/sie kann keine Buchungen mehr erhalten.", lw_number_label: "Deine Rydanu Nummer:",
- fees_listing_profile: "Listing & Profil", fees_hero_free_label: "immer kostenlos", fees_listing_desc: "Erstelle unbegrenzt viele Angebote, keine Kosten solange du keine Buchungen hast",
+ fees_listing_profile: "Angebot & Profil", fees_hero_free_label: "immer kostenlos", fees_listing_desc: "Erstelle unbegrenzt viele Angebote, keine Kosten solange du keine Buchungen hast",
     fees_conditions_apply: "Bedingungen gelten", fees_see_full_terms: "vollständige Bedingungen ansehen", fees_th_booking_value: "Buchungswert", fees_th_fee_charged: "Gebühr für Fahrer", fees_row_any_booking: "Jede bestätigte Buchung", fees_row_any_booking_val: "10% des Tourpreises", fees_conditions_apply_booking: "Bedingungen gelten für jede Buchung", fees_zero_bookings_note: "Ein Fahrer ohne Buchungen in diesem Monat zahlt gar nichts — die Gebühr entsteht erst, sobald ein Gast tatsächlich eine bezahlte Tour bestätigt.",
     fees_featured_placement: "Featured Placement", fees_featured_desc: "Höhere Platzierung in den Suchergebnissen — läuft automatisch nach 1 Monat aus", fees_featured_price: "IDR 100.000 / Monat",
     fees_open_fees_title: "Offene Gebühren diesen Monat", fees_open_fees_desc: "Bezahle deine angesammelten Buchungsgebühren — eine Rechnung wird dir automatisch per E-Mail zugesendet",
@@ -9786,7 +9785,7 @@ const translations = {
     pay_link_label: "Zahlungslink des Fahrers öffnen",
     
     rd_paylink_label: "Zahlungslink für Gäste, die lieber digital bezahlen (Wise / Revolut / PayPal) — optional",
-    rd_qris_label: "Ich akzeptiere QRIS (GoPay / OVO / DANA)", ep_push_toggle_label: "Push-Benachrichtigungen für neue Anfragen (z.B. Villa-Partner-Buchungen)",
+    rd_qris_label: "Ich akzeptiere QRIS (GoPay / OVO / DANA)", ep_push_toggle_label: "Push-Benachrichtigungen für neue Anfragen (z.B. <span style=\"white-space:nowrap;\">Villa-Partner-Buchungen</span>)",
     pay_confirm_btn: "Buchungsanfrage absenden",
     rd_name_label: "Vollständiger Name",
     rd_homeregion_label: "Heimatregion", rd_serviceregions_label: "Regionen, die du bedienst", rd_serviceregions_hint: "Wird genutzt, um dich mit passenden Abholanfragen in der Nähe zu matchen — auch Villa-Partner-Buchungen.", rd_serviceregions_err: "Bitte mindestens eine Region auswählen.",
@@ -10110,7 +10109,7 @@ const translations = {
     pay_link_label: "Buka tautan pembayaran sopir",
     
     rd_paylink_label: "Tautan pembayaran untuk tamu yang lebih suka membayar secara digital (Wise / Revolut / PayPal) — opsional",
-    rd_qris_label: "Saya menerima QRIS (GoPay / OVO / DANA)", ep_push_toggle_label: "Notifikasi push untuk permintaan baru (mis. booking Villa Partner)",
+    rd_qris_label: "Saya menerima QRIS (GoPay / OVO / DANA)", ep_push_toggle_label: "Notifikasi push untuk permintaan baru (mis. <span style=\"white-space:nowrap;\">booking Villa Partner</span>)",
     pay_confirm_btn: "Kirim permintaan pemesanan",
     rd_name_label: "Nama lengkap",
     rd_homeregion_label: "Wilayah asal", rd_serviceregions_label: "Wilayah yang Anda layani", rd_serviceregions_hint: "Digunakan untuk mencocokkan Anda dengan permintaan penjemputan terdekat — termasuk booking Villa Partner.", rd_serviceregions_err: "Silakan pilih setidaknya satu wilayah.",
@@ -14394,7 +14393,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v208</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v209</div>
 
 </body>
 </html>
