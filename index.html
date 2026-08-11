@@ -1872,18 +1872,36 @@
           <span class="mono" style="font-weight:800; font-size:1.3rem; color:var(--teal); white-space:nowrap;">IDR 0</span>
         </div>
 
-        <div class="panel">
-          <div class="booking-row"><div><div class="who">✨ <span data-i18n="fees_featured_placement">Featured placement <em style="font-style:normal;color:var(--ink-soft);font-size:0.75rem;" data-i18n="lbl_optional_inline">(optional)</em></span></div><div class="when" data-i18n="fees_featured_desc">Higher spot in search results this week</div></div><span class="mono" style="font-weight:600;" data-i18n="fees_featured_price">IDR 75,000 / week</span></div>
-          <table class="tier-table">
-            <thead><tr><th data-i18n="fees_th_booking_value">Booking value</th><th data-i18n="fees_th_fee_charged">Fee charged to driver</th></tr></thead>
-            <tbody>
-              <tr><td>🚗 <span data-i18n="fees_row_any_booking">Any confirmed booking</span></td><td class="mono" data-i18n="fees_row_any_booking_val">10% of tour price</td></tr>
-              <tr style="background:var(--gold); border-radius:6px;"><td style="font-weight:800; color:var(--ink);">🏠 <span data-i18n="villa_source_tag">Villa Partner</span></td><td class="mono" style="font-weight:800; color:var(--ink);" data-i18n="fees_overview_villa_note">20% platform fee (instead of the usual 10%)</td></tr>
-            </tbody>
-          </table>
-          <p class="conditions-hint" style="padding:0 20px 14px;">ⓘ <span data-i18n="fees_conditions_apply_booking">Conditions apply to every booking</span> — <a href="#" onclick="openTerms('booking'); return false;" data-i18n="fees_see_full_terms">see full terms</a></p>
-          <p class="tier-footnote" data-i18n="tier_transfer_note">Transfer bookings (with or without airport pickup) use the exact same price-based fee table above — there's no separate flat rate.</p>
+        <div class="panel" style="margin-bottom:14px;">
+          <div class="booking-row" style="border-bottom:none;">
+            <div>
+              <div class="who">✨ <span data-i18n="fees_featured_placement">Featured Placement <em style="font-style:normal;color:var(--ink-soft);font-size:0.75rem;" data-i18n="lbl_optional_inline">(optional)</em></span></div>
+              <div class="when" data-i18n="fees_featured_desc">Higher spot in search results — auto-expires after 1 month</div>
+            </div>
+            <span class="mono" style="font-weight:600; white-space:nowrap;" data-i18n="fees_featured_price">IDR 100,000 / month</span>
+          </div>
         </div>
+
+        <!-- Villa-Partner eigene Karte: gruen/abgerundet wie "Listing & Profil", eigener Baustein statt Tabellenzeile. -->
+        <div class="panel" style="background:var(--teal-soft); border-color:var(--teal); padding:20px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center; gap:14px; flex-wrap:wrap;">
+          <div>
+            <div style="font-size:1.15rem; font-weight:800; color:var(--ink);">🏠 <span data-i18n="villa_source_tag">Villa Partner</span></div>
+            <div class="when" style="margin-top:4px;" data-i18n="fees_overview_villa_note">Platform fee for Villa Partner bookings (instead of the usual 10%)</div>
+            <div class="conditions-hint" style="margin-top:6px;">ⓘ <span data-i18n="fees_conditions_apply_booking">Conditions apply to every booking</span> — <a href="#" onclick="openTerms('booking'); return false;" data-i18n="fees_see_full_terms">see full terms</a></div>
+          </div>
+          <span class="mono" style="font-weight:800; font-size:1.3rem; color:var(--teal); white-space:nowrap;">20%</span>
+        </div>
+
+        <div class="panel" style="margin-bottom:14px;">
+          <div class="booking-row" style="border-bottom:none;">
+            <div>
+              <div class="who">🚗 <span data-i18n="fees_row_any_booking">Any confirmed booking</span></div>
+            </div>
+            <span class="mono" style="font-weight:600; white-space:nowrap;" data-i18n="fees_row_any_booking_val">10% of tour price</span>
+          </div>
+        </div>
+
+        <p class="tier-footnote" style="padding:0 0 6px;" data-i18n="tier_transfer_note">Transfer bookings (with or without airport pickup) use the exact same price-based fee table above — there's no separate flat rate.</p>
 
         <div class="dash-head" style="margin-top:26px;"><div><h3 data-i18n="feestatements_title" style="margin:0;">Fee statements</h3><p data-i18n="feestatements_sub">Every paid fee generates a receipt here — also emailed to you.</p></div></div>
         <div class="panel" id="feestatements-list"></div>
@@ -9327,7 +9345,7 @@ const translations = {
     vr_not_found_title: "Link not found", vr_not_found_body: "This booking link doesn't seem to be active anymore. Please contact your villa or hotel directly.",
     vr_sent_title: "Request sent!", vr_sent_body: "Thanks — a Rydanu driver will pick this up shortly. We'll reach out to {email} with the details.",
     vr_matched_to: "✓ Matched to {area} on the map",
-    fees_overview_new_title: "Fees this month", fees_overview_villa_note: "Villa Partner bookings: 20% platform fee (instead of the usual 10%)", fees_how_it_works_title: "How fees work",
+    fees_overview_new_title: "Fees this month", fees_overview_villa_note: "Platform fee for Villa Partner bookings (instead of the usual 10%)", fees_how_it_works_title: "How fees work",
     requests_tab_open: "Open", requests_tab_offered: "Completed", requests_empty_offered: "No completed requests yet.", requests_tab_declined: "Declined", requests_empty_declined: "No declined requests.",
     co_open_btn_standalone: "✨ Or create a custom offer without a request",
     new_request_banner_one: "You have a new custom tour request — tap to view it", new_request_banner_many: "You have {n} new custom tour requests — tap to view them", new_villa_banner_one: "🏠 New Villa Partner request — tap to view it", new_villa_banner_many: "🏠 {n} new Villa Partner requests — tap to view them",
@@ -9651,7 +9669,7 @@ const translations = {
     vr_not_found_title: "Link nicht gefunden", vr_not_found_body: "Dieser Buchungslink scheint nicht mehr aktiv zu sein. Bitte kontaktieren Sie Ihre Villa oder Ihr Hotel direkt.",
     vr_sent_title: "Anfrage gesendet!", vr_sent_body: "Danke — ein Rydanu-Fahrer meldet sich in Kürze bei Ihnen. Wir kontaktieren {email} mit den Details.",
     vr_matched_to: "✓ {area} auf der Karte gefunden",
-    fees_overview_new_title: "Gebühren diesen Monat", fees_overview_villa_note: "Villa-Partner-Buchungen: 20% Plattformgebühr (statt sonst 10%)", fees_how_it_works_title: "So funktionieren Gebühren",
+    fees_overview_new_title: "Gebühren diesen Monat", fees_overview_villa_note: "Plattformgebühr für Villa-Partner-Buchungen (statt sonst 10%)", fees_how_it_works_title: "So funktionieren Gebühren",
     requests_tab_open: "Offen", requests_tab_offered: "Abgeschlossen", requests_empty_offered: "Noch keine abgeschlossenen Anfragen.", requests_tab_declined: "Abgelehnt", requests_empty_declined: "Keine abgelehnten Anfragen.",
     co_open_btn_standalone: "✨ Oder individuelles Angebot ohne Anfrage erstellen",
     new_request_banner_one: "Du hast eine neue individuelle Touranfrage — antippen zum Ansehen", new_request_banner_many: "Du hast {n} neue individuelle Touranfragen — antippen zum Ansehen", new_villa_banner_one: "🏠 Neue Villa-Partner-Anfrage — antippen zum Ansehen", new_villa_banner_many: "🏠 {n} neue Villa-Partner-Anfragen — antippen zum Ansehen",
@@ -9731,7 +9749,7 @@ const translations = {
     nav_subscription: "Gebühren & Abrechnung",
     nav_feestatements: "Gebührenabrechnung",
     nav_inbox: "Posteingang",
-    feestatements_title: "Gebührenabrechnung",
+    feestatements_title: "Gebührenabrechnungen",
     feestatements_sub: "Jede bezahlte Gebühr erzeugt hier einen Beleg — zusätzlich per E-Mail an dich.",
     inbox_title: "Posteingang",
     inbox_sub: "Nachrichten von Rydanu zu deinem Konto, Freischaltungen und Zahlungen.",
@@ -9975,7 +9993,7 @@ const translations = {
     vr_not_found_title: "Tautan tidak ditemukan", vr_not_found_body: "Tautan pemesanan ini sepertinya sudah tidak aktif. Silakan hubungi villa atau hotel Anda langsung.",
     vr_sent_title: "Permintaan terkirim!", vr_sent_body: "Terima kasih — pengemudi Rydanu akan segera menghubungi Anda. Kami akan menghubungi {email} dengan detailnya.",
     vr_matched_to: "✓ Cocok dengan {area} di peta",
-    fees_overview_new_title: "Biaya bulan ini", fees_overview_villa_note: "Booking Villa Partner: biaya platform 20% (bukan 10% seperti biasa)", fees_how_it_works_title: "Cara kerja biaya",
+    fees_overview_new_title: "Biaya bulan ini", fees_overview_villa_note: "Biaya platform untuk booking Villa Partner (bukan 10% seperti biasa)", fees_how_it_works_title: "Cara kerja biaya",
     requests_tab_open: "Terbuka", requests_tab_offered: "Selesai", requests_empty_offered: "Belum ada permintaan yang selesai.", requests_tab_declined: "Ditolak", requests_empty_declined: "Tidak ada permintaan yang ditolak.",
     co_open_btn_standalone: "✨ Atau buat penawaran khusus tanpa permintaan",
     new_request_banner_one: "Anda memiliki permintaan tur khusus baru — ketuk untuk melihatnya", new_request_banner_many: "Anda memiliki {n} permintaan tur khusus baru — ketuk untuk melihatnya", new_villa_banner_one: "🏠 Permintaan Villa Partner baru — ketuk untuk melihatnya", new_villa_banner_many: "🏠 {n} permintaan Villa Partner baru — ketuk untuk melihatnya",
@@ -14376,7 +14394,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v207</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v208</div>
 
 </body>
 </html>
