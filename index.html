@@ -972,7 +972,11 @@
     box-shadow:0 6px 20px rgba(11,61,34,0.18); -webkit-tap-highlight-color:transparent;
   }
   .info-cta-box:hover{ filter:brightness(1.06); }
-  .info-cta-logo{ width:40px; height:40px; object-fit:contain; flex-shrink:0; }
+  .info-cta-logo-wrap{
+    flex-shrink:0; width:52px; height:52px; border-radius:12px; background:#fff;
+    display:flex; align-items:center; justify-content:center; padding:6px;
+  }
+  .info-cta-logo{ width:100%; height:100%; object-fit:contain; }
   .info-cta-text{ flex:1; min-width:0; }
   .info-cta-text strong{ display:block; font-family:'Fraunces', serif; font-size:1.02rem; color:#fff; margin-bottom:3px; }
   .info-cta-text p{ margin:0; font-size:0.82rem; line-height:1.4; color:rgba(255,255,255,0.82); }
@@ -4196,7 +4200,7 @@ function infoCta(lang){
   };
   const c = t[lang] || t.en;
   return `<div class="info-cta-box" onclick="closeInfoPage(); goHome();">
-    <img src="${RYVIO_LOGO_WORDMARK}" alt="Rydanu" class="info-cta-logo">
+    <div class="info-cta-logo-wrap"><img src="${RYVIO_LOGO_WORDMARK}" alt="Rydanu" class="info-cta-logo"></div>
     <div class="info-cta-text"><strong>${c.title}</strong><p>${c.text}</p></div>
     <span class="info-cta-btn">${c.btn} →</span>
   </div>`;
@@ -14888,7 +14892,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v224</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v225</div>
 
 </body>
 </html>
