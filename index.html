@@ -4091,37 +4091,94 @@ document.getElementById('qr-modal-bg').addEventListener('click', e=>{ if(e.targe
 let dpIsReal = false; // zeigt gerade eine echte "My Page" (statt Demo)?
 let dpRealData = null; // { driver, tours, reviews } fuer die echte My Page
 // ---- SEO-Menü / Ratgeber-Unterseiten (Baustein 10) ----
-// Ausformulierte Ratgeber-Inhalte (11. August). Affiliate-Platzhalter (HTML-Kommentare) bewusst nur an
-// den 3 von Jörg festgelegten Kategorien: eSIM, Kreditkarten, Reiseversicherung -- sonst nirgends.
-// Jörg kann/soll die Texte selbst pruefen, kuerzen oder ergaenzen; einfach den body-Text ersetzen.
+// Ausformulierte Ratgeber-Inhalte (11. August), mit echten Bildern (lizenzfrei, Pexels -- keine
+// Namensnennung noetig laut Pexels-Lizenz) und jetzt sprachabhaengig (DE/EN/ID), passend zur oben
+// gewaehlten Sprache der App. Affiliate-Platzhalter (HTML-Kommentare) bewusst nur an den 3 von Jörg
+// festgelegten Kategorien: eSIM, Kreditkarten, Reiseversicherung -- sonst nirgends.
+// Jörg kann/soll die Texte selbst pruefen, kuerzen oder ergaenzen; einfach den jeweiligen body-Text
+// ersetzen (auf .de/.en/.id achten).
+function infoImg(id, alt){
+  return `<img src="https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&w=1200" alt="${alt}" loading="lazy" style="width:100%; border-radius:12px; margin:4px 0 14px; display:block;">`;
+}
 const INFO_PAGES = {
   anreise: {
-    title: '✈️ Anreise nach Bali',
-    body: `<p>Die meisten internationalen Flüge landen am Flughafen Ngurah Rai (DPS) bei Denpasar im Süden Balis. Von Europa aus gibt es keine Direktflüge — üblich sind Umstiege in Doha, Singapur, Kuala Lumpur, Istanbul oder Abu Dhabi. Je nach Route dauert die Gesamtreise inklusive Zwischenstopp meist zwischen 16 und 22 Stunden.</p>
+    title: { de: '✈️ Anreise nach Bali', en: '✈️ Getting to Bali', id: '✈️ Perjalanan ke Bali' },
+    body: {
+      de: `${infoImg(34405178,'Flugzeug landet am Flughafen')}
+      <p>Die meisten internationalen Flüge landen am Flughafen Ngurah Rai (DPS) bei Denpasar im Süden Balis. Von Europa aus gibt es keine Direktflüge — üblich sind Umstiege in Doha, Singapur, Kuala Lumpur, Istanbul oder Abu Dhabi. Je nach Route dauert die Gesamtreise inklusive Zwischenstopp meist zwischen 16 und 22 Stunden.</p>
       <h3>Vor dem Abflug: Arrival Card & Tourist-Levy</h3>
       <p>Seit 2024 verlangt Indonesien für alle internationalen Ankünfte die "All Indonesia Arrival Card" — ein digitales Formular, das Zoll- und Gesundheitsangaben zusammenfasst und im Idealfall bereits 1–3 Tage vor Ankunft online ausgefüllt wird. Nach dem Absenden bekommst du einen QR-Code, den du bei der Einreise vorzeigst. Zusätzlich fällt seit Februar 2024 eine Touristenabgabe ("Bali Tourist Levy") von 150.000 IDR pro Person an, die vorab online oder direkt am Flughafen bezahlt werden kann — der Zahlungsbeleg (ebenfalls als QR-Code) sollte während der ganzen Reise griffbereit bleiben, da stichprobenartig kontrolliert wird.</p>
       <h3>Ankunft & Gepäck</h3>
       <p>Nach der Landung geht es zunächst durch die Immigration (bei vorab beantragtem e-VOA oft über die schnelleren E-Gates möglich), danach zur Gepäckausgabe und zum Zoll. Insgesamt solltest du am Flughafen Denpasar je nach Andrang 30 bis 90 Minuten einplanen.</p>
       <h3>Weiter vom Flughafen</h3>
       <p>Vom Flughafen aus geht es am bequemsten mit einem vorab gebuchten privaten Fahrer weiter — genau das kannst du direkt über Rydanu organisieren, mit transparentem Festpreis von Anfang an und ganz ohne Verhandeln direkt am Ausgang, wo die Preise für Touristen erfahrungsgemäß besonders hoch angesetzt werden.</p>
-      <p style="font-size:0.85rem; color:var(--ink-soft);"><em>Einreisebestimmungen ändern sich gelegentlich — für die aktuell gültigen Regeln bitte immer zusätzlich die offizielle Seite der indonesischen Einwanderungsbehörde prüfen.</em></p>`
+      <p style="font-size:0.85rem; color:var(--ink-soft);"><em>Einreisebestimmungen ändern sich gelegentlich — für die aktuell gültigen Regeln bitte immer zusätzlich die offizielle Seite der indonesischen Einwanderungsbehörde prüfen.</em></p>`,
+      en: `${infoImg(34405178,'Plane landing at the airport')}
+      <p>Most international flights land at Ngurah Rai Airport (DPS) near Denpasar in southern Bali. There are no direct flights from Europe or the US — expect a stopover in Doha, Singapore, Kuala Lumpur, Istanbul, or Abu Dhabi. Total travel time including the layover is usually 16–22 hours.</p>
+      <h3>Before you fly: Arrival Card & Tourist Levy</h3>
+      <p>Since 2024, Indonesia requires all international arrivals to complete the "All Indonesia Arrival Card" — a digital form combining customs and health declarations, ideally filled in 1–3 days before arrival. You'll get a QR code to present on arrival. Since February 2024 there's also a Bali Tourist Levy of IDR 150,000 per person, payable online in advance or on arrival — keep the payment confirmation (also a QR code) handy throughout your trip, as spot checks do happen.</p>
+      <h3>Arrival & luggage</h3>
+      <p>After landing you'll go through immigration (e-VOA holders can often use the faster e-gates), then baggage claim and customs. Budget 30–90 minutes at Denpasar airport depending on how busy it is.</p>
+      <h3>Onward from the airport</h3>
+      <p>The easiest way onward is a pre-booked private driver — exactly what you can arrange directly through Rydanu, with a transparent fixed price from the start, no need to haggle right at the exit where prices for tourists tend to run especially high.</p>
+      <p style="font-size:0.85rem; color:var(--ink-soft);"><em>Entry requirements change from time to time — always double-check the current rules on the official Indonesian immigration website before you travel.</em></p>`,
+      id: `${infoImg(34405178,'Pesawat mendarat di bandara')}
+      <p>Sebagian besar penerbangan internasional mendarat di Bandara Ngurah Rai (DPS) dekat Denpasar di selatan Bali. Tidak ada penerbangan langsung dari Eropa — biasanya transit di Doha, Singapura, Kuala Lumpur, Istanbul, atau Abu Dhabi. Total waktu perjalanan termasuk transit biasanya 16–22 jam.</p>
+      <h3>Sebelum berangkat: Kartu Kedatangan & Pungutan Wisatawan</h3>
+      <p>Sejak 2024, Indonesia mewajibkan semua kedatangan internasional mengisi "All Indonesia Arrival Card" — formulir digital yang menggabungkan deklarasi bea cukai dan kesehatan, idealnya diisi 1–3 hari sebelum kedatangan. Setelah mengirim, Anda mendapat kode QR untuk ditunjukkan saat kedatangan. Sejak Februari 2024 juga berlaku Pungutan Wisatawan Bali sebesar 150.000 IDR per orang, dapat dibayar online sebelumnya atau langsung di bandara — simpan bukti pembayaran (juga berupa kode QR) selama perjalanan, karena bisa diperiksa sewaktu-waktu.</p>
+      <h3>Kedatangan & bagasi</h3>
+      <p>Setelah mendarat, Anda akan melewati imigrasi (pemegang e-VOA sering bisa memakai jalur e-gate yang lebih cepat), lalu pengambilan bagasi dan bea cukai. Sisakan waktu 30–90 menit di bandara Denpasar tergantung keramaian.</p>
+      <h3>Lanjut dari bandara</h3>
+      <p>Cara paling nyaman melanjutkan perjalanan adalah dengan pengemudi pribadi yang sudah dipesan sebelumnya — persis yang bisa Anda atur langsung lewat Rydanu, dengan harga tetap dan transparan sejak awal, tanpa perlu tawar-menawar tepat di pintu keluar yang biasanya mematok harga tinggi untuk turis.</p>
+      <p style="font-size:0.85rem; color:var(--ink-soft);"><em>Ketentuan masuk sewaktu-waktu bisa berubah — selalu periksa aturan terbaru di situs resmi imigrasi Indonesia sebelum berangkat.</em></p>`
+    }
   },
   aktivitaeten: {
-    title: '🌴 Aktivitäten & Sehenswürdigkeiten',
-    body: `<p>Bali ist überraschend vielseitig — welche Ecke der Insel am besten passt, hängt stark davon ab, wonach du suchst.</p>
+    title: { de: '🌴 Aktivitäten & Sehenswürdigkeiten', en: '🌴 Activities & Sights', id: '🌴 Aktivitas & Tempat Wisata' },
+    body: {
+      de: `<p>Bali ist überraschend vielseitig — welche Ecke der Insel am besten passt, hängt stark davon ab, wonach du suchst.</p>
       <h3>Ubud — Kultur, Reisterrassen & Wellness</h3>
+      ${infoImg(36828569,'Reisterrassen bei Ubud')}
       <p>Das spirituelle Zentrum der Insel: sattgrüne Reisterrassen (z. B. Tegallalang), der Affenwald, unzählige Yoga-Studios und ein lebendiger Nachtmarkt. Von hier aus sind auch mehrere sehenswerte Wasserfälle wie Tegenungan, Tibumana oder Kanto Lampo gut erreichbar.</p>
       <h3>Uluwatu & die Bukit-Halbinsel — Klippen, Surfen & Sonnenuntergang</h3>
+      ${infoImg(30286799,'Klippen von Uluwatu bei Sonnenuntergang')}
       <p>Der Tempel Pura Luhur Uluwatu thront spektakulär auf einer Steilklippe über dem Indischen Ozean; abends findet dort regelmäßig die traditionelle Kecak-Tanzaufführung vor Sonnenuntergangskulisse statt (für den Tempelbesuch inkl. Vorführung solltest du 2–3 Stunden einplanen). Die Bukit-Halbinsel ist außerdem eines der besten Surf-Reviere Balis mit feinen Sandstränden zum Baden.</p>
       <h3>Norden & Osten — Wasserfälle, Vulkane & ruhigere Küsten</h3>
       <p>Im Norden liegt mit dem Sekumpul-Wasserfall (rund 80 Meter hoch, über gut 350 Stufen erreichbar) einer der eindrucksvollsten Wasserfälle der Insel. Der Vulkan Batur lässt sich für eine Sonnenaufgangswanderung besteigen, und die Ostküste um Amed bietet ruhiges Wasser mit guten Schnorchel- und Tauchspots direkt vor der Küste. Sidemen punktet mit besonders unberührten Reisterrassen und deutlich weniger Trubel als Ubud.</p>
       <h3>Nusa Penida — Tagesausflug</h3>
       <p>Die vorgelagerte Insel Nusa Penida (per Speedboot von Sanur aus erreichbar) ist bekannt für spektakuläre Klippen-Aussichtspunkte wie Kelingking Beach und Angel's Billabong — lohnt sich als ganztägiger Ausflug ab Bali.</p>
-      <p>Ein lokaler Fahrer über Rydanu kennt die besten Routen und weniger überlaufenen Ecken abseits der Touristenpfade — und du musst dich um nichts weiter kümmern als ums Erleben.</p>`
+      <p>Ein lokaler Fahrer über Rydanu kennt die besten Routen und weniger überlaufenen Ecken abseits der Touristenpfade — und du musst dich um nichts weiter kümmern als ums Erleben.</p>`,
+      en: `<p>Bali is surprisingly diverse — which part of the island suits you best depends a lot on what you're after.</p>
+      <h3>Ubud — culture, rice terraces & wellness</h3>
+      ${infoImg(36828569,'Rice terraces near Ubud')}
+      <p>The island's spiritual heart: lush rice terraces (e.g. Tegallalang), the Monkey Forest, countless yoga studios, and a lively night market. Several great waterfalls — Tegenungan, Tibumana, Kanto Lampo — are also within easy reach from here.</p>
+      <h3>Uluwatu & the Bukit Peninsula — cliffs, surfing & sunsets</h3>
+      ${infoImg(30286799,'Uluwatu cliffs at sunset')}
+      <p>Pura Luhur Uluwatu temple sits dramatically on a sea cliff above the Indian Ocean; in the evening it regularly hosts the traditional Kecak fire dance against a sunset backdrop (allow 2–3 hours for the temple visit plus performance). The Bukit Peninsula is also one of Bali's best surf areas, with fine sandy beaches for swimming too.</p>
+      <h3>North & east — waterfalls, volcanoes & quieter coasts</h3>
+      <p>Up north, Sekumpul Waterfall (about 80 metres tall, reached via roughly 350 steps) is one of the island's most impressive. Mount Batur can be climbed for a sunrise hike, and the east coast around Amed offers calm water with good snorkelling and diving right offshore. Sidemen stands out for its especially unspoiled rice terraces and far fewer crowds than Ubud.</p>
+      <h3>Nusa Penida — day trip</h3>
+      <p>The offshore island of Nusa Penida (reachable by speedboat from Sanur) is known for dramatic clifftop viewpoints like Kelingking Beach and Angel's Billabong — well worth a full-day trip from Bali.</p>
+      <p>A local Rydanu driver knows the best routes and the quieter corners off the beaten path — leaving you free to just enjoy the ride.</p>`,
+      id: `<p>Bali ternyata sangat beragam — bagian pulau mana yang paling cocok untuk Anda sangat tergantung apa yang Anda cari.</p>
+      <h3>Ubud — budaya, sawah berundak & wellness</h3>
+      ${infoImg(36828569,'Sawah berundak dekat Ubud')}
+      <p>Pusat spiritual pulau ini: sawah hijau berundak (mis. Tegallalang), Hutan Monyet, banyak studio yoga, dan pasar malam yang hidup. Dari sini juga mudah menjangkau beberapa air terjun indah seperti Tegenungan, Tibumana, atau Kanto Lampo.</p>
+      <h3>Uluwatu & Semenanjung Bukit — tebing, berselancar & matahari terbenam</h3>
+      ${infoImg(30286799,'Tebing Uluwatu saat matahari terbenam')}
+      <p>Pura Luhur Uluwatu berdiri megah di atas tebing menghadap Samudra Hindia; setiap malam biasanya ada pertunjukan Tari Kecak tradisional dengan latar matahari terbenam (sisakan 2–3 jam untuk kunjungan candi plus pertunjukan). Semenanjung Bukit juga salah satu area selancar terbaik di Bali, dengan pantai berpasir halus untuk berenang.</p>
+      <h3>Utara & timur — air terjun, gunung berapi & pantai yang lebih tenang</h3>
+      <p>Di utara, Air Terjun Sekumpul (tinggi sekitar 80 meter, dicapai lewat sekitar 350 anak tangga) adalah salah satu yang paling mengesankan di pulau ini. Gunung Batur bisa didaki untuk melihat matahari terbit, dan pantai timur di sekitar Amed menawarkan air tenang dengan spot snorkeling dan diving yang bagus tepat di lepas pantai. Sidemen unggul dengan sawah berundak yang masih asli dan jauh lebih sepi dibanding Ubud.</p>
+      <h3>Nusa Penida — wisata sehari</h3>
+      <p>Pulau Nusa Penida (dapat dicapai dengan speedboat dari Sanur) terkenal dengan titik pandang tebing dramatis seperti Kelingking Beach dan Angel's Billabong — cocok untuk wisata sehari penuh dari Bali.</p>
+      <p>Pengemudi lokal Rydanu tahu rute terbaik dan sudut-sudut yang lebih sepi di luar jalur wisata biasa — Anda tinggal menikmati perjalanan.</p>`
+    }
   },
   einreise: {
-    title: '🛂 Einreisebestimmungen',
-    body: `<p>Für die meisten Nationalitäten (u. a. Deutschland, Österreich, Schweiz) ist ein Visa on Arrival (VOA) bzw. das elektronische e-VOA für kurze Aufenthalte möglich.</p>
+    title: { de: '🛂 Einreisebestimmungen', en: '🛂 Entry requirements', id: '🛂 Ketentuan Masuk' },
+    body: {
+      de: `${infoImg(4922086,'Reisepass mit Einreisestempeln')}
+      <p>Für die meisten Nationalitäten (u. a. Deutschland, Österreich, Schweiz) ist ein Visa on Arrival (VOA) bzw. das elektronische e-VOA für kurze Aufenthalte möglich.</p>
       <h3>Die wichtigsten Eckdaten</h3>
       <ul>
         <li><strong>Gültigkeitsdauer:</strong> 30 Tage, einmalig um weitere 30 Tage verlängerbar (maximal 60 Tage am Stück).</li>
@@ -4134,11 +4191,43 @@ const INFO_PAGES = {
       <p>Wer das e-VOA bereits online vor dem Abflug erledigt, kommt am Flughafen meist deutlich schneller durch die Immigration — teils über automatisierte E-Gates — statt am Schalter Schlange zu stehen und vor Ort zu bezahlen.</p>
       <h3>Längere Aufenthalte</h3>
       <p>Wer länger als 60 Tage bleiben möchte oder aus einem nicht VOA-berechtigten Land kommt, kann ein B211A-Touristenvisum beantragen (Gesamtdauer bis zu 180 Tage, mehrfach verlängerbar). Weder das B211A- noch ein B211B-Visum erlauben eine bezahlte Tätigkeit in Indonesien — dafür wäre ein KITAS/ITAS mit entsprechender Arbeitserlaubnis nötig.</p>
-      <p style="font-size:0.85rem; color:var(--ink-soft);"><em>Einreisebestimmungen ändern sich gelegentlich und werden zunehmend strenger kontrolliert. Bitte informiere dich vor Abreise immer zusätzlich über die aktuell gültigen Bestimmungen bei der offiziellen indonesischen Einwanderungsbehörde (Direktorat Jenderal Imigrasi) oder der zuständigen Botschaft — diese Seite ersetzt keine Rechtsberatung.</em></p>`
+      <p style="font-size:0.85rem; color:var(--ink-soft);"><em>Einreisebestimmungen ändern sich gelegentlich und werden zunehmend strenger kontrolliert. Bitte informiere dich vor Abreise immer zusätzlich über die aktuell gültigen Bestimmungen bei der offiziellen indonesischen Einwanderungsbehörde (Direktorat Jenderal Imigrasi) oder der zuständigen Botschaft — diese Seite ersetzt keine Rechtsberatung.</em></p>`,
+      en: `${infoImg(4922086,'Passport with entry stamps')}
+      <p>Most nationalities (including the US, UK, EU, Australia) can get a Visa on Arrival (VOA) or the electronic e-VOA for short stays.</p>
+      <h3>The essentials</h3>
+      <ul>
+        <li><strong>Validity:</strong> 30 days, extendable once for another 30 days (60 days maximum).</li>
+        <li><strong>Cost:</strong> the VOA/e-VOA currently costs IDR 500,000, plus the separate Tourist Levy of IDR 150,000 — around IDR 650,000 total per person.</li>
+        <li><strong>Passport:</strong> must be valid for at least 6 months from arrival, with at least 2 blank pages.</li>
+        <li><strong>Onward travel proof:</strong> airlines and/or immigration require a booked return or onward ticket — without it, boarding can be refused.</li>
+        <li><strong>Arrival Card:</strong> the "All Indonesia Arrival Card" (digital customs/health form) should be completed online 1–3 days before arrival.</li>
+      </ul>
+      <h3>Applying for the e-VOA in advance pays off</h3>
+      <p>Getting the e-VOA sorted online before you fly usually means clearing immigration much faster at the airport — sometimes via automated e-gates — instead of queueing and paying at the counter.</p>
+      <h3>Longer stays</h3>
+      <p>If you want to stay longer than 60 days, or your nationality isn't VOA-eligible, you can apply for a B211A tourist visa (total duration up to 180 days, renewable multiple times). Neither the B211A nor the B211B visa permits paid work in Indonesia — that requires a KITAS/ITAS with the appropriate work authorisation.</p>
+      <p style="font-size:0.85rem; color:var(--ink-soft);"><em>Entry requirements change from time to time and enforcement has been getting stricter. Always check the current rules with the official Indonesian immigration authority (Direktorat Jenderal Imigrasi) or your relevant embassy before you travel — this page isn't legal advice.</em></p>`,
+      id: `${infoImg(4922086,'Paspor dengan stempel masuk')}
+      <p>Sebagian besar kewarganegaraan dapat memperoleh Visa on Arrival (VOA) atau e-VOA elektronik untuk kunjungan singkat.</p>
+      <h3>Poin-poin penting</h3>
+      <ul>
+        <li><strong>Masa berlaku:</strong> 30 hari, dapat diperpanjang sekali selama 30 hari lagi (maksimal 60 hari).</li>
+        <li><strong>Biaya:</strong> VOA/e-VOA saat ini 500.000 IDR, ditambah Pungutan Wisatawan terpisah sebesar 150.000 IDR — total sekitar 650.000 IDR per orang.</li>
+        <li><strong>Paspor:</strong> harus berlaku minimal 6 bulan sejak kedatangan, dengan minimal 2 halaman kosong.</li>
+        <li><strong>Bukti perjalanan lanjutan:</strong> maskapai dan/atau imigrasi mensyaratkan tiket pulang atau lanjutan yang sudah dipesan — tanpa itu, boarding bisa ditolak.</li>
+        <li><strong>Kartu Kedatangan:</strong> "All Indonesia Arrival Card" (formulir digital bea cukai/kesehatan) sebaiknya diisi online 1–3 hari sebelum kedatangan.</li>
+      </ul>
+      <h3>Mengurus e-VOA lebih awal sangat membantu</h3>
+      <p>Mengurus e-VOA secara online sebelum terbang biasanya membuat proses imigrasi di bandara jauh lebih cepat — kadang lewat e-gate otomatis — daripada mengantre dan membayar di loket.</p>
+      <h3>Tinggal lebih lama</h3>
+      <p>Jika ingin tinggal lebih dari 60 hari, atau kewarganegaraan Anda tidak memenuhi syarat VOA, Anda bisa mengajukan visa turis B211A (total durasi hingga 180 hari, dapat diperpanjang berkali-kali). Baik visa B211A maupun B211B tidak mengizinkan bekerja berbayar di Indonesia — untuk itu diperlukan KITAS/ITAS dengan izin kerja yang sesuai.</p>
+      <p style="font-size:0.85rem; color:var(--ink-soft);"><em>Ketentuan masuk sewaktu-waktu berubah dan pengawasannya semakin ketat. Selalu periksa aturan terbaru di otoritas imigrasi resmi Indonesia (Direktorat Jenderal Imigrasi) atau kedutaan terkait sebelum berangkat — halaman ini bukan nasihat hukum.</em></p>`
+    }
   },
   reisetipps: {
-    title: '💡 Reise-Tipps für Bali',
-    body: `<p>Ein paar praktische Dinge, die eine Bali-Reise spürbar entspannter machen.</p>
+    title: { de: '💡 Reise-Tipps für Bali', en: '💡 Bali travel tips', id: '💡 Tips Perjalanan Bali' },
+    body: {
+      de: `<p>Ein paar praktische Dinge, die eine Bali-Reise spürbar entspannter machen.</p>
       <h3>Geld & Bezahlen</h3>
       <p>Landeswährung ist der indonesische Rupiah (IDR). In Restaurants, größeren Läden und bei Fahrern läuft vieles inzwischen auch über QRIS (den lokalen QR-Code-Zahlungsstandard), an kleineren Warungs und auf lokalen Märkten wird aber weiterhin oft nur bar bezahlt.</p>
       <!-- Affiliate-Platzhalter (Kreditkarte): sobald registriert, hier eine Empfehlung für eine reisetaugliche Kreditkarte ohne Auslandsgebühren einfügen -->
@@ -4146,6 +4235,7 @@ const INFO_PAGES = {
       <p>Eine lokale SIM-Karte oder eSIM lohnt sich für Navigation, Übersetzungs-Apps und Erreichbarkeit — die Netzabdeckung der großen indonesischen Anbieter ist auf Bali durchgehend gut.</p>
       <!-- Affiliate-Platzhalter (eSIM): sobald registriert, hier einen eSIM-Anbieter für Bali/Indonesien verlinken -->
       <h3>Kleidung & Verhalten bei Tempelbesuchen</h3>
+      ${infoImg(10038998,'Sarong beim Tempelbesuch')}
       <p>Beim Tempelbesuch wird respektvolle Kleidung erwartet — Schultern und Knie bedeckt. Ein Sarong (Wickeltuch) wird an den meisten Tempeln vor Ort kostenlos oder gegen kleine Spende gestellt.</p>
       <h3>Verhandeln</h3>
       <p>Beim informellen Handel auf Märkten und mit freien Anbietern ist Verhandeln üblich und wird nicht als unhöflich empfunden. Bei Rydanu legt dagegen jeder Fahrer seinen Preis von Anfang an transparent fest — kein Feilschen nötig.</p>
@@ -4153,11 +4243,48 @@ const INFO_PAGES = {
       <p>Leitungswasser sollte nicht getrunken werden, abgefülltes oder gefiltertes Wasser ist überall erhältlich. Eine Auslandskrankenversicherung mit Rücktransport-Absicherung ist für Indonesien dringend empfehlenswert, da die gesetzliche Krankenversicherung im Ausland meist nicht oder nur eingeschränkt greift.</p>
       <!-- Affiliate-Platzhalter (Reiseversicherung): sobald registriert, hier einen Reiseversicherungsanbieter verlinken -->
       <h3>Unterwegs auf der Insel</h3>
-      <p>Roller-Vermietung ist günstig und verbreitet, verlangt aber einen internationalen Führerschein, umsichtiges Fahren im teils chaotischen Verkehr und ist bei Regen/auf schlechten Straßen nicht ohne Risiko. Wer es entspannter mag oder zu mehreens unterwegs ist, bucht sich lieber einen privaten Fahrer über Rydanu — flexibel stundenweise oder für einen ganzen Tagesausflug.</p>`
+      <p>Roller-Vermietung ist günstig und verbreitet, verlangt aber einen internationalen Führerschein, umsichtiges Fahren im teils chaotischen Verkehr und ist bei Regen/auf schlechten Straßen nicht ohne Risiko. Wer es entspannter mag oder zu mehreren unterwegs ist, bucht sich lieber einen privaten Fahrer über Rydanu — flexibel stundenweise oder für einen ganzen Tagesausflug.</p>`,
+      en: `<p>A few practical things that make a Bali trip noticeably easier.</p>
+      <h3>Money & payments</h3>
+      <p>The local currency is the Indonesian Rupiah (IDR). Restaurants, larger shops, and drivers increasingly accept QRIS (Indonesia's local QR-code payment standard), but smaller warungs and local markets still mostly run on cash.</p>
+      <!-- Affiliate placeholder (credit card): once registered, add a recommendation for a travel-friendly card with no foreign transaction fees -->
+      <h3>Staying connected</h3>
+      <p>A local SIM or eSIM is worth it for navigation, translation apps, and staying reachable — coverage from the major Indonesian networks is solid across Bali.</p>
+      <!-- Affiliate placeholder (eSIM): once registered, link an eSIM provider for Bali/Indonesia here -->
+      <h3>Dress & etiquette at temples</h3>
+      ${infoImg(10038998,'Sarong worn at a temple visit')}
+      <p>Temples expect modest dress — shoulders and knees covered. Most temples provide a sarong on-site for free or a small donation.</p>
+      <h3>Bargaining</h3>
+      <p>Haggling is normal and expected in informal markets and with independent vendors — it's not considered rude. Rydanu drivers, on the other hand, set a transparent price upfront — no bargaining needed.</p>
+      <h3>Health & insurance</h3>
+      <p>Don't drink tap water — bottled or filtered water is available everywhere. Travel health insurance with medical evacuation cover is strongly recommended for Indonesia, since domestic health insurance rarely covers you abroad, or only partially.</p>
+      <!-- Affiliate placeholder (travel insurance): once registered, link a travel insurance provider here -->
+      <h3>Getting around the island</h3>
+      <p>Scooter rentals are cheap and common, but require an international driving permit, careful riding in sometimes chaotic traffic, and carry real risk in the rain or on rough roads. If you'd rather relax or you're travelling as a group, booking a private driver through Rydanu is the easier option — flexible by the hour or for a full day trip.</p>`,
+      id: `<p>Beberapa hal praktis yang membuat perjalanan ke Bali jauh lebih santai.</p>
+      <h3>Uang & pembayaran</h3>
+      <p>Mata uang lokal adalah Rupiah (IDR). Restoran, toko besar, dan pengemudi kini banyak menerima QRIS, tapi warung kecil dan pasar lokal umumnya masih mengandalkan tunai.</p>
+      <!-- Placeholder afiliasi (kartu kredit): setelah terdaftar, tambahkan rekomendasi kartu yang ramah untuk perjalanan tanpa biaya transaksi luar negeri -->
+      <h3>Tetap terhubung</h3>
+      <p>SIM lokal atau eSIM sangat berguna untuk navigasi, aplikasi terjemahan, dan tetap bisa dihubungi — jangkauan operator besar Indonesia cukup baik di seluruh Bali.</p>
+      <!-- Placeholder afiliasi (eSIM): setelah terdaftar, tautkan penyedia eSIM untuk Bali/Indonesia di sini -->
+      <h3>Pakaian & etika saat mengunjungi pura</h3>
+      ${infoImg(10038998,'Sarung dikenakan saat kunjungan pura')}
+      <p>Pura mengharapkan pakaian sopan — bahu dan lutut tertutup. Sebagian besar pura menyediakan sarung di tempat secara gratis atau dengan donasi kecil.</p>
+      <h3>Tawar-menawar</h3>
+      <p>Tawar-menawar hal biasa di pasar informal dan dengan penjual mandiri — bukan dianggap tidak sopan. Sebaliknya, pengemudi Rydanu menetapkan harga transparan sejak awal — tidak perlu tawar-menawar.</p>
+      <h3>Kesehatan & asuransi</h3>
+      <p>Jangan minum air keran — air kemasan atau air saring tersedia di mana-mana. Asuransi kesehatan perjalanan dengan perlindungan evakuasi medis sangat disarankan untuk Indonesia, karena asuransi kesehatan domestik jarang mencakup Anda di luar negeri, atau hanya sebagian.</p>
+      <!-- Placeholder afiliasi (asuransi perjalanan): setelah terdaftar, tautkan penyedia asuransi perjalanan di sini -->
+      <h3>Berkeliling pulau</h3>
+      <p>Sewa skuter murah dan umum, tetapi memerlukan SIM internasional, berkendara hati-hati di lalu lintas yang kadang kacau, dan berisiko saat hujan atau di jalan rusak. Jika ingin lebih santai atau bepergian berkelompok, memesan pengemudi pribadi lewat Rydanu adalah pilihan yang lebih mudah — fleksibel per jam atau untuk wisata sehari penuh.</p>`
+    }
   },
   reisezeit: {
-    title: '☀️ Beste Reisezeit für Bali',
-    body: `<p>Bali liegt nahe am Äquator und hat daher kein klassisches Vier-Jahreszeiten-Klima, sondern eine Trocken- und eine Regenzeit. Die Temperaturen bleiben ganzjährig bei angenehm-warmen 27 bis 33 °C, in höher gelegenen Regionen wie Ubud oder am Vulkan etwas kühler.</p>
+    title: { de: '☀️ Beste Reisezeit für Bali', en: '☀️ Best time to visit Bali', id: '☀️ Waktu Terbaik Berkunjung ke Bali' },
+    body: {
+      de: `${infoImg(31973189,'Sonnenuntergang am Strand auf Bali')}
+      <p>Bali liegt nahe am Äquator und hat daher kein klassisches Vier-Jahreszeiten-Klima, sondern eine Trocken- und eine Regenzeit. Die Temperaturen bleiben ganzjährig bei angenehm-warmen 27 bis 33 °C, in höher gelegenen Regionen wie Ubud oder am Vulkan etwas kühler.</p>
       <h3>Trockenzeit: April bis Oktober</h3>
       <p>Gilt allgemein als beste Reisezeit, mit den wenigsten Niederschlägen zwischen Juni und September. Ideal für Strand, Wandern, Tempelbesichtigungen und generell alles, was gutes Wetter braucht. Juli und August sind gleichzeitig Hochsaison — entsprechend voller und mit höheren Unterkunftspreisen.</p>
       <h3>Regenzeit: November bis März</h3>
@@ -4168,20 +4295,75 @@ const INFO_PAGES = {
         <li><strong>Tauchen & Schnorcheln:</strong> ganzjährig möglich (Wassertemperatur ca. 27–29 °C), aber zwischen April und Oktober meist klarere Sicht.</li>
         <li><strong>Vulkanwanderungen (Batur):</strong> in der Trockenzeit deutlich angenehmer und sicherer als bei rutschigen Pfaden in der Regenzeit.</li>
       </ul>
-      <p>Egal zu welcher Jahreszeit — ein Fahrer über Rydanu kennt die Insel bei jedem Wetter und passt die Route bei Bedarf spontan an.</p>`
+      <p>Egal zu welcher Jahreszeit — ein Fahrer über Rydanu kennt die Insel bei jedem Wetter und passt die Route bei Bedarf spontan an.</p>`,
+      en: `${infoImg(31973189,'Beach sunset in Bali')}
+      <p>Bali sits close to the equator, so it doesn't have four classic seasons — just a dry season and a wet season. Temperatures stay a pleasant 27–33°C (80–91°F) year-round, a bit cooler in higher areas like Ubud or near the volcano.</p>
+      <h3>Dry season: April to October</h3>
+      <p>Generally considered the best time to visit, with the least rain between June and September. Great for the beach, hiking, temple visits, and anything that needs good weather. July and August are also peak season — expect more crowds and higher accommodation prices.</p>
+      <h3>Wet season: November to March</h3>
+      <p>Usually short, heavy showers, often in the afternoon, with plenty of sunny spells in between — not constant rain. The heaviest rainfall is between December and February. Upside: far fewer tourists and lower prices. Northern Bali (shielded by the central mountains) tends to get less rain than the south during this period.</p>
+      <h3>By activity</h3>
+      <ul>
+        <li><strong>Surfing:</strong> best conditions on the west/south coast (e.g. Uluwatu, Canggu) between May and September.</li>
+        <li><strong>Diving & snorkelling:</strong> possible year-round (water temp around 27–29°C), but visibility is usually clearer April–October.</li>
+        <li><strong>Volcano hikes (Batur):</strong> noticeably more pleasant and safer in the dry season than on slippery trails during the rains.</li>
+      </ul>
+      <p>Whatever the season, a Rydanu driver knows the island in any weather and can adjust the route on the fly if needed.</p>`,
+      id: `${infoImg(31973189,'Matahari terbenam di pantai Bali')}
+      <p>Bali berada dekat garis khatulistiwa, jadi tidak memiliki empat musim klasik — hanya musim kemarau dan musim hujan. Suhu tetap nyaman sekitar 27–33°C sepanjang tahun, sedikit lebih sejuk di daerah dataran tinggi seperti Ubud atau dekat gunung berapi.</p>
+      <h3>Musim kemarau: April hingga Oktober</h3>
+      <p>Umumnya dianggap waktu terbaik untuk berkunjung, dengan curah hujan paling sedikit antara Juni dan September. Cocok untuk pantai, hiking, kunjungan pura, dan aktivitas apa pun yang butuh cuaca cerah. Juli dan Agustus juga musim puncak — jadi lebih ramai dan harga akomodasi lebih tinggi.</p>
+      <h3>Musim hujan: November hingga Maret</h3>
+      <p>Biasanya hujan deras tapi singkat, sering di sore hari, diselingi banyak waktu cerah — bukan hujan terus-menerus. Curah hujan terbanyak antara Desember dan Februari. Kelebihannya: jauh lebih sedikit turis dan harga lebih rendah. Bali utara (terlindung oleh pegunungan tengah) cenderung mendapat hujan lebih sedikit dibanding selatan pada periode ini.</p>
+      <h3>Berdasarkan aktivitas</h3>
+      <ul>
+        <li><strong>Berselancar:</strong> kondisi terbaik di pantai barat/selatan (mis. Uluwatu, Canggu) antara Mei dan September.</li>
+        <li><strong>Menyelam & snorkeling:</strong> bisa sepanjang tahun (suhu air sekitar 27–29°C), tapi visibilitas biasanya lebih jernih April–Oktober.</li>
+        <li><strong>Pendakian gunung berapi (Batur):</strong> jauh lebih nyaman dan aman di musim kemarau dibanding jalur licin saat musim hujan.</li>
+      </ul>
+      <p>Apa pun musimnya, pengemudi Rydanu mengenal pulau ini dalam cuaca apa pun dan bisa menyesuaikan rute secara spontan jika diperlukan.</p>`
+    }
   },
   lombok: {
-    title: '🏝️ Lombok entdecken',
-    body: `<p>Balis östliche Nachbarinsel Lombok wird oft "die kleine Schwester Balis" genannt, ist touristisch aber deutlich weniger erschlossen — mehr ursprüngliche Natur, ruhigere Strände, weniger Trubel.</p>
+    title: { de: '🏝️ Lombok entdecken', en: '🏝️ Discovering Lombok', id: '🏝️ Menjelajahi Lombok' },
+    body: {
+      de: `<p>Balis östliche Nachbarinsel Lombok wird oft "die kleine Schwester Balis" genannt, ist touristisch aber deutlich weniger erschlossen — mehr ursprüngliche Natur, ruhigere Strände, weniger Trubel.</p>
       <h3>Anreise</h3>
       <p>Von Bali aus geht es entweder per Schnellboot (z. B. ab Padang Bai oder Sanur, ca. 1,5–2 Stunden) oder per Kurzstreckenflug nach Lombok. Wer beide Inseln kombinieren möchte, kann Lombok gut als Verlängerung an eine Bali-Reise anhängen.</p>
       <h3>Gunung Rinjani</h3>
+      ${infoImg(4552428,'Kratersee des Vulkans Rinjani')}
       <p>Mit 3.726 Metern der zweithöchste Vulkan Indonesiens und eines der großen Trekking-Highlights der Region. Im Krater liegt der als heilig geltende See Segara Anak. Für die Besteigung solltest du je nach Route 2 bis 4 Tage einplanen, am besten in der Trockenzeit zwischen Mai und Oktober — die Landschaft ist dann kurz nach der Regenzeit (Mai/Juni) besonders grün.</p>
       <h3>Die Gili-Inseln</h3>
+      ${infoImg(36956255,'Kristallklares Wasser bei Gili Air')}
       <p>Die drei bekanntesten vorgelagerten Inseln — Gili Trawangan (Party & Nachtleben), Gili Meno (ruhig, romantisch) und Gili Air (guter Mix aus beidem) — sind komplett autofrei; unterwegs ist man dort per Fahrrad oder Pferdekutsche. Für mehr Ruhe abseits des Trubels lohnt sich ein Blick auf die weniger bekannten "Secret Gilis".</p>
       <h3>Strände & Kuta Lombok</h3>
       <p>Kuta Lombok im Süden hat sich zu einem beliebten, aber noch überschaubaren Ziel für Surfer und Backpacker entwickelt, mit Traumstränden wie Selong Belanak und Tanjung Aan in der Nähe.</p>
-      <p>Auch auf Lombok sind lokale Rydanu-Fahrer buchbar — praktisch für Transfers zwischen Flughafen, Hafen und den verstreuten Ecken der Insel.</p>`
+      <p>Auch auf Lombok sind lokale Rydanu-Fahrer buchbar — praktisch für Transfers zwischen Flughafen, Hafen und den verstreuten Ecken der Insel.</p>`,
+      en: `<p>Bali's eastern neighbour Lombok is often called "Bali's little sister," but it's much less developed for tourism — more untouched nature, quieter beaches, less hustle.</p>
+      <h3>Getting there</h3>
+      <p>From Bali you can go by fast boat (e.g. from Padang Bai or Sanur, roughly 1.5–2 hours) or a short flight to Lombok. If you want to combine both islands, Lombok makes a great extension to a Bali trip.</p>
+      <h3>Mount Rinjani</h3>
+      ${infoImg(4552428,'Crater lake of Mount Rinjani')}
+      <p>At 3,726 metres, Indonesia's second-highest volcano and one of the region's biggest trekking draws. Its crater holds the sacred Segara Anak lake. Plan 2–4 days for the climb depending on the route, ideally in the dry season between May and October — the landscape is especially green shortly after the rains (May/June).</p>
+      <h3>The Gili Islands</h3>
+      ${infoImg(36956255,'Crystal-clear water off Gili Air')}
+      <p>The three best-known offshore islands — Gili Trawangan (nightlife), Gili Meno (quiet, romantic) and Gili Air (a good mix of both) — are entirely car-free; getting around means bicycle or horse cart. For more peace and quiet off the beaten path, check out the lesser-known "Secret Gilis."</p>
+      <h3>Beaches & Kuta Lombok</h3>
+      <p>Kuta Lombok in the south has become a popular but still manageable spot for surfers and backpackers, with dreamy beaches like Selong Belanak and Tanjung Aan nearby.</p>
+      <p>Local Rydanu drivers are bookable on Lombok too — handy for transfers between the airport, harbour, and the island's scattered corners.</p>`,
+      id: `<p>Tetangga timur Bali, Lombok, sering disebut "adik kecil Bali", tapi jauh lebih belum berkembang secara wisata — alam lebih alami, pantai lebih tenang, lebih sedikit keramaian.</p>
+      <h3>Cara menuju ke sana</h3>
+      <p>Dari Bali Anda bisa naik speedboat (mis. dari Padang Bai atau Sanur, sekitar 1,5–2 jam) atau penerbangan singkat ke Lombok. Jika ingin menggabungkan kedua pulau, Lombok cocok sebagai perpanjangan perjalanan dari Bali.</p>
+      <h3>Gunung Rinjani</h3>
+      ${infoImg(4552428,'Danau kawah Gunung Rinjani')}
+      <p>Dengan ketinggian 3.726 meter, ini gunung berapi tertinggi kedua di Indonesia dan salah satu daya tarik trekking terbesar di kawasan ini. Di kawahnya terdapat danau suci Segara Anak. Sisakan 2–4 hari untuk pendakian tergantung rute, idealnya di musim kemarau antara Mei dan Oktober — lanskap paling hijau tak lama setelah musim hujan (Mei/Juni).</p>
+      <h3>Pulau-pulau Gili</h3>
+      ${infoImg(36956255,'Air jernih di Gili Air')}
+      <p>Tiga pulau terluar yang paling terkenal — Gili Trawangan (kehidupan malam), Gili Meno (tenang, romantis) dan Gili Air (perpaduan keduanya) — sepenuhnya bebas kendaraan bermotor; berkeliling memakai sepeda atau delman. Untuk ketenangan lebih jauh dari keramaian, coba lihat "Secret Gilis" yang kurang dikenal.</p>
+      <h3>Pantai & Kuta Lombok</h3>
+      <p>Kuta Lombok di selatan telah menjadi tujuan populer namun masih tidak terlalu ramai bagi peselancar dan backpacker, dengan pantai indah seperti Selong Belanak dan Tanjung Aan di dekatnya.</p>
+      <p>Pengemudi lokal Rydanu juga bisa dipesan di Lombok — praktis untuk transfer antara bandara, pelabuhan, dan sudut-sudut pulau yang tersebar.</p>`
+    }
   }
 };
 function toggleSeoMenu(){
@@ -4197,12 +4379,22 @@ function openInfoPage(pageId){
   if(!page) return;
   closeSeoMenu();
   document.querySelectorAll('.modal-bg.active').forEach(m => m.classList.remove('active'));
-  document.getElementById('info-page-title').textContent = page.title;
-  document.getElementById('info-page-body').innerHTML = page.body;
+  const lang = (typeof currentLang !== 'undefined' && page.title[currentLang]) ? currentLang : 'en';
+  document.getElementById('info-page-title').textContent = page.title[lang];
+  document.getElementById('info-page-body').innerHTML = page.body[lang];
   document.getElementById('info-page').style.display = 'block';
   document.getElementById('info-page').scrollTop = 0;
 }
-function closeInfoPage(){ document.getElementById('info-page').style.display = 'none'; }
+// Bugfix (11. August): "Zurück" auf einer Ratgeberseite sprang bisher direkt zur Startseite, statt
+// wieder das SEO-Menü zu oeffnen, aus dem man ja gerade kam. Jetzt: "Zurück" -> zurueck ins Menue (so
+// kann man direkt eine andere Unterseite waehlen); klickt man von dort NICHT auf einen weiteren
+// Menuepunkt, sondern daneben (Overlay), schliesst sich das Menue ueber den bestehenden
+// closeSeoMenu()-Mechanismus und man landet auf der Startseite.
+function closeInfoPage(){
+  document.getElementById('info-page').style.display = 'none';
+  document.getElementById('seo-menu-overlay').classList.add('active');
+  document.getElementById('seo-menu-panel').classList.add('active');
+}
 
 // Baustein F (internes Rydanu-Bewertungssystem): oeffentliche Sterne-Bewertungen fuer Rydanu als
 // Plattform, getrennt von den bestehenden Fahrer-Bewertungen. Kein Login noetig, jeder kann lesen
@@ -14539,7 +14731,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v219</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v220</div>
 
 </body>
 </html>
