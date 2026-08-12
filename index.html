@@ -4195,11 +4195,19 @@ function infoCta(lang){
     id: { title: 'Rencanakan dengan tenang sebelumnya', text: 'Pesan transfer Anda langsung di muka lewat Rydanu — harga tetap yang transparan, tanpa tawar-menawar, tanpa repot di pelabuhan atau bandara.', btn: 'Pesan perjalanan sekarang' }
   };
   const c = t[lang] || t.en;
-  return `<div class="info-cta-box" onclick="closeInfoPage(); goHome();">
+  return `<div class="info-cta-box" onclick="goToBookingFromInfoPage();">
     <img src="${RYVIO_LOGO_WORDMARK}" alt="Rydanu" class="info-cta-logo">
     <div class="info-cta-text"><strong>${c.title}</strong><p>${c.text}</p></div>
     <span class="info-cta-btn">${c.btn} →</span>
   </div>`;
+}
+// Zuverlaessiger Sprung von einer Ratgeberseite direkt zur Buchungs-Startseite (12. August, Bugfix):
+// schliesst Ratgeberseite UND das Hamburger-SEO-Menue explizit, statt sich darauf zu verlassen,
+// dass Letzteres bereits zu ist -- verhindert, dass man nach dem Klick im SEO-Menue landet.
+function goToBookingFromInfoPage(){
+  closeInfoPage();
+  closeSeoMenu();
+  goHome();
 }
 const INFO_EYEBROW = { de: 'Rydanu Reiseführer', en: 'Rydanu Travel Guide', id: 'Panduan Rydanu' };
 const INFO_BACK_BOTTOM_LABEL = { de: 'Zurück zur Übersicht', en: 'Back to overview', id: 'Kembali ke ringkasan' };
@@ -4457,7 +4465,7 @@ const INFO_PAGES = {
     }
   },
   transport: {
-    heroId: 18728499, heroAlt: { de: 'Roller-Fahrer auf Bali', en: 'Motorbike rider in Bali', id: 'Pengendara motor di Bali' },
+    heroId: 37298617, heroAlt: { de: 'Straße auf Bali in der Abenddämmerung', en: 'A street in Bali at dusk', id: 'Jalanan di Bali saat senja' },
     title: { de: '🚕 Transport auf Bali', en: '🚕 Getting around Bali', id: '🚕 Transportasi di Bali' },
     body: {
       de: `<p>Bali hat kein klassisches öffentliches Nahverkehrsnetz, wie man es vielleicht aus Europa kennt — keine U-Bahn und kaum Buslinien, die wirklich jeden Ort abdecken. Ein paar Ausnahmen wie die Busse Trans Metro Dewata oder Trans Sarbagita gibt es zwar, sie decken aber nur einzelne Korridore rund um Denpasar, Kuta, Sanur und Nusa Dua ab. Für die meisten beliebten Reiseziele der Insel — Ubud, Uluwatu, der Norden oder Osten — sind sie keine echte Option.</p>
@@ -14888,7 +14896,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v226</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v227</div>
 
 </body>
 </html>
