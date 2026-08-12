@@ -2681,6 +2681,10 @@
       <div class="form-field" id="ep-push-field" style="display:none; background:var(--teal-soft); border:1px solid var(--teal); border-radius:10px; padding:12px 14px;">
         <label class="nl-service-check" style="margin-bottom:0;"><input type="checkbox" id="ep-push-toggle"> <span data-i18n-html="ep_push_toggle_label">Push notifications for new requests (e.g. <span style="white-space:nowrap;">Villa Partner bookings</span>)</span></label>
       </div>
+      <div class="form-field" style="background:var(--teal-soft); border:1px solid var(--teal); border-radius:10px; padding:12px 14px;">
+        <label class="nl-service-check" style="margin-bottom:0;"><input type="checkbox" id="ep-villa-optin-toggle"> <span data-i18n="ep_villa_optin_label">I want to receive exclusive Villa Partner tour requests from customers</span></label>
+        <p class="conditions-hint" style="margin-top:6px; margin-bottom:0;" data-i18n="ep_villa_optin_hint">On: you'll see and get notified about every open Villa Partner request island-wide, regardless of your region. Off: none.</p>
+      </div>
       <div class="form-field">
         <label data-i18n="rd_serviceregions_label">Regions you serve</label>
         <div class="chip-row" data-group="ep-serviceregions">
@@ -9109,6 +9113,9 @@ function openEditProfileReal(){
   supabaseClient.from('push_subscriptions').select('id').eq('driver_id', d.id).eq('active', true).limit(1).maybeSingle().then(({data})=>{
     document.getElementById('ep-push-toggle').checked = !!data;
   });
+  // v217: Opt-in-Schalter fuer Villa-Anfragen ohne Regionen-Radius -- direkt aus dem geladenen
+  // Fahrerprofil, kein Extra-Request noetig (im Gegensatz zum Push-Status oben).
+  document.getElementById('ep-villa-optin-toggle').checked = !!d.villa_exclusive_opt_in;
   document.getElementById('edit-profile-modal-bg').classList.add('active');
 }
 function closeEditProfile(){ document.getElementById('edit-profile-modal-bg').classList.remove('active'); }
@@ -9186,7 +9193,8 @@ async function saveEditProfileReal(){
     document.getElementById('ep-error').textContent = t('rd_serviceregions_err');
     return;
   }
-  // service_regions ist jetzt die Quelle fuer echtes Matching (auch Villa-Partner-Anfragen);
+  // service_regions dient aktuell keinem aktiven Matching mehr (v217: Villa-Partner-Anfragen nutzen
+  // seit dem Wegfall des Regionen-Radius stattdessen den Opt-in-Schalter villa_exclusive_opt_in);
   // home_area bleibt als einzelner Anzeige-Wert bestehen (erste gewaehlte Region), damit bestehende
   // Anzeigen (z.B. "🚩 Ubud" auf dem Profil) weiterhin funktionieren.
   const service_regions = [...epSelectedServiceRegions];
@@ -9209,11 +9217,12 @@ async function saveEditProfileReal(){
     link: document.getElementById('ep-paylink').value.trim()
   };
   const phone = document.getElementById('ep-phone').value.trim();
+  const villa_exclusive_opt_in = document.getElementById('ep-villa-optin-toggle').checked;
 
   document.getElementById('ep-error').textContent = '';
   const { data, error } = await supabaseClient
     .from('drivers')
-    .update({ name, home_area, service_regions, languages, services, vehicle, payment, phone })
+    .update({ name, home_area, service_regions, languages, services, vehicle, payment, phone, villa_exclusive_opt_in })
     .eq('id', realDriverProfile.id)
     .select()
     .single();
@@ -9489,10 +9498,10 @@ const translations = {
     pay_link_label: "Open driver's payment link",
     
     rd_paylink_label: "Payment link for customers who prefer to pay digitally (Wise / Revolut / PayPal) — optional",
-    rd_qris_label: "I accept QRIS (GoPay / OVO / DANA)", ep_push_toggle_label: "Push notifications for new requests (e.g. <span style=\"white-space:nowrap;\">Villa Partner bookings</span>)",
+    rd_qris_label: "I accept QRIS (GoPay / OVO / DANA)", ep_push_toggle_label: "Push notifications for new requests (e.g. <span style=\"white-space:nowrap;\">Villa Partner bookings</span>)", ep_villa_optin_label: "I want to receive exclusive Villa Partner tour requests from customers", ep_villa_optin_hint: "On: you'll see and get notified about every open Villa Partner request island-wide, regardless of your region. Off: none.",
     pay_confirm_btn: "Submit booking request",
     rd_name_label: "Full name",
-    rd_homeregion_label: "Home region", rd_serviceregions_label: "Regions you serve", rd_serviceregions_hint: "Used to match you with nearby pickup requests — including Villa Partner bookings.", rd_serviceregions_err: "Please select at least one region.",
+    rd_homeregion_label: "Home region", rd_serviceregions_label: "Regions you serve", rd_serviceregions_hint: "Used to match you with nearby pickup requests. Villa Partner requests are matched separately (see below).", rd_serviceregions_err: "Please select at least one region.",
     rd_lang_label: "Languages spoken",
     rd_docs_title: "Upload your documents — all 4 are mandatory. Your registration is only forwarded once everything is uploaded.",
     rd_doc_license: "Driver's license *",
@@ -9814,10 +9823,10 @@ const translations = {
     pay_link_label: "Zahlungslink des Fahrers öffnen",
     
     rd_paylink_label: "Zahlungslink für Gäste, die lieber digital bezahlen (Wise / Revolut / PayPal) — optional",
-    rd_qris_label: "Ich akzeptiere QRIS (GoPay / OVO / DANA)", ep_push_toggle_label: "Push-Benachrichtigungen für neue Anfragen (z.B. <span style=\"white-space:nowrap;\">Villa-Partner-Buchungen</span>)",
+    rd_qris_label: "Ich akzeptiere QRIS (GoPay / OVO / DANA)", ep_push_toggle_label: "Push-Benachrichtigungen für neue Anfragen (z.B. <span style=\"white-space:nowrap;\">Villa-Partner-Buchungen</span>)", ep_villa_optin_label: "Ich möchte exklusive Villa-Partner-Touranfragen von Kunden erhalten", ep_villa_optin_hint: "An: du siehst jede offene Villa-Partner-Anfrage inselweit und wirst benachrichtigt, egal in welcher Region. Aus: keine.",
     pay_confirm_btn: "Buchungsanfrage absenden",
     rd_name_label: "Vollständiger Name",
-    rd_homeregion_label: "Heimatregion", rd_serviceregions_label: "Regionen, die du bedienst", rd_serviceregions_hint: "Wird genutzt, um dich mit passenden Abholanfragen in der Nähe zu matchen — auch Villa-Partner-Buchungen.", rd_serviceregions_err: "Bitte mindestens eine Region auswählen.",
+    rd_homeregion_label: "Heimatregion", rd_serviceregions_label: "Regionen, die du bedienst", rd_serviceregions_hint: "Wird genutzt, um dich mit passenden Abholanfragen in der Nähe zu matchen. Villa-Partner-Anfragen laufen separat (siehe unten).", rd_serviceregions_err: "Bitte mindestens eine Region auswählen.",
     rd_lang_label: "Gesprochene Sprachen",
     rd_docs_title: "Hier deine Dokumente hochladen — alle 4 sind verpflichtend. Erst wenn alles hochgeladen ist, wird die Registrierung weitergeleitet.",
     rd_doc_license: "Führerschein *",
@@ -10139,10 +10148,10 @@ const translations = {
     pay_link_label: "Buka tautan pembayaran sopir",
     
     rd_paylink_label: "Tautan pembayaran untuk tamu yang lebih suka membayar secara digital (Wise / Revolut / PayPal) — opsional",
-    rd_qris_label: "Saya menerima QRIS (GoPay / OVO / DANA)", ep_push_toggle_label: "Notifikasi push untuk permintaan baru (mis. <span style=\"white-space:nowrap;\">booking Villa Partner</span>)",
+    rd_qris_label: "Saya menerima QRIS (GoPay / OVO / DANA)", ep_push_toggle_label: "Notifikasi push untuk permintaan baru (mis. <span style=\"white-space:nowrap;\">booking Villa Partner</span>)", ep_villa_optin_label: "Saya ingin menerima permintaan tur Villa Partner eksklusif dari pelanggan", ep_villa_optin_hint: "Aktif: Anda akan melihat dan diberi tahu tentang setiap permintaan Villa Partner terbuka di seluruh pulau, terlepas dari wilayah Anda. Nonaktif: tidak ada.",
     pay_confirm_btn: "Kirim permintaan pemesanan",
     rd_name_label: "Nama lengkap",
-    rd_homeregion_label: "Wilayah asal", rd_serviceregions_label: "Wilayah yang Anda layani", rd_serviceregions_hint: "Digunakan untuk mencocokkan Anda dengan permintaan penjemputan terdekat — termasuk booking Villa Partner.", rd_serviceregions_err: "Silakan pilih setidaknya satu wilayah.",
+    rd_homeregion_label: "Wilayah asal", rd_serviceregions_label: "Wilayah yang Anda layani", rd_serviceregions_hint: "Digunakan untuk mencocokkan Anda dengan permintaan penjemputan terdekat. Permintaan Villa Partner dicocokkan secara terpisah (lihat di bawah).", rd_serviceregions_err: "Silakan pilih setidaknya satu wilayah.",
     rd_lang_label: "Bahasa yang dikuasai",
     rd_docs_title: "Unggah dokumen Anda — keempatnya wajib. Pendaftaran baru diteruskan setelah semuanya diunggah.",
     rd_doc_license: "SIM *",
@@ -14476,7 +14485,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v217</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v218</div>
 
 </body>
 </html>
