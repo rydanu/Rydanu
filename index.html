@@ -927,6 +927,58 @@
   .dp-reviews-avg-count{ color:var(--ink-soft); font-size:0.82rem; }
   .dp-review .r-text{ font-size:0.88rem; line-height:1.55; color:var(--ink-soft); }
   .dp-footer{ text-align:center; padding:34px 20px 40px; font-size:0.68rem; color:var(--ink-soft); }
+  /* v220: Editorial-Layout fuer die SEO-Ratgeberseiten -- nutzt Fraunces (bereits geladen, bisher
+     ungenutzt) als warme Serifenschrift fuer die Ueberschriften, damit es nach echtem Reisemagazin statt
+     nach aneinandergereihten Linktexten aussieht. Bleibt bewusst innerhalb der bestehenden Marke
+     (Waldgruen/Gold, Public Sans) statt eine neue Palette einzufuehren. */
+  .info-article-hero{ position:relative; width:100%; aspect-ratio:16/10; overflow:hidden; background:var(--paper-dim); }
+  .info-article-hero img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .info-article-hero::after{
+    content:''; position:absolute; inset:0;
+    background:linear-gradient(to bottom, rgba(11,61,34,0) 55%, rgba(11,61,34,0.35) 100%);
+  }
+  .info-article-body-wrap{ max-width:640px; margin:0 auto; padding:28px 22px 60px; }
+  .info-eyebrow{
+    font-family:'JetBrains Mono', monospace; font-size:0.72rem; font-weight:500; letter-spacing:0.12em;
+    text-transform:uppercase; color:var(--gold-deep); margin:0 0 10px;
+  }
+  #info-page-title{
+    font-family:'Fraunces', serif; font-weight:600; font-size:2.1rem; line-height:1.15;
+    letter-spacing:-0.01em; color:var(--ink); margin:0 0 22px;
+  }
+  #info-page-body{ font-size:1rem; line-height:1.75; color:var(--ink); }
+  #info-page-body h3{
+    font-family:'Fraunces', serif; font-weight:600; font-size:1.28rem; color:var(--ink);
+    margin:34px 0 12px; padding-top:18px; border-top:1px solid var(--line);
+  }
+  #info-page-body h3:first-child{ margin-top:0; padding-top:0; border-top:none; }
+  #info-page-body p{ margin:0 0 16px; }
+  #info-page-body ul{
+    margin:0 0 20px; padding:16px 18px 16px 20px; list-style:none;
+    background:var(--teal-soft); border-radius:12px; border:1px solid var(--line);
+  }
+  #info-page-body ul li{ position:relative; padding:5px 0 5px 20px; line-height:1.55; }
+  #info-page-body ul li::before{
+    content:'—'; position:absolute; left:0; color:var(--teal); font-weight:700;
+  }
+  #info-page-body p[style*="0.85rem"]{
+    background:var(--paper-dim); border:1px solid var(--line); border-radius:10px;
+    padding:12px 16px; font-size:0.82rem !important; color:var(--ink-soft) !important; margin:22px 0 4px;
+  }
+  #info-page-body figure{ margin:26px 0 22px; }
+  #info-page-body figure img{
+    width:100%; border-radius:14px; display:block;
+    box-shadow:0 6px 20px rgba(11,61,34,0.12);
+  }
+  #info-page-body figcaption{
+    font-family:'JetBrains Mono', monospace; font-size:0.7rem; color:var(--ink-soft);
+    letter-spacing:0.02em; margin-top:8px; text-align:center;
+  }
+  /* Kopfzeile schwebt transparent ueber dem Titelbild statt als eigener dunkler Balken darueber --
+     wirkt redaktioneller/hochwertiger als zwei gestapelte Rechtecke. */
+  #info-page .dp-topbar{
+    position:absolute; top:0; left:0; right:0; z-index:5; background:linear-gradient(to bottom, rgba(11,61,34,0.55), rgba(11,61,34,0));
+  }
   .driver-page-link{
     background:none; border:1px solid var(--gold); color:var(--gold); font-family:'Public Sans'; font-weight:700;
     font-size:0.78rem; padding:6px 12px; border-radius:20px; cursor:pointer; margin-top:8px;
@@ -1239,9 +1291,13 @@
   <div class="dp-topbar">
     <button type="button" class="dp-back" onclick="closeInfoPage()">‹ Zurück</button>
   </div>
-  <div class="dp-section" style="padding-top:36px;">
-    <h1 id="info-page-title" style="font-family:'Public Sans', sans-serif; font-weight:700; font-size:1.8rem; margin:0 0 18px;"></h1>
-    <div id="info-page-body" style="font-size:0.98rem; line-height:1.7;"></div>
+  <div class="info-article">
+    <div class="info-article-hero" id="info-page-hero"></div>
+    <div class="info-article-body-wrap">
+      <p class="info-eyebrow" id="info-page-eyebrow"></p>
+      <h1 id="info-page-title"></h1>
+      <div id="info-page-body"></div>
+    </div>
   </div>
 </div>
 
@@ -4098,14 +4154,15 @@ let dpRealData = null; // { driver, tours, reviews } fuer die echte My Page
 // Jörg kann/soll die Texte selbst pruefen, kuerzen oder ergaenzen; einfach den jeweiligen body-Text
 // ersetzen (auf .de/.en/.id achten).
 function infoImg(id, alt){
-  return `<img src="https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&w=1200" alt="${alt}" loading="lazy" style="width:100%; border-radius:12px; margin:4px 0 14px; display:block;">`;
+  return `<figure><img src="https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&w=1200" alt="${alt}" loading="lazy"><figcaption>${alt}</figcaption></figure>`;
 }
+const INFO_EYEBROW = { de: 'Rydanu Reiseführer', en: 'Rydanu Travel Guide', id: 'Panduan Rydanu' };
 const INFO_PAGES = {
   anreise: {
+    heroId: 34405178, heroAlt: { de: 'Flugzeug landet am Flughafen', en: 'Plane landing at the airport', id: 'Pesawat mendarat di bandara' },
     title: { de: '✈️ Anreise nach Bali', en: '✈️ Getting to Bali', id: '✈️ Perjalanan ke Bali' },
     body: {
-      de: `${infoImg(34405178,'Flugzeug landet am Flughafen')}
-      <p>Die meisten internationalen Flüge landen am Flughafen Ngurah Rai (DPS) bei Denpasar im Süden Balis. Von Europa aus gibt es keine Direktflüge — üblich sind Umstiege in Doha, Singapur, Kuala Lumpur, Istanbul oder Abu Dhabi. Je nach Route dauert die Gesamtreise inklusive Zwischenstopp meist zwischen 16 und 22 Stunden.</p>
+      de: `<p>Die meisten internationalen Flüge landen am Flughafen Ngurah Rai (DPS) bei Denpasar im Süden Balis. Von Europa aus gibt es keine Direktflüge — üblich sind Umstiege in Doha, Singapur, Kuala Lumpur, Istanbul oder Abu Dhabi. Je nach Route dauert die Gesamtreise inklusive Zwischenstopp meist zwischen 16 und 22 Stunden.</p>
       <h3>Vor dem Abflug: Arrival Card & Tourist-Levy</h3>
       <p>Seit 2024 verlangt Indonesien für alle internationalen Ankünfte die "All Indonesia Arrival Card" — ein digitales Formular, das Zoll- und Gesundheitsangaben zusammenfasst und im Idealfall bereits 1–3 Tage vor Ankunft online ausgefüllt wird. Nach dem Absenden bekommst du einen QR-Code, den du bei der Einreise vorzeigst. Zusätzlich fällt seit Februar 2024 eine Touristenabgabe ("Bali Tourist Levy") von 150.000 IDR pro Person an, die vorab online oder direkt am Flughafen bezahlt werden kann — der Zahlungsbeleg (ebenfalls als QR-Code) sollte während der ganzen Reise griffbereit bleiben, da stichprobenartig kontrolliert wird.</p>
       <h3>Ankunft & Gepäck</h3>
@@ -4113,8 +4170,7 @@ const INFO_PAGES = {
       <h3>Weiter vom Flughafen</h3>
       <p>Vom Flughafen aus geht es am bequemsten mit einem vorab gebuchten privaten Fahrer weiter — genau das kannst du direkt über Rydanu organisieren, mit transparentem Festpreis von Anfang an und ganz ohne Verhandeln direkt am Ausgang, wo die Preise für Touristen erfahrungsgemäß besonders hoch angesetzt werden.</p>
       <p style="font-size:0.85rem; color:var(--ink-soft);"><em>Einreisebestimmungen ändern sich gelegentlich — für die aktuell gültigen Regeln bitte immer zusätzlich die offizielle Seite der indonesischen Einwanderungsbehörde prüfen.</em></p>`,
-      en: `${infoImg(34405178,'Plane landing at the airport')}
-      <p>Most international flights land at Ngurah Rai Airport (DPS) near Denpasar in southern Bali. There are no direct flights from Europe or the US — expect a stopover in Doha, Singapore, Kuala Lumpur, Istanbul, or Abu Dhabi. Total travel time including the layover is usually 16–22 hours.</p>
+      en: `<p>Most international flights land at Ngurah Rai Airport (DPS) near Denpasar in southern Bali. There are no direct flights from Europe or the US — expect a stopover in Doha, Singapore, Kuala Lumpur, Istanbul, or Abu Dhabi. Total travel time including the layover is usually 16–22 hours.</p>
       <h3>Before you fly: Arrival Card & Tourist Levy</h3>
       <p>Since 2024, Indonesia requires all international arrivals to complete the "All Indonesia Arrival Card" — a digital form combining customs and health declarations, ideally filled in 1–3 days before arrival. You'll get a QR code to present on arrival. Since February 2024 there's also a Bali Tourist Levy of IDR 150,000 per person, payable online in advance or on arrival — keep the payment confirmation (also a QR code) handy throughout your trip, as spot checks do happen.</p>
       <h3>Arrival & luggage</h3>
@@ -4122,8 +4178,7 @@ const INFO_PAGES = {
       <h3>Onward from the airport</h3>
       <p>The easiest way onward is a pre-booked private driver — exactly what you can arrange directly through Rydanu, with a transparent fixed price from the start, no need to haggle right at the exit where prices for tourists tend to run especially high.</p>
       <p style="font-size:0.85rem; color:var(--ink-soft);"><em>Entry requirements change from time to time — always double-check the current rules on the official Indonesian immigration website before you travel.</em></p>`,
-      id: `${infoImg(34405178,'Pesawat mendarat di bandara')}
-      <p>Sebagian besar penerbangan internasional mendarat di Bandara Ngurah Rai (DPS) dekat Denpasar di selatan Bali. Tidak ada penerbangan langsung dari Eropa — biasanya transit di Doha, Singapura, Kuala Lumpur, Istanbul, atau Abu Dhabi. Total waktu perjalanan termasuk transit biasanya 16–22 jam.</p>
+      id: `<p>Sebagian besar penerbangan internasional mendarat di Bandara Ngurah Rai (DPS) dekat Denpasar di selatan Bali. Tidak ada penerbangan langsung dari Eropa — biasanya transit di Doha, Singapura, Kuala Lumpur, Istanbul, atau Abu Dhabi. Total waktu perjalanan termasuk transit biasanya 16–22 jam.</p>
       <h3>Sebelum berangkat: Kartu Kedatangan & Pungutan Wisatawan</h3>
       <p>Sejak 2024, Indonesia mewajibkan semua kedatangan internasional mengisi "All Indonesia Arrival Card" — formulir digital yang menggabungkan deklarasi bea cukai dan kesehatan, idealnya diisi 1–3 hari sebelum kedatangan. Setelah mengirim, Anda mendapat kode QR untuk ditunjukkan saat kedatangan. Sejak Februari 2024 juga berlaku Pungutan Wisatawan Bali sebesar 150.000 IDR per orang, dapat dibayar online sebelumnya atau langsung di bandara — simpan bukti pembayaran (juga berupa kode QR) selama perjalanan, karena bisa diperiksa sewaktu-waktu.</p>
       <h3>Kedatangan & bagasi</h3>
@@ -4134,11 +4189,11 @@ const INFO_PAGES = {
     }
   },
   aktivitaeten: {
+    heroId: 36828569, heroAlt: { de: 'Reisterrassen bei Ubud', en: 'Rice terraces near Ubud', id: 'Sawah berundak dekat Ubud' },
     title: { de: '🌴 Aktivitäten & Sehenswürdigkeiten', en: '🌴 Activities & Sights', id: '🌴 Aktivitas & Tempat Wisata' },
     body: {
       de: `<p>Bali ist überraschend vielseitig — welche Ecke der Insel am besten passt, hängt stark davon ab, wonach du suchst.</p>
       <h3>Ubud — Kultur, Reisterrassen & Wellness</h3>
-      ${infoImg(36828569,'Reisterrassen bei Ubud')}
       <p>Das spirituelle Zentrum der Insel: sattgrüne Reisterrassen (z. B. Tegallalang), der Affenwald, unzählige Yoga-Studios und ein lebendiger Nachtmarkt. Von hier aus sind auch mehrere sehenswerte Wasserfälle wie Tegenungan, Tibumana oder Kanto Lampo gut erreichbar.</p>
       <h3>Uluwatu & die Bukit-Halbinsel — Klippen, Surfen & Sonnenuntergang</h3>
       ${infoImg(30286799,'Klippen von Uluwatu bei Sonnenuntergang')}
@@ -4150,7 +4205,6 @@ const INFO_PAGES = {
       <p>Ein lokaler Fahrer über Rydanu kennt die besten Routen und weniger überlaufenen Ecken abseits der Touristenpfade — und du musst dich um nichts weiter kümmern als ums Erleben.</p>`,
       en: `<p>Bali is surprisingly diverse — which part of the island suits you best depends a lot on what you're after.</p>
       <h3>Ubud — culture, rice terraces & wellness</h3>
-      ${infoImg(36828569,'Rice terraces near Ubud')}
       <p>The island's spiritual heart: lush rice terraces (e.g. Tegallalang), the Monkey Forest, countless yoga studios, and a lively night market. Several great waterfalls — Tegenungan, Tibumana, Kanto Lampo — are also within easy reach from here.</p>
       <h3>Uluwatu & the Bukit Peninsula — cliffs, surfing & sunsets</h3>
       ${infoImg(30286799,'Uluwatu cliffs at sunset')}
@@ -4162,7 +4216,6 @@ const INFO_PAGES = {
       <p>A local Rydanu driver knows the best routes and the quieter corners off the beaten path — leaving you free to just enjoy the ride.</p>`,
       id: `<p>Bali ternyata sangat beragam — bagian pulau mana yang paling cocok untuk Anda sangat tergantung apa yang Anda cari.</p>
       <h3>Ubud — budaya, sawah berundak & wellness</h3>
-      ${infoImg(36828569,'Sawah berundak dekat Ubud')}
       <p>Pusat spiritual pulau ini: sawah hijau berundak (mis. Tegallalang), Hutan Monyet, banyak studio yoga, dan pasar malam yang hidup. Dari sini juga mudah menjangkau beberapa air terjun indah seperti Tegenungan, Tibumana, atau Kanto Lampo.</p>
       <h3>Uluwatu & Semenanjung Bukit — tebing, berselancar & matahari terbenam</h3>
       ${infoImg(30286799,'Tebing Uluwatu saat matahari terbenam')}
@@ -4175,10 +4228,10 @@ const INFO_PAGES = {
     }
   },
   einreise: {
+    heroId: 4922086, heroAlt: { de: 'Reisepass mit Einreisestempeln', en: 'Passport with entry stamps', id: 'Paspor dengan stempel masuk' },
     title: { de: '🛂 Einreisebestimmungen', en: '🛂 Entry requirements', id: '🛂 Ketentuan Masuk' },
     body: {
-      de: `${infoImg(4922086,'Reisepass mit Einreisestempeln')}
-      <p>Für die meisten Nationalitäten (u. a. Deutschland, Österreich, Schweiz) ist ein Visa on Arrival (VOA) bzw. das elektronische e-VOA für kurze Aufenthalte möglich.</p>
+      de: `<p>Für die meisten Nationalitäten (u. a. Deutschland, Österreich, Schweiz) ist ein Visa on Arrival (VOA) bzw. das elektronische e-VOA für kurze Aufenthalte möglich.</p>
       <h3>Die wichtigsten Eckdaten</h3>
       <ul>
         <li><strong>Gültigkeitsdauer:</strong> 30 Tage, einmalig um weitere 30 Tage verlängerbar (maximal 60 Tage am Stück).</li>
@@ -4192,8 +4245,7 @@ const INFO_PAGES = {
       <h3>Längere Aufenthalte</h3>
       <p>Wer länger als 60 Tage bleiben möchte oder aus einem nicht VOA-berechtigten Land kommt, kann ein B211A-Touristenvisum beantragen (Gesamtdauer bis zu 180 Tage, mehrfach verlängerbar). Weder das B211A- noch ein B211B-Visum erlauben eine bezahlte Tätigkeit in Indonesien — dafür wäre ein KITAS/ITAS mit entsprechender Arbeitserlaubnis nötig.</p>
       <p style="font-size:0.85rem; color:var(--ink-soft);"><em>Einreisebestimmungen ändern sich gelegentlich und werden zunehmend strenger kontrolliert. Bitte informiere dich vor Abreise immer zusätzlich über die aktuell gültigen Bestimmungen bei der offiziellen indonesischen Einwanderungsbehörde (Direktorat Jenderal Imigrasi) oder der zuständigen Botschaft — diese Seite ersetzt keine Rechtsberatung.</em></p>`,
-      en: `${infoImg(4922086,'Passport with entry stamps')}
-      <p>Most nationalities (including the US, UK, EU, Australia) can get a Visa on Arrival (VOA) or the electronic e-VOA for short stays.</p>
+      en: `<p>Most nationalities (including the US, UK, EU, Australia) can get a Visa on Arrival (VOA) or the electronic e-VOA for short stays.</p>
       <h3>The essentials</h3>
       <ul>
         <li><strong>Validity:</strong> 30 days, extendable once for another 30 days (60 days maximum).</li>
@@ -4207,8 +4259,7 @@ const INFO_PAGES = {
       <h3>Longer stays</h3>
       <p>If you want to stay longer than 60 days, or your nationality isn't VOA-eligible, you can apply for a B211A tourist visa (total duration up to 180 days, renewable multiple times). Neither the B211A nor the B211B visa permits paid work in Indonesia — that requires a KITAS/ITAS with the appropriate work authorisation.</p>
       <p style="font-size:0.85rem; color:var(--ink-soft);"><em>Entry requirements change from time to time and enforcement has been getting stricter. Always check the current rules with the official Indonesian immigration authority (Direktorat Jenderal Imigrasi) or your relevant embassy before you travel — this page isn't legal advice.</em></p>`,
-      id: `${infoImg(4922086,'Paspor dengan stempel masuk')}
-      <p>Sebagian besar kewarganegaraan dapat memperoleh Visa on Arrival (VOA) atau e-VOA elektronik untuk kunjungan singkat.</p>
+      id: `<p>Sebagian besar kewarganegaraan dapat memperoleh Visa on Arrival (VOA) atau e-VOA elektronik untuk kunjungan singkat.</p>
       <h3>Poin-poin penting</h3>
       <ul>
         <li><strong>Masa berlaku:</strong> 30 hari, dapat diperpanjang sekali selama 30 hari lagi (maksimal 60 hari).</li>
@@ -4225,6 +4276,7 @@ const INFO_PAGES = {
     }
   },
   reisetipps: {
+    heroId: 10038998, heroAlt: { de: 'Sarong beim Tempelbesuch', en: 'Sarong worn at a temple visit', id: 'Sarung dikenakan saat kunjungan pura' },
     title: { de: '💡 Reise-Tipps für Bali', en: '💡 Bali travel tips', id: '💡 Tips Perjalanan Bali' },
     body: {
       de: `<p>Ein paar praktische Dinge, die eine Bali-Reise spürbar entspannter machen.</p>
@@ -4235,7 +4287,6 @@ const INFO_PAGES = {
       <p>Eine lokale SIM-Karte oder eSIM lohnt sich für Navigation, Übersetzungs-Apps und Erreichbarkeit — die Netzabdeckung der großen indonesischen Anbieter ist auf Bali durchgehend gut.</p>
       <!-- Affiliate-Platzhalter (eSIM): sobald registriert, hier einen eSIM-Anbieter für Bali/Indonesien verlinken -->
       <h3>Kleidung & Verhalten bei Tempelbesuchen</h3>
-      ${infoImg(10038998,'Sarong beim Tempelbesuch')}
       <p>Beim Tempelbesuch wird respektvolle Kleidung erwartet — Schultern und Knie bedeckt. Ein Sarong (Wickeltuch) wird an den meisten Tempeln vor Ort kostenlos oder gegen kleine Spende gestellt.</p>
       <h3>Verhandeln</h3>
       <p>Beim informellen Handel auf Märkten und mit freien Anbietern ist Verhandeln üblich und wird nicht als unhöflich empfunden. Bei Rydanu legt dagegen jeder Fahrer seinen Preis von Anfang an transparent fest — kein Feilschen nötig.</p>
@@ -4252,7 +4303,6 @@ const INFO_PAGES = {
       <p>A local SIM or eSIM is worth it for navigation, translation apps, and staying reachable — coverage from the major Indonesian networks is solid across Bali.</p>
       <!-- Affiliate placeholder (eSIM): once registered, link an eSIM provider for Bali/Indonesia here -->
       <h3>Dress & etiquette at temples</h3>
-      ${infoImg(10038998,'Sarong worn at a temple visit')}
       <p>Temples expect modest dress — shoulders and knees covered. Most temples provide a sarong on-site for free or a small donation.</p>
       <h3>Bargaining</h3>
       <p>Haggling is normal and expected in informal markets and with independent vendors — it's not considered rude. Rydanu drivers, on the other hand, set a transparent price upfront — no bargaining needed.</p>
@@ -4269,7 +4319,6 @@ const INFO_PAGES = {
       <p>SIM lokal atau eSIM sangat berguna untuk navigasi, aplikasi terjemahan, dan tetap bisa dihubungi — jangkauan operator besar Indonesia cukup baik di seluruh Bali.</p>
       <!-- Placeholder afiliasi (eSIM): setelah terdaftar, tautkan penyedia eSIM untuk Bali/Indonesia di sini -->
       <h3>Pakaian & etika saat mengunjungi pura</h3>
-      ${infoImg(10038998,'Sarung dikenakan saat kunjungan pura')}
       <p>Pura mengharapkan pakaian sopan — bahu dan lutut tertutup. Sebagian besar pura menyediakan sarung di tempat secara gratis atau dengan donasi kecil.</p>
       <h3>Tawar-menawar</h3>
       <p>Tawar-menawar hal biasa di pasar informal dan dengan penjual mandiri — bukan dianggap tidak sopan. Sebaliknya, pengemudi Rydanu menetapkan harga transparan sejak awal — tidak perlu tawar-menawar.</p>
@@ -4281,10 +4330,10 @@ const INFO_PAGES = {
     }
   },
   reisezeit: {
+    heroId: 31973189, heroAlt: { de: 'Sonnenuntergang am Strand auf Bali', en: 'Beach sunset in Bali', id: 'Matahari terbenam di pantai Bali' },
     title: { de: '☀️ Beste Reisezeit für Bali', en: '☀️ Best time to visit Bali', id: '☀️ Waktu Terbaik Berkunjung ke Bali' },
     body: {
-      de: `${infoImg(31973189,'Sonnenuntergang am Strand auf Bali')}
-      <p>Bali liegt nahe am Äquator und hat daher kein klassisches Vier-Jahreszeiten-Klima, sondern eine Trocken- und eine Regenzeit. Die Temperaturen bleiben ganzjährig bei angenehm-warmen 27 bis 33 °C, in höher gelegenen Regionen wie Ubud oder am Vulkan etwas kühler.</p>
+      de: `<p>Bali liegt nahe am Äquator und hat daher kein klassisches Vier-Jahreszeiten-Klima, sondern eine Trocken- und eine Regenzeit. Die Temperaturen bleiben ganzjährig bei angenehm-warmen 27 bis 33 °C, in höher gelegenen Regionen wie Ubud oder am Vulkan etwas kühler.</p>
       <h3>Trockenzeit: April bis Oktober</h3>
       <p>Gilt allgemein als beste Reisezeit, mit den wenigsten Niederschlägen zwischen Juni und September. Ideal für Strand, Wandern, Tempelbesichtigungen und generell alles, was gutes Wetter braucht. Juli und August sind gleichzeitig Hochsaison — entsprechend voller und mit höheren Unterkunftspreisen.</p>
       <h3>Regenzeit: November bis März</h3>
@@ -4296,8 +4345,7 @@ const INFO_PAGES = {
         <li><strong>Vulkanwanderungen (Batur):</strong> in der Trockenzeit deutlich angenehmer und sicherer als bei rutschigen Pfaden in der Regenzeit.</li>
       </ul>
       <p>Egal zu welcher Jahreszeit — ein Fahrer über Rydanu kennt die Insel bei jedem Wetter und passt die Route bei Bedarf spontan an.</p>`,
-      en: `${infoImg(31973189,'Beach sunset in Bali')}
-      <p>Bali sits close to the equator, so it doesn't have four classic seasons — just a dry season and a wet season. Temperatures stay a pleasant 27–33°C (80–91°F) year-round, a bit cooler in higher areas like Ubud or near the volcano.</p>
+      en: `<p>Bali sits close to the equator, so it doesn't have four classic seasons — just a dry season and a wet season. Temperatures stay a pleasant 27–33°C (80–91°F) year-round, a bit cooler in higher areas like Ubud or near the volcano.</p>
       <h3>Dry season: April to October</h3>
       <p>Generally considered the best time to visit, with the least rain between June and September. Great for the beach, hiking, temple visits, and anything that needs good weather. July and August are also peak season — expect more crowds and higher accommodation prices.</p>
       <h3>Wet season: November to March</h3>
@@ -4309,8 +4357,7 @@ const INFO_PAGES = {
         <li><strong>Volcano hikes (Batur):</strong> noticeably more pleasant and safer in the dry season than on slippery trails during the rains.</li>
       </ul>
       <p>Whatever the season, a Rydanu driver knows the island in any weather and can adjust the route on the fly if needed.</p>`,
-      id: `${infoImg(31973189,'Matahari terbenam di pantai Bali')}
-      <p>Bali berada dekat garis khatulistiwa, jadi tidak memiliki empat musim klasik — hanya musim kemarau dan musim hujan. Suhu tetap nyaman sekitar 27–33°C sepanjang tahun, sedikit lebih sejuk di daerah dataran tinggi seperti Ubud atau dekat gunung berapi.</p>
+      id: `<p>Bali berada dekat garis khatulistiwa, jadi tidak memiliki empat musim klasik — hanya musim kemarau dan musim hujan. Suhu tetap nyaman sekitar 27–33°C sepanjang tahun, sedikit lebih sejuk di daerah dataran tinggi seperti Ubud atau dekat gunung berapi.</p>
       <h3>Musim kemarau: April hingga Oktober</h3>
       <p>Umumnya dianggap waktu terbaik untuk berkunjung, dengan curah hujan paling sedikit antara Juni dan September. Cocok untuk pantai, hiking, kunjungan pura, dan aktivitas apa pun yang butuh cuaca cerah. Juli dan Agustus juga musim puncak — jadi lebih ramai dan harga akomodasi lebih tinggi.</p>
       <h3>Musim hujan: November hingga Maret</h3>
@@ -4325,13 +4372,13 @@ const INFO_PAGES = {
     }
   },
   lombok: {
+    heroId: 4552428, heroAlt: { de: 'Kratersee des Vulkans Rinjani', en: 'Crater lake of Mount Rinjani', id: 'Danau kawah Gunung Rinjani' },
     title: { de: '🏝️ Lombok entdecken', en: '🏝️ Discovering Lombok', id: '🏝️ Menjelajahi Lombok' },
     body: {
       de: `<p>Balis östliche Nachbarinsel Lombok wird oft "die kleine Schwester Balis" genannt, ist touristisch aber deutlich weniger erschlossen — mehr ursprüngliche Natur, ruhigere Strände, weniger Trubel.</p>
       <h3>Anreise</h3>
       <p>Von Bali aus geht es entweder per Schnellboot (z. B. ab Padang Bai oder Sanur, ca. 1,5–2 Stunden) oder per Kurzstreckenflug nach Lombok. Wer beide Inseln kombinieren möchte, kann Lombok gut als Verlängerung an eine Bali-Reise anhängen.</p>
       <h3>Gunung Rinjani</h3>
-      ${infoImg(4552428,'Kratersee des Vulkans Rinjani')}
       <p>Mit 3.726 Metern der zweithöchste Vulkan Indonesiens und eines der großen Trekking-Highlights der Region. Im Krater liegt der als heilig geltende See Segara Anak. Für die Besteigung solltest du je nach Route 2 bis 4 Tage einplanen, am besten in der Trockenzeit zwischen Mai und Oktober — die Landschaft ist dann kurz nach der Regenzeit (Mai/Juni) besonders grün.</p>
       <h3>Die Gili-Inseln</h3>
       ${infoImg(36956255,'Kristallklares Wasser bei Gili Air')}
@@ -4343,7 +4390,6 @@ const INFO_PAGES = {
       <h3>Getting there</h3>
       <p>From Bali you can go by fast boat (e.g. from Padang Bai or Sanur, roughly 1.5–2 hours) or a short flight to Lombok. If you want to combine both islands, Lombok makes a great extension to a Bali trip.</p>
       <h3>Mount Rinjani</h3>
-      ${infoImg(4552428,'Crater lake of Mount Rinjani')}
       <p>At 3,726 metres, Indonesia's second-highest volcano and one of the region's biggest trekking draws. Its crater holds the sacred Segara Anak lake. Plan 2–4 days for the climb depending on the route, ideally in the dry season between May and October — the landscape is especially green shortly after the rains (May/June).</p>
       <h3>The Gili Islands</h3>
       ${infoImg(36956255,'Crystal-clear water off Gili Air')}
@@ -4355,7 +4401,6 @@ const INFO_PAGES = {
       <h3>Cara menuju ke sana</h3>
       <p>Dari Bali Anda bisa naik speedboat (mis. dari Padang Bai atau Sanur, sekitar 1,5–2 jam) atau penerbangan singkat ke Lombok. Jika ingin menggabungkan kedua pulau, Lombok cocok sebagai perpanjangan perjalanan dari Bali.</p>
       <h3>Gunung Rinjani</h3>
-      ${infoImg(4552428,'Danau kawah Gunung Rinjani')}
       <p>Dengan ketinggian 3.726 meter, ini gunung berapi tertinggi kedua di Indonesia dan salah satu daya tarik trekking terbesar di kawasan ini. Di kawahnya terdapat danau suci Segara Anak. Sisakan 2–4 hari untuk pendakian tergantung rute, idealnya di musim kemarau antara Mei dan Oktober — lanskap paling hijau tak lama setelah musim hujan (Mei/Juni).</p>
       <h3>Pulau-pulau Gili</h3>
       ${infoImg(36956255,'Air jernih di Gili Air')}
@@ -4380,8 +4425,10 @@ function openInfoPage(pageId){
   closeSeoMenu();
   document.querySelectorAll('.modal-bg.active').forEach(m => m.classList.remove('active'));
   const lang = (typeof currentLang !== 'undefined' && page.title[currentLang]) ? currentLang : 'en';
+  document.getElementById('info-page-eyebrow').textContent = INFO_EYEBROW[lang] || INFO_EYEBROW.en;
   document.getElementById('info-page-title').textContent = page.title[lang];
   document.getElementById('info-page-body').innerHTML = page.body[lang];
+  document.getElementById('info-page-hero').innerHTML = `<img src="https://images.pexels.com/photos/${page.heroId}/pexels-photo-${page.heroId}.jpeg?auto=compress&cs=tinysrgb&w=1600" alt="${(page.heroAlt[lang]||page.heroAlt.en)}" loading="lazy">`;
   document.getElementById('info-page').style.display = 'block';
   document.getElementById('info-page').scrollTop = 0;
 }
@@ -14731,7 +14778,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v220</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v221</div>
 
 </body>
 </html>
