@@ -979,6 +979,13 @@
   #info-page .dp-topbar{
     position:absolute; top:0; left:0; right:0; z-index:5; background:linear-gradient(to bottom, rgba(11,61,34,0.55), rgba(11,61,34,0));
   }
+  .info-back-bottom{
+    display:flex; align-items:center; justify-content:center; gap:6px; width:100%;
+    margin-top:18px; padding:14px; border-radius:12px; border:1px solid var(--line);
+    background:var(--paper-dim); color:var(--ink); font-family:'Public Sans', sans-serif;
+    font-weight:600; font-size:0.95rem; cursor:pointer; -webkit-tap-highlight-color:transparent;
+  }
+  .info-back-bottom:hover{ background:var(--teal-soft); }
   .driver-page-link{
     background:none; border:1px solid var(--gold); color:var(--gold); font-family:'Public Sans'; font-weight:700;
     font-size:0.78rem; padding:6px 12px; border-radius:20px; cursor:pointer; margin-top:8px;
@@ -1284,6 +1291,7 @@
   <a href="#" class="seo-menu-link" onclick="openInfoPage('reisetipps'); return false;">💡 Reise-Tipps für Bali</a>
   <a href="#" class="seo-menu-link" onclick="openInfoPage('reisezeit'); return false;">☀️ Beste Reisezeit</a>
   <a href="#" class="seo-menu-link" onclick="openInfoPage('lombok'); return false;">🏝️ Lombok entdecken</a>
+  <a href="#" class="seo-menu-link" onclick="openInfoPage('warum'); return false;">🙏 Warum es Rydanu gibt</a>
 </div>
 
 <!-- Wiederverwendbare Info-Seite (fuer alle SEO-Unterseiten) -->
@@ -1297,6 +1305,7 @@
       <p class="info-eyebrow" id="info-page-eyebrow"></p>
       <h1 id="info-page-title"></h1>
       <div id="info-page-body"></div>
+      <button type="button" class="info-back-bottom" onclick="closeInfoPage()">‹ <span id="info-back-bottom-label">Zurück zur Übersicht</span></button>
     </div>
   </div>
 </div>
@@ -4157,6 +4166,7 @@ function infoImg(id, alt){
   return `<figure><img src="https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&w=1200" alt="${alt}" loading="lazy"><figcaption>${alt}</figcaption></figure>`;
 }
 const INFO_EYEBROW = { de: 'Rydanu Reiseführer', en: 'Rydanu Travel Guide', id: 'Panduan Rydanu' };
+const INFO_BACK_BOTTOM_LABEL = { de: 'Zurück zur Übersicht', en: 'Back to overview', id: 'Kembali ke ringkasan' };
 const INFO_PAGES = {
   anreise: {
     heroId: 34405178, heroAlt: { de: 'Flugzeug landet am Flughafen', en: 'Plane landing at the airport', id: 'Pesawat mendarat di bandara' },
@@ -4409,6 +4419,21 @@ const INFO_PAGES = {
       <p>Kuta Lombok di selatan telah menjadi tujuan populer namun masih tidak terlalu ramai bagi peselancar dan backpacker, dengan pantai indah seperti Selong Belanak dan Tanjung Aan di dekatnya.</p>
       <p>Pengemudi lokal Rydanu juga bisa dipesan di Lombok — praktis untuk transfer antara bandara, pelabuhan, dan sudut-sudut pulau yang tersebar.</p>`
     }
+  },
+  warum: {
+    heroId: 4239546, heroAlt: { de: 'Pura Ulun Danu Bratan, Wassertempel am See Bratan', en: 'Pura Ulun Danu Bratan, the water temple on Lake Bratan', id: 'Pura Ulun Danu Bratan, pura air di Danau Bratan' },
+    title: { de: '🙏 Warum es Rydanu gibt', en: '🙏 Why Rydanu exists', id: '🙏 Mengapa Rydanu Ada' },
+    body: {
+      de: `<p>Bei mehreren Bali-Reisen über die Jahre bin ich immer wieder auf dasselbe Problem gestoßen: Entweder verhandelt man direkt am Flughafenausgang einen Preis mit einem fremden Fahrer, oder man nutzt eine der bestehenden Plattformen — die dann oft hohe Gebühren verlangen, während die Fahrer selbst an ruhigen Tagen kaum etwas verdienen.</p>
+      <p>Die Idee zu Rydanu ist bei einer dieser Reisen entstanden, am Pura Ulun Danu Bratan, dem Wassertempel am See Bratan mitten im Bergland Balis. Zwischen der Ruhe dieses Orts und dem alltäglichen Trubel der Insel wurde mir klar: Es müsste einfacher gehen — Reisende direkt mit lokalen Fahrern verbinden, mit fairen, transparenten Gebühren, und ohne dass Fahrer tagelang ohne Fahrt und ohne Einkommen dastehen.</p>
+      <p>Genau das ist die Idee hinter Rydanu: transparente Preise für Reisende, faire Bedingungen für Fahrer — und eine Plattform, die sich nicht mehr nimmt, als nötig ist.</p>`,
+      en: `<p>Across several trips to Bali over the years, I kept running into the same problem: either negotiate a price with a stranger right at the airport exit, or use one of the existing platforms — which often charge steep fees while leaving drivers with barely anything to show for the quiet days.</p>
+      <p>The idea for Rydanu came together on one of these trips, at Pura Ulun Danu Bratan, the water temple on Lake Bratan in Bali's highlands. Somewhere between the calm of that place and the everyday hustle of the island, it became clear: this could be simpler — connect travelers directly with local drivers, with fair, transparent fees, and without drivers sitting idle for days with no income.</p>
+      <p>That's the idea behind Rydanu today: transparent prices for travelers, fair terms for drivers, and a platform that doesn't take more than it needs to.</p>`,
+      id: `<p>Selama beberapa kali perjalanan ke Bali bertahun-tahun, saya terus menemukan masalah yang sama: baik menawar harga langsung dengan orang asing tepat di pintu keluar bandara, atau menggunakan salah satu platform yang ada — yang seringkali mengenakan biaya tinggi sementara pengemudi sendiri nyaris tidak mendapat apa-apa di hari-hari sepi.</p>
+      <p>Ide Rydanu muncul dalam salah satu perjalanan tersebut, di Pura Ulun Danu Bratan, pura air di Danau Bratan di dataran tinggi Bali. Di antara ketenangan tempat itu dan hiruk-pikuk keseharian pulau ini, saya menyadari: ini bisa dibuat lebih sederhana — menghubungkan wisatawan langsung dengan pengemudi lokal, dengan biaya yang adil dan transparan, tanpa pengemudi menganggur berhari-hari tanpa penghasilan.</p>
+      <p>Itulah ide di balik Rydanu hari ini: harga transparan untuk wisatawan, kondisi adil untuk pengemudi, dan platform yang tidak mengambil lebih dari yang diperlukan.</p>`
+    }
   }
 };
 function toggleSeoMenu(){
@@ -4426,6 +4451,7 @@ function openInfoPage(pageId){
   document.querySelectorAll('.modal-bg.active').forEach(m => m.classList.remove('active'));
   const lang = (typeof currentLang !== 'undefined' && page.title[currentLang]) ? currentLang : 'en';
   document.getElementById('info-page-eyebrow').textContent = INFO_EYEBROW[lang] || INFO_EYEBROW.en;
+  document.getElementById('info-back-bottom-label').textContent = INFO_BACK_BOTTOM_LABEL[lang] || INFO_BACK_BOTTOM_LABEL.en;
   document.getElementById('info-page-title').textContent = page.title[lang];
   document.getElementById('info-page-body').innerHTML = page.body[lang];
   document.getElementById('info-page-hero').innerHTML = `<img src="https://images.pexels.com/photos/${page.heroId}/pexels-photo-${page.heroId}.jpeg?auto=compress&cs=tinysrgb&w=1600" alt="${(page.heroAlt[lang]||page.heroAlt.en)}" loading="lazy">`;
@@ -14778,7 +14804,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v221</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v223</div>
 
 </body>
 </html>
