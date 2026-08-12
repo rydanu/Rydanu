@@ -972,6 +972,7 @@
     box-shadow:0 6px 20px rgba(11,61,34,0.08); -webkit-tap-highlight-color:transparent;
   }
   .info-cta-box:hover{ box-shadow:0 8px 24px rgba(11,61,34,0.14); }
+  .info-cta-head{ display:flex; align-items:center; gap:16px; flex:1; min-width:0; }
   .info-cta-logo{ width:64px; height:64px; object-fit:contain; flex-shrink:0; }
   .info-cta-text{ flex:1; min-width:0; }
   .info-cta-text strong{ display:block; font-family:'Fraunces', serif; font-size:1.02rem; color:var(--ink); margin-bottom:3px; }
@@ -980,9 +981,16 @@
     flex-shrink:0; font-family:'Public Sans', sans-serif; font-weight:700; font-size:0.78rem;
     color:var(--ink); background:var(--gold); padding:8px 12px; border-radius:20px; white-space:nowrap;
   }
-  @media (max-width:420px){
-    .info-cta-box{ flex-wrap:wrap; }
-    .info-cta-btn{ margin-left:80px; }
+  /* Auf schmalen Screens (iPhone etc.) reicht der Platz fuer Logo+Text+Button nicht nebeneinander --
+     dann sauber gestapelt: Logo+Titel als Kopfzeile, Text darunter volle Breite, Button unten volle
+     Breite (12. August, Bugfix -- vorher wurde der Text auf ein enges Mittel-Drittel gequetscht). */
+  @media (max-width:480px){
+    .info-cta-box{ flex-direction:column; align-items:stretch; gap:14px; }
+    .info-cta-head{ gap:12px; }
+    .info-cta-logo{ width:44px; height:44px; }
+    .info-cta-text strong{ font-size:0.98rem; }
+    .info-cta-text p{ font-size:0.85rem; }
+    .info-cta-btn{ text-align:center; padding:11px 12px; font-size:0.85rem; }
   }
   #info-page-body figure{ margin:26px 0 22px; }
   #info-page-body figure img{
@@ -4196,8 +4204,10 @@ function infoCta(lang){
   };
   const c = t[lang] || t.en;
   return `<div class="info-cta-box" onclick="goToBookingFromInfoPage();">
-    <img src="${RYVIO_LOGO_WORDMARK}" alt="Rydanu" class="info-cta-logo">
-    <div class="info-cta-text"><strong>${c.title}</strong><p>${c.text}</p></div>
+    <div class="info-cta-head">
+      <img src="${RYVIO_LOGO_WORDMARK}" alt="Rydanu" class="info-cta-logo">
+      <div class="info-cta-text"><strong>${c.title}</strong><p>${c.text}</p></div>
+    </div>
     <span class="info-cta-btn">${c.btn} →</span>
   </div>`;
 }
@@ -14896,7 +14906,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v227</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v228</div>
 
 </body>
 </html>
