@@ -965,6 +965,25 @@
     background:var(--paper-dim); border:1px solid var(--line); border-radius:10px;
     padding:12px 16px; font-size:0.82rem !important; color:var(--ink-soft) !important; margin:22px 0 4px;
   }
+  /* CTA-Box mit Logo innerhalb einer Ratgeberseite (Baustein "Transport", 12. August) */
+  .info-cta-box{
+    display:flex; align-items:center; gap:14px; margin:26px 0 22px; padding:16px 18px;
+    background:var(--ink); border-radius:14px; cursor:pointer;
+    box-shadow:0 6px 20px rgba(11,61,34,0.18); -webkit-tap-highlight-color:transparent;
+  }
+  .info-cta-box:hover{ filter:brightness(1.06); }
+  .info-cta-logo{ width:40px; height:40px; object-fit:contain; flex-shrink:0; }
+  .info-cta-text{ flex:1; min-width:0; }
+  .info-cta-text strong{ display:block; font-family:'Fraunces', serif; font-size:1.02rem; color:#fff; margin-bottom:3px; }
+  .info-cta-text p{ margin:0; font-size:0.82rem; line-height:1.4; color:rgba(255,255,255,0.82); }
+  .info-cta-btn{
+    flex-shrink:0; font-family:'Public Sans', sans-serif; font-weight:700; font-size:0.78rem;
+    color:var(--ink); background:var(--gold); padding:8px 12px; border-radius:20px; white-space:nowrap;
+  }
+  @media (max-width:420px){
+    .info-cta-box{ flex-wrap:wrap; }
+    .info-cta-btn{ margin-left:54px; }
+  }
   #info-page-body figure{ margin:26px 0 22px; }
   #info-page-body figure img{
     width:100%; border-radius:14px; display:block;
@@ -1291,6 +1310,7 @@
   <a href="#" class="seo-menu-link" onclick="openInfoPage('reisetipps'); return false;">💡 Reise-Tipps für Bali</a>
   <a href="#" class="seo-menu-link" onclick="openInfoPage('reisezeit'); return false;">☀️ Beste Reisezeit</a>
   <a href="#" class="seo-menu-link" onclick="openInfoPage('lombok'); return false;">🏝️ Lombok entdecken</a>
+  <a href="#" class="seo-menu-link" onclick="openInfoPage('transport'); return false;">🚕 Transport auf Bali</a>
   <a href="#" class="seo-menu-link" onclick="openInfoPage('warum'); return false;">🙏 Warum es Rydanu gibt</a>
 </div>
 
@@ -4165,6 +4185,22 @@ let dpRealData = null; // { driver, tours, reviews } fuer die echte My Page
 function infoImg(id, alt){
   return `<figure><img src="https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&w=1200" alt="${alt}" loading="lazy"><figcaption>${alt}</figcaption></figure>`;
 }
+// CTA-Box mit Rydanu-Logo innerhalb einer Ratgeberseite (bisher nur bei "transport" genutzt) --
+// nutzt die bereits vorhandene RYVIO_LOGO_WORDMARK-Konstante (weiter oben im Script definiert),
+// klickbar: schliesst die Ratgeberseite und springt zur Buchungs-Startseite.
+function infoCta(lang){
+  const t = {
+    de: { title: 'Schon vorher entspannt planen', text: 'Buche deinen Transfer direkt im Voraus über Rydanu — transparenter Festpreis, kein Verhandeln, kein Ärger am Hafen oder Flughafen.', btn: 'Jetzt Fahrt buchen' },
+    en: { title: 'Plan ahead, relax on arrival', text: 'Book your transfer in advance through Rydanu — a transparent fixed price, no haggling, no hassle at the harbour or airport.', btn: 'Book a ride now' },
+    id: { title: 'Rencanakan dengan tenang sebelumnya', text: 'Pesan transfer Anda langsung di muka lewat Rydanu — harga tetap yang transparan, tanpa tawar-menawar, tanpa repot di pelabuhan atau bandara.', btn: 'Pesan perjalanan sekarang' }
+  };
+  const c = t[lang] || t.en;
+  return `<div class="info-cta-box" onclick="closeInfoPage(); goHome();">
+    <img src="${RYVIO_LOGO_WORDMARK}" alt="Rydanu" class="info-cta-logo">
+    <div class="info-cta-text"><strong>${c.title}</strong><p>${c.text}</p></div>
+    <span class="info-cta-btn">${c.btn} →</span>
+  </div>`;
+}
 const INFO_EYEBROW = { de: 'Rydanu Reiseführer', en: 'Rydanu Travel Guide', id: 'Panduan Rydanu' };
 const INFO_BACK_BOTTOM_LABEL = { de: 'Zurück zur Übersicht', en: 'Back to overview', id: 'Kembali ke ringkasan' };
 const INFO_PAGES = {
@@ -4418,6 +4454,54 @@ const INFO_PAGES = {
       <h3>Pantai & Kuta Lombok</h3>
       <p>Kuta Lombok di selatan telah menjadi tujuan populer namun masih tidak terlalu ramai bagi peselancar dan backpacker, dengan pantai indah seperti Selong Belanak dan Tanjung Aan di dekatnya.</p>
       <p>Pengemudi lokal Rydanu juga bisa dipesan di Lombok — praktis untuk transfer antara bandara, pelabuhan, dan sudut-sudut pulau yang tersebar.</p>`
+    }
+  },
+  transport: {
+    heroId: 31142633, heroAlt: { de: 'Motorradverkehr auf einer asiatischen Stadtstraße', en: 'Motorbike traffic on an Asian city street', id: 'Lalu lintas sepeda motor di jalan kota Asia' },
+    title: { de: '🚕 Transport auf Bali', en: '🚕 Getting around Bali', id: '🚕 Transportasi di Bali' },
+    body: {
+      de: `<p>Bali hat kein klassisches öffentliches Nahverkehrsnetz, wie man es vielleicht aus Europa kennt — keine U-Bahn und kaum Buslinien, die wirklich jeden Ort abdecken. Ein paar Ausnahmen wie die Busse Trans Metro Dewata oder Trans Sarbagita gibt es zwar, sie decken aber nur einzelne Korridore rund um Denpasar, Kuta, Sanur und Nusa Dua ab. Für die meisten beliebten Reiseziele der Insel — Ubud, Uluwatu, der Norden oder Osten — sind sie keine echte Option.</p>
+      <h3>Grab und Gojek — praktisch, aber nicht überall</h3>
+      <p>Die Ride-Hailing-Apps Grab und Gojek funktionieren in den touristischen Zentren wie Kuta, Seminyak, Canggu oder Denpasar meist gut. In vielen anderen Orten — etwa im Zentrum von Ubud rund um Palast und Markt, an einigen Tempeln wie Uluwatu oder Tanah Lot, an manchen Beach Clubs sowie direkt am Flughafen — haben lokale Fahrer- und Taxi-Kooperativen informelle "Sperrzonen" durchgesetzt, in denen App-Abholungen nicht erlaubt sind. In der App findet sich dann oft einfach kein verfügbarer Fahrer, oder man muss erst ein paar hundert Meter zu einem erlaubten Treffpunkt laufen. Für spontane, kurze Strecken in den touristischen Kernzonen sind die Apps trotzdem praktisch — nur sollte man sich nicht darauf verlassen, dass sie überall zuverlässig funktionieren.</p>
+      ${infoImg(27221384,'Taxis warten am Straßenrand in einer asiatischen Stadt')}
+      <h3>Vorsicht vor der sogenannten "Taxi-Mafia"</h3>
+      <p>Besonders am Flughafen, an Hafenterminals (z. B. Padang Bai, Sanur, Gilimanuk) und an belebten Touristenorten stehen häufig Fahrer ohne Taxameter bereit, die überteuerte Festpreise verlangen — oft ein Vielfaches des ortsüblichen Preises. Reisende sprechen umgangssprachlich von der "Taxi-Mafia": informell organisierte Fahrergruppen, die den Zugang zu bestimmten Orten unter sich aufteilen und Konkurrenz (auch Grab/Gojek) fernhalten. Gefährlich ist das in der Regel nicht, aber ärgerlich und teuer — besonders direkt nach einem langen Flug oder einer Bootsfahrt, wenn man müde ist und wenig Lust auf Verhandlungen hat.</p>
+      <ul>
+        <li><strong>Immer nach dem Taxameter fragen</strong> oder vorab einen Festpreis bestätigen lassen, bevor man einsteigt.</li>
+        <li><strong>Am Flughafen/Hafen:</strong> offizielle Taxistände nutzen oder besser gleich vorab einen Fahrer buchen.</li>
+        <li><strong>Nicht unter Druck setzen lassen</strong> — bei einem unseriösen Preis lieber gehen, es gibt fast immer eine Alternative.</li>
+      </ul>
+      <h3>Am besten: den Transfer schon vorher buchen</h3>
+      <p>Die entspannteste Lösung ist simpel: den Transfer bereits im Vorfeld organisieren, bevor man überhaupt am Flughafen, Hafen oder Busbahnhof ankommt. Mit Rydanu lässt sich das in Ruhe von zu Hause aus planen — mit einem transparenten Festpreis von Anfang an, ganz ohne Verhandeln oder Diskussionen direkt vor Ort.</p>
+      ${infoCta('de')}`,
+      en: `<p>Bali doesn't have a proper public transport network the way you might expect from a European city — no metro, and hardly any bus routes that actually cover the places you'll want to go. A few exceptions exist, like the Trans Metro Dewata and Trans Sarbagita buses, but they only cover isolated corridors around Denpasar, Kuta, Sanur and Nusa Dua. For most of the island's popular destinations — Ubud, Uluwatu, the north or east — they're simply not a real option.</p>
+      <h3>Grab and Gojek — handy, but not everywhere</h3>
+      <p>The ride-hailing apps Grab and Gojek generally work well in tourist hubs like Kuta, Seminyak, Canggu, or Denpasar. In many other places, though — central Ubud around the palace and market, some temples such as Uluwatu or Tanah Lot, certain beach clubs, and right at the airport — local driver and taxi cooperatives enforce informal "no-go zones" where app pickups aren't allowed. The app will often simply show no available driver, or you'll need to walk a few hundred metres to an approved pickup point. For spontaneous short hops within the tourist core areas the apps are still handy — just don't rely on them working everywhere.</p>
+      ${infoImg(27221384,'Taxis waiting on the roadside in an Asian city')}
+      <h3>Watch out for the so-called "taxi mafia"</h3>
+      <p>Especially at the airport, at harbour terminals (e.g. Padang Bai, Sanur, Gilimanuk), and in busy tourist spots, you'll often find drivers without a meter demanding inflated fixed prices — sometimes several times the going rate. Travellers commonly call this the "taxi mafia": informally organised driver groups that divide up access to certain locations and keep competition (including Grab/Gojek) out. It's rarely dangerous, but it's annoying and expensive — especially right after a long flight or boat ride, when you're tired and in no mood to negotiate.</p>
+      <ul>
+        <li><strong>Always ask for the meter</strong> or agree on a fixed price before getting in.</li>
+        <li><strong>At the airport/harbour:</strong> use the official taxi counter, or better yet, book a driver in advance.</li>
+        <li><strong>Don't feel pressured</strong> — if the price seems off, walk away; there's almost always an alternative.</li>
+      </ul>
+      <h3>Best option: book your transfer ahead of time</h3>
+      <p>The most relaxed solution is simple: arrange your transfer before you even arrive at the airport, harbour, or bus terminal. With Rydanu you can plan it calmly from home — a transparent fixed price from the start, no haggling or on-the-spot negotiating.</p>
+      ${infoCta('en')}`,
+      id: `<p>Bali tidak memiliki jaringan transportasi umum yang layak seperti yang mungkin Anda kenal dari kota-kota Eropa — tidak ada kereta bawah tanah, dan hampir tidak ada rute bus yang benar-benar menjangkau tempat-tempat yang ingin Anda kunjungi. Ada beberapa pengecualian seperti bus Trans Metro Dewata dan Trans Sarbagita, tetapi hanya mencakup koridor tertentu di sekitar Denpasar, Kuta, Sanur, dan Nusa Dua. Untuk sebagian besar destinasi populer di pulau ini — Ubud, Uluwatu, utara atau timur — bus-bus ini bukan pilihan yang benar-benar bisa diandalkan.</p>
+      <h3>Grab dan Gojek — praktis, tapi tidak di mana-mana</h3>
+      <p>Aplikasi ride-hailing Grab dan Gojek umumnya berfungsi baik di pusat-pusat wisata seperti Kuta, Seminyak, Canggu, atau Denpasar. Namun di banyak tempat lain — pusat Ubud sekitar istana dan pasar, beberapa pura seperti Uluwatu atau Tanah Lot, sejumlah beach club, serta tepat di bandara — koperasi pengemudi dan taksi lokal menerapkan "zona larangan" informal di mana penjemputan lewat aplikasi tidak diperbolehkan. Aplikasi sering kali hanya menampilkan tidak ada pengemudi tersedia, atau Anda perlu berjalan beberapa ratus meter ke titik jemput yang diizinkan. Untuk perjalanan singkat yang spontan di area wisata inti, aplikasi ini tetap praktis — hanya saja jangan terlalu mengandalkannya berfungsi di mana pun.</p>
+      ${infoImg(27221384,'Taksi menunggu di pinggir jalan di sebuah kota Asia')}
+      <h3>Waspada terhadap "mafia taksi"</h3>
+      <p>Terutama di bandara, terminal pelabuhan (mis. Padang Bai, Sanur, Gilimanuk), dan tempat wisata yang ramai, sering ada pengemudi tanpa argometer yang meminta harga tetap yang sangat tinggi — kadang berkali-kali lipat dari harga wajar. Wisatawan biasa menyebutnya "mafia taksi": kelompok pengemudi yang terorganisir secara informal, membagi akses ke lokasi tertentu dan menyingkirkan persaingan (termasuk Grab/Gojek). Biasanya tidak berbahaya, tapi menjengkelkan dan mahal — terutama setelah penerbangan panjang atau perjalanan kapal, saat Anda lelah dan tidak ingin bernegosiasi.</p>
+      <ul>
+        <li><strong>Selalu tanyakan argometer</strong> atau sepakati harga tetap sebelum naik.</li>
+        <li><strong>Di bandara/pelabuhan:</strong> gunakan loket taksi resmi, atau lebih baik pesan pengemudi terlebih dahulu.</li>
+        <li><strong>Jangan merasa tertekan</strong> — jika harga terasa tidak wajar, pergi saja; hampir selalu ada alternatif.</li>
+      </ul>
+      <h3>Pilihan terbaik: pesan transfer Anda sebelumnya</h3>
+      <p>Solusi paling santai sangatlah sederhana: atur transfer Anda sebelum tiba di bandara, pelabuhan, atau terminal bus. Dengan Rydanu, Anda bisa merencanakannya dengan tenang dari rumah — harga tetap yang transparan sejak awal, tanpa tawar-menawar atau diskusi di tempat.</p>
+      ${infoCta('id')}`
     }
   },
   warum: {
@@ -14804,7 +14888,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v223</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v224</div>
 
 </body>
 </html>
