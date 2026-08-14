@@ -3345,16 +3345,16 @@
   <div class="modal">
     <div class="modal-header">
       <button class="modal-close" onclick="closeFeeBreakdown()">✕</button>
-      <span class="eyebrow" data-i18n="fee_breakdown_eyebrow">Fees this month</span>
-      <h2 data-i18n="fee_breakdown_title">What's in your open balance</h2>
+      <span class="eyebrow" id="fee-breakdown-eyebrow" data-i18n="fee_breakdown_eyebrow">Fees this month</span>
+      <h2 id="fee-breakdown-title" data-i18n="fee_breakdown_title">What's in your open balance</h2>
     </div>
     <div class="modal-body">
       <div class="panel" id="fee-breakdown-list"></div>
-      <div class="booking-row" style="border-top:2px solid var(--ink); margin-top:10px; padding-top:12px;">
-        <div class="who" data-i18n="fee_breakdown_total_label">Total open</div>
+      <div class="booking-row" id="fee-breakdown-total-row" style="border-top:2px solid var(--ink); margin-top:10px; padding-top:12px;">
+        <div class="who" id="fee-breakdown-total-label" data-i18n="fee_breakdown_total_label">Total open</div>
         <span class="mono" style="font-weight:800;" id="fee-breakdown-total"></span>
       </div>
-      <button type="button" class="book-btn" style="margin-top:16px;" onclick="closeFeeBreakdown(); showDashSection('subscription');" data-i18n="fee_breakdown_go_to_fees_btn">Go to Fees &amp; billing</button>
+      <button type="button" class="book-btn" id="fee-breakdown-go-to-fees-btn" style="margin-top:16px;" onclick="closeFeeBreakdown(); showDashSection('subscription');" data-i18n="fee_breakdown_go_to_fees_btn">Go to Fees &amp; billing</button>
     </div>
   </div>
 </div>
@@ -6393,6 +6393,12 @@ async function openFeeBreakdown(){
   const list = document.getElementById('fee-breakdown-list');
   list.innerHTML = `<div class="empty-state">${t('loading_generic')}</div>`;
   document.getElementById('fee-breakdown-modal-bg').classList.add('active');
+  // Beschriftung auf Standard zurueck (falls zuvor ueber einen Beleg mit anderem Titel geoeffnet, siehe openFeeReceiptBreakdown).
+  document.getElementById('fee-breakdown-eyebrow').textContent = t('fee_breakdown_eyebrow');
+  document.getElementById('fee-breakdown-title').textContent = t('fee_breakdown_title');
+  document.getElementById('fee-breakdown-total-label').textContent = t('fee_breakdown_total_label');
+  const goBtn = document.getElementById('fee-breakdown-go-to-fees-btn');
+  if(goBtn) goBtn.style.display = '';
   const { data, error } = await supabaseClient.from('bookings')
     .select('id, custom_tour_description, booking_date, fee_idr, cancellation_fee_idr, status, listings:listing_id(title)')
     .eq('driver_id', realDriverProfile.id).eq('fee_settled', false)
@@ -6821,7 +6827,7 @@ async function adminCollectFeesNow(driverId, driverName){
     if(r.credits_applied_idr > 0) bodyParts.push(t('admin_collect_notify_credit_note').replace('{amount}', formatIDR(r.credits_applied_idr)));
     if(r.remaining_due_idr > 0) bodyParts.push(t('admin_collect_notify_remaining_note').replace('{amount}', formatIDR(r.remaining_due_idr)));
     const { error: msgErr } = await supabaseClient.from('driver_messages').insert({
-      driver_id: driverId, type: 'fee_receipt', subject: t('admin_collect_notify_title'), body: bodyParts.join(' ')
+      driver_id: driverId, type: 'fee_receipt', subject: t('admin_collect_notify_title'), body: bodyParts.join(' '), settlement_batch_id: r.batch_id
     });
     if(msgErr) console.error('Beleg-Nachricht an Fahrer konnte nicht gesendet werden:', msgErr);
   }
@@ -7138,7 +7144,7 @@ function setFeeStatementsViewTab(tab){
 async function loadRealFeeReceipts(){
   if(!realDriverProfile) return;
   const { data, error } = await supabaseClient.from('driver_messages')
-    .select('id, subject, body, created_at, archived')
+    .select('id, subject, body, created_at, archived, settlement_batch_id')
     .eq('driver_id', realDriverProfile.id).eq('type', 'fee_receipt')
     .order('created_at', { ascending:false });
   if(error){ console.error('Gebührenbelege konnten nicht geladen werden:', error); realFeeReceipts = []; return; }
@@ -7150,6 +7156,52 @@ async function archiveFeeReceipt(id){
   const m = realFeeReceipts.find(x => x.id === id);
   if(m) m.archived = true;
   renderFeeStatements();
+}
+// Aufschluesselung "wofuer war dieser Beleg" (14. August, Abend, auf Joergs Wunsch): jeder Beleg
+// ab jetzt mit settlement_batch_id verknuepft (siehe DB-Migration + settle_driver_booking_fees) --
+// Klick oeffnet dieselbe Modal-Struktur wie openFeeBreakdown, gefiltert auf genau die Touren dieses
+// Einzugs statt aller aktuell offenen. Historische Belege ohne Batch-ID (vor diesem Fix) zeigen
+// einen ehrlichen Hinweis statt einer falschen/leeren Liste.
+async function openFeeReceiptBreakdown(messageId){
+  const m = realFeeReceipts.find(x => x.id === messageId);
+  const list = document.getElementById('fee-breakdown-list');
+  document.getElementById('fee-breakdown-modal-bg').classList.add('active');
+  // Beleg-Kontext: Titel/Summen-Beschriftung passend umschreiben ("bezahlt" statt "offen"),
+  // eigenen Zurueck-Button ausblenden (waere hier nur ein Sprung auf sich selbst).
+  document.getElementById('fee-breakdown-eyebrow').textContent = t('fee_receipt_breakdown_eyebrow');
+  document.getElementById('fee-breakdown-title').textContent = t('fee_receipt_breakdown_title');
+  document.getElementById('fee-breakdown-total-label').textContent = t('fee_receipt_breakdown_total_label');
+  const goBtn = document.getElementById('fee-breakdown-go-to-fees-btn');
+  if(goBtn) goBtn.style.display = 'none';
+  if(!m || !m.settlement_batch_id){
+    list.innerHTML = `<div class="empty-state">${t('fee_receipt_no_breakdown')}</div>`;
+    document.getElementById('fee-breakdown-total').textContent = '';
+    return;
+  }
+  list.innerHTML = `<div class="empty-state">${t('loading_generic')}</div>`;
+  const { data, error } = await supabaseClient.from('bookings')
+    .select('id, custom_tour_description, booking_date, fee_idr, cancellation_fee_idr, status, listings:listing_id(title)')
+    .eq('driver_id', realDriverProfile.id).eq('settlement_batch_id', m.settlement_batch_id)
+    .order('created_at', { ascending:false });
+  if(error){ console.error('Beleg-Aufschlüsselung konnte nicht geladen werden:', error); list.innerHTML = `<div class="empty-state">${t('fee_breakdown_load_err')}</div>`; return; }
+  const rows = (data||[]).filter(b => (b.fee_idr||0) + (b.cancellation_fee_idr||0) > 0);
+  let total = 0;
+  if(rows.length === 0){
+    list.innerHTML = `<div class="empty-state">${t('fee_breakdown_empty')}</div>`;
+  } else {
+    list.innerHTML = rows.map(b=>{
+      const tourName = (b.listings && b.listings.title) || b.custom_tour_description || t('lbl_tour_singular');
+      const rowTotal = (b.fee_idr||0) + (b.cancellation_fee_idr||0);
+      total += rowTotal;
+      const cancelNote = b.cancellation_fee_idr>0 ? `<div class="when" style="color:var(--danger);">🚫 ${t('fees_cancellation_title')}: ${formatIDR(b.cancellation_fee_idr)}</div>` : '';
+      return `
+      <div class="booking-row">
+        <div><div class="who">${escapeHtml(tourName)}</div><div class="when">${b.booking_date ? formatDateDisplay(b.booking_date) : '—'}</div>${cancelNote}</div>
+        <span class="mono" style="font-weight:700;">${formatIDR(rowTotal)}</span>
+      </div>`;
+    }).join('');
+  }
+  document.getElementById('fee-breakdown-total').textContent = formatIDR(total);
 }
 async function renderFeeStatements(){
   const el = document.getElementById('feestatements-list');
@@ -7164,9 +7216,9 @@ async function renderFeeStatements(){
       return;
     }
     el.innerHTML = filtered.map(m => `
-      <div class="booking-row">
+      <div class="booking-row" style="cursor:pointer;" onclick="openFeeReceiptBreakdown('${m.id}')">
         <div><div class="who">🧾 ${escapeHtml(m.subject||'')}</div><div class="when">${new Date(m.created_at).toLocaleDateString(currentLang==='de'?'de-DE':currentLang==='id'?'id-ID':'en-GB')} · ${escapeHtml(m.body||'')}</div></div>
-        ${!m.archived ? `<button type="button" class="accept-btn" onclick="archiveFeeReceipt('${m.id}')">✓ ${t('mark_done_btn')}</button>` : `<span class="mailbox-replied-tag">${t('archived_tag')}</span>`}
+        ${!m.archived ? `<button type="button" class="accept-btn" onclick="event.stopPropagation(); archiveFeeReceipt('${m.id}')">✓ ${t('mark_done_btn')}</button>` : `<span class="mailbox-replied-tag">${t('archived_tag')}</span>`}
       </div>`).join('');
     return;
   }
@@ -7209,8 +7261,13 @@ let realMessages = [];
 let currentRealMsgIndex = null;
 async function loadRealInbox(){
   if(!realDriverProfile) return;
+  // Fix (14. August, Abend): fee_receipt-Nachrichten erscheinen jetzt AUSSCHLIESSLICH in der
+  // Gebuehrenabrechnung, nicht mehr zusaetzlich im normalen Postfach. Vorher teilten sich beide
+  // Ansichten dieselbe DB-Zeile (archived/is_read) -- wurde eine Nachricht im normalen Postfach
+  // archiviert, erschien sie in der Gebuehrenabrechnung faelschlich schon als "erledigt", obwohl
+  // sie dort nie geoeffnet wurde.
   const { data, error } = await supabaseClient.from('driver_messages')
-    .select('*').eq('driver_id', realDriverProfile.id).order('created_at', { ascending:false });
+    .select('*').eq('driver_id', realDriverProfile.id).neq('type', 'fee_receipt').order('created_at', { ascending:false });
   if(error){ console.error('Nachrichten konnten nicht geladen werden:', error); return; }
   realMessages = data || [];
   renderRealInbox();
@@ -7426,8 +7483,9 @@ async function archiveRealMessage(idx){
   const m = realMessages[idx];
   if(!m) return;
   m.archived = true;
+  m.is_read = true;
   renderRealInbox();
-  const { error } = await supabaseClient.from('driver_messages').update({ archived:true }).eq('id', m.id);
+  const { error } = await supabaseClient.from('driver_messages').update({ archived:true, is_read:true }).eq('id', m.id);
   if(error) console.error('Nachricht konnte nicht archiviert werden:', error);
 }
 // Baustein (Buchungs-Alarm): das Umschlag-Symbol oben in der Leiste soll aufleuchten,
@@ -10171,7 +10229,7 @@ const translations = {
     stat_requests: "Booking requests",
     stat_rating: "Avg. rating",
     stat_fees: "Fees this month", loading_generic: "Loading…",
-    fee_breakdown_eyebrow: "Fees this month", fee_breakdown_title: "What's in your open balance", fee_breakdown_total_label: "Total open", fee_breakdown_go_to_fees_btn: "Go to Fees & billing", fee_breakdown_tap_hint: "Tap to see what's included", fee_breakdown_empty: "Nothing open right now.", fee_breakdown_load_err: "Couldn't load this — please try again.",
+    fee_breakdown_eyebrow: "Fees this month", fee_breakdown_title: "What's in your open balance", fee_breakdown_total_label: "Total open", fee_receipt_breakdown_eyebrow: "Receipt", fee_receipt_breakdown_title: "What this receipt covers", fee_receipt_breakdown_total_label: "Total settled", fee_receipt_no_breakdown: "No trip breakdown available for this receipt.", fee_breakdown_go_to_fees_btn: "Go to Fees & billing", fee_breakdown_tap_hint: "Tap to see what's included", fee_breakdown_empty: "Nothing open right now.", fee_breakdown_load_err: "Couldn't load this — please try again.",
     upcoming_bookings: "Upcoming bookings",
     view_calendar_btn: "View calendar",
     listings_title: "My listings",
@@ -10500,7 +10558,7 @@ const translations = {
     stat_requests: "Buchungsanfragen",
     stat_rating: "Ø Bewertung",
     stat_fees: "Gebühren diesen Monat", loading_generic: "Wird geladen…",
-    fee_breakdown_eyebrow: "Gebühren diesen Monat", fee_breakdown_title: "Das steckt in deinem offenen Betrag", fee_breakdown_total_label: "Gesamt offen", fee_breakdown_go_to_fees_btn: "Zu Gebühren & Abrechnung", fee_breakdown_tap_hint: "Antippen für Details", fee_breakdown_empty: "Aktuell nichts offen.", fee_breakdown_load_err: "Konnte nicht geladen werden — bitte nochmal versuchen.",
+    fee_breakdown_eyebrow: "Gebühren diesen Monat", fee_breakdown_title: "Das steckt in deinem offenen Betrag", fee_breakdown_total_label: "Gesamt offen", fee_receipt_breakdown_eyebrow: "Beleg", fee_receipt_breakdown_title: "Das steckt in diesem Beleg", fee_receipt_breakdown_total_label: "Gesamt beglichen", fee_receipt_no_breakdown: "Für diesen Beleg ist keine Touren-Aufschlüsselung verfügbar.", fee_breakdown_go_to_fees_btn: "Zu Gebühren & Abrechnung", fee_breakdown_tap_hint: "Antippen für Details", fee_breakdown_empty: "Aktuell nichts offen.", fee_breakdown_load_err: "Konnte nicht geladen werden — bitte nochmal versuchen.",
     upcoming_bookings: "Anstehende Buchungen",
     view_calendar_btn: "Kalender ansehen",
     listings_title: "Meine Angebote",
@@ -10829,7 +10887,7 @@ const translations = {
     stat_requests: "Permintaan pemesanan",
     stat_rating: "Rating rata-rata",
     stat_fees: "Biaya bulan ini", loading_generic: "Memuat…",
-    fee_breakdown_eyebrow: "Biaya bulan ini", fee_breakdown_title: "Rincian saldo terbuka Anda", fee_breakdown_total_label: "Total terbuka", fee_breakdown_go_to_fees_btn: "Ke Biaya & tagihan", fee_breakdown_tap_hint: "Ketuk untuk rincian", fee_breakdown_empty: "Tidak ada yang terbuka saat ini.", fee_breakdown_load_err: "Gagal memuat — silakan coba lagi.",
+    fee_breakdown_eyebrow: "Biaya bulan ini", fee_breakdown_title: "Rincian saldo terbuka Anda", fee_breakdown_total_label: "Total terbuka", fee_receipt_breakdown_eyebrow: "Kwitansi", fee_receipt_breakdown_title: "Rincian kwitansi ini", fee_receipt_breakdown_total_label: "Total diselesaikan", fee_receipt_no_breakdown: "Rincian perjalanan tidak tersedia untuk kwitansi ini.", fee_breakdown_go_to_fees_btn: "Ke Biaya & tagihan", fee_breakdown_tap_hint: "Ketuk untuk rincian", fee_breakdown_empty: "Tidak ada yang terbuka saat ini.", fee_breakdown_load_err: "Gagal memuat — silakan coba lagi.",
     upcoming_bookings: "Pemesanan mendatang",
     view_calendar_btn: "Lihat kalender",
     listings_title: "Tur saya",
@@ -14907,7 +14965,7 @@ async function archiveMyThread(){
   if(!realDriverProfile) return;
   const { error } = await supabaseClient.from('support_threads').update({ archived:true }).eq('driver_id', realDriverProfile.id);
   if(error){ console.error('Konnte nicht als erledigt markiert werden:', error); return; }
-  await supabaseClient.from('driver_messages').update({ archived:true }).eq('driver_id', realDriverProfile.id).eq('type', 'admin');
+  await supabaseClient.from('driver_messages').update({ archived:true, is_read:true }).eq('driver_id', realDriverProfile.id).eq('type', 'admin');
   closeDriverThreadView();
   loadRealInbox();
 }
@@ -15350,7 +15408,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v237</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v238</div>
 
 </body>
 </html>
