@@ -648,7 +648,7 @@
   }
   .stat-card-clickable{ cursor:pointer; border:1.5px solid var(--gold); }
   .pay-fees-hint{ font-family:'JetBrains Mono'; font-size:0.62rem; color:var(--teal); margin-top:4px; font-weight:700; }
-  .referral-credit-row{ font-family:'JetBrains Mono'; font-size:0.62rem; color:var(--teal); margin-top:4px; font-weight:700; }
+  .referral-credit-row{ font-family:'JetBrains Mono'; font-size:0.62rem; color:var(--teal); margin-top:4px; font-weight:700; align-items:center; gap:5px; }
   .referral-code-box{
     display:flex; justify-content:space-between; align-items:center; background:#fff; border:1px dashed var(--gold-deep);
     border-radius:6px; padding:10px 14px; font-size:0.85rem;
@@ -1838,6 +1838,7 @@
           <div class="filter-group-title" style="margin-bottom:8px;" data-i18n="referral_title">🎁 Refer a driver, earn IDR 100,000</div>
           <p class="note" style="margin:0 0 10px;" data-i18n="referral_body">Share your Rydanu number with another driver. Once they're approved and complete their first booking, you get an IDR 100,000 credit — automatically applied to your next fee payment.</p>
           <p class="note" style="margin:0 0 10px; font-weight:700; color:var(--ink);" data-i18n="referral_no_payout">⚠️ This credit cannot be paid out in cash — it can only be used to offset your Rydanu booking fees.</p>
+          <p class="note" style="margin:0 0 10px;" data-i18n="referral_promo_note">ⓘ The bonus only applies once your invited driver actually pays a booking fee — if their first booking is fee-free due to a promotion, no bonus is credited for it.</p>
           <div class="referral-code-box">
             <span data-i18n="referral_your_code">Your referral code</span>
             <span class="mono" id="referral-code-display" onclick="copyRyvioNumber('referral-code-display')" style="font-weight:700; cursor:pointer;" title="Klicken zum Kopieren">RY-000</span>
@@ -2001,7 +2002,7 @@
              einzigen langen Panel vermischt, laut Jörg unübersichtlich. -->
         <div class="dash-head" style="margin-top:4px;"><div><h3 data-i18n="fees_overview_new_title" style="margin:0;">Fees this month</h3></div></div>
         <div class="panel">
-          <div class="booking-row"><div><div class="who" data-i18n="fees_open_fees_title">Open fees this month</div><div class="when" data-i18n="fees_open_fees_desc">Pay your accumulated booking fees — an invoice is emailed to you automatically</div></div><button class="book-btn" style="width:auto; padding:9px 18px; margin:0;" onclick="payFees()" data-i18n="btn_pay_now">Pay now</button></div>
+          <div class="booking-row"><div><div class="who" data-i18n="fees_open_fees_title">Open fees this month</div><div class="when" data-i18n="fees_open_fees_desc">Pay your accumulated booking fees</div></div><button class="book-btn" style="width:auto; padding:9px 18px; margin:0;" onclick="payFees()" data-i18n="btn_pay_now">Pay now</button></div>
           <div class="booking-row" id="cancellation-fee-row" style="display:none;"><div><div class="who" data-i18n="fees_cancellation_title">Includes a cancellation fee</div><div class="when" data-i18n="fees_cancellation_desc">For tours you cancelled yourself — see Bookings for details</div></div><span class="mono" style="font-weight:600; color:var(--danger);" id="cancellation-fee-amount">IDR 0</span></div>
           <p class="tier-footnote" data-i18n="fees_charged_when_note">ⓘ Fees are only actually charged when you tap "Pay now", or automatically on the last day of the month. Any referral credit is applied at that moment, not before.</p>
         </div>
@@ -2015,40 +2016,44 @@
              Buchung → Villa Partner → Featured Placement (die am seltensten genutzte Option zuletzt). -->
         <div class="panel" style="background:var(--teal-soft); border-color:var(--teal); padding:20px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center; gap:14px; flex-wrap:wrap;">
           <div>
-            <div style="font-size:1.15rem; font-weight:800; color:var(--ink);">🎉 <span data-i18n="fees_listing_profile">Set up tours &amp; driver profile</span></div>
+            <div style="font-size:0.98rem; font-weight:800; color:var(--ink);">🎉 <span data-i18n="fees_listing_profile">Set up tours &amp; driver profile</span></div>
             <div class="when" style="margin-top:4px;" data-i18n="fees_listing_desc">Create unlimited listings, no cost while you have zero bookings</div>
           </div>
-          <span class="mono" style="font-weight:800; font-size:1.3rem; color:var(--teal); white-space:nowrap;">IDR 0</span>
+          <span class="mono" style="font-weight:800; font-size:1.1rem; color:var(--teal); white-space:nowrap;">IDR 0</span>
         </div>
 
         <div class="panel" style="background:var(--teal-soft); border-color:var(--teal); padding:20px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center; gap:14px; flex-wrap:wrap;">
           <div>
-            <div style="font-size:1.15rem; font-weight:800; color:var(--ink);">🚗 <span data-i18n="fees_row_any_booking">Any confirmed booking</span></div>
+            <div style="font-size:0.98rem; font-weight:800; color:var(--ink);">🚗 <span data-i18n="fees_row_any_booking">Any confirmed booking</span></div>
           </div>
-          <span class="mono" style="font-weight:800; font-size:1.3rem; color:var(--teal); white-space:nowrap;" data-i18n="fees_row_any_booking_val">10% of tour price</span>
+          <span class="mono" style="font-weight:800; font-size:1.1rem; color:var(--teal); white-space:nowrap;" data-i18n="fees_row_any_booking_val">10% of tour price</span>
         </div>
 
         <!-- Villa-Partner eigene Karte: gruen/abgerundet wie "Listing & Profil", eigener Baustein statt Tabellenzeile. -->
         <div class="panel" style="background:var(--teal-soft); border-color:var(--teal); padding:20px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center; gap:14px; flex-wrap:wrap;">
           <div>
-            <div style="font-size:1.15rem; font-weight:800; color:var(--ink);">🏠 <span data-i18n="villa_source_tag">Villa Partner</span></div>
+            <div style="font-size:0.98rem; font-weight:800; color:var(--ink);">🏠 <span data-i18n="villa_source_tag">Villa Partner</span></div>
             <div class="when" style="margin-top:4px;" data-i18n="fees_overview_villa_note">Platform fee for Villa Partner bookings (instead of the usual 10%)</div>
           </div>
-          <span class="mono" style="font-weight:800; font-size:1.3rem; color:var(--teal); white-space:nowrap;">20%</span>
+          <span class="mono" style="font-weight:800; font-size:1.1rem; color:var(--teal); white-space:nowrap;">20%</span>
         </div>
 
         <div class="panel" style="background:var(--teal-soft); border-color:var(--teal); padding:20px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center; gap:14px; flex-wrap:wrap;">
           <div>
-            <div style="font-size:1.15rem; font-weight:800; color:var(--ink);">✨ <span data-i18n="fees_featured_placement">Featured Placement <em style="font-style:normal;color:var(--ink-soft);font-size:0.75rem;" data-i18n="lbl_optional_inline">(optional)</em></span></div>
+            <div style="font-size:0.98rem; font-weight:800; color:var(--ink);">✨ <span data-i18n="fees_featured_placement">Featured Placement <em style="font-style:normal;color:var(--ink-soft);font-size:0.75rem;" data-i18n="lbl_optional_inline">(optional)</em></span></div>
             <div class="when" style="margin-top:4px;" data-i18n="fees_featured_desc">Higher spot in search results — auto-expires after 1 month</div>
           </div>
-          <span class="mono" style="font-weight:800; font-size:1.3rem; color:var(--teal); white-space:nowrap;" data-i18n="fees_featured_price">IDR 100,000 / month</span>
+          <span class="mono" style="font-weight:800; font-size:1.1rem; color:var(--teal); white-space:nowrap;" data-i18n="fees_featured_price">IDR 100,000 / month</span>
         </div>
 
         <p class="tier-footnote" style="padding:0 0 6px;" data-i18n="tier_transfer_note">Transfer bookings (with or without airport pickup) use the exact same price-based fee table above — there's no separate flat rate.</p>
         <p class="conditions-hint" style="margin-bottom:8px;">ⓘ <span data-i18n="fees_conditions_apply_booking">Conditions apply to every booking</span> — <a href="#" onclick="openTerms('booking'); return false;" data-i18n="fees_see_full_terms">see full terms</a></p>
 
-        <div class="dash-head" style="margin-top:26px;"><div><h3 data-i18n="feestatements_title" style="margin:0;">Fee statements</h3><p data-i18n="feestatements_sub">Every paid fee generates a receipt here — also emailed to you.</p></div></div>
+        <div class="dash-head" style="margin-top:26px;"><div><h3 data-i18n="feestatements_title" style="margin:0;">Fee statements</h3><p data-i18n="feestatements_sub">Every paid fee generates a receipt here.</p></div></div>
+        <div class="period-tabs" id="feestatements-view-tabs">
+          <button type="button" class="period-btn active" data-view="inbox" onclick="setFeeStatementsViewTab('inbox')" data-i18n="mailbox_tab_inbox">Inbox</button>
+          <button type="button" class="period-btn" data-view="archive" onclick="setFeeStatementsViewTab('archive')" data-i18n="mailbox_tab_archive">Archive</button>
+        </div>
         <div class="panel" id="feestatements-list"></div>
       </div>
 
@@ -6740,14 +6745,58 @@ async function renderAdminOpenPayments(){
     const credit = creditByDriver[d.id] || 0;
     const overdueNote = d.fees_overdue_since ? ` · <span style="color:var(--danger);">${d.is_locked ? t('admin_openpay_suspended') : t('admin_openpay_overdue')}</span>` : '';
     return `
-    <div class="booking-row">
-      <div>
-        <div class="who">${escapeHtml(d.name)} · ${d.lw_number||'—'}</div>
-        <div class="when">${t('admin_openpay_amount')}: ${formatIDR(d.fees_due_idr)} · ${t('admin_openpay_balance')}: ${formatIDR(d.balance_idr)}${credit>0 ? ` · ${t('admin_openpay_credit')}: ${formatIDR(credit)}` : ''}${overdueNote}</div>
+    <div class="admin-openpay-item" style="border-bottom:1px solid var(--line); padding:12px 0;">
+      <div class="booking-row" style="border:none; padding:0;">
+        <div>
+          <div class="who">${escapeHtml(d.name)} · ${d.lw_number||'—'}</div>
+          <div class="when">${t('admin_openpay_amount')}: ${formatIDR(d.fees_due_idr)} · ${t('admin_openpay_balance')}: ${formatIDR(d.balance_idr)}${credit>0 ? ` · ${t('admin_openpay_credit')}: ${formatIDR(credit)}` : ''}${overdueNote}</div>
+        </div>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <button type="button" class="link-btn" onclick="toggleAdminFeeDetails('${d.id}', this)">${t('admin_openpay_details_btn')}</button>
+          <button type="button" class="accept-btn" onclick="adminCollectFeesNow('${d.id}','${escapeHtml(d.name).replace(/'/g,"\\'")}')">${t('admin_openpay_collect_btn')}</button>
+        </div>
       </div>
-      <button type="button" class="accept-btn" onclick="adminCollectFeesNow('${d.id}','${escapeHtml(d.name).replace(/'/g,"\\'")}')">${t('admin_openpay_collect_btn')}</button>
+      <div id="admin-fee-detail-${d.id}" style="display:none; margin-top:8px; padding-left:4px; border-left:2px solid var(--line);"></div>
     </div>`;
   }).join('');
+}
+// Aufschluesselung der einzelnen offenen Touren je Fahrer (14. August) — nutzt dieselbe Query wie
+// die Fahrer-eigene Aufschluesselung (openFeeBreakdown), nur inline unter der Admin-Zeile statt im Modal.
+async function toggleAdminFeeDetails(driverId, btnEl){
+  const box = document.getElementById('admin-fee-detail-' + driverId);
+  if(!box) return;
+  const isOpen = box.style.display === 'block';
+  if(isOpen){
+    box.style.display = 'none';
+    if(btnEl) btnEl.textContent = t('admin_openpay_details_btn');
+    return;
+  }
+  box.style.display = 'block';
+  if(btnEl) btnEl.textContent = t('admin_openpay_hide_btn');
+  if(box.dataset.loaded === '1') return;
+  box.innerHTML = `<div class="empty-state">${t('loading_generic')}</div>`;
+  const { data, error } = await supabaseClient.from('bookings')
+    .select('id, custom_tour_description, booking_date, fee_idr, cancellation_fee_idr, status, listings:listing_id(title)')
+    .eq('driver_id', driverId).eq('fee_settled', false)
+    .not('status', 'in', '(pending,declined_by_driver)')
+    .order('created_at', { ascending:false });
+  if(error){ console.error('Admin-Aufschlüsselung konnte nicht geladen werden:', error); box.innerHTML = `<div class="empty-state">${t('fee_breakdown_load_err')}</div>`; return; }
+  const rows = (data||[]).filter(b => (b.fee_idr||0) + (b.cancellation_fee_idr||0) > 0);
+  if(rows.length === 0){
+    box.innerHTML = `<div class="empty-state">${t('fee_breakdown_empty')}</div>`;
+  } else {
+    box.innerHTML = rows.map(b=>{
+      const tourName = (b.listings && b.listings.title) || b.custom_tour_description || t('lbl_tour_singular');
+      const rowTotal = (b.fee_idr||0) + (b.cancellation_fee_idr||0);
+      const cancelNote = b.cancellation_fee_idr>0 ? `<div class="when" style="color:var(--danger);">🚫 ${t('fees_cancellation_title')}: ${formatIDR(b.cancellation_fee_idr)}</div>` : '';
+      return `
+      <div class="booking-row" style="padding:8px 0;">
+        <div><div class="who">${escapeHtml(tourName)}</div><div class="when">${b.booking_date ? formatDateDisplay(b.booking_date) : '—'}</div>${cancelNote}</div>
+        <span class="mono" style="font-weight:700;">${formatIDR(rowTotal)}</span>
+      </div>`;
+    }).join('');
+  }
+  box.dataset.loaded = '1';
 }
 // Punkt (5. August): Gebühreneinzug muss jederzeit manuell moeglich sein, nicht nur beim
 // automatischen Monatsabzug. Verrechnet dabei zuerst offene Gutschriften (bisher nie passiert!),
@@ -6766,7 +6815,7 @@ async function adminCollectFeesNow(driverId, driverName){
     if(r.credits_applied_idr > 0) bodyParts.push(t('admin_collect_notify_credit_note').replace('{amount}', formatIDR(r.credits_applied_idr)));
     if(r.remaining_due_idr > 0) bodyParts.push(t('admin_collect_notify_remaining_note').replace('{amount}', formatIDR(r.remaining_due_idr)));
     const { error: msgErr } = await supabaseClient.from('driver_messages').insert({
-      driver_id: driverId, type: 'system', subject: t('admin_collect_notify_title'), body: bodyParts.join(' ')
+      driver_id: driverId, type: 'fee_receipt', subject: t('admin_collect_notify_title'), body: bodyParts.join(' ')
     });
     if(msgErr) console.error('Beleg-Nachricht an Fahrer konnte nicht gesendet werden:', msgErr);
   }
@@ -7069,13 +7118,53 @@ function showDashSection(name){
   if(name==='inbox'){ if(realDriverProfile) loadRealInbox(); else renderInbox(); }
 }
 function getStore(){ return driverDataStore[currentDriverId]; }
-function renderFeeStatements(){
+// Gebührenbelege (14. August, auf Jörgs Wunsch): kein Mail-Versand mehr behauptet — stattdessen
+// echte Belege (driver_messages vom Typ 'fee_receipt', z.B. aus adminCollectFeesNow) mit denselben
+// Neu/Archiviert-Reitern wie im Postfach. Solange noch kein echter Zahlungsanbieter angebunden ist,
+// entstehen Belege nur bei manuellem Admin-Einzug oder dem monatlichen Cronjob.
+let feeStatementsViewTab = 'inbox';
+let realFeeReceipts = [];
+function setFeeStatementsViewTab(tab){
+  feeStatementsViewTab = tab;
+  document.querySelectorAll('#feestatements-view-tabs .period-btn').forEach(b => b.classList.toggle('active', b.dataset.view===tab));
+  renderFeeStatements();
+}
+async function loadRealFeeReceipts(){
+  if(!realDriverProfile) return;
+  const { data, error } = await supabaseClient.from('driver_messages')
+    .select('id, subject, body, created_at, archived')
+    .eq('driver_id', realDriverProfile.id).eq('type', 'fee_receipt')
+    .order('created_at', { ascending:false });
+  if(error){ console.error('Gebührenbelege konnten nicht geladen werden:', error); realFeeReceipts = []; return; }
+  realFeeReceipts = data || [];
+}
+async function archiveFeeReceipt(id){
+  const { error } = await supabaseClient.from('driver_messages').update({ archived:true }).eq('id', id);
+  if(error){ alert('Fehler: ' + error.message); return; }
+  const m = realFeeReceipts.find(x => x.id === id);
+  if(m) m.archived = true;
+  renderFeeStatements();
+}
+async function renderFeeStatements(){
   const el = document.getElementById('feestatements-list');
+  const tabs = document.getElementById('feestatements-view-tabs');
   if(realDriverProfile){
-    // Echte Gebührenzahlung ist noch nicht angebunden (kein Zahlungsanbieter) — ehrlich anzeigen statt Demo-Belege zu zeigen
-    el.innerHTML = `<div class="empty-state">${t('real_receipts_not_yet')}</div>`;
+    if(tabs) tabs.style.display = '';
+    el.innerHTML = `<div class="empty-state">${t('loading_generic')}</div>`;
+    await loadRealFeeReceipts();
+    const filtered = realFeeReceipts.filter(m => feeStatementsViewTab==='archive' ? m.archived : !m.archived);
+    if(filtered.length === 0){
+      el.innerHTML = `<div class="empty-state">${feeStatementsViewTab==='archive' ? t('empty_archive') : t('empty_receipts')}</div>`;
+      return;
+    }
+    el.innerHTML = filtered.map(m => `
+      <div class="booking-row">
+        <div><div class="who">🧾 ${escapeHtml(m.subject||'')}</div><div class="when">${new Date(m.created_at).toLocaleDateString(currentLang==='de'?'de-DE':currentLang==='id'?'id-ID':'en-GB')} · ${escapeHtml(m.body||'')}</div></div>
+        ${!m.archived ? `<button type="button" class="accept-btn" onclick="archiveFeeReceipt('${m.id}')">✓ ${t('mark_done_btn')}</button>` : `<span class="mailbox-replied-tag">${t('archived_tag')}</span>`}
+      </div>`).join('');
     return;
   }
+  if(tabs) tabs.style.display = 'none';
   const receipts = getStore().receipts || [];
   if(receipts.length === 0){
     el.innerHTML = `<div class="empty-state">${t('empty_receipts')}</div>`;
@@ -7121,7 +7210,7 @@ async function loadRealInbox(){
   renderRealInbox();
   updateRealInboxDot();
 }
-const DRIVER_MSG_TYPE_ICON = { fee_reminder:'💳', lock_notice:'🚫', unlock_notice:'✓', admin:'👤', system:'ℹ️', doc_request:'📎', customer_message:'✉️' };
+const DRIVER_MSG_TYPE_ICON = { fee_reminder:'💳', fee_receipt:'🧾', lock_notice:'🚫', unlock_notice:'✓', admin:'👤', system:'ℹ️', doc_request:'📎', customer_message:'✉️' };
 function renderRealInbox(){
   const el = document.getElementById('inbox-list');
   if(!el) return;
@@ -9932,7 +10021,7 @@ const translations = {
  fees_listing_profile: "Set up tours & driver profile", fees_hero_free_label: "always free", fees_listing_desc: "Create unlimited listings, no cost while you have zero bookings",
     fees_conditions_apply: "Conditions apply", fees_see_full_terms: "see full terms", fees_th_booking_value: "Booking value", fees_th_fee_charged: "Fee charged to driver", fees_row_any_booking: "Any confirmed booking", fees_row_any_booking_val: "10% of tour price", fees_conditions_apply_booking: "Conditions apply to every booking", fees_zero_bookings_note: "A driver with zero bookings this month pays nothing at all — the fee only appears once a guest actually confirms a paid trip.",
     fees_featured_placement: "Featured placement", fees_featured_desc: "Higher spot in search results — auto-expires after 1 month", fees_featured_price: "IDR 100,000 / month",
-    fees_open_fees_title: "Open fees this month", fees_open_fees_desc: "Pay your accumulated booking fees — an invoice is emailed to you automatically",
+    fees_open_fees_title: "Open fees this month", fees_open_fees_desc: "Pay your accumulated booking fees",
     fees_cancellation_title: "Includes a cancellation fee", fees_cancellation_desc: "For tours you cancelled yourself — see Bookings for details",
     cancel_outcome_customer_1: "Cancelled —", cancel_outcome_customer_2: "Since the customer didn't show up, there's no further payout — the platform fee already charged for this booking is not refunded. The customer has been informed by email.",
     cancel_outcome_driver_1: "Cancelled —", cancel_outcome_driver_2: "No regular Rydanu fee applies to this booking, but a cancellation fee of", cancel_outcome_driver_3: "The customer has been informed by email and pointed to Rydanu to find another driver.",
@@ -10032,7 +10121,7 @@ const translations = {
     cancel_reason_eyebrow: "Cancel booking", cancel_reason_prompt: "Why are you cancelling this tour? The guest will be notified.", cancel_reason_customer: "Customer didn't show up", cancel_reason_driver: "I need to cancel the tour",
     cancel_confirm_prompt: "Are you sure you want to cancel this tour? This cannot be undone.", cancel_confirm_back: "No, go back", cancel_confirm_yes: "Yes, cancel tour",
     alert_deposit_confirmed_1: "Booking accepted — now final with", alert_deposit_confirmed_2: "The guest has been notified by email & WhatsApp.",
-    alert_no_fees: "No open fees — everything is paid. ✓", confirm_pay_fees: "Pay your open Rydanu fees of", confirm_pay_fees_credit_note: "after applying your referral credit of", confirm_pay_fees_fully_covered: "Your open fees are fully covered by your referral credit —", referral_credit_lbl: "Referral credit", admin_credit_lbl: "Credit", referral_title: "🎁 Refer a driver, earn IDR 100,000", referral_body: "Share your Rydanu number with another driver. Once they're approved and complete their first booking, you get an IDR 100,000 credit — automatically applied to your next fee payment.", referral_your_code: "Your referral code", referral_bonus_inbox_title: "🎁 Referral bonus credited!", referral_bonus_inbox_body: "{name} completed their first booking — you've been credited {amount} toward your Rydanu fees. Thanks for growing the community!", referral_no_payout: "This credit cannot be paid out in cash — it can only be used to offset your Rydanu booking fees.", tier_transfer_note: "Transfer bookings (with or without airport pickup) use the exact same price-based fee table above — there's no separate flat rate.", referral_credit_pending_note: "available — applied automatically when you next pay your fees", fees_charged_when_note: "\u24d8 Fees are only actually charged when you tap \"Pay now\", or automatically on the last day of the month. Any referral credit is applied at that moment, not before.",
+    alert_no_fees: "No open fees — everything is paid. ✓", confirm_pay_fees: "Pay your open Rydanu fees of", confirm_pay_fees_credit_note: "after applying your referral credit of", confirm_pay_fees_fully_covered: "Your open fees are fully covered by your referral credit —", referral_credit_lbl: "Referral credit", admin_credit_lbl: "Credit", referral_title: "🎁 Refer a driver, earn IDR 100,000", referral_body: "Share your Rydanu number with another driver. Once they're approved and complete their first booking, you get an IDR 100,000 credit — automatically applied to your next fee payment.", referral_your_code: "Your referral code", referral_bonus_inbox_title: "🎁 Referral bonus credited!", referral_bonus_inbox_body: "{name} completed their first booking — you've been credited {amount} toward your Rydanu fees. Thanks for growing the community!", referral_no_payout: "This credit cannot be paid out in cash — it can only be used to offset your Rydanu booking fees.", referral_promo_note: "The bonus only applies once your invited driver actually pays a booking fee — if their first booking is fee-free due to a promotion, no bonus is credited for it.", tier_transfer_note: "Transfer bookings (with or without airport pickup) use the exact same price-based fee table above — there's no separate flat rate.", referral_credit_pending_note: "available — applied automatically when you next pay your fees", fees_charged_when_note: "\u24d8 Fees are only actually charged when you tap \"Pay now\", or automatically on the last day of the month. Any referral credit is applied at that moment, not before.",
     alert_fees_paid_1: "Payment successful:", alert_fees_paid_2: "Your receipt is available under \"Fee statements\":",
     alert_listing_pending: "Your listing is saved, but it will only appear to travelers once your Rydanu account has been approved.",
     empty_bookings: "No bookings yet. Add your first listing to start receiving requests.",
@@ -10048,7 +10137,7 @@ const translations = {
     admin_openpay_title: "Open payments", admin_openpay_sub: "Drivers whose automatic month-end fee payment failed. They have 5 days to settle before their account is automatically suspended.",
     admin_run_settlement_btn: "Run month-end settlement now (test)", admin_settlement_real_note: "Real fee billing already runs automatically every day (daily cron job) — there's no manual trigger for real drivers, and this button only affects demo data.", admin_openpay_empty: "No open payments right now — everyone is settled.",
     admin_openpay_amount: "Amount due", admin_openpay_due: "Due date", admin_openpay_suspended: "🚫 Suspended", admin_openpay_overdue: "Overdue",
-    admin_openpay_balance: "Balance", admin_openpay_credit: "Pending credit", admin_openpay_collect_btn: "Collect now",
+    admin_openpay_balance: "Balance", admin_openpay_credit: "Pending credit", admin_openpay_collect_btn: "Collect now", admin_openpay_details_btn: "Details", admin_openpay_hide_btn: "Hide",
     admin_openpay_collect_confirm: "Collect fees from {name} now? This applies any pending credits first, then deducts what's available from their balance.",
     admin_openpay_collect_result_1: "✓ Collected: {amount}", admin_openpay_collect_result_credit: "Credit applied: {amount}", admin_openpay_collect_result_remaining: "Still open afterwards: {amount}", admin_collect_notify_title: "💳 Rydanu fees collected", admin_collect_notify_body: "Rydanu collected {amount} in fees from your balance.", admin_collect_notify_credit_note: "This included {amount} from your referral/admin credit.", admin_collect_notify_remaining_note: "{amount} is still open.",
     admin_openpay_days_left: "{n} days left", admin_confirm_run_settlement: "Run the automatic month-end fee settlement for all drivers now? This charges everyone with open fees and a valid payment method, and starts the 5-day countdown for anyone without one.",
@@ -10065,7 +10154,7 @@ const translations = {
     nav_feestatements: "Fee statements",
     nav_inbox: "Inbox",
     feestatements_title: "Fee statements",
-    feestatements_sub: "Every paid fee generates a receipt here — also emailed to you.",
+    feestatements_sub: "Every paid fee generates a receipt here.",
     inbox_title: "Inbox",
     inbox_sub: "Messages from Rydanu about your account, approvals and payments.",
     switcher_label: "Logged in as",
@@ -10172,7 +10261,7 @@ const translations = {
     admin_fch_confirm_delete: "Delete this charge entry? This does not reverse the amount already applied.",
     admin_fc_confirm_delete: "Really delete this credit? The already-credited amount will be deducted from the driver again, if not yet used.",
     admin_fc_empty_default: "No credits created yet.", admin_fc_empty_filtered: "No credits created for this driver yet.",
-    admin_all_drivers_option: "All drivers", admin_drivers_search_placeholder: "Search driver…", admin_delete_btn: "✕ Delete", admin_status_suspended: "🚫 Suspended (unpaid fees)", admin_status_blocked: "🚫 Blocked", admin_status_active: "Active", admin_lock_btn: "Block", admin_unlock_btn: "Unblock", payment_received_title: "Payment received — receipt {ref}", payment_received_body_credit: "We received your fee payment of {amount} (an {credit} referral credit was applied). The receipt is available under \"Fees & billing\" and was emailed to you.", payment_received_body_plain: "We received your fee payment of {amount}. The receipt is available under \"Fees & billing\" and was emailed to you.", welcome_inbox_title: "Welcome to Rydanu! 🌴", welcome_inbox_body: "Your registration was received and is under review. Your Rydanu number is {number} — keep it handy for all support requests.", approved_inbox_title: "Your account is approved ✓", approved_inbox_body: "Congratulations! Your profile and all your tours are now live and bookable for travelers.", approved_alert: "{name} has been approved and is now live on Rydanu.", rejected_inbox_title: "Your registration was rejected", rejected_inbox_body: "Reason: {reason} — you can register again with corrected documents or contact support.", rejected_alert: "{name} has been rejected and notified with your reason.", account_blocked_banner: "🚫 Your account has been blocked by Rydanu. Your tours are not visible to travelers. Please contact support via the WhatsApp button below.", rejected_banner: "✕ Your registration was rejected. Reason: {reason}<br>Please contact Rydanu support or register again with corrected documents.",
+    admin_all_drivers_option: "All drivers", admin_drivers_search_placeholder: "Search driver…", admin_delete_btn: "✕ Delete", admin_status_suspended: "🚫 Suspended (unpaid fees)", admin_status_blocked: "🚫 Blocked", admin_status_active: "Active", admin_lock_btn: "Block", admin_unlock_btn: "Unblock", payment_received_title: "Payment received — receipt {ref}", payment_received_body_credit: "We received your fee payment of {amount} (an {credit} referral credit was applied). The receipt is available under \"Fees & billing\".", payment_received_body_plain: "We received your fee payment of {amount}. The receipt is available under \"Fees & billing\".", welcome_inbox_title: "Welcome to Rydanu! 🌴", welcome_inbox_body: "Your registration was received and is under review. Your Rydanu number is {number} — keep it handy for all support requests.", approved_inbox_title: "Your account is approved ✓", approved_inbox_body: "Congratulations! Your profile and all your tours are now live and bookable for travelers.", approved_alert: "{name} has been approved and is now live on Rydanu.", rejected_inbox_title: "Your registration was rejected", rejected_inbox_body: "Reason: {reason} — you can register again with corrected documents or contact support.", rejected_alert: "{name} has been rejected and notified with your reason.", account_blocked_banner: "🚫 Your account has been blocked by Rydanu. Your tours are not visible to travelers. Please contact support via the WhatsApp button below.", rejected_banner: "✕ Your registration was rejected. Reason: {reason}<br>Please contact Rydanu support or register again with corrected documents.",
     modal_services_label: "Service (on request)",
     modal_start_label: "Start of tour",
     surcharge_note: "against surcharge",
@@ -10361,7 +10450,7 @@ const translations = {
     cancel_reason_eyebrow: "Buchung stornieren", cancel_reason_prompt: "Warum stornierst du die Tour? Der Gast wird benachrichtigt.", cancel_reason_customer: "Kunde ist nicht gekommen", cancel_reason_driver: "Ich muss die Tour absagen",
     cancel_confirm_prompt: "Willst du diese Tour wirklich stornieren? Das kann nicht rückgängig gemacht werden.", cancel_confirm_back: "Nein, zurück", cancel_confirm_yes: "Ja, Tour stornieren",
     alert_deposit_confirmed_1: "Buchung angenommen — jetzt final mit", alert_deposit_confirmed_2: "Der Gast wurde per E-Mail & WhatsApp benachrichtigt.",
-    alert_no_fees: "Keine offenen Gebühren — alles bezahlt. ✓", confirm_pay_fees: "Deine offenen Rydanu-Gebühren jetzt bezahlen:", confirm_pay_fees_credit_note: "nach Anrechnung deiner Empfehlungs-Gutschrift von", confirm_pay_fees_fully_covered: "Deine offenen Gebühren sind vollständig durch deine Empfehlungs-Gutschrift gedeckt —", referral_credit_lbl: "Empfehlungs-Gutschrift", admin_credit_lbl: "Gutschrift", referral_title: "🎁 Fahrer werben, IDR 100.000 verdienen", referral_body: "Teile deine Rydanu-Nummer mit einem anderen Fahrer. Sobald er freigeschaltet ist und seine erste Buchung abgeschlossen hat, bekommst du eine Gutschrift von IDR 100.000 — automatisch bei deiner nächsten Gebührenzahlung angerechnet.", referral_your_code: "Deine Empfehlungs-Nummer", referral_bonus_inbox_title: "🎁 Empfehlungsbonus gutgeschrieben!", referral_bonus_inbox_body: "{name} hat seine erste Buchung abgeschlossen — dir wurden {amount} auf deine Rydanu-Gebühren gutgeschrieben. Danke, dass du die Community wachsen lässt!", referral_no_payout: "Diese Gutschrift kann nicht ausgezahlt werden — sie kann nur zur Verrechnung mit deinen Rydanu-Gebühren verwendet werden.", tier_transfer_note: "Transfer-Buchungen (mit oder ohne Flughafenabholung) nutzen genau dieselbe preisbasierte Gebührentabelle oben — es gibt keinen separaten Pauschalsatz.", referral_credit_pending_note: "verf\u00fcgbar — wird automatisch bei deiner n\u00e4chsten Gebührenzahlung angerechnet", fees_charged_when_note: "\u24d8 Geb\u00fchren werden erst berechnet, wenn du auf \"Jetzt bezahlen\" tippst, oder automatisch am letzten Tag des Monats. Eine Empfehlungs-Gutschrift wird erst zu diesem Zeitpunkt angerechnet, nicht vorher.",
+    alert_no_fees: "Keine offenen Gebühren — alles bezahlt. ✓", confirm_pay_fees: "Deine offenen Rydanu-Gebühren jetzt bezahlen:", confirm_pay_fees_credit_note: "nach Anrechnung deiner Empfehlungs-Gutschrift von", confirm_pay_fees_fully_covered: "Deine offenen Gebühren sind vollständig durch deine Empfehlungs-Gutschrift gedeckt —", referral_credit_lbl: "Empfehlungs-Gutschrift", admin_credit_lbl: "Gutschrift", referral_title: "🎁 Fahrer werben, IDR 100.000 verdienen", referral_body: "Teile deine Rydanu-Nummer mit einem anderen Fahrer. Sobald er freigeschaltet ist und seine erste Buchung abgeschlossen hat, bekommst du eine Gutschrift von IDR 100.000 — automatisch bei deiner nächsten Gebührenzahlung angerechnet.", referral_your_code: "Deine Empfehlungs-Nummer", referral_bonus_inbox_title: "🎁 Empfehlungsbonus gutgeschrieben!", referral_bonus_inbox_body: "{name} hat seine erste Buchung abgeschlossen — dir wurden {amount} auf deine Rydanu-Gebühren gutgeschrieben. Danke, dass du die Community wachsen lässt!", referral_no_payout: "Diese Gutschrift kann nicht ausgezahlt werden — sie kann nur zur Verrechnung mit deinen Rydanu-Gebühren verwendet werden.", referral_promo_note: "Die Prämie gilt nur, wenn dein geworbener Fahrer tatsächlich eine Buchungsgebühr zahlt — ist seine erste Buchung durch eine Aktion gebührenfrei, entfällt die Prämie dafür.", tier_transfer_note: "Transfer-Buchungen (mit oder ohne Flughafenabholung) nutzen genau dieselbe preisbasierte Gebührentabelle oben — es gibt keinen separaten Pauschalsatz.", referral_credit_pending_note: "verf\u00fcgbar — wird automatisch bei deiner n\u00e4chsten Gebührenzahlung angerechnet", fees_charged_when_note: "\u24d8 Geb\u00fchren werden erst berechnet, wenn du auf \"Jetzt bezahlen\" tippst, oder automatisch am letzten Tag des Monats. Eine Empfehlungs-Gutschrift wird erst zu diesem Zeitpunkt angerechnet, nicht vorher.",
     alert_fees_paid_1: "Zahlung erfolgreich:", alert_fees_paid_2: "Dein Beleg liegt unter \"Gebührenabrechnung\":",
     alert_listing_pending: "Dein Angebot ist gespeichert, erscheint für Reisende aber erst, sobald dein Rydanu-Konto freigeschaltet wurde.",
     empty_bookings: "Noch keine Buchungen. Lege dein erstes Angebot an, um Anfragen zu erhalten.",
@@ -10377,7 +10466,7 @@ const translations = {
     admin_openpay_title: "Offene Zahlungen", admin_openpay_sub: "Fahrer, deren automatische Monatsend-Gebührenzahlung fehlgeschlagen ist. Sie haben 5 Tage Zeit zu zahlen, bevor ihr Konto automatisch gesperrt wird.",
     admin_run_settlement_btn: "Monatsabrechnung jetzt ausführen (Test)", admin_settlement_real_note: "Die echte Gebührenabrechnung läuft schon automatisch jeden Tag (täglicher Cronjob) — dafür gibt es keinen manuellen Auslöser für echte Fahrer, dieser Button betrifft nur Demo-Daten.", admin_openpay_empty: "Aktuell keine offenen Zahlungen — alles beglichen.",
     admin_openpay_amount: "Fälliger Betrag", admin_openpay_due: "Fällig am", admin_openpay_suspended: "🚫 Gesperrt", admin_openpay_overdue: "Überfällig",
-    admin_openpay_balance: "Guthaben", admin_openpay_credit: "Offene Gutschrift", admin_openpay_collect_btn: "Jetzt einziehen",
+    admin_openpay_balance: "Guthaben", admin_openpay_credit: "Offene Gutschrift", admin_openpay_collect_btn: "Jetzt einziehen", admin_openpay_details_btn: "Details", admin_openpay_hide_btn: "Ausblenden",
     admin_openpay_collect_confirm: "Jetzt Gebühren von {name} einziehen? Zuerst werden offene Gutschriften verrechnet, danach der Rest vom Guthaben abgezogen.",
     admin_openpay_collect_result_1: "✓ Eingezogen: {amount}", admin_openpay_collect_result_credit: "Gutschrift verrechnet: {amount}", admin_openpay_collect_result_remaining: "Danach noch offen: {amount}", admin_collect_notify_title: "💳 Rydanu-Gebühren eingezogen", admin_collect_notify_body: "Rydanu hat {amount} an Gebühren von deinem Guthaben eingezogen.", admin_collect_notify_credit_note: "Davon {amount} aus deiner Empfehlungs-/Admin-Gutschrift verrechnet.", admin_collect_notify_remaining_note: "Noch offen: {amount}.",
     admin_openpay_days_left: "noch {n} Tage", admin_confirm_run_settlement: "Jetzt die automatische Monatsend-Gebührenabrechnung für alle Fahrer ausführen? Das belastet alle mit offenen Gebühren und gültiger Zahlungsmethode und startet die 5-Tage-Frist für alle ohne.",
@@ -10394,7 +10483,7 @@ const translations = {
     nav_feestatements: "Gebührenabrechnung",
     nav_inbox: "Posteingang",
     feestatements_title: "Gebührenabrechnungen",
-    feestatements_sub: "Jede bezahlte Gebühr erzeugt hier einen Beleg — zusätzlich per E-Mail an dich.",
+    feestatements_sub: "Jede bezahlte Gebühr erzeugt hier einen Beleg.",
     inbox_title: "Posteingang",
     inbox_sub: "Nachrichten von Rydanu zu deinem Konto, Freischaltungen und Zahlungen.",
     switcher_label: "Angemeldet als",
@@ -10501,7 +10590,7 @@ const translations = {
     admin_fch_confirm_delete: "Diesen Belastungs-Eintrag löschen? Der bereits verrechnete Betrag wird dadurch nicht rückgängig gemacht.",
     admin_fc_confirm_delete: "Diese Gutschrift wirklich löschen? Der bereits gutgeschriebene Betrag wird dem Fahrer wieder abgezogen, sofern er noch nicht verbraucht wurde.",
     admin_fc_empty_default: "Noch keine Gutschriften erstellt.", admin_fc_empty_filtered: "Für diesen Fahrer wurden noch keine Gutschriften erstellt.",
-    admin_all_drivers_option: "Alle Fahrer", admin_drivers_search_placeholder: "Fahrer suchen…", admin_delete_btn: "✕ Löschen", admin_status_suspended: "🚫 Gesperrt (unbezahlte Gebühren)", admin_status_blocked: "🚫 Gesperrt", admin_status_active: "Aktiv", admin_lock_btn: "Sperren", admin_unlock_btn: "Entsperren", payment_received_title: "Zahlung erhalten — Beleg {ref}", payment_received_body_credit: "Wir haben deine Gebührenzahlung von {amount} erhalten (eine Empfehlungs-Gutschrift von {credit} wurde angerechnet). Der Beleg ist unter \"Gebühren & Abrechnung\" verfügbar und wurde dir per Mail geschickt.", payment_received_body_plain: "Wir haben deine Gebührenzahlung von {amount} erhalten. Der Beleg ist unter \"Gebühren & Abrechnung\" verfügbar und wurde dir per Mail geschickt.", welcome_inbox_title: "Willkommen bei Rydanu! 🌴", welcome_inbox_body: "Deine Registrierung ist eingegangen und wird geprüft. Deine Rydanu-Nummer ist {number} — halte sie für alle Support-Anfragen bereit.", approved_inbox_title: "Dein Konto ist freigeschaltet ✓", approved_inbox_body: "Glückwunsch! Dein Profil und alle deine Touren sind jetzt live und für Reisende buchbar.", approved_alert: "{name} wurde freigeschaltet und ist jetzt live auf Rydanu.", rejected_inbox_title: "Deine Registrierung wurde abgelehnt", rejected_inbox_body: "Grund: {reason} — du kannst dich mit korrigierten Dokumenten erneut registrieren oder den Support kontaktieren.", rejected_alert: "{name} wurde abgelehnt und über deinen Grund benachrichtigt.", account_blocked_banner: "🚫 Dein Konto wurde von Rydanu gesperrt. Deine Touren sind für Reisende nicht sichtbar. Bitte kontaktiere den Support über den WhatsApp-Button unten.", rejected_banner: "✕ Deine Registrierung wurde abgelehnt. Grund: {reason}<br>Bitte kontaktiere den Rydanu-Support oder registriere dich mit korrigierten Dokumenten erneut.",
+    admin_all_drivers_option: "Alle Fahrer", admin_drivers_search_placeholder: "Fahrer suchen…", admin_delete_btn: "✕ Löschen", admin_status_suspended: "🚫 Gesperrt (unbezahlte Gebühren)", admin_status_blocked: "🚫 Gesperrt", admin_status_active: "Aktiv", admin_lock_btn: "Sperren", admin_unlock_btn: "Entsperren", payment_received_title: "Zahlung erhalten — Beleg {ref}", payment_received_body_credit: "Wir haben deine Gebührenzahlung von {amount} erhalten (eine Empfehlungs-Gutschrift von {credit} wurde angerechnet). Der Beleg ist unter \"Gebühren & Abrechnung\" verfügbar.", payment_received_body_plain: "Wir haben deine Gebührenzahlung von {amount} erhalten. Der Beleg ist unter \"Gebühren & Abrechnung\" verfügbar.", welcome_inbox_title: "Willkommen bei Rydanu! 🌴", welcome_inbox_body: "Deine Registrierung ist eingegangen und wird geprüft. Deine Rydanu-Nummer ist {number} — halte sie für alle Support-Anfragen bereit.", approved_inbox_title: "Dein Konto ist freigeschaltet ✓", approved_inbox_body: "Glückwunsch! Dein Profil und alle deine Touren sind jetzt live und für Reisende buchbar.", approved_alert: "{name} wurde freigeschaltet und ist jetzt live auf Rydanu.", rejected_inbox_title: "Deine Registrierung wurde abgelehnt", rejected_inbox_body: "Grund: {reason} — du kannst dich mit korrigierten Dokumenten erneut registrieren oder den Support kontaktieren.", rejected_alert: "{name} wurde abgelehnt und über deinen Grund benachrichtigt.", account_blocked_banner: "🚫 Dein Konto wurde von Rydanu gesperrt. Deine Touren sind für Reisende nicht sichtbar. Bitte kontaktiere den Support über den WhatsApp-Button unten.", rejected_banner: "✕ Deine Registrierung wurde abgelehnt. Grund: {reason}<br>Bitte kontaktiere den Rydanu-Support oder registriere dich mit korrigierten Dokumenten erneut.",
     modal_services_label: "Service (auf Anfrage)",
     modal_start_label: "Start der Tour",
     surcharge_note: "gegen Aufpreis",
@@ -10690,7 +10779,7 @@ const translations = {
     cancel_reason_eyebrow: "Batalkan pemesanan", cancel_reason_prompt: "Mengapa Anda membatalkan tur ini? Tamu akan diberi tahu.", cancel_reason_customer: "Pelanggan tidak datang", cancel_reason_driver: "Saya perlu membatalkan tur",
     cancel_confirm_prompt: "Apakah Anda yakin ingin membatalkan tur ini? Tindakan ini tidak dapat dibatalkan.", cancel_confirm_back: "Tidak, kembali", cancel_confirm_yes: "Ya, batalkan tur",
     alert_deposit_confirmed_1: "Pemesanan diterima — kini final dengan", alert_deposit_confirmed_2: "Tamu telah diberi tahu via email & WhatsApp.",
-    alert_no_fees: "Tidak ada biaya terbuka — semuanya lunas. ✓", confirm_pay_fees: "Bayar biaya Rydanu terbuka Anda:", confirm_pay_fees_credit_note: "setelah menerapkan kredit referral Anda sebesar", confirm_pay_fees_fully_covered: "Biaya terbuka Anda telah sepenuhnya ditutupi oleh kredit referral Anda —", referral_credit_lbl: "Kredit referral", admin_credit_lbl: "Kredit", referral_title: "🎁 Ajak sopir, dapatkan IDR 100.000", referral_body: "Bagikan nomor Rydanu Anda kepada sopir lain. Setelah mereka disetujui dan menyelesaikan pemesanan pertama, Anda mendapat kredit IDR 100.000 — otomatis diterapkan pada pembayaran biaya berikutnya.", referral_your_code: "Kode referral Anda", referral_bonus_inbox_title: "🎁 Bonus referral dikreditkan!", referral_bonus_inbox_body: "{name} telah menyelesaikan pemesanan pertama mereka — Anda dikreditkan {amount} untuk biaya Rydanu Anda. Terima kasih telah mengembangkan komunitas!", referral_no_payout: "Kredit ini tidak dapat dicairkan secara tunai — hanya dapat digunakan untuk mengurangi biaya pemesanan Rydanu Anda.", tier_transfer_note: "Pemesanan transfer (dengan atau tanpa penjemputan bandara) menggunakan tabel biaya berbasis harga yang sama persis seperti di atas — tidak ada tarif tetap terpisah.", referral_credit_pending_note: "tersedia — otomatis diterapkan saat Anda membayar biaya berikutnya", fees_charged_when_note: "\u24d8 Biaya hanya benar-benar dikenakan saat Anda mengetuk \"Bayar sekarang\", atau otomatis pada hari terakhir bulan tersebut. Kredit referral apa pun diterapkan pada saat itu, bukan sebelumnya.",
+    alert_no_fees: "Tidak ada biaya terbuka — semuanya lunas. ✓", confirm_pay_fees: "Bayar biaya Rydanu terbuka Anda:", confirm_pay_fees_credit_note: "setelah menerapkan kredit referral Anda sebesar", confirm_pay_fees_fully_covered: "Biaya terbuka Anda telah sepenuhnya ditutupi oleh kredit referral Anda —", referral_credit_lbl: "Kredit referral", admin_credit_lbl: "Kredit", referral_title: "🎁 Ajak sopir, dapatkan IDR 100.000", referral_body: "Bagikan nomor Rydanu Anda kepada sopir lain. Setelah mereka disetujui dan menyelesaikan pemesanan pertama, Anda mendapat kredit IDR 100.000 — otomatis diterapkan pada pembayaran biaya berikutnya.", referral_your_code: "Kode referral Anda", referral_bonus_inbox_title: "🎁 Bonus referral dikreditkan!", referral_bonus_inbox_body: "{name} telah menyelesaikan pemesanan pertama mereka — Anda dikreditkan {amount} untuk biaya Rydanu Anda. Terima kasih telah mengembangkan komunitas!", referral_no_payout: "Kredit ini tidak dapat dicairkan secara tunai — hanya dapat digunakan untuk mengurangi biaya pemesanan Rydanu Anda.", referral_promo_note: "Bonus hanya berlaku jika sopir yang Anda ajak benar-benar membayar biaya pemesanan — jika pemesanan pertamanya bebas biaya karena promosi, bonus tidak diberikan untuk itu.", tier_transfer_note: "Pemesanan transfer (dengan atau tanpa penjemputan bandara) menggunakan tabel biaya berbasis harga yang sama persis seperti di atas — tidak ada tarif tetap terpisah.", referral_credit_pending_note: "tersedia — otomatis diterapkan saat Anda membayar biaya berikutnya", fees_charged_when_note: "\u24d8 Biaya hanya benar-benar dikenakan saat Anda mengetuk \"Bayar sekarang\", atau otomatis pada hari terakhir bulan tersebut. Kredit referral apa pun diterapkan pada saat itu, bukan sebelumnya.",
     alert_fees_paid_1: "Pembayaran berhasil:", alert_fees_paid_2: "Kuitansi tersedia di \"Laporan biaya\":",
     alert_listing_pending: "Tur Anda tersimpan, tetapi baru terlihat oleh wisatawan setelah akun Rydanu Anda disetujui.",
     empty_bookings: "Belum ada pemesanan. Tambahkan tur pertama Anda untuk menerima permintaan.",
@@ -10706,7 +10795,7 @@ const translations = {
     admin_openpay_title: "Pembayaran terbuka", admin_openpay_sub: "Sopir yang pembayaran biaya akhir bulan otomatisnya gagal. Mereka punya 5 hari untuk melunasi sebelum akun mereka otomatis ditangguhkan.",
     admin_run_settlement_btn: "Jalankan penyelesaian akhir bulan sekarang (uji)", admin_settlement_real_note: "Penagihan biaya sesungguhnya sudah berjalan otomatis setiap hari (cron job harian) — tidak ada pemicu manual untuk sopir sungguhan, tombol ini hanya memengaruhi data demo.", admin_openpay_empty: "Tidak ada pembayaran terbuka saat ini — semua sudah lunas.",
     admin_openpay_amount: "Jumlah jatuh tempo", admin_openpay_due: "Tanggal jatuh tempo", admin_openpay_suspended: "🚫 Ditangguhkan", admin_openpay_overdue: "Terlambat",
-    admin_openpay_balance: "Saldo", admin_openpay_credit: "Kredit tertunda", admin_openpay_collect_btn: "Tagih sekarang",
+    admin_openpay_balance: "Saldo", admin_openpay_credit: "Kredit tertunda", admin_openpay_collect_btn: "Tagih sekarang", admin_openpay_details_btn: "Rincian", admin_openpay_hide_btn: "Sembunyikan",
     admin_openpay_collect_confirm: "Tagih biaya dari {name} sekarang? Kredit tertunda akan diterapkan lebih dulu, lalu sisanya diambil dari saldo.",
     admin_openpay_collect_result_1: "✓ Ditagih: {amount}", admin_openpay_collect_result_credit: "Kredit diterapkan: {amount}", admin_openpay_collect_result_remaining: "Masih terbuka setelahnya: {amount}", admin_collect_notify_title: "💳 Biaya Rydanu ditagih", admin_collect_notify_body: "Rydanu menagih {amount} biaya dari saldo Anda.", admin_collect_notify_credit_note: "Termasuk {amount} dari kredit referral/admin Anda.", admin_collect_notify_remaining_note: "Masih terbuka: {amount}.",
     admin_openpay_days_left: "{n} hari lagi", admin_confirm_run_settlement: "Jalankan penyelesaian biaya akhir bulan otomatis untuk semua sopir sekarang? Ini akan menagih semua yang memiliki biaya terbuka dan metode pembayaran valid, dan memulai hitung mundur 5 hari untuk yang tidak punya.",
@@ -10723,7 +10812,7 @@ const translations = {
     nav_feestatements: "Laporan biaya",
     nav_inbox: "Kotak masuk",
     feestatements_title: "Laporan biaya",
-    feestatements_sub: "Setiap biaya yang dibayar menghasilkan kuitansi di sini — juga dikirim via email.",
+    feestatements_sub: "Setiap biaya yang dibayar menghasilkan kuitansi di sini.",
     inbox_title: "Kotak masuk",
     inbox_sub: "Pesan dari Rydanu tentang akun, persetujuan, dan pembayaran Anda.",
     switcher_label: "Masuk sebagai",
@@ -10830,7 +10919,7 @@ const translations = {
     admin_fch_confirm_delete: "Hapus entri pembebanan ini? Jumlah yang sudah diterapkan tidak akan dibatalkan.",
     admin_fc_confirm_delete: "Yakin ingin menghapus kredit ini? Jumlah yang sudah dikreditkan akan dikurangi kembali dari sopir, jika belum digunakan.",
     admin_fc_empty_default: "Belum ada kredit yang dibuat.", admin_fc_empty_filtered: "Belum ada kredit yang dibuat untuk sopir ini.",
-    admin_all_drivers_option: "Semua sopir", admin_drivers_search_placeholder: "Cari sopir…", admin_delete_btn: "✕ Hapus", admin_status_suspended: "🚫 Ditangguhkan (biaya belum dibayar)", admin_status_blocked: "🚫 Diblokir", admin_status_active: "Aktif", admin_lock_btn: "Blokir", admin_unlock_btn: "Buka blokir", payment_received_title: "Pembayaran diterima — kwitansi {ref}", payment_received_body_credit: "Kami telah menerima pembayaran biaya Anda sebesar {amount} (kredit referral sebesar {credit} telah diterapkan). Kwitansi tersedia di \"Biaya & tagihan\" dan telah dikirim melalui email.", payment_received_body_plain: "Kami telah menerima pembayaran biaya Anda sebesar {amount}. Kwitansi tersedia di \"Biaya & tagihan\" dan telah dikirim melalui email.", welcome_inbox_title: "Selamat datang di Rydanu! 🌴", welcome_inbox_body: "Pendaftaran Anda telah diterima dan sedang ditinjau. Nomor Rydanu Anda adalah {number} — simpan baik-baik untuk semua permintaan dukungan.", approved_inbox_title: "Akun Anda telah disetujui ✓", approved_inbox_body: "Selamat! Profil dan semua tur Anda sekarang aktif dan dapat dipesan oleh wisatawan.", approved_alert: "{name} telah disetujui dan sekarang aktif di Rydanu.", rejected_inbox_title: "Pendaftaran Anda ditolak", rejected_inbox_body: "Alasan: {reason} — Anda dapat mendaftar lagi dengan dokumen yang telah diperbaiki atau menghubungi dukungan.", rejected_alert: "{name} telah ditolak dan diberi tahu dengan alasan Anda.", account_blocked_banner: "🚫 Akun Anda telah diblokir oleh Rydanu. Tur Anda tidak terlihat oleh wisatawan. Silakan hubungi dukungan melalui tombol WhatsApp di bawah.", rejected_banner: "✕ Pendaftaran Anda ditolak. Alasan: {reason}<br>Silakan hubungi dukungan Rydanu atau daftar lagi dengan dokumen yang telah diperbaiki.",
+    admin_all_drivers_option: "Semua sopir", admin_drivers_search_placeholder: "Cari sopir…", admin_delete_btn: "✕ Hapus", admin_status_suspended: "🚫 Ditangguhkan (biaya belum dibayar)", admin_status_blocked: "🚫 Diblokir", admin_status_active: "Aktif", admin_lock_btn: "Blokir", admin_unlock_btn: "Buka blokir", payment_received_title: "Pembayaran diterima — kwitansi {ref}", payment_received_body_credit: "Kami telah menerima pembayaran biaya Anda sebesar {amount} (kredit referral sebesar {credit} telah diterapkan). Kwitansi tersedia di \"Biaya & tagihan\".", payment_received_body_plain: "Kami telah menerima pembayaran biaya Anda sebesar {amount}. Kwitansi tersedia di \"Biaya & tagihan\".", welcome_inbox_title: "Selamat datang di Rydanu! 🌴", welcome_inbox_body: "Pendaftaran Anda telah diterima dan sedang ditinjau. Nomor Rydanu Anda adalah {number} — simpan baik-baik untuk semua permintaan dukungan.", approved_inbox_title: "Akun Anda telah disetujui ✓", approved_inbox_body: "Selamat! Profil dan semua tur Anda sekarang aktif dan dapat dipesan oleh wisatawan.", approved_alert: "{name} telah disetujui dan sekarang aktif di Rydanu.", rejected_inbox_title: "Pendaftaran Anda ditolak", rejected_inbox_body: "Alasan: {reason} — Anda dapat mendaftar lagi dengan dokumen yang telah diperbaiki atau menghubungi dukungan.", rejected_alert: "{name} telah ditolak dan diberi tahu dengan alasan Anda.", account_blocked_banner: "🚫 Akun Anda telah diblokir oleh Rydanu. Tur Anda tidak terlihat oleh wisatawan. Silakan hubungi dukungan melalui tombol WhatsApp di bawah.", rejected_banner: "✕ Pendaftaran Anda ditolak. Alasan: {reason}<br>Silakan hubungi dukungan Rydanu atau daftar lagi dengan dokumen yang telah diperbaiki.",
     modal_services_label: "Layanan (atas permintaan)",
     modal_start_label: "Awal tur",
     surcharge_note: "dengan biaya tambahan",
@@ -15255,7 +15344,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v232</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v233</div>
 
 </body>
 </html>
