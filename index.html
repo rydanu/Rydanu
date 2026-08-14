@@ -7386,6 +7386,10 @@ function openReceiptDetail(i){
   document.getElementById('receipt-modal-bg').classList.add('active');
 }
 function closeReceiptDetail(){ document.getElementById('receipt-modal-bg').classList.remove('active'); }
+// Bugfix (Scan 14. August): dieses Fenster wird aktuell nirgends geoeffnet (totes Ueberbleibsel
+// einer frueheren Version der Touranfragen-Ansicht), aber der Schliessen-Button verwies auf eine
+// nie definierte Funktion. Defensiv ergaenzt, falls das Fenster kuenftig doch wieder genutzt wird.
+function closeRequestDetail(){ document.getElementById('request-detail-modal-bg').classList.remove('active'); }
 // ---- echter Posteingang (Baustein 8) ----
 let realMessages = [];
 let currentRealMsgIndex = null;
