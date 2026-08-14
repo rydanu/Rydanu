@@ -5,6 +5,19 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="color-scheme" content="light only">
 <title>Rydanu — Bali's driver marketplace</title>
+<!-- SEO/Social-Meta ergänzt (Audit 12. August, hatte bisher komplett gefehlt trotz der eigenen
+     Ratgeberseiten) -- statische Basiswerte für die Startseite; einzelne Ratgeberseiten selbst
+     bekommen ihre Inhalte weiterhin dynamisch per JS gerendert und teilen sich diese Basis-Tags. -->
+<meta name="description" content="Rydanu vermittelt private Fahrer auf Bali für Flughafen-Transfers, Tagestouren und individuelle Fahrten — transparente Festpreise, direkte Zahlung bar an den Fahrer, keine versteckten Gebühren.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Rydanu">
+<meta property="og:title" content="Rydanu — Bali's driver marketplace">
+<meta property="og:description" content="Private Fahrer auf Bali buchen: Flughafen-Transfers, Tagestouren, individuelle Fahrten. Transparente Festpreise, Zahlung bar an den Fahrer.">
+<meta property="og:image" content="https://rydanu.com/logo-email.png">
+<meta property="og:url" content="https://rydanu.com/">
+<meta name="twitter:card" content="summary">
+<link rel="canonical" href="https://rydanu.com/">
+
 
 <!-- PWA: installable on iPhone & Android -->
 <link rel="manifest" href="manifest.json">
@@ -1252,6 +1265,18 @@
   </div>
 </div>
 
+<!-- Baustein "Zwei-Wege-Nachrichten" (12. August): oeffentliche Unterhaltungsseite fuer den Kunden,
+     erreichbar ueber den persoenlichen Link aus der Antwort-Benachrichtigungsmail (?msg=TOKEN).
+     Bewusst AUSSERHALB der Baustellen-Tuer, genau wie die anderen oeffentlichen Formulare -- ein
+     Kunde ohne Rydanu-Konto darf hier nie an der Login-Sperre haengen bleiben. Zeigt die komplette
+     Unterhaltung mit dem Fahrer und erlaubt direktes Weiterschreiben, ganz ohne WhatsApp/E-Mail. -->
+<div id="page-msg-public-page" class="offer-confirm-page" style="display:none;">
+  <div class="offer-confirm-card">
+    <div class="lock-logo"><img id="page-msg-public-logo" alt="Rydanu"></div>
+    <div id="page-msg-public-body"><p class="note">Loading your conversation…</p></div>
+  </div>
+</div>
+
 <!-- Villa Partner Phase 1: oeffentliches Anfrageformular fuer Villa-/Hotel-Gaeste, erreichbar ueber
      rydanu.com/v/<slug> (Vercel-Rewrite auf index.html) oder ?villa=<slug>. Bewusst AUSSERHALB der
      Baustellen-Tuer, da der Gast kein Rydanu-Konto hat und nie an der Login-Sperre haengen bleiben darf.
@@ -1432,15 +1457,12 @@
   </div>
 
   <div class="driver-grid" id="driver-grid"></div>
-  <p class="no-results" id="no-results" style="display:none; padding:0 32px 40px; color:var(--ink-soft); font-size:0.9rem;">No drivers match that search yet — try a different area or clear the duration filter.</p>
+  <p class="no-results" id="no-results" data-i18n="no_drivers_match" style="display:none; padding:0 32px 40px; color:var(--ink-soft); font-size:0.9rem;">No drivers match that search yet — try a different area or clear the duration filter.</p>
 
   <footer>
     <svg width="14" height="18" viewBox="0 0 100 130" fill="var(--ink-soft)" style="vertical-align:-5px; margin-right:6px;">
       <path d="M50 8 C76 8 94 28 94 54 C94 82 50 122 50 122 C50 122 6 82 6 54 C6 28 24 8 50 8 Z"/>
-    </svg>RYDANU — Software platform for independent Bali drivers. Payments processed directly to drivers.
-    <br><button type="button" onclick="resetDemoData()" style="background:none;border:none;color:var(--ink-soft);text-decoration:underline;cursor:pointer;font-family:'JetBrains Mono';font-size:0.68rem;margin-top:8px;">Reset demo data</button>
-    · <button type="button" onclick="openDataTransfer('export')" style="background:none;border:none;color:var(--ink-soft);text-decoration:underline;cursor:pointer;font-family:'JetBrains Mono';font-size:0.68rem;">Export data</button>
-    · <button type="button" onclick="openDataTransfer('import')" style="background:none;border:none;color:var(--ink-soft);text-decoration:underline;cursor:pointer;font-family:'JetBrains Mono';font-size:0.68rem;">Import data</button>
+    </svg><span data-i18n="footer_tagline">RYDANU — Software platform for independent Bali drivers. Payments processed directly to drivers.</span>
   </footer>
 </div>
 
@@ -2029,7 +2051,8 @@
   </div>
 </div>
 
-<!-- admin view: approve pending drivers (demo only) -->
+<!-- admin view: echtes, live genutztes Admin-Panel (Kommentar oben war veraltet/irreführend — ist
+     kein Demo-only-Bereich, sondern die tatsächliche Freischaltungs-/Verwaltungsoberfläche) -->
 <div class="view" id="view-admin">
   <div style="max-width:760px; margin:0 auto; padding:32px 20px;">
 
@@ -2037,6 +2060,17 @@
       <p class="note" id="admin-current-account" style="margin:0;"></p>
       <button type="button" class="cancel-btn" style="padding:8px 16px; font-size:0.85rem;" onclick="handleDriverLogout()">🚪 Abmelden</button>
     </div>
+    <!-- Entwickler-Tools fuer die Demo-Daten -- bewusst nur hier im Admin-Bereich (nicht mehr im
+         oeffentlichen Footer, siehe Audit 12. August): betrifft ausschliesslich lokale Demo-Daten
+         in diesem Browser, niemals echte Supabase-Daten. -->
+    <details style="margin-bottom:20px;">
+      <summary style="cursor:pointer; font-family:'JetBrains Mono'; font-size:0.68rem; color:var(--ink-soft); text-transform:uppercase; letter-spacing:0.03em;">Entwickler-Tools (nur Demo-Daten)</summary>
+      <div style="margin-top:8px; display:flex; gap:10px; flex-wrap:wrap;">
+        <button type="button" onclick="resetDemoData()" style="background:none;border:1px solid var(--line);color:var(--ink-soft);border-radius:8px;padding:6px 10px;cursor:pointer;font-family:'JetBrains Mono';font-size:0.68rem;">Reset demo data</button>
+        <button type="button" onclick="openDataTransfer('export')" style="background:none;border:1px solid var(--line);color:var(--ink-soft);border-radius:8px;padding:6px 10px;cursor:pointer;font-family:'JetBrains Mono';font-size:0.68rem;">Export data</button>
+        <button type="button" onclick="openDataTransfer('import')" style="background:none;border:1px solid var(--line);color:var(--ink-soft);border-radius:8px;padding:6px 10px;cursor:pointer;font-family:'JetBrains Mono';font-size:0.68rem;">Import data</button>
+      </div>
+    </details>
 
     <div class="admin-tile-grid" id="admin-tile-menu">
       <button type="button" class="admin-tile" id="admin-tile-pending" onclick="showAdminSection('pending')">
@@ -2932,6 +2966,12 @@
     <div class="form-field">
       <input type="text" id="dp-msg-name" data-i18n-placeholder="dp_msg_name_ph" placeholder="Your name">
     </div>
+    <!-- E-Mail-Feld ergaenzt (12. August): vorher gab es keine Moeglichkeit fuer den Fahrer,
+         zu antworten, obwohl der Bestaetigungstext das versprach. E-Mail dient nur als "Klingel" --
+         das eigentliche Gespraech bleibt komplett auf Rydanu (siehe sendPageMessage()). -->
+    <div class="form-field">
+      <input type="email" id="dp-msg-email" data-i18n-placeholder="dp_msg_email_ph" placeholder="Your email (so the driver can reply)">
+    </div>
     <div class="form-field">
       <textarea id="dp-msg-text" rows="3" data-i18n-placeholder="dp_msg_text_ph" placeholder="Your message to the driver..."></textarea>
     </div>
@@ -2969,7 +3009,7 @@
       <div class="form-field">
         <label class="review-photo-label" for="sr-photo">📷 <span data-i18n="mb_review_photo">Add a photo (optional)</span></label>
         <input type="file" id="sr-photo" accept="image/*" style="display:none;" onchange="handleStandaloneReviewPhoto(event)">
-        <img id="sr-photo-preview" style="display:none; max-width:120px; border-radius:8px; margin-top:8px;">
+        <img id="sr-photo-preview" alt="Vorschau" style="display:none; max-width:120px; border-radius:8px; margin-top:8px;">
       </div>
       <p class="form-error" id="sr-error"></p>
       <button class="book-btn" onclick="submitStandaloneReview()" data-i18n="mb_review_submit">Submit review</button>
@@ -3096,7 +3136,7 @@
           <div class="form-field" id="mb-review-photo-row">
             <label class="review-photo-label" for="mb-review-photo">📷 <span data-i18n="mb_review_photo">Add a photo (optional)</span></label>
             <input type="file" id="mb-review-photo" accept="image/*" style="display:none;" onchange="handleReviewPhoto(event)">
-            <img id="mb-review-photo-preview" style="display:none; max-width:120px; border-radius:8px; margin-top:8px;">
+            <img id="mb-review-photo-preview" alt="Vorschau" style="display:none; max-width:120px; border-radius:8px; margin-top:8px;">
           </div>
           <p class="form-error" id="mb-review-error"></p>
           <button class="book-btn" onclick="submitMyReview()" data-i18n="mb_review_submit">Submit review</button>
@@ -3314,6 +3354,29 @@
       <p class="form-error" id="driver-thread-reply-status" style="color:var(--teal);"></p>
       <button class="book-btn" onclick="sendDriverThreadReply()" data-i18n="support_send_btn">Send message</button>
       <button class="link-btn" id="driver-thread-archive-btn" onclick="archiveMyThread()" style="display:none; width:100%; text-align:center; margin-top:6px;">✓ <span data-i18n="mark_done_btn">Mark as done</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- Baustein "Zwei-Wege-Nachrichten" (12. August): eigenes, sauber getrenntes Chat-Modal fuer
+     Kunden-Nachrichten ueber die Fahrer-Seite (page_message_threads). Bewusst NICHT das bestehende
+     driver-thread-modal-bg wiederverwendet -- das ist fest an support_threads (Fahrer<->Admin)
+     verdrahtet, ein Umbau haette dort Risiko fuer den bestehenden, funktionierenden Flow bedeutet. -->
+<div class="modal-bg" id="page-msg-thread-modal-bg">
+  <div class="modal">
+    <div class="modal-header">
+      <button class="modal-close" onclick="closePageMessageThreadModal()">✕</button>
+      <span class="eyebrow" data-i18n="pm_modal_eyebrow">Message from a customer</span>
+      <h2 id="page-msg-thread-subject">—</h2>
+    </div>
+    <div class="modal-body">
+      <div class="thread-entries" id="page-msg-thread-entries"></div>
+      <div class="form-field" style="margin-top:16px;">
+        <label data-i18n="pm_reply_label">Your reply</label>
+        <textarea id="page-msg-reply-text" rows="4" data-i18n-placeholder="pm_reply_ph" placeholder="Write your reply..."></textarea>
+      </div>
+      <p class="form-error" id="page-msg-reply-status" style="color:var(--teal);"></p>
+      <button class="book-btn" onclick="sendPageMessageThreadReply()" data-i18n="pm_reply_send">Send reply</button>
     </div>
   </div>
 </div>
@@ -3775,6 +3838,7 @@ const RYVIO_LOGO_WORDMARK = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAlgAA
 document.getElementById('lock-logo-img').src = RYVIO_LOGO_WORDMARK;
 document.getElementById('offer-confirm-logo').src = RYVIO_LOGO_WORDMARK;
 document.getElementById('villa-request-logo').src = RYVIO_LOGO_WORDMARK;
+document.getElementById('page-msg-public-logo').src = RYVIO_LOGO_WORDMARK;
 document.getElementById('villa-apply-logo').src = RYVIO_LOGO_WORDMARK;
 
 // ---- persistence: keep demo changes across reloads on this device/browser ----
@@ -4851,7 +4915,7 @@ function renderDriverPage(){
         <div class="dp-review">
           <div class="r-head"><span class="r-name">${r.name}</span><span class="r-stars">${r.stars}</span></div>
           <div class="r-text">${r.text}</div>
-          ${r.photo ? `<img src="${r.photo}" style="max-width:130px; border-radius:8px; margin-top:8px;">` : ''}
+          ${r.photo ? `<img src="${r.photo}" alt="Bewertungsfoto" style="max-width:130px; border-radius:8px; margin-top:8px;">` : ''}
         </div>
       `).join('')
     : `<div class="empty-state">${t('dp_reviews_empty')}</div>`;
@@ -4860,6 +4924,7 @@ function renderDriverPage(){
   document.getElementById('dp-request-tour-btn').style.display = isOwner ? 'none' : 'block';
   document.getElementById('dp-msg-status').textContent = '';
   document.getElementById('dp-msg-name').value = '';
+  document.getElementById('dp-msg-email').value = '';
   document.getElementById('dp-msg-text').value = '';
 }
 // echte "My Page" rendern (Baustein 10) — nutzt dieselben dp-* Elemente wie die Demo-Seite,
@@ -5259,16 +5324,22 @@ function deletePageMedia(i){
 }
 async function sendPageMessage(){
   const name = document.getElementById('dp-msg-name').value.trim();
+  const email = document.getElementById('dp-msg-email').value.trim();
   const text = document.getElementById('dp-msg-text').value.trim();
-  if(!name || !text){
+  const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  if(!name || !emailOk || !text){
     document.getElementById('dp-msg-status').textContent = t('dp_msg_err');
     document.getElementById('dp-msg-status').style.color = 'var(--danger)';
     return;
   }
+  // Baustein "Zwei-Wege-Nachrichten" (12. August): statt eines einfachen Inserts jetzt ueber die
+  // RPC send_page_message, die einen echten Thread anlegt (page_message_threads +
+  // page_message_thread_messages) und dem Fahrer erlaubt, spaeter in seinem Postfach zu antworten.
+  // E-Mail dient nur als "Klingel" fuer die spaetere Antwort-Benachrichtigung -- das Gespraech
+  // selbst bleibt komplett auf Rydanu, nie in der Mail sichtbar.
   if(dpIsReal){
-    const { error } = await supabaseClient.from('driver_messages').insert({
-      driver_id: dpDriverId, type: 'customer_message',
-      subject: t('dp_msg_inbox_title') + ' ' + name, body: text
+    const { error } = await supabaseClient.rpc('send_page_message', {
+      p_driver_id: dpDriverId, p_customer_name: name, p_customer_email: email, p_body: text
     });
     if(error){
       console.error('Nachricht konnte nicht gesendet werden:', error);
@@ -5277,6 +5348,7 @@ async function sendPageMessage(){
       return;
     }
     document.getElementById('dp-msg-name').value = '';
+    document.getElementById('dp-msg-email').value = '';
     document.getElementById('dp-msg-text').value = '';
     document.getElementById('dp-msg-status').style.color = 'var(--teal)';
     document.getElementById('dp-msg-status').textContent = t('dp_msg_sent');
@@ -5286,6 +5358,7 @@ async function sendPageMessage(){
   if(dpDriverId === currentDriverId) updateInboxDot();
   saveState();
   document.getElementById('dp-msg-name').value = '';
+  document.getElementById('dp-msg-email').value = '';
   document.getElementById('dp-msg-text').value = '';
   document.getElementById('dp-msg-status').style.color = 'var(--teal)';
   document.getElementById('dp-msg-status').textContent = t('dp_msg_sent');
@@ -6976,7 +7049,7 @@ function renderRealInbox(){
   el.innerHTML = msgs.map(m=>{
     const idx = realMessages.indexOf(m);
     const isSettled = m.archived && m.is_read;
-    const clickAction = m.type==='admin' ? `openMyThreadFromInbox(${idx})` : `openRealMsgDetail(${idx})`;
+    const clickAction = m.type==='admin' ? `openMyThreadFromInbox(${idx})` : (m.type==='customer_message' && m.thread_id ? `openPageMessageThreadFromInbox(${idx})` : `openRealMsgDetail(${idx})`);
     const archiveAction = m.type==='admin' ? `archiveMyThread()` : `archiveRealMessage(${idx})`;
     return `
     <div class="inbox-row ${!m.is_read?'unread':''}" style="cursor:${isDeletedView?'default':'pointer'}; position:relative;" ${isDeletedView ? '' : `onclick="${clickAction}"`}>
@@ -9692,6 +9765,7 @@ const translations = {
     support_btn: "✉️ Message to Rydanu Support", dp_qr_dash_btn: "📱 Your Rydanu QR code",
     support_modal_title: "Message to Rydanu Support",
     support_subject_label: "Subject", support_msg_label: "Your message", support_send_btn: "Send message",
+    pm_modal_eyebrow: "Message from a customer", pm_reply_label: "Your reply", pm_reply_ph: "Write your reply...", pm_reply_send: "Send reply",
     support_error: "Please enter a subject and a message.",
     support_sent: "Your message has been sent to Rydanu Support. ✓ We'll reply to your inbox.",
     period_day: "Daily", period_month: "Monthly", period_year: "Yearly",
@@ -9742,6 +9816,8 @@ const translations = {
     form_err_name_email: "Please enter your name and email to continue.", form_err_pickup: "Please enter your pickup location (hotel or address) before continuing — your driver needs it to plan the tour.", form_err_required_all: "Please fill in all fields (WhatsApp number, date and pickup location) — only luggage and notes are optional.",
     eyebrow_profile: "Driver profile", eyebrow_trip: "Trip details", eyebrow_payment: "Payment", eyebrow_confirm: "All set",
     status_sending: "Sending…", status_sent: "Sent ✓", status_delivered: "Delivered ✓",
+    no_drivers_match: "No drivers match that search yet — try a different area or clear the duration filter.",
+    footer_tagline: "RYDANU — Software platform for independent Bali drivers. Payments processed directly to drivers.",
     confirm_reset_demo: "Reset the whole demo back to its original starting data? This cannot be undone.",
     admin_err_rejection_reason: "Please enter a reason for the rejection — it will be sent to the driver.",
     admin_confirm_reject: "Reject {name}?\n\nReason: {reason}\n\nThe driver will be notified by email & WhatsApp.",
@@ -9778,8 +9854,8 @@ const translations = {
     dp_gallery_title: "Photos & videos", dp_upload_btn: "Upload photo or video", dp_gallery_empty: "No photos or videos yet.", dp_gallery_empty_owner: "Upload photos and short videos of your tours — travelers love seeing real impressions!", dp_photo_upload_soon: "Photo upload is coming soon.",
     dp_tours_title: "My tours on Rydanu", dp_tours_empty: "No active tours right now.",
     dp_reviews_title: "What guests say", dp_reviews_empty: "No reviews yet.", dp_review_singular: "review", dp_review_plural: "reviews",
-    dp_msg_title: "Send me a message", dp_msg_name_ph: "Your name", dp_msg_text_ph: "Your message to the driver...", dp_msg_send: "✉️ Send message",
-    dp_msg_err: "Please enter your name and a message.", dp_msg_sent: "✓ Message sent — the driver will get back to you.", dp_msg_inbox_title: "New message via your Rydanu page — from", dp_msg_save_err: "Couldn't send your message — please try again.",
+    dp_msg_title: "Send me a message", dp_msg_name_ph: "Your name", dp_msg_email_ph: "Your email (so the driver can reply)", dp_msg_text_ph: "Your message to the driver...", dp_msg_send: "✉️ Send message",
+    dp_msg_err: "Please enter your name, a valid email, and a message.", dp_msg_sent: "✓ Message sent — you'll get an email when the driver replies.", dp_msg_inbox_title: "New message via your Rydanu page — from", dp_msg_save_err: "Couldn't send your message — please try again.",
     rd_vtype_label: "Vehicle type *", lbl_optional_inline: "(optional)", rd_seats_label: "Number of seats", trust_badges_label: "Trust badges (shown on your profile)", rd_referral_label: "Referral code", rd_referral_ph: "e.g. RY-104 — the Rydanu number of the driver who invited you", rd_referral_hint: "Were you invited by another driver? Enter their Rydanu number — they'll receive an IDR 100,000 fee credit once your account is approved and you complete your first booking.",
     vt_standard: "Standard Car", vt_family: "Family Car", vt_minivan: "Minivan", vt_luxury: "Luxury Car", vt_large: "More than 5 seats",
     badge_female: "Female", badge_child: "Child-friendly", badge_guide: "Tour guide", badge_firstaid: "First aid",
@@ -10017,6 +10093,7 @@ const translations = {
     support_btn: "✉️ Nachricht an Rydanu Support", dp_qr_dash_btn: "📱 Dein Rydanu QR-Code",
     support_modal_title: "Nachricht an Rydanu Support",
     support_subject_label: "Betreff", support_msg_label: "Deine Nachricht", support_send_btn: "Nachricht senden",
+    pm_modal_eyebrow: "Nachricht von einem Kunden", pm_reply_label: "Deine Antwort", pm_reply_ph: "Schreib deine Antwort...", pm_reply_send: "Antwort senden",
     support_error: "Bitte gib einen Betreff und eine Nachricht ein.",
     support_sent: "Deine Nachricht wurde an den Rydanu Support gesendet. ✓ Die Antwort erhältst du in deinem Posteingang.",
     period_day: "Täglich", period_month: "Monatlich", period_year: "Jährlich",
@@ -10067,6 +10144,8 @@ const translations = {
     form_err_name_email: "Bitte gib deinen Namen und deine E-Mail-Adresse ein, um fortzufahren.", form_err_pickup: "Bitte gib deinen Abholort ein (Hotel oder Adresse), bevor du fortfährst — dein Fahrer braucht diese Angabe zur Planung der Tour.", form_err_required_all: "Bitte fülle alle Felder aus (WhatsApp-Nummer, Datum und Abholort) — nur Gepäck und Notizen sind optional.",
     eyebrow_profile: "Fahrerprofil", eyebrow_trip: "Reisedetails", eyebrow_payment: "Zahlung", eyebrow_confirm: "Fertig",
     status_sending: "Wird gesendet…", status_sent: "Gesendet ✓", status_delivered: "Zugestellt ✓",
+    no_drivers_match: "Keine Fahrer passen zu dieser Suche — versuche eine andere Region oder entferne den Dauer-Filter.",
+    footer_tagline: "RYDANU — Softwareplattform für unabhängige Fahrer auf Bali. Zahlungen erfolgen direkt an die Fahrer.",
     confirm_reset_demo: "Die komplette Demo auf den ursprünglichen Startzustand zurücksetzen? Das kann nicht rückgängig gemacht werden.",
     admin_err_rejection_reason: "Bitte gib einen Grund für die Ablehnung ein — er wird an den Fahrer gesendet.",
     admin_confirm_reject: "{name} ablehnen?\n\nGrund: {reason}\n\nDer Fahrer wird per E-Mail & WhatsApp benachrichtigt.",
@@ -10103,8 +10182,8 @@ const translations = {
     dp_gallery_title: "Fotos & Videos", dp_upload_btn: "Foto oder Video hochladen", dp_gallery_empty: "Noch keine Fotos oder Videos.", dp_gallery_empty_owner: "Lade Fotos und kurze Videos deiner Touren hoch — Reisende lieben echte Eindrücke!", dp_photo_upload_soon: "Foto-Upload kommt bald.",
     dp_tours_title: "Meine Touren auf Rydanu", dp_tours_empty: "Aktuell keine aktiven Touren.",
     dp_reviews_title: "Das sagen Gäste", dp_reviews_empty: "Noch keine Bewertungen.", dp_review_singular: "Bewertung", dp_review_plural: "Bewertungen",
-    dp_msg_title: "Schreib mir eine Nachricht", dp_msg_name_ph: "Dein Name", dp_msg_text_ph: "Deine Nachricht an den Fahrer...", dp_msg_send: "✉️ Nachricht senden",
-    dp_msg_err: "Bitte gib deinen Namen und eine Nachricht ein.", dp_msg_sent: "✓ Nachricht gesendet — der Fahrer meldet sich bei dir.", dp_msg_inbox_title: "Neue Nachricht über deine Rydanu-Seite — von", dp_msg_save_err: "Nachricht konnte nicht gesendet werden — bitte erneut versuchen.",
+    dp_msg_title: "Schreib mir eine Nachricht", dp_msg_name_ph: "Dein Name", dp_msg_email_ph: "Deine E-Mail (damit der Fahrer antworten kann)", dp_msg_text_ph: "Deine Nachricht an den Fahrer...", dp_msg_send: "✉️ Nachricht senden",
+    dp_msg_err: "Bitte gib deinen Namen, eine gültige E-Mail-Adresse und eine Nachricht ein.", dp_msg_sent: "✓ Nachricht gesendet — du bekommst eine E-Mail, sobald der Fahrer antwortet.", dp_msg_inbox_title: "Neue Nachricht über deine Rydanu-Seite — von", dp_msg_save_err: "Nachricht konnte nicht gesendet werden — bitte erneut versuchen.",
     rd_vtype_label: "Fahrzeugtyp *", lbl_optional_inline: "(optional)", rd_seats_label: "Anzahl Sitzplätze", trust_badges_label: "Vertrauens-Merkmale (auf deinem Profil sichtbar)", rd_referral_label: "Empfehlungs-Code", rd_referral_ph: "z.B. RY-104 — die Rydanu-Nummer des werbenden Fahrers", rd_referral_hint: "Wurdest du von einem anderen Fahrer geworben? Gib seine Rydanu-Nummer ein — er bekommt eine Gutschrift von IDR 100.000, sobald dein Konto freigeschaltet ist und du deine erste Buchung abgeschlossen hast.",
     vt_standard: "Standardauto", vt_family: "Familienauto", vt_minivan: "Minivan", vt_luxury: "Luxusauto", vt_large: "Mehr als 5 Sitzplätze",
     badge_female: "Weiblich", badge_child: "Kinderfreundlich", badge_guide: "Reiseleiter", badge_firstaid: "Erste Hilfe",
@@ -10342,6 +10421,7 @@ const translations = {
     support_btn: "✉️ Pesan ke Dukungan Rydanu", dp_qr_dash_btn: "📱 Kode QR Rydanu Anda",
     support_modal_title: "Pesan ke Dukungan Rydanu",
     support_subject_label: "Subjek", support_msg_label: "Pesan Anda", support_send_btn: "Kirim pesan",
+    pm_modal_eyebrow: "Pesan dari pelanggan", pm_reply_label: "Balasan Anda", pm_reply_ph: "Tulis balasan Anda...", pm_reply_send: "Kirim balasan",
     support_error: "Mohon isi subjek dan pesan.",
     support_sent: "Pesan Anda telah dikirim ke Dukungan Rydanu. ✓ Balasan akan masuk ke kotak masuk Anda.",
     period_day: "Harian", period_month: "Bulanan", period_year: "Tahunan",
@@ -10392,6 +10472,8 @@ const translations = {
     form_err_name_email: "Mohon masukkan nama dan email Anda untuk melanjutkan.", form_err_pickup: "Mohon masukkan lokasi penjemputan Anda (hotel atau alamat) sebelum melanjutkan — sopir Anda memerlukannya untuk merencanakan tur.", form_err_required_all: "Mohon isi semua kolom (nomor WhatsApp, tanggal, dan lokasi penjemputan) — hanya bagasi dan catatan yang opsional.",
     eyebrow_profile: "Profil sopir", eyebrow_trip: "Detail perjalanan", eyebrow_payment: "Pembayaran", eyebrow_confirm: "Selesai",
     status_sending: "Mengirim…", status_sent: "Terkirim ✓", status_delivered: "Terkirim ✓",
+    no_drivers_match: "Belum ada sopir yang cocok dengan pencarian ini — coba area lain atau hapus filter durasi.",
+    footer_tagline: "RYDANU — Platform perangkat lunak untuk sopir independen di Bali. Pembayaran diproses langsung ke sopir.",
     confirm_reset_demo: "Reset seluruh demo ke data awal? Ini tidak dapat dibatalkan.",
     admin_err_rejection_reason: "Mohon masukkan alasan penolakan — ini akan dikirim ke sopir.",
     admin_confirm_reject: "Tolak {name}?\n\nAlasan: {reason}\n\nSopir akan diberi tahu melalui email & WhatsApp.",
@@ -10428,8 +10510,8 @@ const translations = {
     dp_gallery_title: "Foto & video", dp_upload_btn: "Unggah foto atau video", dp_gallery_empty: "Belum ada foto atau video.", dp_gallery_empty_owner: "Unggah foto dan video singkat tur Anda — wisatawan suka melihat kesan nyata!", dp_photo_upload_soon: "Unggah foto akan segera hadir.",
     dp_tours_title: "Tur saya di Rydanu", dp_tours_empty: "Tidak ada tur aktif saat ini.",
     dp_reviews_title: "Kata para tamu", dp_reviews_empty: "Belum ada ulasan.", dp_review_singular: "ulasan", dp_review_plural: "ulasan",
-    dp_msg_title: "Kirim saya pesan", dp_msg_name_ph: "Nama Anda", dp_msg_text_ph: "Pesan Anda untuk sopir...", dp_msg_send: "✉️ Kirim pesan",
-    dp_msg_err: "Mohon isi nama dan pesan Anda.", dp_msg_sent: "✓ Pesan terkirim — sopir akan menghubungi Anda.", dp_msg_inbox_title: "Pesan baru melalui halaman Rydanu Anda — dari", dp_msg_save_err: "Pesan tidak dapat dikirim — silakan coba lagi.",
+    dp_msg_title: "Kirim saya pesan", dp_msg_name_ph: "Nama Anda", dp_msg_email_ph: "Email Anda (agar sopir dapat membalas)", dp_msg_text_ph: "Pesan Anda untuk sopir...", dp_msg_send: "✉️ Kirim pesan",
+    dp_msg_err: "Mohon isi nama, email yang valid, dan pesan Anda.", dp_msg_sent: "✓ Pesan terkirim — Anda akan menerima email saat sopir membalas.", dp_msg_inbox_title: "Pesan baru melalui halaman Rydanu Anda — dari", dp_msg_save_err: "Pesan tidak dapat dikirim — silakan coba lagi.",
     rd_vtype_label: "Jenis kendaraan *", lbl_optional_inline: "(opsional)", rd_seats_label: "Jumlah kursi", trust_badges_label: "Lencana kepercayaan (ditampilkan di profil Anda)", rd_referral_label: "Kode referral", rd_referral_ph: "mis. RY-104 — nomor Rydanu sopir yang mengundang Anda", rd_referral_hint: "Diundang oleh sopir lain? Masukkan nomor Rydanu mereka — mereka akan menerima kredit biaya IDR 100.000 setelah akun Anda disetujui dan Anda menyelesaikan pemesanan pertama.",
     vt_standard: "Mobil Standar", vt_family: "Mobil Keluarga", vt_minivan: "Minivan", vt_luxury: "Mobil Mewah", vt_large: "Lebih dari 5 kursi",
     badge_female: "Wanita", badge_child: "Ramah anak", badge_guide: "Pemandu wisata", badge_firstaid: "P3K",
@@ -11251,6 +11333,7 @@ document.getElementById('doc-preview-modal-bg').addEventListener('click', e=>{ i
 document.getElementById('support-modal-bg').addEventListener('click', e=>{ if(e.target.id==='support-modal-bg') closeSupportMsg(); });
 document.getElementById('admin-msg-detail-modal-bg').addEventListener('click', e=>{ if(e.target.id==='admin-msg-detail-modal-bg') closeAdminMsgDetail(); });
 document.getElementById('driver-thread-modal-bg').addEventListener('click', e=>{ if(e.target.id==='driver-thread-modal-bg') closeDriverThreadView(); });
+document.getElementById('page-msg-thread-modal-bg').addEventListener('click', e=>{ if(e.target.id==='page-msg-thread-modal-bg') closePageMessageThreadModal(); });
 document.getElementById('booking-detail-modal-bg').addEventListener('click', e=>{ if(e.target.id==='booking-detail-modal-bg') closeBookingDetail(); });
 document.getElementById('receipt-modal-bg').addEventListener('click', e=>{ if(e.target.id==='receipt-modal-bg') closeReceiptDetail(); });
 document.getElementById('standalone-review-modal-bg').addEventListener('click', e=>{ if(e.target.id==='standalone-review-modal-bg') closeStandaloneReview(); });
@@ -12539,6 +12622,58 @@ async function submitVillaApplication(){
   }
   document.getElementById('villa-apply-body').innerHTML = `<h2>✓ Danke!</h2><p class="note">Ihre Anmeldung ist bei uns eingegangen — wir melden uns in Kürze bei Ihnen.</p>`;
 }
+// Baustein "Zwei-Wege-Nachrichten" (12. August): oeffentliche Unterhaltungsseite, erreichbar ueber
+// den persoenlichen Link aus der Antwort-Benachrichtigungsmail (?msg=TOKEN). Kein Login noetig --
+// laedt die Unterhaltung ueber die RPC get_page_message_thread (setzt dabei unread_for_customer
+// automatisch zurueck) und erlaubt direktes Weiterschreiben ueber customer_reply_page_message.
+async function initPageMessagePublicView(token){
+  const page = document.getElementById('page-msg-public-page');
+  const body = document.getElementById('page-msg-public-body');
+  page.style.display = 'flex';
+  const { data, error } = await supabaseClient.rpc('get_page_message_thread', { p_token: token });
+  if(error || !data){
+    body.innerHTML = `<h2>⚠️ Conversation not found</h2><p class="note">This link may be invalid, or the conversation may have been removed. Please contact your driver directly.</p>`;
+    return;
+  }
+  renderPageMessagePublicView(token, data);
+}
+function renderPageMessagePublicView(token, data){
+  const body = document.getElementById('page-msg-public-body');
+  const entriesHtml = (data.messages||[]).map(m=>`
+    <div class="thread-entry ${m.sender==='customer' ? 'driver' : 'admin'}">
+      <div class="thread-entry-label">${m.sender==='customer' ? escapeHtml(data.customer_name) : escapeHtml(data.driver_name)}</div>
+      <div class="thread-entry-body">${escapeHtml(m.body)}</div>
+      <div class="thread-entry-date">${formatDateDisplay((m.created_at||'').slice(0,10))}</div>
+    </div>
+  `).join('');
+  body.innerHTML = `
+    <h2 style="font-family:'Public Sans', sans-serif;">Your conversation with ${escapeHtml(data.driver_name)}</h2>
+    <div class="thread-entries" style="max-height:340px;">${entriesHtml}</div>
+    <div class="form-field" style="margin-top:16px;">
+      <label>Your reply</label>
+      <textarea id="page-msg-public-reply-text" rows="4" placeholder="Write your reply..."></textarea>
+    </div>
+    <p class="form-error" id="page-msg-public-reply-status" style="color:var(--teal);"></p>
+    <button type="button" class="book-btn" id="page-msg-public-send-btn" onclick="sendPageMessagePublicReply('${token}')">Send reply</button>
+  `;
+}
+async function sendPageMessagePublicReply(token){
+  const textEl = document.getElementById('page-msg-public-reply-text');
+  const statusEl = document.getElementById('page-msg-public-reply-status');
+  const text = textEl.value.trim();
+  if(!text){ statusEl.textContent = 'Please write a message first.'; return; }
+  const btn = document.getElementById('page-msg-public-send-btn');
+  if(btn) btn.disabled = true;
+  const { data: ok, error } = await supabaseClient.rpc('customer_reply_page_message', { p_token: token, p_body: text });
+  if(error || !ok){
+    console.error('Antwort konnte nicht gesendet werden:', error);
+    statusEl.textContent = 'Something went wrong. Please try again.';
+    if(btn) btn.disabled = false;
+    return;
+  }
+  const { data } = await supabaseClient.rpc('get_page_message_thread', { p_token: token });
+  if(data) renderPageMessagePublicView(token, data);
+}
 async function initOfferConfirmPage(token){
   const page = document.getElementById('offer-confirm-page');
   const body = document.getElementById('offer-confirm-body');
@@ -12616,6 +12751,7 @@ async function confirmCustomOfferPublic(token){
 // komplett uebersprungen und stattdessen direkt die Bestaetigungsseite gezeigt.
 // Baustein F: derselbe Gedanke gilt fuer den "Rate Rydanu"-Link aus der Bewertungs-Erinnerungsmail.
 const _offerToken = new URLSearchParams(location.search).get('offer');
+const _pageMsgToken = new URLSearchParams(location.search).get('msg');
 const _wantsRatingsPage = new URLSearchParams(location.search).get('ratings') === '1';
 const _prBookingFromLink = new URLSearchParams(location.search).get('prBooking');
 // Villa Partner Phase 1: Slug entweder aus schoenem Pfad rydanu.com/v/<slug> (Vercel-Rewrite liefert
@@ -12633,6 +12769,9 @@ if(_villaSlug){
 } else if(_offerToken){
   document.getElementById('site-lock-gate').style.display = 'none';
   initOfferConfirmPage(_offerToken);
+} else if(_pageMsgToken){
+  document.getElementById('site-lock-gate').style.display = 'none';
+  initPageMessagePublicView(_pageMsgToken);
 } else if(_wantsRatingsPage){
   // Bugfix: die Bewertungsseite liegt (anders als die Angebots-Bestaetigungsseite) INNERHALB von
   // #site-content -- das musste hier zusaetzlich sichtbar gemacht werden, sonst blieb alles leer/weiss,
@@ -14546,6 +14685,68 @@ async function sendDriverThreadReply(){
   closeDriverThreadView();
 }
 
+// ---- Kunden-Nachrichten ueber die eigene Fahrer-Seite (page_message_threads, 12. August) ----
+// Separater Chat-Flow zu den Kunden, die "Schreib mir eine Nachricht" auf der oeffentlichen
+// Fahrer-Seite genutzt haben (siehe sendPageMessage() weiter oben). Der Kunde bekommt bei jeder
+// Fahrer-Antwort eine kurze Benachrichtigungs-Mail ("Klingel", ohne Text) mit einem persoenlichen
+// Link zurueck auf eine oeffentliche Unterhaltungsseite (siehe initPageMessagePublicView unten).
+let currentPageMsgThreadId = null;
+// Eigene, kleine Render-Funktion statt der geteilten renderThreadEntries() (die ist auf
+// driver/admin-Labels fest verdrahtet) -- zeigt hier "Du" bzw. den Namen des Kunden.
+function renderPageMessageEntries(containerId, msgs, customerName){
+  const el = document.getElementById(containerId);
+  if(!el) return;
+  if(!msgs || !msgs.length){
+    el.innerHTML = `<div class="empty-state">${t('empty_inbox')}</div>`;
+    return;
+  }
+  el.innerHTML = msgs.map(m=>`
+    <div class="thread-entry ${m.sender==='driver' ? 'driver' : 'admin'}">
+      <div class="thread-entry-label">${m.sender==='driver' ? t('thread_label_driver') : escapeHtml(customerName)}</div>
+      <div class="thread-entry-body">${escapeHtml(m.body)}</div>
+      <div class="thread-entry-date">${formatDateDisplay((m.created_at||'').slice(0,10))}</div>
+    </div>
+  `).join('');
+  el.scrollTop = el.scrollHeight;
+}
+async function openPageMessageThreadFromInbox(idx){
+  const m = realMessages[idx];
+  if(!m || !m.thread_id) return;
+  currentPageMsgThreadId = m.thread_id;
+  if(!m.is_read){
+    m.is_read = true;
+    updateRealInboxDot();
+    const { error } = await supabaseClient.from('driver_messages').update({ is_read:true }).eq('id', m.id);
+    if(error) console.error('Nachricht konnte nicht als gelesen markiert werden:', error);
+  }
+  const { data: threadRow, error: threadErr } = await supabaseClient.from('page_message_threads').select('*').eq('id', m.thread_id).maybeSingle();
+  const { data: msgs, error: msgErr } = await supabaseClient.from('page_message_thread_messages').select('*').eq('thread_id', m.thread_id).order('created_at', { ascending:true });
+  if(threadErr || msgErr){ console.error('Unterhaltung konnte nicht geladen werden:', threadErr||msgErr); return; }
+  const customerName = (threadRow && threadRow.customer_name) || '—';
+  document.getElementById('page-msg-thread-subject').textContent = customerName;
+  renderPageMessageEntries('page-msg-thread-entries', msgs||[], customerName);
+  document.getElementById('page-msg-reply-text').value = '';
+  document.getElementById('page-msg-reply-status').textContent = '';
+  document.getElementById('page-msg-thread-modal-bg').classList.add('active');
+  if(threadRow && threadRow.unread_for_driver){
+    await supabaseClient.from('page_message_threads').update({ unread_for_driver:false }).eq('id', m.thread_id);
+  }
+}
+function closePageMessageThreadModal(){ document.getElementById('page-msg-thread-modal-bg').classList.remove('active'); currentPageMsgThreadId = null; }
+async function sendPageMessageThreadReply(){
+  const reply = document.getElementById('page-msg-reply-text').value.trim();
+  if(!reply || !currentPageMsgThreadId) return;
+  const statusEl = document.getElementById('page-msg-reply-status');
+  const { error } = await supabaseClient.from('page_message_thread_messages').insert({ thread_id: currentPageMsgThreadId, sender:'driver', body: reply });
+  if(error){ console.error('Antwort konnte nicht gesendet werden:', error); statusEl.textContent = 'Etwas ist schiefgelaufen. Bitte nochmal versuchen.'; return; }
+  await supabaseClient.from('page_message_threads').update({ unread_for_customer:true, updated_at: new Date().toISOString() }).eq('id', currentPageMsgThreadId);
+  // Kunden-"Klingel"-Mail im Hintergrund anstossen -- die Antwort ist unabhaengig davon bereits
+  // gespeichert, ein Fehlschlag hier soll dem Fahrer die erfolgreiche Antwort nicht verderben.
+  supabaseClient.functions.invoke('send-tour-offer-email', { body: { type: 'page_message_reply', threadId: currentPageMsgThreadId, origin: location.origin } }).catch(err=>console.error('Antwort-Benachrichtigung fehlgeschlagen:', err));
+  closePageMessageThreadModal();
+  loadRealInbox();
+}
+
 async function openAdminComposeMsg(){
   if(realDriverProfile || isAdminSession){
     const { data: drv, error } = await supabaseClient.from('drivers').select('id, name, lw_number').order('name');
@@ -14906,7 +15107,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v228</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v230</div>
 
 </body>
 </html>
