@@ -3898,6 +3898,51 @@ document.getElementById('villa-request-logo').src = RYVIO_LOGO_WORDMARK;
 document.getElementById('page-msg-public-logo').src = RYVIO_LOGO_WORDMARK;
 document.getElementById('villa-apply-logo').src = RYVIO_LOGO_WORDMARK;
 
+// ============================================================
+// ZENTRALE REGIONEN-KONFIGURATION (Bali & Lombok)
+// Einzige Quelle fuer Regionen/Insel-Daten in der ganzen App. Neue Insel oder
+// neue Region? Nur HIER aendern, nirgends sonst kopieren.
+// Stand: Bauplan "Rydanu_Finaler_Bauplan_Lombok_Suche_Filter", 15.08.2026.
+// Kollisions-Regel: "Kuta" (Bali) und "Kuta Lombok" sind bewusst UNTERSCHIEDLICHE
+// value-Strings, damit sie nie verwechselt werden koennen (siehe Kapitel 3 im Bauplan).
+// ============================================================
+const REGION_CONFIG = {
+  bali: {
+    label: { de:'Bali', en:'Bali', id:'Bali' },
+    airport: { value:'Airport', icon:'✈️', label:{ de:'Flughafen (Ngurah Rai)', en:'Airport (Ngurah Rai)', id:'Bandara (Ngurah Rai)' } },
+    regions: [
+      { value:'Kuta',     icon:'📍', i18nKey:'reg_kuta',     label:{ de:'Kuta & Umgebung',     en:'Kuta & surroundings',     id:'Kuta & sekitarnya' } },
+      { value:'Uluwatu',  icon:'📍', i18nKey:'reg_uluwatu',  label:{ de:'Uluwatu & Umgebung',  en:'Uluwatu & surroundings',  id:'Uluwatu & sekitarnya' } },
+      { value:'Ubud',     icon:'📍', i18nKey:'reg_ubud',     label:{ de:'Ubud & Umgebung',     en:'Ubud & surroundings',     id:'Ubud & sekitarnya' } },
+      { value:'Amed',     icon:'📍', i18nKey:'reg_amed',     label:{ de:'Amed & Umgebung',     en:'Amed & surroundings',     id:'Amed & sekitarnya' } },
+      { value:'Sidemen',  icon:'📍', i18nKey:'reg_sidemen',  label:{ de:'Sidemen & Umgebung',  en:'Sidemen & surroundings',  id:'Sidemen & sekitarnya' } },
+      { value:'Lovina',   icon:'📍', i18nKey:'reg_lovina',   label:{ de:'Lovina & Umgebung',   en:'Lovina & surroundings',   id:'Lovina & sekitarnya' } },
+    ]
+  },
+  lombok: {
+    label: { de:'Lombok', en:'Lombok', id:'Lombok' },
+    airport: { value:'Lombok Airport', icon:'✈️', label:{ de:'Flughafen Lombok (Praya)', en:'Lombok Airport (Praya)', id:'Bandara Lombok (Praya)' } },
+    regions: [
+      { value:'Kuta Lombok', icon:'📍', i18nKey:'reg_lombok_kuta',     label:{ de:'Kuta Lombok (Süd)',        en:'Kuta Lombok (South)',      id:'Kuta Lombok (Selatan)' } },
+      { value:'Senggigi',    icon:'📍', i18nKey:'reg_lombok_senggigi', label:{ de:'Senggigi (West)',          en:'Senggigi (West)',          id:'Senggigi (Barat)' } },
+      { value:'Gili-Inseln', icon:'📍', i18nKey:'reg_lombok_gili',     label:{ de:'Gili-Inseln (Nord)',       en:'Gili Islands (North)',     id:'Gili (Utara)' } },
+      { value:'Sembalun',    icon:'📍', i18nKey:'reg_lombok_sembalun', label:{ de:'Sembalun (Ost)',           en:'Sembalun (East)',          id:'Sembalun (Timur)' } },
+    ]
+  }
+};
+// Alle Regionen-Werte einer Insel inkl. Flughafen (fuer Matching/Chips)
+function getIslandRegionList(island){
+  const cfg = REGION_CONFIG[island] || REGION_CONFIG.bali;
+  return [cfg.airport, ...cfg.regions];
+}
+// Insel anhand eines bekannten Regions-Werts erkennen (fuer Migrations-/Anzeigezwecke)
+function detectIslandFromRegionValue(value){
+  if(!value) return null;
+  if(REGION_CONFIG.bali.regions.some(r=>r.value===value) || value===REGION_CONFIG.bali.airport.value) return 'bali';
+  if(REGION_CONFIG.lombok.regions.some(r=>r.value===value) || value===REGION_CONFIG.lombok.airport.value) return 'lombok';
+  return null;
+}
+
 // ---- persistence: keep demo changes across reloads on this device/browser ----
 const STORAGE_KEY = 'ryvio_demo_state_v1';
 const LEGACY_STORAGE_KEY = 'ryvio_demo_state_v1'; // pre-rebrand key — migrated automatically if found
@@ -10417,6 +10462,7 @@ const translations = {
     filter_spots_title: "Available tours",
     nl_regions_title: "Pickup regions you serve — travelers filtering by these starting points will see this tour",
     reg_kuta: "Kuta & surroundings", reg_uluwatu: "Uluwatu & surroundings", reg_lovina: "Lovina & surroundings", reg_sidemen: "Sidemen & surroundings", reg_ubud: "Ubud & surroundings", reg_amed: "Amed & surroundings",
+    reg_lombok_kuta: "Kuta Lombok (South)", reg_lombok_senggigi: "Senggigi (West)", reg_lombok_gili: "Gili Islands (North)", reg_lombok_sembalun: "Sembalun (East)",
     nl_airport_regions_title: "Airport destination regions — set a price per region (leave empty if not offered)",
     nl_transfer_regions_title: "Transfer destinations — set a price per destination (leave empty if not offered)",
     other_tours_title: "All tours by this driver",
@@ -10746,6 +10792,7 @@ const translations = {
     filter_spots_title: "Verfügbare Touren",
     nl_regions_title: "Abholregionen, die du bedienst — Reisende mit diesem Startpunkt-Filter sehen diese Tour",
     reg_kuta: "Kuta & Umgebung", reg_uluwatu: "Uluwatu & Umgebung", reg_lovina: "Lovina & Umgebung", reg_sidemen: "Sidemen & Umgebung", reg_ubud: "Ubud & Umgebung", reg_amed: "Amed & Umgebung",
+    reg_lombok_kuta: "Kuta Lombok (Süd)", reg_lombok_senggigi: "Senggigi (West)", reg_lombok_gili: "Gili-Inseln (Nord)", reg_lombok_sembalun: "Sembalun (Ost)",
     nl_airport_regions_title: "Flughafen-Zielregionen — Preis pro Region festlegen (leer lassen, wenn nicht angeboten)",
     nl_transfer_regions_title: "Transfer-Ziele — Preis pro Ziel festlegen (leer lassen, wenn nicht angeboten)",
     other_tours_title: "Alle Touren dieses Fahrers",
@@ -11075,6 +11122,7 @@ const translations = {
     filter_spots_title: "Tur tersedia",
     nl_regions_title: "Wilayah penjemputan yang Anda layani — wisatawan yang memfilter titik awal ini akan melihat tur ini",
     reg_kuta: "Kuta & sekitarnya", reg_uluwatu: "Uluwatu & sekitarnya", reg_lovina: "Lovina & sekitarnya", reg_sidemen: "Sidemen & sekitarnya", reg_ubud: "Ubud & sekitarnya", reg_amed: "Amed & sekitarnya",
+    reg_lombok_kuta: "Kuta Lombok (Selatan)", reg_lombok_senggigi: "Senggigi (Barat)", reg_lombok_gili: "Gili (Utara)", reg_lombok_sembalun: "Sembalun (Timur)",
     nl_airport_regions_title: "Wilayah tujuan bandara — atur harga per wilayah (kosongkan jika tidak ditawarkan)",
     nl_transfer_regions_title: "Tujuan transfer — atur harga per tujuan (kosongkan jika tidak ditawarkan)",
     other_tours_title: "Semua tur sopir ini",
@@ -11380,14 +11428,11 @@ function applyFilters(){
   runSearch();
 }
 
+// Stammt jetzt aus der zentralen REGION_CONFIG (bisher eigene Kopie der Bali-Regionen).
+// Label bewusst kurz gehalten (ohne "& Umgebung"), wie es das Suchfeld bisher zeigte.
 const SEARCH_REGION_LIST = [
   { value:'Airport', icon:'✈️', label:{ de:'Flughafen', en:'Airport', id:'Bandara' } },
-  { value:'Kuta', icon:'📍', label:{ de:'Kuta', en:'Kuta', id:'Kuta' } },
-  { value:'Uluwatu', icon:'📍', label:{ de:'Uluwatu', en:'Uluwatu', id:'Uluwatu' } },
-  { value:'Ubud', icon:'📍', label:{ de:'Ubud', en:'Ubud', id:'Ubud' } },
-  { value:'Amed', icon:'📍', label:{ de:'Amed', en:'Amed', id:'Amed' } },
-  { value:'Sidemen', icon:'📍', label:{ de:'Sidemen', en:'Sidemen', id:'Sidemen' } },
-  { value:'Lovina', icon:'📍', label:{ de:'Lovina', en:'Lovina', id:'Lovina' } },
+  ...REGION_CONFIG.bali.regions.map(r => ({ value:r.value, icon:r.icon, label:{ de:r.value, en:r.value, id:r.value } }))
 ];
 function handleSearchInput(){
   const q = document.getElementById('search-input').value.trim().toLowerCase();
@@ -15550,7 +15595,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v241</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v242</div>
 
 </body>
 </html>
