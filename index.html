@@ -1333,6 +1333,9 @@
      Bild zeigt Mandalika/Kuta-Lombok-Kueste von oben -- passend zu allen 4 Zonen als Uebersichtsmotiv. -->
 <div id="lombok-hero-banner" style="display:none; position:relative; height:280px; overflow:hidden;">
   <img src="https://images.pexels.com/photos/30013786/pexels-photo-30013786.jpeg?auto=compress&cs=tinysrgb&w=1600" alt="Aerial view of Lombok's Mandalika coastline" loading="lazy" style="width:100%; height:100%; object-fit:cover;">
+  <button type="button" onclick="location.href='/'" style="position:absolute; top:14px; left:14px; background:rgba(11,61,34,0.72); color:#fff; border:none; border-radius:20px; padding:8px 14px; font-size:0.8rem; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:5px; backdrop-filter:blur(3px);">
+    <span data-i18n="lombok_back_to_bali">← Zurück zu Bali</span>
+  </button>
   <div style="position:absolute; inset:0; background:linear-gradient(180deg, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.55) 100%); display:flex; flex-direction:column; justify-content:flex-end; padding:22px 24px;">
     <h1 id="lombok-hero-title" style="color:#fff; font-size:1.6rem; margin:0 0 6px; font-weight:800; text-shadow:0 1px 6px rgba(0,0,0,0.4);" data-i18n="lombok_hero_title">🏝️ Rydanu Lombok — lokale Fahrer, echte Preise</h1>
     <p id="lombok-hero-subtitle" style="color:#f0ece6; font-size:0.92rem; margin:0; max-width:520px; text-shadow:0 1px 4px rgba(0,0,0,0.4);" data-i18n="lombok_hero_subtitle">Kuta Lombok, Senggigi, Gili-Inseln, Sembalun — dein Fahrer wartet, egal wo auf der Insel.</p>
@@ -2872,6 +2875,9 @@
       </div>
       <div class="form-field" id="ep-push-field" style="display:none; background:var(--teal-soft); border:1px solid var(--teal); border-radius:10px; padding:12px 14px;">
         <label class="nl-service-check" style="margin-bottom:0;"><input type="checkbox" id="ep-push-toggle"> <span data-i18n-html="ep_push_toggle_label">Push notifications for new requests (e.g. <span style="white-space:nowrap;">Villa Partner bookings</span>)</span></label>
+      </div>
+      <div class="form-field" id="ep-push-unavailable-hint" style="display:none; background:#f6f6f4; border:1px solid var(--line); border-radius:10px; padding:12px 14px;">
+        <p class="conditions-hint" style="margin:0;" data-i18n="ep_push_unavailable_hint">📲 Push notifications need this page added to your homescreen first (Share → Add to Home Screen), then reopen it from there.</p>
       </div>
       <div class="form-field" style="background:var(--teal-soft); border:1px solid var(--teal); border-radius:10px; padding:12px 14px;">
         <label class="nl-service-check" style="margin-bottom:0;"><input type="checkbox" id="ep-villa-optin-toggle"> <span data-i18n="ep_villa_optin_label">I want to receive exclusive Villa Partner tour requests from customers</span></label>
@@ -10193,7 +10199,10 @@ function openEditProfileReal(){
   document.getElementById('ep-qris').checked = pay.qris !== false;
   document.getElementById('ep-phone').value = d.phone || '';
   document.getElementById('ep-error').textContent = '';
-  document.getElementById('ep-push-field').style.display = ('serviceWorker' in navigator && 'PushManager' in window) ? 'block' : 'none';
+  const pushAvailable = ('serviceWorker' in navigator && 'PushManager' in window);
+  document.getElementById('ep-push-field').style.display = pushAvailable ? 'block' : 'none';
+  const pushHint = document.getElementById('ep-push-unavailable-hint');
+  if(pushHint) pushHint.style.display = pushAvailable ? 'none' : 'block';
   supabaseClient.from('push_subscriptions').select('id').eq('driver_id', d.id).eq('active', true).limit(1).maybeSingle().then(({data})=>{
     document.getElementById('ep-push-toggle').checked = !!data;
   });
@@ -10342,7 +10351,7 @@ const translations = {
     tab_driver: "Driver Dashboard",
     tab_register: "+ Register as Driver",
     tab_admin: "🔐 Admin",
-    hero_eyebrow: "Bali's driver marketplace", logo_tagline: "Local drivers. Anywhere in Bali", lombok_eyecatcher_text: "🌴 Now also on Lombok — discover drivers →", lombok_soft_suggest_text: "Did you mean Lombok? → This way", lombok_hero_title: "🏝️ Rydanu Lombok — local drivers, real prices", lombok_hero_subtitle: "Kuta Lombok, Senggigi, the Gili Islands, Sembalun — your driver is ready, wherever on the island.",
+    hero_eyebrow: "Bali's driver marketplace", logo_tagline: "Local drivers. Anywhere in Bali", lombok_eyecatcher_text: "🌴 Now also on Lombok — discover drivers →", lombok_soft_suggest_text: "Did you mean Lombok? → This way", lombok_hero_title: "🏝️ Rydanu Lombok — local drivers, real prices", lombok_hero_subtitle: "Kuta Lombok, Senggigi, the Gili Islands, Sembalun — your driver is ready, wherever on the island.", lombok_back_to_bali: "← Back to Bali",
     hero_headline_pre: "Local ", hero_headline_word: "drivers", hero_headline_post: "<br>Anywhere in Bali",
     hero_title: "All of Bali talks about it.",
     hero_sub: "Every driver on Rydanu runs their own tours, sets their own price, and keeps what they earn. You get transparent pricing and real reviews.",
@@ -10585,7 +10594,7 @@ const translations = {
     pay_link_label: "Open driver's payment link",
     
     rd_paylink_label: "Payment link for customers who prefer to pay digitally (Wise / Revolut / PayPal) — optional",
-    rd_qris_label: "I accept QRIS (GoPay / OVO / DANA)", ep_push_toggle_label: "Push notifications for new requests (e.g. <span style=\"white-space:nowrap;\">Villa Partner bookings</span>)", ep_villa_optin_label: "I want to receive exclusive Villa Partner tour requests from customers", ep_villa_optin_hint: "On: you'll see and get notified about every open Villa Partner request island-wide, regardless of your region. Off: none.",
+    rd_qris_label: "I accept QRIS (GoPay / OVO / DANA)", ep_push_toggle_label: "Push notifications for new requests (e.g. <span style=\"white-space:nowrap;\">Villa Partner bookings</span>)", ep_push_unavailable_hint: "📲 Push notifications need this page added to your homescreen first (Share → Add to Home Screen), then reopen it from there.", ep_villa_optin_label: "I want to receive exclusive Villa Partner tour requests from customers", ep_villa_optin_hint: "On: you'll see and get notified about every open Villa Partner request island-wide, regardless of your region. Off: none.",
     ep_island_label: "Island", ep_island_bali: "🌊 Bali", ep_island_lombok: "🌴 Lombok", ep_island_hint: "Determines which regions you can pick below. When you switch, your existing regions/prices on the other island stay saved.",
     pay_confirm_btn: "Submit booking request",
     rd_name_label: "Full name",
@@ -10673,7 +10682,7 @@ const translations = {
     tab_driver: "Fahrer-Dashboard",
     tab_register: "+ Als Fahrer registrieren",
     tab_admin: "🔐 Admin",
-    hero_eyebrow: "Balis Fahrer-Marktplatz", logo_tagline: "Lokale Fahrer. Überall auf Bali", lombok_eyecatcher_text: "🌴 Jetzt auch auf Lombok unterwegs — Fahrer entdecken →", lombok_soft_suggest_text: "Meintest du Lombok? → Hier entlang", lombok_hero_title: "🏝️ Rydanu Lombok — lokale Fahrer, echte Preise", lombok_hero_subtitle: "Kuta Lombok, Senggigi, Gili-Inseln, Sembalun — dein Fahrer wartet, egal wo auf der Insel.",
+    hero_eyebrow: "Balis Fahrer-Marktplatz", logo_tagline: "Lokale Fahrer. Überall auf Bali", lombok_eyecatcher_text: "🌴 Jetzt auch auf Lombok unterwegs — Fahrer entdecken →", lombok_soft_suggest_text: "Meintest du Lombok? → Hier entlang", lombok_hero_title: "🏝️ Rydanu Lombok — lokale Fahrer, echte Preise", lombok_hero_subtitle: "Kuta Lombok, Senggigi, Gili-Inseln, Sembalun — dein Fahrer wartet, egal wo auf der Insel.", lombok_back_to_bali: "← Zurück zu Bali",
     hero_headline_pre: "Lokale ", hero_headline_word: "Fahrer", hero_headline_post: "<br>Überall auf Bali",
     hero_title: "Darüber spricht Bali.",
     hero_sub: "Jeder Fahrer auf Rydanu bietet seine eigenen Touren an, bestimmt seinen eigenen Preis und behält seinen Verdienst. Du bekommst transparente Preise und echte Bewertungen.",
@@ -10916,7 +10925,7 @@ const translations = {
     pay_link_label: "Zahlungslink des Fahrers öffnen",
     
     rd_paylink_label: "Zahlungslink für Gäste, die lieber digital bezahlen (Wise / Revolut / PayPal) — optional",
-    rd_qris_label: "Ich akzeptiere QRIS (GoPay / OVO / DANA)", ep_push_toggle_label: "Push-Benachrichtigungen für neue Anfragen (z.B. <span style=\"white-space:nowrap;\">Villa-Partner-Buchungen</span>)", ep_villa_optin_label: "Ich möchte exklusive Villa-Partner-Touranfragen von Kunden erhalten", ep_villa_optin_hint: "An: du siehst jede offene Villa-Partner-Anfrage inselweit und wirst benachrichtigt, egal in welcher Region. Aus: keine.",
+    rd_qris_label: "Ich akzeptiere QRIS (GoPay / OVO / DANA)", ep_push_toggle_label: "Push-Benachrichtigungen für neue Anfragen (z.B. <span style=\"white-space:nowrap;\">Villa-Partner-Buchungen</span>)", ep_push_unavailable_hint: "📲 Push-Benachrichtigungen brauchen zuerst diese Seite auf deinem Homescreen (Teilen → Zum Home-Bildschirm), dann von dort neu öffnen.", ep_villa_optin_label: "Ich möchte exklusive Villa-Partner-Touranfragen von Kunden erhalten", ep_villa_optin_hint: "An: du siehst jede offene Villa-Partner-Anfrage inselweit und wirst benachrichtigt, egal in welcher Region. Aus: keine.",
     ep_island_label: "Insel", ep_island_bali: "🌊 Bali", ep_island_lombok: "🌴 Lombok", ep_island_hint: "Bestimmt, welche Regionen du unten auswählen kannst. Beim Wechsel bleiben deine bisherigen Regionen/Preise der anderen Insel gespeichert.",
     pay_confirm_btn: "Buchungsanfrage absenden",
     rd_name_label: "Vollständiger Name",
@@ -11004,7 +11013,7 @@ const translations = {
     tab_driver: "Dasbor Sopir",
     tab_register: "+ Daftar sebagai Sopir",
     tab_admin: "🔐 Admin",
-    hero_eyebrow: "Marketplace sopir lokal Bali", logo_tagline: "Sopir lokal. Di mana saja di Bali", lombok_eyecatcher_text: "🌴 Kini juga di Lombok — temukan sopir →", lombok_soft_suggest_text: "Maksud Anda Lombok? → Lewat sini", lombok_hero_title: "🏝️ Rydanu Lombok — sopir lokal, harga sebenarnya", lombok_hero_subtitle: "Kuta Lombok, Senggigi, Gili, Sembalun — sopir Anda siap, di mana pun di pulau ini.",
+    hero_eyebrow: "Marketplace sopir lokal Bali", logo_tagline: "Sopir lokal. Di mana saja di Bali", lombok_eyecatcher_text: "🌴 Kini juga di Lombok — temukan sopir →", lombok_soft_suggest_text: "Maksud Anda Lombok? → Lewat sini", lombok_hero_title: "🏝️ Rydanu Lombok — sopir lokal, harga sebenarnya", lombok_hero_subtitle: "Kuta Lombok, Senggigi, Gili, Sembalun — sopir Anda siap, di mana pun di pulau ini.", lombok_back_to_bali: "← Kembali ke Bali",
     hero_headline_pre: "", hero_headline_word: "Sopir", hero_headline_post: " lokal<br>Di mana saja di Bali",
     hero_title: "Seluruh Bali membicarakannya.",
     hero_sub: "Setiap sopir di Rydanu mengelola tur mereka sendiri, menentukan harga sendiri, dan menyimpan penghasilannya. Anda mendapat harga transparan dan ulasan asli.",
@@ -11247,7 +11256,7 @@ const translations = {
     pay_link_label: "Buka tautan pembayaran sopir",
     
     rd_paylink_label: "Tautan pembayaran untuk tamu yang lebih suka membayar secara digital (Wise / Revolut / PayPal) — opsional",
-    rd_qris_label: "Saya menerima QRIS (GoPay / OVO / DANA)", ep_push_toggle_label: "Notifikasi push untuk permintaan baru (mis. <span style=\"white-space:nowrap;\">booking Villa Partner</span>)", ep_villa_optin_label: "Saya ingin menerima permintaan tur Villa Partner eksklusif dari pelanggan", ep_villa_optin_hint: "Aktif: Anda akan melihat dan diberi tahu tentang setiap permintaan Villa Partner terbuka di seluruh pulau, terlepas dari wilayah Anda. Nonaktif: tidak ada.",
+    rd_qris_label: "Saya menerima QRIS (GoPay / OVO / DANA)", ep_push_toggle_label: "Notifikasi push untuk permintaan baru (mis. <span style=\"white-space:nowrap;\">booking Villa Partner</span>)", ep_push_unavailable_hint: "📲 Notifikasi push memerlukan halaman ini ditambahkan ke layar utama Anda terlebih dahulu (Bagikan → Tambah ke Layar Utama), lalu buka kembali dari sana.", ep_villa_optin_label: "Saya ingin menerima permintaan tur Villa Partner eksklusif dari pelanggan", ep_villa_optin_hint: "Aktif: Anda akan melihat dan diberi tahu tentang setiap permintaan Villa Partner terbuka di seluruh pulau, terlepas dari wilayah Anda. Nonaktif: tidak ada.",
     ep_island_label: "Pulau", ep_island_bali: "🌊 Bali", ep_island_lombok: "🌴 Lombok", ep_island_hint: "Menentukan wilayah mana yang bisa Anda pilih di bawah. Saat beralih, wilayah/harga Anda yang sudah ada di pulau lain tetap tersimpan.",
     pay_confirm_btn: "Kirim permintaan pemesanan",
     rd_name_label: "Nama lengkap",
@@ -11429,7 +11438,7 @@ function renderDriverGrid(list){
         ${matrixPrice ? `<div class="spots-line airport-price-lines" style="margin-bottom:6px;">✈️ ${cityAirportCity} ⇄ ${t('map_dropoff_area')}</div>` : ''}
         ${d.extras && d.extras.length ? `<div class="extras-line" style="margin-bottom:8px;">⚠ Not included: ${d.extras.join(', ')}</div>` : ''}
         <div class="region-tag">
-          🚐 ${t('modal_start_label')}: ${d.serviceRegions==='all' ? t('all_regions') : (Array.isArray(d.serviceRegions) && d.serviceRegions.length ? d.serviceRegions.join(', ') : d.region)}
+          🚐 ${t('modal_start_label')}: ${regionDisplayLabel(d)}
           <button type="button" class="mini-map-btn" onclick="viewTourOnMap(event, ${i})">🗺️ Tour map</button>
         </div>
         <div class="meta-row">
@@ -11520,6 +11529,15 @@ renderFilterDestChips();
 
 renderDriverGrid(visibleDrivers());
 
+// Zeigt die "Start der Tour"-Region an -- faengt den Fall ab, dass d.region nur die Insel
+// ('bali'/'lombok') als Fallback traegt (z.B. wenn beim Angebot keine Abholregion gewaehlt wurde).
+// Vorher stand dort dann woertlich "bali" -- verwirrend fuer Reisende. Jetzt: sinnvoller Text.
+function regionDisplayLabel(d){
+  if(d.serviceRegions==='all') return t('all_regions');
+  if(Array.isArray(d.serviceRegions) && d.serviceRegions.length) return d.serviceRegions.join(', ');
+  if(d.region==='bali' || d.region==='lombok') return t('all_regions');
+  return d.region || t('all_regions');
+}
 function currentAirportValue(){
   return (REGION_CONFIG[selectedIsland] || REGION_CONFIG.bali).airport.value;
 }
@@ -12132,8 +12150,7 @@ function openMapModal(mode, driverObj){
   const bbox = `${coords.lng-delta},${coords.lat-delta},${coords.lng+delta},${coords.lat+delta}`;
   const title = t('map_title_tour') + ' — ' + d.tour;
   document.getElementById('map-modal-title').textContent = title;
-  const startLabel = d.serviceRegions==='all' ? t('all_regions')
-    : (Array.isArray(d.serviceRegions) && d.serviceRegions.length ? d.serviceRegions.join(', ') : d.region);
+  const startLabel = regionDisplayLabel(d);
   const stopsBox = document.getElementById('map-stops');
   let html = `<div class="map-stop-row start"><span class="map-stop-dot">🚐</span><div><strong>${t('map_start_of_tour')}</strong><br><span>${startLabel}</span></div></div>`;
   if(d.spots && d.spots.length){
@@ -12339,8 +12356,7 @@ function openModal(d){
   if(pageLink) pageLink.style.display = (d.ownerId && (driverProfiles[d.ownerId] || d.isReal)) ? 'inline-block' : 'none';
   const reqTourBtn = document.getElementById('modal-request-tour-btn');
   if(reqTourBtn) reqTourBtn.style.display = d.ownerId ? 'block' : 'none';
-  const startRegions = d.serviceRegions==='all' ? t('all_regions')
-    : (Array.isArray(d.serviceRegions) && d.serviceRegions.length ? d.serviceRegions.join(', ') : d.region);
+  const startRegions = regionDisplayLabel(d);
   document.getElementById('modal-start-regions').textContent = '🚐 ' + startRegions;
   const airportRow = document.getElementById('modal-airport-region-row');
   const airportMapBox = document.getElementById('modal-airport-map');
@@ -15862,7 +15878,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v245</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v246</div>
 
 </body>
 </html>
