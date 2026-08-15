@@ -3360,8 +3360,8 @@
       <!-- PDF-Beleg (14. August, auf Joergs Wunsch): nur bei einem echten Beleg sichtbar (openFeeReceiptBreakdown
            setzt receiptPdfContext), nicht bei der normalen "offener Betrag"-Ansicht (openFeeBreakdown). -->
       <div id="fee-breakdown-pdf-row" style="display:none; margin-top:12px; gap:8px; align-items:stretch;">
-        <button type="button" class="book-btn" id="fee-breakdown-pdf-open-btn" style="flex:1; margin-top:0;" onclick="openFeeReceiptPdf('open')" data-i18n="rcpt_pdf_open_btn">🧾 Open as PDF</button>
-        <button type="button" class="book-btn" id="fee-breakdown-pdf-download-btn" style="flex:0 0 auto; margin-top:0; background:transparent; border:1.5px solid var(--gold); padding:0 16px;" onclick="openFeeReceiptPdf('save')" data-i18n="rcpt_pdf_download_btn">⬇ Download</button>
+        <button type="button" class="book-btn" id="fee-breakdown-pdf-open-btn" style="flex:1 1 0; min-width:0; margin-top:0; padding-left:6px; padding-right:6px;" onclick="openFeeReceiptPdf('open')" data-i18n="rcpt_pdf_open_btn">🧾 Open as PDF</button>
+        <button type="button" class="book-btn" id="fee-breakdown-pdf-download-btn" style="flex:1 1 0; min-width:0; margin-top:0; background:transparent; border:1.5px solid var(--gold); padding-left:6px; padding-right:6px; box-sizing:border-box;" onclick="openFeeReceiptPdf('save')" data-i18n="rcpt_pdf_download_btn">⬇ Download</button>
       </div>
     </div>
   </div>
@@ -15550,7 +15550,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v240</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v241</div>
 
 </body>
 </html>
