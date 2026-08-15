@@ -1328,6 +1328,17 @@
   <span data-i18n="lombok_eyecatcher_text">🌴 Jetzt auch auf Lombok unterwegs — Fahrer entdecken →</span>
 </div>
 
+<!-- Eigener Foto-Hero fuer die Lombok-Landingpage (Bauplan Kap. 2.2) -- nur sichtbar auf /lombok.
+     Fotos: lizenzfrei von Pexels (keine Namensnennung noetig), gleiche Quelle wie die Bali-Ratgeberseiten.
+     Bild zeigt Mandalika/Kuta-Lombok-Kueste von oben -- passend zu allen 4 Zonen als Uebersichtsmotiv. -->
+<div id="lombok-hero-banner" style="display:none; position:relative; height:280px; overflow:hidden;">
+  <img src="https://images.pexels.com/photos/30013786/pexels-photo-30013786.jpeg?auto=compress&cs=tinysrgb&w=1600" alt="Aerial view of Lombok's Mandalika coastline" loading="lazy" style="width:100%; height:100%; object-fit:cover;">
+  <div style="position:absolute; inset:0; background:linear-gradient(180deg, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.55) 100%); display:flex; flex-direction:column; justify-content:flex-end; padding:22px 24px;">
+    <h1 id="lombok-hero-title" style="color:#fff; font-size:1.6rem; margin:0 0 6px; font-weight:800; text-shadow:0 1px 6px rgba(0,0,0,0.4);" data-i18n="lombok_hero_title">🏝️ Rydanu Lombok — lokale Fahrer, echte Preise</h1>
+    <p id="lombok-hero-subtitle" style="color:#f0ece6; font-size:0.92rem; margin:0; max-width:520px; text-shadow:0 1px 4px rgba(0,0,0,0.4);" data-i18n="lombok_hero_subtitle">Kuta Lombok, Senggigi, Gili-Inseln, Sembalun — dein Fahrer wartet, egal wo auf der Insel.</p>
+  </div>
+</div>
+
 <div class="topbar">
   <div class="logo" onclick="goHome()" style="cursor:pointer;" title="Rydanu home">
     <div class="logo-mark"><img id="logo-mark-header" alt="Rydanu"></div>
@@ -1485,6 +1496,29 @@
       <option value="price_low" data-i18n="sort_price_low">Price: low to high</option>
       <option value="price_high" data-i18n="sort_price_high">Price: high to low</option>
     </select>
+  </div>
+
+  <!-- Lombok-Zonen-Bildkacheln (Bauplan Kap. 2.2): kurzer visueller Ueberblick ueber die Insel,
+       nur auf /lombok sichtbar. Fotos lizenzfrei von Pexels. Klick setzt direkt den Regionen-Filter. -->
+  <div id="lombok-zone-tiles" style="display:none; padding:0 32px 20px;">
+    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:10px; max-width:640px;">
+      <div onclick="selectSearchRegion('Kuta Lombok')" style="position:relative; height:110px; border-radius:10px; overflow:hidden; cursor:pointer;">
+        <img src="https://images.pexels.com/photos/38679624/pexels-photo-38679624.jpeg?auto=compress&cs=tinysrgb&w=500" alt="Kuta Lombok beach" loading="lazy" style="width:100%; height:100%; object-fit:cover;">
+        <div style="position:absolute; inset:0; background:linear-gradient(180deg, transparent 40%, rgba(0,0,0,0.6) 100%); display:flex; align-items:flex-end; padding:8px;"><span style="color:#fff; font-weight:700; font-size:0.78rem;">Kuta Lombok</span></div>
+      </div>
+      <div onclick="selectSearchRegion('Gili-Inseln')" style="position:relative; height:110px; border-radius:10px; overflow:hidden; cursor:pointer;">
+        <img src="https://images.pexels.com/photos/36956255/pexels-photo-36956255.jpeg?auto=compress&cs=tinysrgb&w=500" alt="Gili Air crystal clear water" loading="lazy" style="width:100%; height:100%; object-fit:cover;">
+        <div style="position:absolute; inset:0; background:linear-gradient(180deg, transparent 40%, rgba(0,0,0,0.6) 100%); display:flex; align-items:flex-end; padding:8px;"><span style="color:#fff; font-weight:700; font-size:0.78rem;">Gili-Inseln</span></div>
+      </div>
+      <div onclick="selectSearchRegion('Sembalun')" style="position:relative; height:110px; border-radius:10px; overflow:hidden; cursor:pointer;">
+        <img src="https://images.pexels.com/photos/4552428/pexels-photo-4552428.jpeg?auto=compress&cs=tinysrgb&w=500" alt="Mount Rinjani crater lake near Sembalun" loading="lazy" style="width:100%; height:100%; object-fit:cover;">
+        <div style="position:absolute; inset:0; background:linear-gradient(180deg, transparent 40%, rgba(0,0,0,0.6) 100%); display:flex; align-items:flex-end; padding:8px;"><span style="color:#fff; font-weight:700; font-size:0.78rem;">Sembalun</span></div>
+      </div>
+      <div onclick="selectSearchRegion('Senggigi')" style="position:relative; height:110px; border-radius:10px; overflow:hidden; cursor:pointer;">
+        <img src="https://images.pexels.com/photos/32332180/pexels-photo-32332180.jpeg?auto=compress&cs=tinysrgb&w=500" alt="Senggigi coastline West Lombok" loading="lazy" style="width:100%; height:100%; object-fit:cover;">
+        <div style="position:absolute; inset:0; background:linear-gradient(180deg, transparent 40%, rgba(0,0,0,0.6) 100%); display:flex; align-items:flex-end; padding:8px;"><span style="color:#fff; font-weight:700; font-size:0.78rem;">Senggigi</span></div>
+      </div>
+    </div>
   </div>
 
   <div class="driver-grid" id="driver-grid"></div>
@@ -3752,33 +3786,11 @@
         </div>
       </div>
 
-      <div class="filter-group">
-        <div class="filter-group-title" data-i18n="filter_starting_point">Starting point</div>
-        <div class="chip-row" data-group="regions" id="filter-regions-row">
-          <!-- dynamisch befuellt: renderFilterRegionChips() je nach gewaehlter Insel -->
-        </div>
-      </div>
+      <!-- Bauplan Kap. 4.3: neue, ruhige Subline genau am Entscheidungspunkt (Tour-Art), bewusst
+           gedaempft statt schreiend -- "was ihr erlebt, klaerst du direkt mit deinem Fahrer". -->
+      <p class="filter-decision-subline" style="margin:-4px 0 14px; font-size:0.82rem; color:var(--ink-soft, #8a9188); line-height:1.5;" data-i18n="filter_decision_subline">Choose Transfer, Half-day or Full-day — what you'll experience, you settle directly with your driver.</p>
 
-      <div class="filter-group">
-        <div class="filter-group-title" data-i18n="filter_language_title">Language</div>
-        <div class="chip-row" data-group="languages">
-          <button type="button" class="chip" data-value="DE" data-i18n="lang_de">Deutsch</button>
-          <button type="button" class="chip" data-value="EN" data-i18n="lang_en">Englisch</button>
-          <button type="button" class="chip" data-value="ID" data-i18n="lang_id">Indonesisch</button>
-          <button type="button" class="chip" data-value="FR" data-i18n="lang_fr">Französisch</button>
-          <button type="button" class="chip" data-value="ZH" data-i18n="lang_zh">Chinesisch (Mandarin)</button>
-          <button type="button" class="chip" data-value="RU" data-i18n="lang_ru">Russisch</button>
-        </div>
-      </div>
-
-      <div class="filter-group" id="filter-service-group">
-        <div class="filter-group-title" data-i18n="filter_service_title">Service (on request)</div>
-        <div class="chip-row" data-group="services">
-          <button type="button" class="chip" data-value="PhotoDrone" data-i18n="svc_filter_chip">📸 Photo & drone service</button>
-          <button type="button" class="chip" data-value="Boat" data-i18n="svc_filter_boat">🎫 Boat tickets</button>
-        </div>
-      </div>
-
+      <!-- Haupt-Filter (Bauplan Kap. 4.2): Tour-Art / Region / Fahrzeug direkt sichtbar, kein Scrollen noetig. -->
       <div class="filter-group" id="filter-spots-group">
         <div class="filter-group-title" data-i18n="filter_spots_title">Available tours</div>
         <div class="chip-row" data-group="spots">
@@ -3788,6 +3800,26 @@
         </div>
       </div>
 
+      <div class="filter-group">
+        <div class="filter-group-title" data-i18n="filter_starting_point">Starting point</div>
+        <div class="chip-row" data-group="regions" id="filter-regions-row">
+          <!-- dynamisch befuellt: renderFilterRegionChips() je nach gewaehlter Insel -->
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <div class="filter-group-title" data-i18n="filter_vtype_title">Vehicle type</div>
+        <div class="chip-row" data-group="vtype">
+          <button type="button" class="chip" data-value="Standard Car">🚗 <span data-i18n="vt_standard">Standard Car</span></button>
+          <button type="button" class="chip" data-value="Family Car">👨‍👩‍👧 <span data-i18n="vt_family">Family Car</span></button>
+          <button type="button" class="chip" data-value="Minivan">🚐 <span data-i18n="vt_minivan">Minivan</span></button>
+          <button type="button" class="chip" data-value="Luxury Car">🚘 <span data-i18n="vt_luxury">Luxury Car</span></button>
+          <button type="button" class="chip" data-value="Large Vehicle">🚌 <span data-i18n="vt_large">More than 5 seats</span></button>
+        </div>
+      </div>
+
+      <!-- Kontext-Filter: erscheinen erst nach der jeweiligen Grundauswahl (unveraendertes Verhalten,
+           nur neu einsortiert direkt hinter Tour-Art/Region, wo sie inhaltlich hingehoeren). -->
       <div class="filter-group" id="filter-airport-dest-group" style="display:none;">
         <div class="filter-group-title" data-i18n="filter_airport_dest_title">✈️ Airport transfer — where do you want to go?</div>
         <div class="chip-row" data-group="airportDest" id="filter-airportdest-row">
@@ -3809,25 +3841,42 @@
         </div>
       </div>
 
-      <div class="filter-group">
-        <div class="filter-group-title" data-i18n="filter_trust_title">Trust &amp; safety</div>
-        <div class="chip-row" data-group="trust">
-          <button type="button" class="chip" data-value="femaleDriver">👩 <span data-i18n="badge_female">Female driver</span></button>
-          <button type="button" class="chip" data-value="childFriendly">👶 <span data-i18n="badge_child">Child-friendly</span></button>
-          <button type="button" class="chip" data-value="tourGuideCertified">🎓 <span data-i18n="badge_guide">Tour guide certified</span></button>
-          <button type="button" class="chip" data-value="firstAidTrained">🩹 <span data-i18n="badge_firstaid">First aid trained</span></button>
-        </div>
-      </div>
+      <!-- Bauplan Kap. 4.2: Rest bewusst hinter "Weitere Filter" -- nicht im Weg, aber verfuegbar. -->
+      <button type="button" class="link-btn" id="filter-more-toggle-btn" onclick="toggleMoreFilters()" style="margin:6px 0 14px; display:flex; align-items:center; gap:6px;">
+        <span id="filter-more-toggle-icon">▸</span> <span data-i18n="filter_more_toggle">More filters</span>
+      </button>
+      <div id="filter-more-group" style="display:none;">
 
-      <div class="filter-group">
-        <div class="filter-group-title" data-i18n="filter_vtype_title">Vehicle type</div>
-        <div class="chip-row" data-group="vtype">
-          <button type="button" class="chip" data-value="Standard Car">🚗 <span data-i18n="vt_standard">Standard Car</span></button>
-          <button type="button" class="chip" data-value="Family Car">👨‍👩‍👧 <span data-i18n="vt_family">Family Car</span></button>
-          <button type="button" class="chip" data-value="Minivan">🚐 <span data-i18n="vt_minivan">Minivan</span></button>
-          <button type="button" class="chip" data-value="Luxury Car">🚘 <span data-i18n="vt_luxury">Luxury Car</span></button>
-          <button type="button" class="chip" data-value="Large Vehicle">🚌 <span data-i18n="vt_large">More than 5 seats</span></button>
+        <div class="filter-group">
+          <div class="filter-group-title" data-i18n="filter_language_title">Language</div>
+          <div class="chip-row" data-group="languages">
+            <button type="button" class="chip" data-value="DE" data-i18n="lang_de">Deutsch</button>
+            <button type="button" class="chip" data-value="EN" data-i18n="lang_en">Englisch</button>
+            <button type="button" class="chip" data-value="ID" data-i18n="lang_id">Indonesisch</button>
+            <button type="button" class="chip" data-value="FR" data-i18n="lang_fr">Französisch</button>
+            <button type="button" class="chip" data-value="ZH" data-i18n="lang_zh">Chinesisch (Mandarin)</button>
+            <button type="button" class="chip" data-value="RU" data-i18n="lang_ru">Russisch</button>
+          </div>
         </div>
+
+        <div class="filter-group">
+          <div class="filter-group-title" data-i18n="filter_trust_title">Trust &amp; safety</div>
+          <div class="chip-row" data-group="trust">
+            <button type="button" class="chip" data-value="femaleDriver">👩 <span data-i18n="badge_female">Female driver</span></button>
+            <button type="button" class="chip" data-value="childFriendly">👶 <span data-i18n="badge_child">Child-friendly</span></button>
+            <button type="button" class="chip" data-value="tourGuideCertified">🎓 <span data-i18n="badge_guide">Tour guide certified</span></button>
+            <button type="button" class="chip" data-value="firstAidTrained">🩹 <span data-i18n="badge_firstaid">First aid trained</span></button>
+          </div>
+        </div>
+
+        <div class="filter-group" id="filter-service-group">
+          <div class="filter-group-title" data-i18n="filter_service_title">Service (on request)</div>
+          <div class="chip-row" data-group="services">
+            <button type="button" class="chip" data-value="PhotoDrone" data-i18n="svc_filter_chip">📸 Photo & drone service</button>
+            <button type="button" class="chip" data-value="Boat" data-i18n="svc_filter_boat">🎫 Boat tickets</button>
+          </div>
+        </div>
+
       </div>
 
       <button class="book-btn" onclick="applyFilters()" data-i18n="apply_filters_btn">Apply filters</button>
@@ -10293,7 +10342,7 @@ const translations = {
     tab_driver: "Driver Dashboard",
     tab_register: "+ Register as Driver",
     tab_admin: "🔐 Admin",
-    hero_eyebrow: "Bali's driver marketplace", logo_tagline: "Local drivers. Anywhere in Bali", lombok_eyecatcher_text: "🌴 Now also on Lombok — discover drivers →", lombok_soft_suggest_text: "Did you mean Lombok? → This way",
+    hero_eyebrow: "Bali's driver marketplace", logo_tagline: "Local drivers. Anywhere in Bali", lombok_eyecatcher_text: "🌴 Now also on Lombok — discover drivers →", lombok_soft_suggest_text: "Did you mean Lombok? → This way", lombok_hero_title: "🏝️ Rydanu Lombok — local drivers, real prices", lombok_hero_subtitle: "Kuta Lombok, Senggigi, the Gili Islands, Sembalun — your driver is ready, wherever on the island.",
     hero_headline_pre: "Local ", hero_headline_word: "drivers", hero_headline_post: "<br>Anywhere in Bali",
     hero_title: "All of Bali talks about it.",
     hero_sub: "Every driver on Rydanu runs their own tours, sets their own price, and keeps what they earn. You get transparent pricing and real reviews.",
@@ -10374,7 +10423,7 @@ const translations = {
     btn_pay_now: "Pay now", fees_tier_note: "Per confirmed booking, the fee scales with the trip's price — small trips cost small fees:",
     lbl_email_address: "Email address", pay_secure_note: "You'll pay your driver directly via secure payment link. Rydanu does not process tour payments.",
     notify_email_driver: "Email to driver", notify_email_to: "Email to", notify_wa_to: "WhatsApp to",
-    filter_eyebrow: "Refine your search", filter_title: "Filters", filter_starting_point: "Starting point", filter_island_title: "Island", filter_all_regions: "All regions", filter_language_title: "Language", lang_de: "German", lang_en: "English", lang_id: "Indonesian", lang_fr: "French", lang_zh: "Chinese (Mandarin)", lang_ru: "Russian", filter_city_airport_title: "Also need an airport transfer from {city}?", filter_city_airport_chip: "✈️ Yes — to the airport",
+    filter_eyebrow: "Refine your search", filter_title: "Filters", filter_starting_point: "Starting point", filter_island_title: "Island", filter_all_regions: "All regions", filter_decision_subline: "Choose Transfer, Half-day or Full-day — what you'll experience, you settle directly with your driver.", filter_more_toggle: "More filters", filter_language_title: "Language", lang_de: "German", lang_en: "English", lang_id: "Indonesian", lang_fr: "French", lang_zh: "Chinese (Mandarin)", lang_ru: "Russian", filter_city_airport_title: "Also need an airport transfer from {city}?", filter_city_airport_chip: "✈️ Yes — to the airport",
     map_title_tour: "Tour map", map_start_of_tour: "Start of tour", map_note_tour_area: "Marker shows the tour's main area — your driver will confirm the exact pickup point and route after booking.", map_drive_time_label: "driving time",
     map_title_airport_dest: "Airport transfer destination", map_dropoff_area: "Drop-off area",
     admin_empty_pending: "No pending driver registrations right now.", admin_empty_approved: "No approved drivers yet.", email_greeting: "Hi",
@@ -10624,7 +10673,7 @@ const translations = {
     tab_driver: "Fahrer-Dashboard",
     tab_register: "+ Als Fahrer registrieren",
     tab_admin: "🔐 Admin",
-    hero_eyebrow: "Balis Fahrer-Marktplatz", logo_tagline: "Lokale Fahrer. Überall auf Bali", lombok_eyecatcher_text: "🌴 Jetzt auch auf Lombok unterwegs — Fahrer entdecken →", lombok_soft_suggest_text: "Meintest du Lombok? → Hier entlang",
+    hero_eyebrow: "Balis Fahrer-Marktplatz", logo_tagline: "Lokale Fahrer. Überall auf Bali", lombok_eyecatcher_text: "🌴 Jetzt auch auf Lombok unterwegs — Fahrer entdecken →", lombok_soft_suggest_text: "Meintest du Lombok? → Hier entlang", lombok_hero_title: "🏝️ Rydanu Lombok — lokale Fahrer, echte Preise", lombok_hero_subtitle: "Kuta Lombok, Senggigi, Gili-Inseln, Sembalun — dein Fahrer wartet, egal wo auf der Insel.",
     hero_headline_pre: "Lokale ", hero_headline_word: "Fahrer", hero_headline_post: "<br>Überall auf Bali",
     hero_title: "Darüber spricht Bali.",
     hero_sub: "Jeder Fahrer auf Rydanu bietet seine eigenen Touren an, bestimmt seinen eigenen Preis und behält seinen Verdienst. Du bekommst transparente Preise und echte Bewertungen.",
@@ -10705,7 +10754,7 @@ const translations = {
     btn_pay_now: "Jetzt bezahlen", fees_tier_note: "Pro bestätigter Buchung richtet sich die Gebühr nach dem Reisepreis — kleine Touren, kleine Gebühren:",
     lbl_email_address: "E-Mail-Adresse", pay_secure_note: "Du bezahlst deinen Fahrer direkt über einen sicheren Zahlungslink. Rydanu wickelt keine Tour-Zahlungen ab.",
     notify_email_driver: "E-Mail an Fahrer", notify_email_to: "E-Mail an", notify_wa_to: "WhatsApp an",
-    filter_eyebrow: "Suche verfeinern", filter_title: "Filter", filter_starting_point: "Startpunkt", filter_island_title: "Insel", filter_all_regions: "Alle Regionen", filter_language_title: "Sprache", lang_de: "Deutsch", lang_en: "Englisch", lang_id: "Indonesisch", lang_fr: "Französisch", lang_zh: "Chinesisch (Mandarin)", lang_ru: "Russisch", filter_city_airport_title: "Brauchst du auch einen Flughafentransfer ab {city}?", filter_city_airport_chip: "✈️ Ja — zum Flughafen",
+    filter_eyebrow: "Suche verfeinern", filter_title: "Filter", filter_starting_point: "Startpunkt", filter_island_title: "Insel", filter_all_regions: "Alle Regionen", filter_decision_subline: "Wähle Transfer, Halbtag oder Ganztag — was ihr erlebt, besprichst du direkt mit deinem Fahrer.", filter_more_toggle: "Weitere Filter", filter_language_title: "Sprache", lang_de: "Deutsch", lang_en: "Englisch", lang_id: "Indonesisch", lang_fr: "Französisch", lang_zh: "Chinesisch (Mandarin)", lang_ru: "Russisch", filter_city_airport_title: "Brauchst du auch einen Flughafentransfer ab {city}?", filter_city_airport_chip: "✈️ Ja — zum Flughafen",
     map_title_tour: "Tour-Karte", map_start_of_tour: "Start der Tour", map_note_tour_area: "Der Marker zeigt das Hauptgebiet der Tour — dein Fahrer bestätigt den genauen Abholpunkt und die Route nach der Buchung.", map_drive_time_label: "Fahrzeit",
     map_title_airport_dest: "Flughafentransfer-Ziel", map_dropoff_area: "Abholbereich",
     admin_empty_pending: "Aktuell keine ausstehenden Fahrer-Registrierungen.", admin_empty_approved: "Noch keine freigeschalteten Fahrer.", email_greeting: "Hallo",
@@ -10955,7 +11004,7 @@ const translations = {
     tab_driver: "Dasbor Sopir",
     tab_register: "+ Daftar sebagai Sopir",
     tab_admin: "🔐 Admin",
-    hero_eyebrow: "Marketplace sopir lokal Bali", logo_tagline: "Sopir lokal. Di mana saja di Bali", lombok_eyecatcher_text: "🌴 Kini juga di Lombok — temukan sopir →", lombok_soft_suggest_text: "Maksud Anda Lombok? → Lewat sini",
+    hero_eyebrow: "Marketplace sopir lokal Bali", logo_tagline: "Sopir lokal. Di mana saja di Bali", lombok_eyecatcher_text: "🌴 Kini juga di Lombok — temukan sopir →", lombok_soft_suggest_text: "Maksud Anda Lombok? → Lewat sini", lombok_hero_title: "🏝️ Rydanu Lombok — sopir lokal, harga sebenarnya", lombok_hero_subtitle: "Kuta Lombok, Senggigi, Gili, Sembalun — sopir Anda siap, di mana pun di pulau ini.",
     hero_headline_pre: "", hero_headline_word: "Sopir", hero_headline_post: " lokal<br>Di mana saja di Bali",
     hero_title: "Seluruh Bali membicarakannya.",
     hero_sub: "Setiap sopir di Rydanu mengelola tur mereka sendiri, menentukan harga sendiri, dan menyimpan penghasilannya. Anda mendapat harga transparan dan ulasan asli.",
@@ -11036,7 +11085,7 @@ const translations = {
     btn_pay_now: "Bayar sekarang", fees_tier_note: "Per pemesanan terkonfirmasi, biaya menyesuaikan harga perjalanan — perjalanan kecil, biaya kecil:",
     lbl_email_address: "Alamat email", pay_secure_note: "Anda membayar sopir Anda langsung melalui tautan pembayaran yang aman. Rydanu tidak memproses pembayaran tur.",
     notify_email_driver: "Email ke sopir", notify_email_to: "Email ke", notify_wa_to: "WhatsApp ke",
-    filter_eyebrow: "Perhalus pencarian Anda", filter_title: "Filter", filter_starting_point: "Titik keberangkatan", filter_island_title: "Pulau", filter_all_regions: "Semua wilayah", filter_language_title: "Bahasa", lang_de: "Jerman", lang_en: "Inggris", lang_id: "Indonesia", lang_fr: "Prancis", lang_zh: "Mandarin", lang_ru: "Rusia", filter_city_airport_title: "Perlu transfer bandara juga dari {city}?", filter_city_airport_chip: "✈️ Ya — ke bandara",
+    filter_eyebrow: "Perhalus pencarian Anda", filter_title: "Filter", filter_starting_point: "Titik keberangkatan", filter_island_title: "Pulau", filter_all_regions: "Semua wilayah", filter_decision_subline: "Pilih Transfer, Setengah hari, atau Sehari penuh — apa yang Anda alami, dibicarakan langsung dengan sopir Anda.", filter_more_toggle: "Filter lainnya", filter_language_title: "Bahasa", lang_de: "Jerman", lang_en: "Inggris", lang_id: "Indonesia", lang_fr: "Prancis", lang_zh: "Mandarin", lang_ru: "Rusia", filter_city_airport_title: "Perlu transfer bandara juga dari {city}?", filter_city_airport_chip: "✈️ Ya — ke bandara",
     map_title_tour: "Peta tur", map_start_of_tour: "Awal tur", map_note_tour_area: "Penanda menunjukkan area utama tur — sopir Anda akan mengonfirmasi titik jemput dan rute pasti setelah pemesanan.", map_drive_time_label: "waktu berkendara",
     map_title_airport_dest: "Tujuan transfer bandara", map_dropoff_area: "Area penurunan",
     admin_empty_pending: "Tidak ada pendaftaran sopir yang tertunda saat ini.", admin_empty_approved: "Belum ada sopir yang disetujui.", email_greeting: "Hai",
@@ -11562,7 +11611,26 @@ document.addEventListener('click', e=>{
   }catch(err){ console.error('Filter chip click error:', err); }
 });
 
-function openFilters(){ document.getElementById('filter-modal-bg').classList.add('active'); updateAllFilterVisibility(); }
+function toggleMoreFilters(){
+  const grp = document.getElementById('filter-more-group');
+  const icon = document.getElementById('filter-more-toggle-icon');
+  const opening = grp.style.display === 'none';
+  grp.style.display = opening ? 'block' : 'none';
+  if(icon) icon.textContent = opening ? '▾' : '▸';
+}
+function openFilters(){
+  document.getElementById('filter-modal-bg').classList.add('active');
+  updateAllFilterVisibility();
+  // Wenn schon Filter aus dem eingeklappten Bereich aktiv sind (Sprache/Vertrauen/Service),
+  // gleich aufklappen -- sonst wirkt es, als waeren die Auswahlen verschwunden.
+  const hasHiddenActive = selectedFilters.languages.length || selectedFilters.trust.length || selectedFilters.services.length;
+  const grp = document.getElementById('filter-more-group');
+  const icon = document.getElementById('filter-more-toggle-icon');
+  if(hasHiddenActive && grp && grp.style.display === 'none'){
+    grp.style.display = 'block';
+    if(icon) icon.textContent = '▾';
+  }
+}
 function closeFilters(){ document.getElementById('filter-modal-bg').classList.remove('active'); }
 document.getElementById('filter-modal-bg').addEventListener('click', e=>{ if(e.target.id==='filter-modal-bg') closeFilters(); });
 
@@ -13447,6 +13515,14 @@ if(_villaSlug){
       document.title = 'Rydanu Lombok — ' + (t('logo_tagline') || 'Local drivers');
       const heroEl = document.getElementById('hero-eyebrow');
       if(heroEl) heroEl.textContent = '🌴 ' + (currentLang==='de' ? 'Lomboks Fahrer-Marktplatz' : (currentLang==='id' ? 'Marketplace sopir lokal Lombok' : "Lombok's driver marketplace"));
+      const banner = document.getElementById('lombok-hero-banner');
+      if(banner) banner.style.display = 'block';
+      const titleEl = document.getElementById('lombok-hero-title');
+      const subEl = document.getElementById('lombok-hero-subtitle');
+      if(titleEl) titleEl.textContent = t('lombok_hero_title');
+      if(subEl) subEl.textContent = t('lombok_hero_subtitle');
+      const tiles = document.getElementById('lombok-zone-tiles');
+      if(tiles) tiles.style.display = 'block';
     }, 50);
   }
   // Punkt 4 (5. August): Link "Buchung ändern?" aus den Buchungs-Mails oeffnet "Meine Buchung
@@ -13899,10 +13975,16 @@ function applyRealDriverProfileToUI(d){
 
 function updateLombokBandVisibility(view){
   const band = document.getElementById('lombok-eyecatcher-band');
-  if(!band) return;
-  // Nie auf der Lombok-Landingpage selbst zeigen (waere sinnlos, man ist ja schon da) und nur
-  // auf dem Kunden-Tab, nicht im Fahrer-Dashboard oder Admin-Bereich.
-  band.style.display = (view==='customer' && !(typeof _isLombokLanding !== 'undefined' && _isLombokLanding)) ? 'block' : 'none';
+  if(band){
+    // Nie auf der Lombok-Landingpage selbst zeigen (waere sinnlos, man ist ja schon da) und nur
+    // auf dem Kunden-Tab, nicht im Fahrer-Dashboard oder Admin-Bereich.
+    band.style.display = (view==='customer' && !(typeof _isLombokLanding !== 'undefined' && _isLombokLanding)) ? 'block' : 'none';
+  }
+  const heroBanner = document.getElementById('lombok-hero-banner');
+  if(heroBanner && typeof _isLombokLanding !== 'undefined' && _isLombokLanding){
+    // Foto-Hero nur auf dem Kunden-Tab der Lombok-Landingpage zeigen, nicht im Fahrer-/Admin-Bereich.
+    heroBanner.style.display = (view==='customer') ? 'block' : 'none';
+  }
 }
 function switchView(view){
   document.getElementById('view-customer').classList.toggle('active', view==='customer');
@@ -15780,7 +15862,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v243</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v245</div>
 
 </body>
 </html>
