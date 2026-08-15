@@ -6943,6 +6943,14 @@ async function adminCollectFeesNow(driverId, driverName){
       driver_id: driverId, type: 'fee_receipt', subject: t('admin_collect_notify_title'), body: bodyParts.join(' '), settlement_batch_id: r.batch_id
     });
     if(msgErr) console.error('Beleg-Nachricht an Fahrer konnte nicht gesendet werden:', msgErr);
+    // 15. August (Joergs Wunsch): zusaetzlich zum Beleg (der bewusst NUR in der Gebuehrenabrechnung
+    // erscheint, siehe loadRealInbox) eine kurze, eigenstaendige Info-Nachricht im normalen Postfach --
+    // eigene is_read/archived-Zeile, damit der 14.-August-Fix (kein doppelter Zustand) nicht wieder bricht.
+    const { error: infoMsgErr } = await supabaseClient.from('driver_messages').insert({
+      driver_id: driverId, type: 'system', subject: t('fee_collect_info_title'),
+      body: t('fee_collect_info_body').replace('{amount}', formatIDR(r.collected_idr + r.credits_applied_idr))
+    });
+    if(infoMsgErr) console.error('Info-Nachricht an Fahrer konnte nicht gesendet werden:', infoMsgErr);
   }
   alert(
     t('admin_openpay_collect_result_1').replace('{amount}', formatIDR(r.collected_idr)) +
@@ -10337,7 +10345,7 @@ const translations = {
     admin_openpay_amount: "Amount due", admin_openpay_due: "Due date", admin_openpay_suspended: "🚫 Suspended", admin_openpay_overdue: "Overdue",
     admin_openpay_balance: "Balance", admin_openpay_credit: "Pending credit", admin_openpay_collect_btn: "Collect now", admin_openpay_details_btn: "Details", admin_openpay_hide_btn: "Hide",
     admin_openpay_collect_confirm: "Collect fees from {name} now? This applies any pending credits first, then deducts what's available from their balance.",
-    admin_openpay_collect_result_1: "✓ Collected: {amount}", admin_openpay_collect_result_credit: "Credit applied: {amount}", admin_openpay_collect_result_remaining: "Still open afterwards: {amount}", admin_collect_notify_title: "💳 Rydanu fees collected", admin_collect_notify_body: "Rydanu collected {amount} in fees from your balance.", admin_collect_notify_credit_note: "This included {amount} from your referral/admin credit.", admin_collect_notify_remaining_note: "{amount} is still open.",
+    admin_openpay_collect_result_1: "✓ Collected: {amount}", admin_openpay_collect_result_credit: "Credit applied: {amount}", admin_openpay_collect_result_remaining: "Still open afterwards: {amount}", admin_collect_notify_title: "💳 Rydanu fees collected", admin_collect_notify_body: "Rydanu collected {amount} in fees from your balance.", admin_collect_notify_credit_note: "This included {amount} from your referral/admin credit.", admin_collect_notify_remaining_note: "{amount} is still open.", fee_collect_info_title: "💳 Fees collected", fee_collect_info_body: "{amount} was just collected from your balance for open fees. You'll find the full receipt under Fees & billing.",
     admin_openpay_days_left: "{n} days left", admin_confirm_run_settlement: "Run the automatic month-end fee settlement for all drivers now? This charges everyone with open fees and a valid payment method, and starts the 5-day countdown for anyone without one.",
     admin_settlement_done: "Settlement run complete. Check the lists below for results.",
     payment_suspended_banner: "Your account is suspended because your Rydanu fees ({amount}) weren't settled in time. Your tours are hidden from travelers. Pay now to be reinstated automatically.",
@@ -10666,7 +10674,7 @@ const translations = {
     admin_openpay_amount: "Fälliger Betrag", admin_openpay_due: "Fällig am", admin_openpay_suspended: "🚫 Gesperrt", admin_openpay_overdue: "Überfällig",
     admin_openpay_balance: "Guthaben", admin_openpay_credit: "Offene Gutschrift", admin_openpay_collect_btn: "Jetzt einziehen", admin_openpay_details_btn: "Details", admin_openpay_hide_btn: "Ausblenden",
     admin_openpay_collect_confirm: "Jetzt Gebühren von {name} einziehen? Zuerst werden offene Gutschriften verrechnet, danach der Rest vom Guthaben abgezogen.",
-    admin_openpay_collect_result_1: "✓ Eingezogen: {amount}", admin_openpay_collect_result_credit: "Gutschrift verrechnet: {amount}", admin_openpay_collect_result_remaining: "Danach noch offen: {amount}", admin_collect_notify_title: "💳 Rydanu-Gebühren eingezogen", admin_collect_notify_body: "Rydanu hat {amount} an Gebühren von deinem Guthaben eingezogen.", admin_collect_notify_credit_note: "Davon {amount} aus deiner Empfehlungs-/Admin-Gutschrift verrechnet.", admin_collect_notify_remaining_note: "Noch offen: {amount}.",
+    admin_openpay_collect_result_1: "✓ Eingezogen: {amount}", admin_openpay_collect_result_credit: "Gutschrift verrechnet: {amount}", admin_openpay_collect_result_remaining: "Danach noch offen: {amount}", admin_collect_notify_title: "💳 Rydanu-Gebühren eingezogen", admin_collect_notify_body: "Rydanu hat {amount} an Gebühren von deinem Guthaben eingezogen.", admin_collect_notify_credit_note: "Davon {amount} aus deiner Empfehlungs-/Admin-Gutschrift verrechnet.", admin_collect_notify_remaining_note: "Noch offen: {amount}.", fee_collect_info_title: "💳 Gebühren eingezogen", fee_collect_info_body: "Es wurden gerade {amount} für offene Gebühren von deinem Guthaben eingezogen. Den vollständigen Beleg findest du unter Gebühren & Abrechnung.",
     admin_openpay_days_left: "noch {n} Tage", admin_confirm_run_settlement: "Jetzt die automatische Monatsend-Gebührenabrechnung für alle Fahrer ausführen? Das belastet alle mit offenen Gebühren und gültiger Zahlungsmethode und startet die 5-Tage-Frist für alle ohne.",
     admin_settlement_done: "Abrechnungslauf abgeschlossen. Ergebnisse unten prüfen.",
     payment_suspended_banner: "Dein Konto ist gesperrt, weil deine Rydanu-Gebühren ({amount}) nicht rechtzeitig beglichen wurden. Deine Touren sind für Reisende ausgeblendet. Jetzt bezahlen, um automatisch wieder freigeschaltet zu werden.",
@@ -10995,7 +11003,7 @@ const translations = {
     admin_openpay_amount: "Jumlah jatuh tempo", admin_openpay_due: "Tanggal jatuh tempo", admin_openpay_suspended: "🚫 Ditangguhkan", admin_openpay_overdue: "Terlambat",
     admin_openpay_balance: "Saldo", admin_openpay_credit: "Kredit tertunda", admin_openpay_collect_btn: "Tagih sekarang", admin_openpay_details_btn: "Rincian", admin_openpay_hide_btn: "Sembunyikan",
     admin_openpay_collect_confirm: "Tagih biaya dari {name} sekarang? Kredit tertunda akan diterapkan lebih dulu, lalu sisanya diambil dari saldo.",
-    admin_openpay_collect_result_1: "✓ Ditagih: {amount}", admin_openpay_collect_result_credit: "Kredit diterapkan: {amount}", admin_openpay_collect_result_remaining: "Masih terbuka setelahnya: {amount}", admin_collect_notify_title: "💳 Biaya Rydanu ditagih", admin_collect_notify_body: "Rydanu menagih {amount} biaya dari saldo Anda.", admin_collect_notify_credit_note: "Termasuk {amount} dari kredit referral/admin Anda.", admin_collect_notify_remaining_note: "Masih terbuka: {amount}.",
+    admin_openpay_collect_result_1: "✓ Ditagih: {amount}", admin_openpay_collect_result_credit: "Kredit diterapkan: {amount}", admin_openpay_collect_result_remaining: "Masih terbuka setelahnya: {amount}", admin_collect_notify_title: "💳 Biaya Rydanu ditagih", admin_collect_notify_body: "Rydanu menagih {amount} biaya dari saldo Anda.", admin_collect_notify_credit_note: "Termasuk {amount} dari kredit referral/admin Anda.", admin_collect_notify_remaining_note: "Masih terbuka: {amount}.", fee_collect_info_title: "💳 Biaya ditagih", fee_collect_info_body: "{amount} baru saja ditagih dari saldo Anda untuk biaya terbuka. Kuitansi lengkap ada di Biaya & penagihan.",
     admin_openpay_days_left: "{n} hari lagi", admin_confirm_run_settlement: "Jalankan penyelesaian biaya akhir bulan otomatis untuk semua sopir sekarang? Ini akan menagih semua yang memiliki biaya terbuka dan metode pembayaran valid, dan memulai hitung mundur 5 hari untuk yang tidak punya.",
     admin_settlement_done: "Penyelesaian selesai. Periksa daftar di bawah untuk hasilnya.",
     payment_suspended_banner: "Akun Anda ditangguhkan karena biaya Rydanu Anda ({amount}) tidak dilunasi tepat waktu. Tur Anda disembunyikan dari wisatawan. Bayar sekarang untuk diaktifkan kembali secara otomatis.",
@@ -15542,7 +15550,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v239</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v240</div>
 
 </body>
 </html>
