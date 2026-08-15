@@ -1,1 +1,2 @@
-{ "rewrites": [ { "source": "/v/:slug", "destination": "/index.html" } ] }
+{ "rewrites": [ { "source": "/lombok", "destination": "/index.html" }, { "source": "/v/:slug", "destination": "/index.html" } ] }
+
