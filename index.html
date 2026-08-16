@@ -1531,9 +1531,9 @@
 
   <div class="driver-grid" id="driver-grid"></div>
   <p class="no-results" id="no-results" data-i18n="no_drivers_match" style="display:none; padding:0 32px 40px; color:var(--ink-soft); font-size:0.9rem;">No drivers match that search yet — try a different area or clear the duration filter.</p>
-  <p id="lombok-soft-suggest" style="display:none; padding:0 32px 24px; font-size:0.9rem;">
-    <a href="/lombok" style="color:#C9895F; font-weight:600; text-decoration:none;" data-i18n="lombok_soft_suggest_text">Meintest du Lombok? → Hier entlang</a>
-  </p>
+  <div id="lombok-soft-suggest" style="display:none; margin:0 32px 24px; padding:16px 18px; background:#FBF0E4; border:1.5px solid #E8B98A; border-radius:12px;">
+    <a href="/lombok" id="lombok-soft-suggest-link" style="color:#8A4A1F; font-weight:700; font-size:1.02rem; text-decoration:none; display:flex; align-items:center; gap:10px;"><span style="font-size:1.3rem;">🏝️</span><span>Meintest du Lombok? → Hier entlang</span></a>
+  </div>
 
   <footer>
     <svg width="14" height="18" viewBox="0 0 100 130" fill="var(--ink-soft)" style="vertical-align:-5px; margin-right:6px;">
@@ -10356,7 +10356,7 @@ const translations = {
     tab_driver: "Driver Dashboard",
     tab_register: "+ Register as Driver",
     tab_admin: "🔐 Admin",
-    hero_eyebrow: "Bali's driver marketplace", logo_tagline: "Local drivers. Anywhere in Bali", lombok_eyecatcher_text: "🌴 Now also on Lombok — discover drivers →", lombok_soft_suggest_text: "Did you mean Lombok? → This way", lombok_hero_title: "🏝️ Rydanu Lombok — local drivers, real prices", lombok_hero_subtitle: "Kuta Lombok, Senggigi, the Gili Islands, Sembalun — your driver is ready, wherever on the island.", lombok_back_to_bali: "← Back to Bali",
+    hero_eyebrow: "Bali's driver marketplace", logo_tagline: "Local drivers. Anywhere in Bali", lombok_eyecatcher_text: "🌴 Now also on Lombok — discover drivers →", lombok_soft_suggest_text: "Did you mean Lombok? → This way", lombok_soft_suggest_text_zone: "Did you mean {zone} on Lombok? → This way", lombok_hero_title: "🏝️ Rydanu Lombok — local drivers, real prices", lombok_hero_subtitle: "Kuta Lombok, Senggigi, the Gili Islands, Sembalun — your driver is ready, wherever on the island.", lombok_back_to_bali: "← Back to Bali",
     hero_headline_pre: "Local ", hero_headline_word: "drivers", hero_headline_post: "<br>Anywhere in Bali",
     hero_title: "All of Bali talks about it.",
     hero_sub: "Every driver on Rydanu runs their own tours, sets their own price, and keeps what they earn. You get transparent pricing and real reviews.",
@@ -10687,7 +10687,7 @@ const translations = {
     tab_driver: "Fahrer-Dashboard",
     tab_register: "+ Als Fahrer registrieren",
     tab_admin: "🔐 Admin",
-    hero_eyebrow: "Balis Fahrer-Marktplatz", logo_tagline: "Lokale Fahrer. Überall auf Bali", lombok_eyecatcher_text: "🌴 Jetzt auch auf Lombok unterwegs — Fahrer entdecken →", lombok_soft_suggest_text: "Meintest du Lombok? → Hier entlang", lombok_hero_title: "🏝️ Rydanu Lombok — lokale Fahrer, echte Preise", lombok_hero_subtitle: "Kuta Lombok, Senggigi, Gili-Inseln, Sembalun — dein Fahrer wartet, egal wo auf der Insel.", lombok_back_to_bali: "← Zurück zu Bali",
+    hero_eyebrow: "Balis Fahrer-Marktplatz", logo_tagline: "Lokale Fahrer. Überall auf Bali", lombok_eyecatcher_text: "🌴 Jetzt auch auf Lombok unterwegs — Fahrer entdecken →", lombok_soft_suggest_text: "Meintest du Lombok? → Hier entlang", lombok_soft_suggest_text_zone: "Meintest du {zone} auf Lombok? → Hier entlang", lombok_hero_title: "🏝️ Rydanu Lombok — lokale Fahrer, echte Preise", lombok_hero_subtitle: "Kuta Lombok, Senggigi, Gili-Inseln, Sembalun — dein Fahrer wartet, egal wo auf der Insel.", lombok_back_to_bali: "← Zurück zu Bali",
     hero_headline_pre: "Lokale ", hero_headline_word: "Fahrer", hero_headline_post: "<br>Überall auf Bali",
     hero_title: "Darüber spricht Bali.",
     hero_sub: "Jeder Fahrer auf Rydanu bietet seine eigenen Touren an, bestimmt seinen eigenen Preis und behält seinen Verdienst. Du bekommst transparente Preise und echte Bewertungen.",
@@ -11018,7 +11018,7 @@ const translations = {
     tab_driver: "Dasbor Sopir",
     tab_register: "+ Daftar sebagai Sopir",
     tab_admin: "🔐 Admin",
-    hero_eyebrow: "Marketplace sopir lokal Bali", logo_tagline: "Sopir lokal. Di mana saja di Bali", lombok_eyecatcher_text: "🌴 Kini juga di Lombok — temukan sopir →", lombok_soft_suggest_text: "Maksud Anda Lombok? → Lewat sini", lombok_hero_title: "🏝️ Rydanu Lombok — sopir lokal, harga sebenarnya", lombok_hero_subtitle: "Kuta Lombok, Senggigi, Gili, Sembalun — sopir Anda siap, di mana pun di pulau ini.", lombok_back_to_bali: "← Kembali ke Bali",
+    hero_eyebrow: "Marketplace sopir lokal Bali", logo_tagline: "Sopir lokal. Di mana saja di Bali", lombok_eyecatcher_text: "🌴 Kini juga di Lombok — temukan sopir →", lombok_soft_suggest_text: "Maksud Anda Lombok? → Lewat sini", lombok_soft_suggest_text_zone: "Maksud Anda {zone} di Lombok? → Lewat sini", lombok_hero_title: "🏝️ Rydanu Lombok — sopir lokal, harga sebenarnya", lombok_hero_subtitle: "Kuta Lombok, Senggigi, Gili, Sembalun — sopir Anda siap, di mana pun di pulau ini.", lombok_back_to_bali: "← Kembali ke Bali",
     hero_headline_pre: "", hero_headline_word: "Sopir", hero_headline_post: " lokal<br>Di mana saja di Bali",
     hero_title: "Seluruh Bali membicarakannya.",
     hero_sub: "Setiap sopir di Rydanu mengelola tur mereka sendiri, menentukan harga sendiri, dan menyimpan penghasilannya. Anda mendapat harga transparan dan ulasan asli.",
@@ -11373,6 +11373,8 @@ function setLanguage(lang){
     if(dict[key]) el.placeholder = dict[key];
   });
   if(document.getElementById('dash-greeting')) renderProfileChip();
+  const searchInputEl = document.getElementById('search-input');
+  if(searchInputEl) updateLombokSoftSuggest(searchInputEl.value.trim().toLowerCase());
   saveState();
 }
 
@@ -11696,16 +11698,26 @@ function getSearchRegionList(){
 // normalizeFuzzy: entfernt doppelte aufeinanderfolgende Buchstaben (z.B. "Senggigi" -> "sengigi"),
 // damit ein haeufiger Tippfehler (fehlender Doppel-Buchstabe) den Hinweis trotzdem ausloest.
 function normalizeFuzzy(s){ return (s||'').toLowerCase().replace(/(.)\1+/g, '$1'); }
-function updateLombokSoftSuggest(q){
-  const suggestEl = document.getElementById('lombok-soft-suggest');
-  if(!suggestEl) return;
+function matchLombokZone(q){
+  if(q.length<3 || selectedIsland!=='bali') return null;
   const qFuzzy = normalizeFuzzy(q);
-  const looksLikeLombok = q.length>=3 && selectedIsland==='bali' && REGION_CONFIG.lombok.regions.some(r => {
+  return REGION_CONFIG.lombok.regions.find(r => {
     const val = r.value.toLowerCase();
     const label = (r.label[currentLang]||r.label.en).toLowerCase();
     return val.includes(q) || label.includes(q) || normalizeFuzzy(val).includes(qFuzzy) || normalizeFuzzy(label).includes(qFuzzy);
-  });
-  suggestEl.style.display = looksLikeLombok ? 'block' : 'none';
+  }) || null;
+}
+function updateLombokSoftSuggest(q){
+  const suggestEl = document.getElementById('lombok-soft-suggest');
+  const linkEl = document.getElementById('lombok-soft-suggest-link');
+  if(!suggestEl || !linkEl) return;
+  const zone = matchLombokZone(q);
+  if(zone){
+    const template = t('lombok_soft_suggest_text_zone');
+    const text = template.replace('{zone}', zone.value);
+    linkEl.querySelector('span:last-child').textContent = text;
+  }
+  suggestEl.style.display = zone ? 'block' : 'none';
 }
 function handleSearchInput(){
   const q = document.getElementById('search-input').value.trim().toLowerCase();
@@ -15910,7 +15922,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v249</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v250</div>
 
 </body>
 </html>
