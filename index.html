@@ -4380,6 +4380,12 @@ async function submitTourRequest(){
       return;
     }
     if(trRequestDriverId === realDriverProfile?.id) loadRealTourInquiries();
+    // Bugfix (17.8., Joerg gemeldet): bei einer neuen individuellen Touranfrage bekam der Fahrer
+    // bisher WEDER Push NOCH Posteingangs-Nachricht -- nur Villa-Anfragen und bereits bestaetigte
+    // Angebote loesten das aus. notify-driver-booking jetzt um inquiryId erweitert (siehe Edge
+    // Function), hier der fehlende Aufruf dazu.
+    supabaseClient.functions.invoke('notify-driver-booking', { body: { inquiryId: newId } })
+      .catch(err=>console.error('Fahrer-Benachrichtigung (neue Anfrage) fehlgeschlagen:', err));
     // Punkt 1 (heute): Kunde bekommt zusaetzlich zur Bestaetigung auf dieser Seite auch eine Mail,
     // falls er/sie das Fenster schliesst, bevor die Seite hier gesehen wird
     if(email){
@@ -7921,8 +7927,11 @@ function updateInboxDot(){
 // Baustein (Buchungs-Alarm): neue, noch nicht angesehene Buchungsanfragen bekommen dieselbe
 // Aufmerksamkeit wie ungelesene Nachrichten — Umschlag oben, roter Punkt am Menüpunkt "Bookings",
 // und zusätzlich ein auffälliger Banner in der Mitte, der zu den Buchungen springt.
+// Bugfix (17.8., Joerg gemeldet): zaehlte bisher JEDE ungesehene Buchung, auch schon bestaetigte --
+// der Balken blieb dadurch rot, obwohl es nichts mehr zu tun gab. Jetzt wie beim Anfragen-Alarm nur
+// echte offene/actionable Buchungen (status 'pending', d.h. der Fahrer muss noch annehmen/ablehnen).
 function updateBookingsAlert(){
-  const unseenCount = (driverBookings || []).filter(b => b.driverSeen === false).length;
+  const unseenCount = (driverBookings || []).filter(b => b.driverSeen === false && b.status === 'pending').length;
   const dot = document.getElementById('bookings-dot');
   if(dot){
     dot.style.display = unseenCount > 0 ? 'inline-block' : 'none';
@@ -15937,7 +15946,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v251</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v253</div>
 
 </body>
 </html>
