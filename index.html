@@ -13049,15 +13049,29 @@ let realDriverProfile = null; // vom Server geladenes echtes Fahrerprofil (erset
 // (info@rydanu.com) für den echten Admin-Bereich nutzbar, kommt aber NICHT
 // automatisch durch die Baustellen-Tür. Nur das separate Konto mit
 // door_access:true (taschner.joerg@gmail.com) öffnet die Tür.
+//
+// Bugfix (17.8., Joerg gemeldet): supabaseClient ist EIN gemeinsamer Auth-Client fuer
+// Tuer-Konto UND Fahrer-Testkonten. Login als Fahrer ERSETZT die aktive Sitzung -- die
+// Tuer "vergisst" dadurch, dass sie schon offen war. Bei jedem vollen Seitenwechsel
+// (z.B. /lombok und zurueck, jeweils ein echter Page-Reload) wird checkSiteLock() neu
+// ausgewertet und haengt dann an der zufaellig gerade aktiven Sitzung -- Joerg musste sich
+// bei jedem Sprung neu einloggen. Fix: Freischaltung zusaetzlich lokal (geraetegebunden)
+// merken, unabhaengig vom gerade aktiven Konto. Bleibt beim expliziten Abmelden weiterhin
+// gesperrt (siehe handleDriverLogout).
 // ============================================
+const DOOR_UNLOCK_KEY = 'rydanu_door_unlocked';
 function unlockSite(){
   document.getElementById('site-lock-gate').style.display = 'none';
   document.getElementById('site-content').style.display = 'block';
+  try{ localStorage.setItem(DOOR_UNLOCK_KEY, '1'); }catch(e){}
   loadRealPublicListings();
   updateLombokBandVisibility('customer');
 }
 
 async function checkSiteLock(){
+  let alreadyUnlocked = false;
+  try{ alreadyUnlocked = localStorage.getItem(DOOR_UNLOCK_KEY) === '1'; }catch(e){}
+  if(alreadyUnlocked){ unlockSite(); return; }
   const { data: { session } } = await supabaseClient.auth.getSession();
   const hasDoorAccess = !!(session && session.user && session.user.user_metadata && session.user.user_metadata.door_access === true);
   if(hasDoorAccess){
@@ -13925,6 +13939,7 @@ async function handleDriverLogout(){
   updateRegisterButtonVisibility();
   await checkDriverAuthState(true);
   // Baustellen-Tür (Phase 3): nach dem Abmelden wieder sperren, statt die Plattform offen zu lassen
+  try{ localStorage.removeItem(DOOR_UNLOCK_KEY); }catch(e){}
   document.getElementById('site-content').style.display = 'none';
   document.getElementById('site-lock-gate').style.display = 'flex';
   document.getElementById('lock-email').value = '';
@@ -15922,7 +15937,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v250</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v251</div>
 
 </body>
 </html>
