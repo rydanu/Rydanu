@@ -231,13 +231,6 @@
   .hero-headline .accent{ color:var(--gold-deep); font-style:normal; }
   .hero p.sub{ font-size:1.05rem; color:var(--ink-soft); max-width:520px; line-height:1.5; margin-bottom:32px; }
 
-  .searchbar-island-row{ display:flex; gap:8px; margin-bottom:10px; }
-  .searchbar-island-chip{
-    border:1px solid var(--line); background:var(--paper); color:var(--ink-soft); font-weight:700;
-    font-size:0.82rem; padding:7px 14px; border-radius:20px; cursor:pointer; transition:all .15s ease;
-  }
-  .searchbar-island-chip:hover{ border-color:var(--teal); }
-  .searchbar-island-chip.active{ background:var(--ink); color:var(--paper); border-color:var(--ink); }
   .searchbar{
     display:flex; gap:0; background:var(--ink); border-radius:6px; padding:6px; max-width:100%;
   }
@@ -1487,10 +1480,6 @@
           <option value="EUR">EUR (€)</option>
           <option value="AUD">AUD (A$)</option>
         </select>
-      </div>
-      <div class="searchbar-island-row" id="searchbar-island-row">
-        <button type="button" class="searchbar-island-chip active" data-value="bali" onclick="setSelectedIsland('bali')">🌊 Bali</button>
-        <button type="button" class="searchbar-island-chip" data-value="lombok" onclick="setSelectedIsland('lombok')">🌴 Lombok</button>
       </div>
       <div class="searchbar" style="position:relative;">
         <div class="searchbar-input-wrap">
@@ -11471,12 +11460,13 @@ function renderDriverGrid(list){
   document.getElementById('no-results').style.display = list.length===0 ? 'block' : 'none';
   // Bauplan Kap. 2.5: sanfter Lombok-Hinweis, wenn die Bali-Suche leer bleibt UND der eingetippte
   // Text zu einem bekannten Lombok-Ort passt -- kein automatisches Wegleiten, nur ein Hinweis-Link.
-  const suggestEl = document.getElementById('lombok-soft-suggest');
-  if(suggestEl){
-    const q = (document.getElementById('search-input').value || '').trim().toLowerCase();
-    const looksLikeLombok = q.length>=3 && selectedIsland==='bali' && REGION_CONFIG.lombok.regions.some(r =>
-      r.value.toLowerCase().includes(q) || (r.label[currentLang]||r.label.en).toLowerCase().includes(q));
-    suggestEl.style.display = (list.length===0 && looksLikeLombok) ? 'block' : 'none';
+  // Nach echter Suche (Enter/runSearch) zusaetzlich an "0 Treffer" gekoppelt (staerkeres Signal als
+  // beim reinen Tippen in handleSearchInput, das nur den Namens-Treffer prueft).
+  if(list.length===0){
+    updateLombokSoftSuggest((document.getElementById('search-input').value || '').trim().toLowerCase());
+  } else {
+    const suggestEl = document.getElementById('lombok-soft-suggest');
+    if(suggestEl) suggestEl.style.display = 'none';
   }
 }
 function viewTourOnMap(e, i){
@@ -11521,7 +11511,6 @@ function setSelectedIsland(island){
   if(selectedIsland === island) return;
   selectedIsland = island;
   document.querySelectorAll('#filter-island-row .chip').forEach(c=>c.classList.toggle('chip-active', c.dataset.value===island));
-  document.querySelectorAll('#searchbar-island-row .searchbar-island-chip').forEach(c=>c.classList.toggle('active', c.dataset.value===island));
   const suggestList = document.getElementById('search-suggest-list');
   if(suggestList) suggestList.style.display = 'none';
   selectedFilters.regions = [];
@@ -11700,8 +11689,20 @@ function getSearchRegionList(){
     ...cfg.regions.map(r => ({ value:r.value, icon:r.icon, label:{ de:r.value, en:r.value, id:r.value } }))
   ];
 }
+// Bauplan Kap. 2.5: sanfter Lombok-Hinweis, wenn auf der Bali-Suche ein bekannter Lombok-Ort
+// getippt wird -- kein automatisches Wegleiten, nur ein dezenter Hinweis-Link. Eigene Funktion,
+// damit sie sowohl live beim Tippen (handleSearchInput) als auch nach Enter (renderDriverGrid)
+// greift -- Bug 16.8.: reagierte vorher nur nach Enter, nicht beim reinen Tippen.
+function updateLombokSoftSuggest(q){
+  const suggestEl = document.getElementById('lombok-soft-suggest');
+  if(!suggestEl) return;
+  const looksLikeLombok = q.length>=3 && selectedIsland==='bali' && REGION_CONFIG.lombok.regions.some(r =>
+    r.value.toLowerCase().includes(q) || (r.label[currentLang]||r.label.en).toLowerCase().includes(q));
+  suggestEl.style.display = looksLikeLombok ? 'block' : 'none';
+}
 function handleSearchInput(){
   const q = document.getElementById('search-input').value.trim().toLowerCase();
+  updateLombokSoftSuggest(q);
   const list = document.getElementById('search-suggest-list');
   const matches = getSearchRegionList().filter(r => !q || (r.label[currentLang]||r.label.en).toLowerCase().includes(q));
   if(matches.length === 0){ list.style.display = 'none'; return; }
