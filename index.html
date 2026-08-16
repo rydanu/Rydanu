@@ -275,8 +275,8 @@
   /* Neu (Suchansicht-Umbau, 18.8.): Ueberschrift oben in eigener Zeile, Steuerzeile (Toggle + Sortierung)
      darunter -- verhindert, dass die Sortierung die Ueberschrift umbricht/ueberlappt (alter Bug). */
   .section-label-stacked{ flex-direction:column; align-items:stretch; gap:12px; }
-  .section-controls-row{ display:flex; justify-content:flex-end; align-items:center; gap:10px; flex-wrap:wrap; }
-  .order-toggle{ display:flex; gap:6px; margin-right:auto; }
+  .section-controls-row{ display:flex; justify-content:flex-start; align-items:center; gap:10px; flex-wrap:wrap; }
+  .order-toggle{ display:flex; gap:6px; }
   .order-toggle-btn{
     font-family:'JetBrains Mono'; font-size:0.72rem; color:var(--ink-soft); background:var(--paper);
     border:1px solid var(--line); border-radius:20px; padding:6px 14px; cursor:pointer; transition:all .15s ease;
@@ -288,7 +288,7 @@
   }
   /* Ebene 1: reine Fahrer-Karten (nur der gruene Kopfbereich, keine Tour-Details) */
   .drivers-only-grid{
-    display:grid; grid-template-columns:repeat(auto-fill, minmax(200px,1fr));
+    display:grid; grid-template-columns:repeat(auto-fill, minmax(270px,1fr));
     gap:16px; padding:0 32px 40px;
   }
   .driver-only-card{
@@ -1592,6 +1592,10 @@
       <div class="section-label section-label-stacked">
         <h2 data-i18n="tours_heading">Available tours this week</h2>
         <div class="section-controls-row">
+          <div class="order-toggle" id="order-toggle-2">
+            <button type="button" class="order-toggle-btn active" id="order-toggle-drivers-2" data-i18n="order_toggle_drivers" onclick="setResultOrder('drivers')">Drivers first</button>
+            <button type="button" class="order-toggle-btn" id="order-toggle-tours-2" data-i18n="order_toggle_tours" onclick="setResultOrder('tours')">Tours first</button>
+          </div>
           <select id="sort-select-2" class="sort-select" onchange="handleSortChange(this.value)">
             <option value="best" data-i18n="sort_best">Best match</option>
             <option value="rating" data-i18n="sort_rating">Highest rated</option>
@@ -11944,6 +11948,10 @@ function setResultOrder(mode){
   }
   document.getElementById('order-toggle-drivers').classList.toggle('active', mode!=='tours');
   document.getElementById('order-toggle-tours').classList.toggle('active', mode==='tours');
+  const d2 = document.getElementById('order-toggle-drivers-2');
+  const t2 = document.getElementById('order-toggle-tours-2');
+  if(d2) d2.classList.toggle('active', mode!=='tours');
+  if(t2) t2.classList.toggle('active', mode==='tours');
 }
 // Kleiner, dezenter "Filter zuruecksetzen"-Link direkt bei der Trefferzahl (bisher nur ganz unten
 // im Filter-Popup versteckt) -- ruft dieselbe, bereits bestehende clearFilters()-Funktion auf.
@@ -16135,7 +16143,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v256</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v257</div>
 
 </body>
 </html>
