@@ -3777,8 +3777,7 @@
       </table>
       <p class="note" style="font-weight:700; margin-bottom:6px;" data-i18n="rank_info_ranks_title">Ranks</p>
       <div style="display:flex; flex-direction:column; gap:6px;">
-        <div class="rank-points-row"><span>🌱 <span data-i18n="rank_newcomer">Newcomer</span></span><span class="mono">0</span></div>
-        <div class="rank-points-row"><span>🥉 <span data-i18n="rank_local">Local Expert</span></span><span class="mono">20</span></div>
+        <div class="rank-points-row"><span>🥉 <span data-i18n="rank_local">Local Expert</span></span><span class="mono">0</span></div>
         <div class="rank-points-row"><span>🥈 <span data-i18n="rank_insider">Insider</span></span><span class="mono">60</span></div>
         <div class="rank-points-row"><span>🥇 <span data-i18n="rank_trusted">Trusted Driver</span></span><span class="mono">120</span></div>
         <div class="rank-points-row"><span>💎 <span data-i18n="rank_legend">Rydanu Legend</span></span><span class="mono">250</span></div>
@@ -9761,7 +9760,7 @@ function addListing(){
     drivers.unshift({
       name: profile.fullName, tour:name, duration, vehicle:vehicleDisplayString(profile.vehicle), vehicleType:(profile.vehicle && profile.vehicle.vtype) || 'Standard Car',
       lang: profile.langs.length ? profile.langs : ["EN"], rating:"New · 0 tours", price,
-      badge: featured ? "⭐ Top offer" : "New driver", featured, region: region || profile.region, services, spots, extras, serviceRegions, airportRegions, transferRegions, pickupRegionPrices,
+      badge: featured ? "⭐ Top offer" : "", featured, region: region || profile.region, services, spots, extras, serviceRegions, airportRegions, transferRegions, pickupRegionPrices,
       photo: profile.photo, ownerId: currentDriverId, active:true,
       femaleDriver: !!profile.femaleDriver, childFriendly: !!profile.childFriendly, tourGuideCertified: !!profile.tourGuideCertified, firstAidTrained: !!profile.firstAidTrained
     });
@@ -9990,7 +9989,7 @@ async function loadRealPublicListings(){
       lang: (d.languages && d.languages.length) ? d.languages : ['EN'],
       rating: 'New · 0 tours',
       price: l.price_display || '',
-      badge: 'New driver',
+      badge: '',
       region: det.area || l.region,
       services: det.services || [],
       serviceRegions: det.serviceRegions || null,
@@ -11553,7 +11552,7 @@ function renderDriverGrid(list){
     });
     card.innerHTML = `
       <div class="driver-card-header">
-        <span class="badge">${d.badge}</span>
+        ${d.badge ? `<span class="badge">${d.badge}</span>` : ''}
         <div class="driver-photo">
           <div class="initials photo-lg" ${d.photo ? `style="background-image:url('${d.photo}'); background-size:cover; background-position:center;"` : ''}>${d.photo ? '' : initials(d.name)}</div>
         </div>
@@ -11627,7 +11626,7 @@ function renderDriversOnlyGrid(list){
         card.style.cursor = 'default';
       }
       card.innerHTML = `
-        <span class="badge">${d.badge}</span>
+        ${d.badge ? `<span class="badge">${d.badge}</span>` : ''}
         <div class="driver-photo">
           <div class="initials photo-lg" ${d.photo ? `style="background-image:url('${d.photo}'); background-size:cover; background-position:center;"` : ''}>${d.photo ? '' : initials(d.name)}</div>
         </div>
@@ -12047,12 +12046,15 @@ function formatIDR(num){ return 'IDR ' + Math.round(num).toLocaleString('en-US')
 function todayMsgDate(){ return new Date().toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'}); }
 
 // ============ Driver rank & badge system ============
+// Neuling-Rang entfernt (18.8., Joerg-Wunsch): "Neuling" klang fuer Kunden abwertend/unerfahren.
+// Fahrer starten jetzt direkt beim niedrigsten sichtbaren Rang "Lokalkenner" (0 Punkte) --
+// betrifft die Punktegrenze UND jede Stelle, die den Rang anzeigt oder erklaert (ueberall, wo
+// getDriverRank()/DRIVER_RANKS verwendet wird, greift diese eine Aenderung durch).
 const DRIVER_RANKS = [
   { key:'legend',   min:250, emoji:'💎', labelKey:'rank_legend'   },
   { key:'trusted',  min:120, emoji:'🥇', labelKey:'rank_trusted'  },
   { key:'insider',  min:60,  emoji:'🥈', labelKey:'rank_insider'  },
-  { key:'local',    min:20,  emoji:'🥉', labelKey:'rank_local'    },
-  { key:'newcomer', min:0,   emoji:'🌱', labelKey:'rank_newcomer' },
+  { key:'local',    min:0,   emoji:'🥉', labelKey:'rank_local'    },
 ];
 function reviewStarsCount(r){
   if(typeof r.starsNum === 'number') return r.starsNum;
@@ -14792,7 +14794,7 @@ function approveDriver(id){
       drivers.unshift({
         name:p.fullName, tour:listing.name, duration:listing.duration, vehicle:vehicleDisplayString(p.vehicle), vehicleType:(p.vehicle && p.vehicle.vtype) || 'Standard Car',
         lang:p.langs.length?p.langs:["EN"], rating:"New · 0 tours", price:listing.price,
-        badge:"New driver", region:listing.region||p.region, services:listing.services||[], serviceRegions:listing.serviceRegions,
+        badge:"", region:listing.region||p.region, services:listing.services||[], serviceRegions:listing.serviceRegions,
         photo:p.photo, ownerId:id, active:listing.active,
         femaleDriver: !!p.femaleDriver, childFriendly: !!p.childFriendly, tourGuideCertified: !!p.tourGuideCertified, firstAidTrained: !!p.firstAidTrained
       });
@@ -16143,7 +16145,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v257</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v259</div>
 
 </body>
 </html>
