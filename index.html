@@ -231,6 +231,13 @@
   .hero-headline .accent{ color:var(--gold-deep); font-style:normal; }
   .hero p.sub{ font-size:1.05rem; color:var(--ink-soft); max-width:520px; line-height:1.5; margin-bottom:32px; }
 
+  .searchbar-island-row{ display:flex; gap:8px; margin-bottom:10px; }
+  .searchbar-island-chip{
+    border:1px solid var(--line); background:var(--paper); color:var(--ink-soft); font-weight:700;
+    font-size:0.82rem; padding:7px 14px; border-radius:20px; cursor:pointer; transition:all .15s ease;
+  }
+  .searchbar-island-chip:hover{ border-color:var(--teal); }
+  .searchbar-island-chip.active{ background:var(--ink); color:var(--paper); border-color:var(--ink); }
   .searchbar{
     display:flex; gap:0; background:var(--ink); border-radius:6px; padding:6px; max-width:100%;
   }
@@ -1087,6 +1094,11 @@
   .airport-region-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
   .airport-region-row span{ font-size:0.82rem; font-weight:600; flex:1; }
   .airport-region-row input{ max-width:170px; flex-shrink:0; }
+  /* Spezialziele (Bauplan Kap. 5.2) — eigene Klasse, bewusst getrennt von .airport-region-row,
+     damit die alte max-width:170px-Regel das Namensfeld nicht mehr zusammenstaucht (Bug 16.8.). */
+  .specialrate-row{ display:flex; align-items:center; gap:10px; }
+  .specialrate-row .sr-label-input{ flex:1.6; min-width:0; }
+  .specialrate-row .sr-price-input{ flex:1; min-width:0; max-width:150px; }
   .add-listing-form input:not([type="checkbox"]):not([type="radio"]), .add-listing-form select{
     flex:1 1 100%; min-width:0; padding:10px 12px; border:1px solid var(--line); border-radius:4px; font-family:'Public Sans'; font-size:0.88rem; box-sizing:border-box;
   }
@@ -1475,6 +1487,10 @@
           <option value="EUR">EUR (€)</option>
           <option value="AUD">AUD (A$)</option>
         </select>
+      </div>
+      <div class="searchbar-island-row" id="searchbar-island-row">
+        <button type="button" class="searchbar-island-chip active" data-value="bali" onclick="setSelectedIsland('bali')">🌊 Bali</button>
+        <button type="button" class="searchbar-island-chip" data-value="lombok" onclick="setSelectedIsland('lombok')">🌴 Lombok</button>
       </div>
       <div class="searchbar" style="position:relative;">
         <div class="searchbar-input-wrap">
@@ -3986,17 +4002,17 @@ function addSpecialRateRow(prefix, label, price){
   const container = document.getElementById(prefix+'-specialrates-rows');
   const rowId = prefix + '-sr-' + Math.random().toString(36).slice(2,9);
   const row = document.createElement('div');
-  row.className = 'airport-region-row';
+  row.className = 'specialrate-row';
   row.id = rowId;
   row.innerHTML = `
-    <input type="text" class="sr-label-input" placeholder="z.B. Sembalun Lawang" style="flex:1.4;" value="${escapeHtml(label||'')}">
+    <input type="text" class="sr-label-input" placeholder="z.B. Sembalun Lawang" value="${escapeHtml(label||'')}">
     <input type="text" class="sr-price-input" placeholder="z.B. IDR 350.000" value="${escapeHtml(price||'')}">
     <button type="button" class="link-btn" style="color:#B03A3A; padding:0 6px;" onclick="document.getElementById('${rowId}').remove()">✕</button>
   `;
   container.appendChild(row);
 }
 function collectSpecialRates(prefix){
-  const rows = document.querySelectorAll('#'+prefix+'-specialrates-rows .airport-region-row');
+  const rows = document.querySelectorAll('#'+prefix+'-specialrates-rows .specialrate-row');
   const out = [];
   rows.forEach(row=>{
     const label = row.querySelector('.sr-label-input').value.trim();
@@ -11505,6 +11521,9 @@ function setSelectedIsland(island){
   if(selectedIsland === island) return;
   selectedIsland = island;
   document.querySelectorAll('#filter-island-row .chip').forEach(c=>c.classList.toggle('chip-active', c.dataset.value===island));
+  document.querySelectorAll('#searchbar-island-row .searchbar-island-chip').forEach(c=>c.classList.toggle('active', c.dataset.value===island));
+  const suggestList = document.getElementById('search-suggest-list');
+  if(suggestList) suggestList.style.display = 'none';
   selectedFilters.regions = [];
   selectedFilters.airportDest = [];
   selectedFilters.transferDest = [];
@@ -11671,15 +11690,20 @@ function applyFilters(){
 }
 
 // Stammt jetzt aus der zentralen REGION_CONFIG (bisher eigene Kopie der Bali-Regionen).
-// Label bewusst kurz gehalten (ohne "& Umgebung"), wie es das Suchfeld bisher zeigte.
-const SEARCH_REGION_LIST = [
-  { value:'Airport', icon:'✈️', label:{ de:'Flughafen', en:'Airport', id:'Bandara' } },
-  ...REGION_CONFIG.bali.regions.map(r => ({ value:r.value, icon:r.icon, label:{ de:r.value, en:r.value, id:r.value } }))
-];
+// Bug 16.8.: war fix auf Bali gedeckelt -- Lombok-Orte tauchten in der Autocomplete nie auf,
+// egal welche Insel der Kunde gerade gewaehlt hat. Jetzt Funktion statt Konstante, immer
+// passend zur aktuell gewaehlten Insel (selectedIsland).
+function getSearchRegionList(){
+  const cfg = REGION_CONFIG[selectedIsland] || REGION_CONFIG.bali;
+  return [
+    { value:cfg.airport.value, icon:cfg.airport.icon, label:cfg.airport.label },
+    ...cfg.regions.map(r => ({ value:r.value, icon:r.icon, label:{ de:r.value, en:r.value, id:r.value } }))
+  ];
+}
 function handleSearchInput(){
   const q = document.getElementById('search-input').value.trim().toLowerCase();
   const list = document.getElementById('search-suggest-list');
-  const matches = SEARCH_REGION_LIST.filter(r => !q || (r.label[currentLang]||r.label.en).toLowerCase().includes(q));
+  const matches = getSearchRegionList().filter(r => !q || (r.label[currentLang]||r.label.en).toLowerCase().includes(q));
   if(matches.length === 0){ list.style.display = 'none'; return; }
   list.innerHTML = matches.map(r => `
     <div class="search-suggest-item" onclick="selectSearchRegion('${r.value}')">
@@ -15878,7 +15902,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v247</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v248</div>
 
 </body>
 </html>
