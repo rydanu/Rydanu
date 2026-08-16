@@ -11693,11 +11693,18 @@ function getSearchRegionList(){
 // getippt wird -- kein automatisches Wegleiten, nur ein dezenter Hinweis-Link. Eigene Funktion,
 // damit sie sowohl live beim Tippen (handleSearchInput) als auch nach Enter (renderDriverGrid)
 // greift -- Bug 16.8.: reagierte vorher nur nach Enter, nicht beim reinen Tippen.
+// normalizeFuzzy: entfernt doppelte aufeinanderfolgende Buchstaben (z.B. "Senggigi" -> "sengigi"),
+// damit ein haeufiger Tippfehler (fehlender Doppel-Buchstabe) den Hinweis trotzdem ausloest.
+function normalizeFuzzy(s){ return (s||'').toLowerCase().replace(/(.)\1+/g, '$1'); }
 function updateLombokSoftSuggest(q){
   const suggestEl = document.getElementById('lombok-soft-suggest');
   if(!suggestEl) return;
-  const looksLikeLombok = q.length>=3 && selectedIsland==='bali' && REGION_CONFIG.lombok.regions.some(r =>
-    r.value.toLowerCase().includes(q) || (r.label[currentLang]||r.label.en).toLowerCase().includes(q));
+  const qFuzzy = normalizeFuzzy(q);
+  const looksLikeLombok = q.length>=3 && selectedIsland==='bali' && REGION_CONFIG.lombok.regions.some(r => {
+    const val = r.value.toLowerCase();
+    const label = (r.label[currentLang]||r.label.en).toLowerCase();
+    return val.includes(q) || label.includes(q) || normalizeFuzzy(val).includes(qFuzzy) || normalizeFuzzy(label).includes(qFuzzy);
+  });
   suggestEl.style.display = looksLikeLombok ? 'block' : 'none';
 }
 function handleSearchInput(){
@@ -15903,7 +15910,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v248</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v249</div>
 
 </body>
 </html>
