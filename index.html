@@ -9962,7 +9962,7 @@ async function loadRealPublicListings(){
   if(dErr){ console.error('Echte Fahrer konnten nicht geladen werden:', dErr); return; }
   // vorher injizierte echte Karten wieder entfernen (verhindert Dubletten bei erneutem Laden)
   for(let i = drivers.length - 1; i >= 0; i--){ if(drivers[i].isReal) drivers.splice(i, 1); }
-  if(!approvedDrivers || approvedDrivers.length === 0){ renderDriverGrid(visibleDrivers()); return; }
+  if(!approvedDrivers || approvedDrivers.length === 0){ runSearch(); return; }
   const driverMap = {};
   approvedDrivers.forEach(d => { driverMap[d.id] = d; });
   const ids = approvedDrivers.map(d => d.id);
@@ -10009,7 +10009,7 @@ async function loadRealPublicListings(){
     };
   });
   drivers.unshift(...realCards);
-  renderDriverGrid(visibleDrivers());
+  runSearch();
 }
 function formatRatingHTML(ratingStr){
   const parts = String(ratingStr || '').split('·').map(p=>p.trim());
@@ -16145,7 +16145,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v260</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v261</div>
 
 </body>
 </html>
