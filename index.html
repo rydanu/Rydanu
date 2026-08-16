@@ -376,6 +376,21 @@
     width:100%; padding:13px 12px; border:1px solid var(--line); border-radius:5px;
     font-family:'Public Sans'; font-size:0.95rem; line-height:1.4; background:#fff; color:var(--ink); outline:none;
   }
+  /* Villa-Transferformular (17.8., Joerg-Wunsch): noch leere Pflichtfelder zart Rydanu-gruen
+     einfaerben, damit auf einen Blick klar ist, was noch auszufuellen ist -- sobald ausgefuellt,
+     wieder normales Weiss. Bewusst nur hier (oeffentliches, kontoloses Formular) und nicht
+     global, um bestehende Formulare mit anderer Optik (z.B. das gelb vorausgefuellte
+     Touranfrage-Formular) nicht versehentlich zu veraendern. */
+  #villa-request-form input[required]:invalid,
+  #villa-request-form select[required]:invalid,
+  #villa-request-form textarea[required]:placeholder-shown{
+    background:#EAF3EC;
+  }
+  #villa-request-form input[required]:valid,
+  #villa-request-form select[required]:valid,
+  #villa-request-form textarea[required]:not(:placeholder-shown){
+    background:#fff;
+  }
   .form-field input:focus, .form-field select:focus, .form-field textarea:focus{ border-color:var(--teal); }
   .form-field textarea{ resize:vertical; }
   .form-row{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
@@ -2029,6 +2044,10 @@
 
       <div class="dash-section" id="sec-villa" style="display:none;">
         <div class="dash-head"><div><h2 data-i18n="villa_title">Villa Partner requests</h2><p data-i18n="villa_sub">Private booking requests from partner villas & hotels — first come, first served.</p></div></div>
+        <div class="period-tabs" id="villa-view-tabs">
+          <button type="button" class="period-btn active" data-view="open" onclick="setVillaViewTab('open')"><span data-i18n="villa_tab_open">Open</span> <span class="tab-count" id="villa-count-open"></span></button>
+          <button type="button" class="period-btn" data-view="archived" onclick="setVillaViewTab('archived')"><span data-i18n="villa_tab_archived">Archived</span> <span class="tab-count" id="villa-count-archived"></span></button>
+        </div>
         <div class="panel" id="villa-requests-list"></div>
       </div>
 
@@ -8590,14 +8609,32 @@ function deleteVillaRequestConfirm(requestId){
   if(!confirm(t('villa_delete_confirm'))) return;
   dismissVillaRequest(requestId);
 }
+let villaViewTab = 'open';
+function setVillaViewTab(view){
+  villaViewTab = view;
+  document.querySelectorAll('#villa-view-tabs .period-btn').forEach(b=>b.classList.toggle('active', b.dataset.view===view));
+  renderVillaRequests();
+}
+// Bugfix (17.8., Joerg gemeldet): eine Villa-Anfrage, die der Gast bereits bestaetigt hat (status
+// 'booked', siehe confirm_custom_tour_request), sah bisher GENAUSO aus wie eine, die noch auf den
+// Gast wartet -- inklusive "Angebot zurueckziehen" und "Entfernen"-Buttons. Das war gefaehrlich:
+// beides haette an einer bereits echten, bestaetigten Buchung herumgepfuscht. Jetzt eigener,
+// abgeschlossener Zustand ohne diese Aktionen -- Stornieren laeuft ab jetzt nur noch ganz normal
+// ueber "Buchungen", nicht mehr hier. Ausserdem: Offen/Archiviert-Reiter wie bei "Anfragen".
 function renderVillaRequests(){
   const el = document.getElementById('villa-requests-list');
   if(!el) return;
-  if(realVillaRequests.length === 0){
-    el.innerHTML = `<div class="empty-state">${t('villa_empty')}</div>`;
+  const setCount = (id, n) => { const c = document.getElementById(id); if(c) c.textContent = n>0 ? String(n) : ''; };
+  const isArchived = r => (r.status==='booked' || r.status==='declined') && r.claimed_by_driver_id===realDriverProfile.id;
+  const isOpenView = r => r.status==='open' || (r.claimed_by_driver_id===realDriverProfile.id && r.status!=='booked' && r.status!=='declined');
+  setCount('villa-count-open', realVillaRequests.filter(isOpenView).length);
+  setCount('villa-count-archived', realVillaRequests.filter(isArchived).length);
+  const visible = realVillaRequests.filter(r => villaViewTab==='archived' ? isArchived(r) : isOpenView(r));
+  if(visible.length === 0){
+    el.innerHTML = `<div class="empty-state">${t(villaViewTab==='archived' ? 'villa_empty_archived' : 'villa_empty')}</div>`;
     return;
   }
-  el.innerHTML = realVillaRequests.map(r=>{
+  el.innerHTML = visible.map(r=>{
     const villaName = (r.villa_partners && r.villa_partners.name) || t('villa_source_tag');
     const isMine = r.claimed_by_driver_id === realDriverProfile.id;
     const whenText = r.request_date ? `${r.request_date}${r.request_time ? ' ' + r.request_time : ''}` : '—';
@@ -8607,6 +8644,10 @@ function renderVillaRequests(){
         <button type="button" class="accept-btn" onclick="claimVillaRequest('${r.id}')">✨ ${t('villa_claim_btn')}</button>
         <button type="button" class="link-btn" style="width:auto; margin-top:6px;" onclick="dismissVillaRequest('${r.id}')">${t('villa_dismiss_btn')}</button>
       `;
+    } else if(r.status === 'booked'){
+      // Gast hat bestaetigt -- ab hier eine ganz normale Buchung, keine Villa-Anfragen-Aktionen mehr.
+      if(!isMine) return '';
+      actionHtml = `<span class="mailbox-replied-tag">${t('villa_booked_tag')}</span>`;
     } else if(r.status === 'declined'){
       // Kunde hat das Angebot endgueltig abgelehnt (siehe decline_custom_tour_request_by_customer) --
       // nichts mehr zu tun fuer diesen Fahrer, nur noch fuer den Fahrer sichtbar der es hatte.
@@ -10476,7 +10517,7 @@ const translations = {
     sr_open_btn: "Already traveled with this driver? Leave a review", sr_eyebrow: "Leave a review", sr_title: "How was your trip?", mb_review_title2: "Your name", sr_err_name: "Please enter your name.",
     nav_requests: "Requests", requests_title: "Custom tour requests", requests_sub: "Travelers who couldn't find exactly what they wanted asked you directly. Reply by creating a real tour offer through Rydanu.", requests_empty: "No custom tour requests yet.",
     nav_villa: "Villa Requests", villa_title: "Villa Partner requests", villa_sub: "Private booking requests from partner villas & hotels — first come, first served.", villa_empty: "No open villa requests right now.",
-    villa_claim_btn: "Accept request", villa_claimed_tag: "⏳ Offer sent — awaiting guest confirmation", villa_claim_taken: "Sorry — another driver already accepted this request.", villa_source_tag: "Villa Partner", villa_dismiss_btn: "Not for me", villa_edit_resend_btn: "Edit & resend offer", villa_withdraw_btn: "Withdraw offer", villa_withdraw_confirm: "Withdraw this offer? The request goes back to open and other drivers in the area will be notified again.", villa_action_err: "Something went wrong. Please try again.", villa_declined_tag: "Guest declined this offer — no action needed. If they still want a transfer, they'll submit a new request.", villa_delete_btn: "🗑 Remove", villa_delete_confirm: "Remove this from your list? It only disappears for you — the request itself isn't affected.",
+    villa_claim_btn: "Accept request", villa_claimed_tag: "⏳ Offer sent — awaiting guest confirmation", villa_booked_tag: "✅ Guest confirmed — now a regular booking. Manage it under \"Bookings\".", villa_tab_open: "Open", villa_tab_archived: "Archived", villa_empty_archived: "No archived villa requests yet.", villa_claim_taken: "Sorry — another driver already accepted this request.", villa_source_tag: "Villa Partner", villa_dismiss_btn: "Not for me", villa_edit_resend_btn: "Edit & resend offer", villa_withdraw_btn: "Withdraw offer", villa_withdraw_confirm: "Withdraw this offer? The request goes back to open and other drivers in the area will be notified again.", villa_action_err: "Something went wrong. Please try again.", villa_declined_tag: "Guest declined this offer — no action needed. If they still want a transfer, they'll submit a new request.", villa_delete_btn: "🗑 Remove", villa_delete_confirm: "Remove this from your list? It only disappears for you — the request itself isn't affected.",
     villa_push_title: "Get notified instantly", villa_push_sub: "Turn on push notifications so you never miss a new villa request.", villa_push_enable_btn: "Enable push notifications",
     villa_push_enabled: "✓ Push notifications enabled", villa_push_ios_hint: "On iPhone: add Rydanu to your Home Screen first (Share → Add to Home Screen), otherwise push notifications won't arrive.",
     villa_push_error: "Could not enable push notifications. Please check your browser permissions.", villa_push_unsupported: "Push notifications aren't supported in this browser.",
@@ -10807,7 +10848,7 @@ const translations = {
     sr_open_btn: "Schon mal mit diesem Fahrer unterwegs gewesen? Bewertung hinterlassen", sr_eyebrow: "Bewertung hinterlassen", sr_title: "Wie war deine Tour?", mb_review_title2: "Dein Name", sr_err_name: "Bitte gib deinen Namen ein.",
     nav_requests: "Anfragen", requests_title: "Individuelle Touranfragen", requests_sub: "Reisende, die nicht genau das Passende gefunden haben, haben dich direkt angefragt. Antworte, indem du über Rydanu ein echtes Tourangebot erstellst.", requests_empty: "Noch keine individuellen Touranfragen.",
     nav_villa: "Villa-Anfragen", villa_title: "Villa-Partner-Anfragen", villa_sub: "Private Buchungsanfragen von Partner-Villen & Hotels — wer zuerst übernimmt, bekommt die Anfrage.", villa_empty: "Aktuell keine offenen Villa-Anfragen.",
-    villa_claim_btn: "Anfrage übernehmen", villa_claimed_tag: "⏳ Angebot gesendet — wartet auf Bestätigung des Gasts", villa_claim_taken: "Schade — ein anderer Fahrer hat diese Anfrage bereits übernommen.", villa_source_tag: "Villa-Partner", villa_dismiss_btn: "Nicht für mich", villa_edit_resend_btn: "Angebot bearbeiten & erneut senden", villa_withdraw_btn: "Angebot zurückziehen", villa_withdraw_confirm: "Dieses Angebot zurückziehen? Die Anfrage wird wieder offen und andere Fahrer in der Region werden erneut benachrichtigt.", villa_action_err: "Etwas ist schiefgelaufen. Bitte nochmal versuchen.", villa_declined_tag: "Gast hat das Angebot abgelehnt — keine Aktion nötig. Falls weiterhin ein Transfer gewünscht ist, stellt der Gast eine neue Anfrage.", villa_delete_btn: "🗑 Entfernen", villa_delete_confirm: "Aus deiner Liste entfernen? Verschwindet nur bei dir — an der Anfrage selbst ändert sich nichts.",
+    villa_claim_btn: "Anfrage übernehmen", villa_claimed_tag: "⏳ Angebot gesendet — wartet auf Bestätigung des Gasts", villa_booked_tag: "✅ Gast hat bestätigt — jetzt eine normale Buchung. Verwalte sie unter \"Buchungen\".", villa_tab_open: "Offen", villa_tab_archived: "Archiviert", villa_empty_archived: "Noch keine archivierten Villa-Anfragen.", villa_claim_taken: "Schade — ein anderer Fahrer hat diese Anfrage bereits übernommen.", villa_source_tag: "Villa-Partner", villa_dismiss_btn: "Nicht für mich", villa_edit_resend_btn: "Angebot bearbeiten & erneut senden", villa_withdraw_btn: "Angebot zurückziehen", villa_withdraw_confirm: "Dieses Angebot zurückziehen? Die Anfrage wird wieder offen und andere Fahrer in der Region werden erneut benachrichtigt.", villa_action_err: "Etwas ist schiefgelaufen. Bitte nochmal versuchen.", villa_declined_tag: "Gast hat das Angebot abgelehnt — keine Aktion nötig. Falls weiterhin ein Transfer gewünscht ist, stellt der Gast eine neue Anfrage.", villa_delete_btn: "🗑 Entfernen", villa_delete_confirm: "Aus deiner Liste entfernen? Verschwindet nur bei dir — an der Anfrage selbst ändert sich nichts.",
     villa_push_title: "Sofort benachrichtigt werden", villa_push_sub: "Aktiviere Push-Benachrichtigungen, damit du keine neue Villa-Anfrage verpasst.", villa_push_enable_btn: "Push-Benachrichtigungen aktivieren",
     villa_push_enabled: "✓ Push-Benachrichtigungen aktiviert", villa_push_ios_hint: "Am iPhone: Rydanu zuerst zum Homescreen hinzufügen (Teilen → Zum Home-Bildschirm), sonst kommen keine Push-Benachrichtigungen an.",
     villa_push_error: "Push-Benachrichtigungen konnten nicht aktiviert werden. Bitte Browser-Berechtigungen prüfen.", villa_push_unsupported: "Push-Benachrichtigungen werden von diesem Browser nicht unterstützt.",
@@ -11138,7 +11179,7 @@ const translations = {
     sr_open_btn: "Pernah bepergian dengan sopir ini? Tinggalkan ulasan", sr_eyebrow: "Tinggalkan ulasan", sr_title: "Bagaimana perjalanan Anda?", mb_review_title2: "Nama Anda", sr_err_name: "Mohon masukkan nama Anda.",
     nav_requests: "Permintaan", requests_title: "Permintaan tur khusus", requests_sub: "Wisatawan yang tidak menemukan yang mereka cari langsung menghubungi Anda. Balas dengan membuat penawaran tur nyata melalui Rydanu.", requests_empty: "Belum ada permintaan tur khusus.",
     nav_villa: "Permintaan Villa", villa_title: "Permintaan Villa Partner", villa_sub: "Permintaan booking pribadi dari villa & hotel mitra — siapa cepat, dia dapat.", villa_empty: "Belum ada permintaan villa yang terbuka.",
-    villa_claim_btn: "Terima permintaan", villa_claimed_tag: "⏳ Penawaran terkirim — menunggu konfirmasi tamu", villa_claim_taken: "Maaf — pengemudi lain sudah menerima permintaan ini.", villa_source_tag: "Villa Partner", villa_dismiss_btn: "Bukan untuk saya", villa_edit_resend_btn: "Edit & kirim ulang penawaran", villa_withdraw_btn: "Tarik penawaran", villa_withdraw_confirm: "Tarik penawaran ini? Permintaan akan terbuka kembali dan pengemudi lain di area tersebut akan diberi tahu lagi.", villa_action_err: "Terjadi kesalahan. Silakan coba lagi.", villa_declined_tag: "Tamu menolak penawaran ini — tidak perlu tindakan. Jika masih ingin transfer, tamu akan mengirim permintaan baru.", villa_delete_btn: "🗑 Hapus", villa_delete_confirm: "Hapus dari daftar Anda? Hanya hilang untuk Anda — permintaan itu sendiri tidak terpengaruh.",
+    villa_claim_btn: "Terima permintaan", villa_claimed_tag: "⏳ Penawaran terkirim — menunggu konfirmasi tamu", villa_booked_tag: "✅ Tamu telah konfirmasi — sekarang menjadi pemesanan biasa. Kelola di \"Pemesanan\".", villa_tab_open: "Terbuka", villa_tab_archived: "Diarsipkan", villa_empty_archived: "Belum ada permintaan villa yang diarsipkan.", villa_claim_taken: "Maaf — pengemudi lain sudah menerima permintaan ini.", villa_source_tag: "Villa Partner", villa_dismiss_btn: "Bukan untuk saya", villa_edit_resend_btn: "Edit & kirim ulang penawaran", villa_withdraw_btn: "Tarik penawaran", villa_withdraw_confirm: "Tarik penawaran ini? Permintaan akan terbuka kembali dan pengemudi lain di area tersebut akan diberi tahu lagi.", villa_action_err: "Terjadi kesalahan. Silakan coba lagi.", villa_declined_tag: "Tamu menolak penawaran ini — tidak perlu tindakan. Jika masih ingin transfer, tamu akan mengirim permintaan baru.", villa_delete_btn: "🗑 Hapus", villa_delete_confirm: "Hapus dari daftar Anda? Hanya hilang untuk Anda — permintaan itu sendiri tidak terpengaruh.",
     villa_push_title: "Dapatkan notifikasi instan", villa_push_sub: "Aktifkan notifikasi push agar tidak melewatkan permintaan villa baru.", villa_push_enable_btn: "Aktifkan notifikasi push",
     villa_push_enabled: "✓ Notifikasi push aktif", villa_push_ios_hint: "Di iPhone: tambahkan Rydanu ke Layar Utama dulu (Bagikan → Tambah ke Layar Utama), jika tidak notifikasi push tidak akan masuk.",
     villa_push_error: "Notifikasi push tidak dapat diaktifkan. Silakan periksa izin browser Anda.", villa_push_unsupported: "Notifikasi push tidak didukung di browser ini.",
@@ -15946,7 +15987,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v253</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v254</div>
 
 </body>
 </html>
