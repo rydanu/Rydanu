@@ -254,7 +254,7 @@
   .search-suggest-item .ssi-sub{ color:var(--ink-soft); font-size:0.76rem; margin-left:auto; }
   .filter-toggle-btn{
     flex:1; background:transparent; border:none; border-left:1px solid rgba(242,236,216,0.15);
-    color:var(--paper-dim); font-family:'Public Sans'; font-size:0.9rem; padding:12px 14px; cursor:pointer;
+    color:var(--paper-dim); font-family:'Public Sans'; font-size:0.98rem; font-weight:700; padding:15px 14px; cursor:pointer;
     display:flex; align-items:center; justify-content:center; gap:6px; white-space:nowrap;
   }
   .filter-count{
@@ -263,8 +263,8 @@
   }
   .searchbar input::placeholder{ color:rgba(255,255,255,0.85); }
   .searchbar button{
-    background:var(--gold); border:none; color:var(--ink); font-weight:700; font-size:0.85rem;
-    padding:12px 22px; border-radius:4px; cursor:pointer; font-family:'Public Sans';
+    background:var(--gold); border:none; color:var(--ink); font-weight:700; font-size:0.9rem;
+    padding:13px 24px; border-radius:4px; cursor:pointer; font-family:'Public Sans';
   }
 
   .section-label{
@@ -272,10 +272,38 @@
   }
   .section-label h2{ font-size:1.5rem; }
   .section-label span{ font-family:'JetBrains Mono'; font-size:0.75rem; color:var(--ink-soft); }
+  /* Neu (Suchansicht-Umbau, 18.8.): Ueberschrift oben in eigener Zeile, Steuerzeile (Toggle + Sortierung)
+     darunter -- verhindert, dass die Sortierung die Ueberschrift umbricht/ueberlappt (alter Bug). */
+  .section-label-stacked{ flex-direction:column; align-items:stretch; gap:12px; }
+  .section-controls-row{ display:flex; justify-content:flex-end; align-items:center; gap:10px; flex-wrap:wrap; }
+  .order-toggle{ display:flex; gap:6px; margin-right:auto; }
+  .order-toggle-btn{
+    font-family:'JetBrains Mono'; font-size:0.72rem; color:var(--ink-soft); background:var(--paper);
+    border:1px solid var(--line); border-radius:20px; padding:6px 14px; cursor:pointer; transition:all .15s ease;
+  }
+  .order-toggle-btn.active{ background:var(--teal); color:#fff; border-color:var(--teal); font-weight:700; }
   .sort-select{
     font-family:'JetBrains Mono'; font-size:0.72rem; color:var(--ink-soft); background:var(--paper);
     border:1px solid var(--line); border-radius:5px; padding:6px 8px; cursor:pointer;
   }
+  /* Ebene 1: reine Fahrer-Karten (nur der gruene Kopfbereich, keine Tour-Details) */
+  .drivers-only-grid{
+    display:grid; grid-template-columns:repeat(auto-fill, minmax(200px,1fr));
+    gap:16px; padding:0 32px 40px;
+  }
+  .driver-only-card{
+    background:linear-gradient(135deg, var(--teal-soft), var(--paper-dim));
+    border:1px solid var(--line); border-radius:var(--radius-card); overflow:hidden;
+    cursor:pointer; transition:transform .15s ease, box-shadow .15s ease; box-shadow:var(--shadow-card);
+    padding:16px 16px 14px; position:relative; box-sizing:border-box;
+    display:flex; flex-direction:column; min-height:190px;
+  }
+  .driver-only-card:hover{ transform:translateY(-3px); box-shadow:var(--shadow-card-hover); }
+  .reset-filters-link{
+    background:none; border:none; padding:0; font-family:'JetBrains Mono'; font-size:0.72rem;
+    color:var(--ink-soft); text-decoration:underline; cursor:pointer; opacity:0.8;
+  }
+  .reset-filters-link:hover{ opacity:1; color:var(--teal); }
   .currency-picker{ display:flex; align-items:center; gap:8px; margin-bottom:10px; }
   .currency-picker-label{ font-family:'JetBrains Mono'; font-size:0.72rem; color:var(--teal); }
   .currency-picker select{
@@ -1508,43 +1536,72 @@
     </div>
   </section>
 
-  <div class="route-divider"><span id="result-count">6 drivers found</span></div>
-
-  <div class="section-label">
-    <h2 id="results-heading" data-i18n="results_heading">Available this week</h2>
-    <select id="sort-select" class="sort-select" onchange="runSearch()">
-      <option value="best" data-i18n="sort_best">Best match</option>
-      <option value="rating" data-i18n="sort_rating">Highest rated</option>
-      <option value="reviews" data-i18n="sort_reviews">Most reviewed</option>
-      <option value="price_low" data-i18n="sort_price_low">Price: low to high</option>
-      <option value="price_high" data-i18n="sort_price_high">Price: high to low</option>
-    </select>
+  <div class="route-divider">
+    <span id="result-count">6 drivers found</span>
+    <button type="button" id="reset-filters-link" class="reset-filters-link" onclick="clearFiltersAndSearch()" style="display:none; margin-left:10px;" data-i18n="reset_filters_link">Reset filters</button>
   </div>
 
-  <!-- Lombok-Zonen-Bildkacheln (Bauplan Kap. 2.2): kurzer visueller Ueberblick ueber die Insel,
-       nur auf /lombok sichtbar. Fotos lizenzfrei von Pexels. Klick setzt direkt den Regionen-Filter. -->
-  <div id="lombok-zone-tiles" style="display:none; padding:0 32px 20px;">
-    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:10px; max-width:640px;">
-      <div onclick="selectSearchRegion('Kuta Lombok')" style="position:relative; height:110px; border-radius:10px; overflow:hidden; cursor:pointer;">
-        <img src="https://images.pexels.com/photos/38679624/pexels-photo-38679624.jpeg?auto=compress&cs=tinysrgb&w=500" alt="Kuta Lombok beach" loading="lazy" style="width:100%; height:100%; object-fit:cover;">
-        <div style="position:absolute; inset:0; background:linear-gradient(180deg, transparent 40%, rgba(0,0,0,0.6) 100%); display:flex; align-items:flex-end; padding:8px;"><span style="color:#fff; font-weight:700; font-size:0.78rem;">Kuta Lombok</span></div>
+  <div id="results-sections" style="display:flex; flex-direction:column;">
+    <div id="drivers-block" style="order:1;">
+      <div class="section-label section-label-stacked">
+        <h2 id="results-heading" data-i18n="results_heading">Available this week</h2>
+        <div class="section-controls-row">
+          <div class="order-toggle" id="order-toggle">
+            <button type="button" class="order-toggle-btn active" id="order-toggle-drivers" data-i18n="order_toggle_drivers" onclick="setResultOrder('drivers')">Drivers first</button>
+            <button type="button" class="order-toggle-btn" id="order-toggle-tours" data-i18n="order_toggle_tours" onclick="setResultOrder('tours')">Tours first</button>
+          </div>
+          <select id="sort-select" class="sort-select" onchange="handleSortChange(this.value)">
+            <option value="best" data-i18n="sort_best">Best match</option>
+            <option value="rating" data-i18n="sort_rating">Highest rated</option>
+            <option value="reviews" data-i18n="sort_reviews">Most reviewed</option>
+            <option value="price_low" data-i18n="sort_price_low">Price: low to high</option>
+            <option value="price_high" data-i18n="sort_price_high">Price: high to low</option>
+          </select>
+        </div>
       </div>
-      <div onclick="selectSearchRegion('Gili-Inseln')" style="position:relative; height:110px; border-radius:10px; overflow:hidden; cursor:pointer;">
-        <img src="https://images.pexels.com/photos/36956255/pexels-photo-36956255.jpeg?auto=compress&cs=tinysrgb&w=500" alt="Gili Air crystal clear water" loading="lazy" style="width:100%; height:100%; object-fit:cover;">
-        <div style="position:absolute; inset:0; background:linear-gradient(180deg, transparent 40%, rgba(0,0,0,0.6) 100%); display:flex; align-items:flex-end; padding:8px;"><span style="color:#fff; font-weight:700; font-size:0.78rem;">Gili-Inseln</span></div>
+      <!-- Lombok-Zonen-Bildkacheln (Bauplan Kap. 2.2): kurzer visueller Ueberblick ueber die Insel,
+           nur auf /lombok sichtbar. Fotos lizenzfrei von Pexels. Klick setzt direkt den Regionen-Filter. -->
+      <div id="lombok-zone-tiles" style="display:none; padding:0 32px 20px;">
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:10px; max-width:640px;">
+          <div onclick="selectSearchRegion('Kuta Lombok')" style="position:relative; height:110px; border-radius:10px; overflow:hidden; cursor:pointer;">
+            <img src="https://images.pexels.com/photos/38679624/pexels-photo-38679624.jpeg?auto=compress&cs=tinysrgb&w=500" alt="Kuta Lombok beach" loading="lazy" style="width:100%; height:100%; object-fit:cover;">
+            <div style="position:absolute; inset:0; background:linear-gradient(180deg, transparent 40%, rgba(0,0,0,0.6) 100%); display:flex; align-items:flex-end; padding:8px;"><span style="color:#fff; font-weight:700; font-size:0.78rem;">Kuta Lombok</span></div>
+          </div>
+          <div onclick="selectSearchRegion('Gili-Inseln')" style="position:relative; height:110px; border-radius:10px; overflow:hidden; cursor:pointer;">
+            <img src="https://images.pexels.com/photos/36956255/pexels-photo-36956255.jpeg?auto=compress&cs=tinysrgb&w=500" alt="Gili Air crystal clear water" loading="lazy" style="width:100%; height:100%; object-fit:cover;">
+            <div style="position:absolute; inset:0; background:linear-gradient(180deg, transparent 40%, rgba(0,0,0,0.6) 100%); display:flex; align-items:flex-end; padding:8px;"><span style="color:#fff; font-weight:700; font-size:0.78rem;">Gili-Inseln</span></div>
+          </div>
+          <div onclick="selectSearchRegion('Sembalun')" style="position:relative; height:110px; border-radius:10px; overflow:hidden; cursor:pointer;">
+            <img src="https://images.pexels.com/photos/4552428/pexels-photo-4552428.jpeg?auto=compress&cs=tinysrgb&w=500" alt="Mount Rinjani crater lake near Sembalun" loading="lazy" style="width:100%; height:100%; object-fit:cover;">
+            <div style="position:absolute; inset:0; background:linear-gradient(180deg, transparent 40%, rgba(0,0,0,0.6) 100%); display:flex; align-items:flex-end; padding:8px;"><span style="color:#fff; font-weight:700; font-size:0.78rem;">Sembalun</span></div>
+          </div>
+          <div onclick="selectSearchRegion('Senggigi')" style="position:relative; height:110px; border-radius:10px; overflow:hidden; cursor:pointer;">
+            <img src="https://images.pexels.com/photos/32332180/pexels-photo-32332180.jpeg?auto=compress&cs=tinysrgb&w=500" alt="Senggigi coastline West Lombok" loading="lazy" style="width:100%; height:100%; object-fit:cover;">
+            <div style="position:absolute; inset:0; background:linear-gradient(180deg, transparent 40%, rgba(0,0,0,0.6) 100%); display:flex; align-items:flex-end; padding:8px;"><span style="color:#fff; font-weight:700; font-size:0.78rem;">Senggigi</span></div>
+          </div>
+        </div>
       </div>
-      <div onclick="selectSearchRegion('Sembalun')" style="position:relative; height:110px; border-radius:10px; overflow:hidden; cursor:pointer;">
-        <img src="https://images.pexels.com/photos/4552428/pexels-photo-4552428.jpeg?auto=compress&cs=tinysrgb&w=500" alt="Mount Rinjani crater lake near Sembalun" loading="lazy" style="width:100%; height:100%; object-fit:cover;">
-        <div style="position:absolute; inset:0; background:linear-gradient(180deg, transparent 40%, rgba(0,0,0,0.6) 100%); display:flex; align-items:flex-end; padding:8px;"><span style="color:#fff; font-weight:700; font-size:0.78rem;">Sembalun</span></div>
+
+      <div class="drivers-only-grid" id="drivers-only-grid"></div>
+    </div>
+
+    <div id="tours-block" style="order:2;">
+      <div class="section-label section-label-stacked">
+        <h2 data-i18n="tours_heading">Available tours this week</h2>
+        <div class="section-controls-row">
+          <select id="sort-select-2" class="sort-select" onchange="handleSortChange(this.value)">
+            <option value="best" data-i18n="sort_best">Best match</option>
+            <option value="rating" data-i18n="sort_rating">Highest rated</option>
+            <option value="reviews" data-i18n="sort_reviews">Most reviewed</option>
+            <option value="price_low" data-i18n="sort_price_low">Price: low to high</option>
+            <option value="price_high" data-i18n="sort_price_high">Price: high to low</option>
+          </select>
+        </div>
       </div>
-      <div onclick="selectSearchRegion('Senggigi')" style="position:relative; height:110px; border-radius:10px; overflow:hidden; cursor:pointer;">
-        <img src="https://images.pexels.com/photos/32332180/pexels-photo-32332180.jpeg?auto=compress&cs=tinysrgb&w=500" alt="Senggigi coastline West Lombok" loading="lazy" style="width:100%; height:100%; object-fit:cover;">
-        <div style="position:absolute; inset:0; background:linear-gradient(180deg, transparent 40%, rgba(0,0,0,0.6) 100%); display:flex; align-items:flex-end; padding:8px;"><span style="color:#fff; font-weight:700; font-size:0.78rem;">Senggigi</span></div>
-      </div>
+      <div class="driver-grid" id="driver-grid"></div>
     </div>
   </div>
 
-  <div class="driver-grid" id="driver-grid"></div>
   <p class="no-results" id="no-results" data-i18n="no_drivers_match" style="display:none; padding:0 32px 40px; color:var(--ink-soft); font-size:0.9rem;">No drivers match that search yet — try a different area or clear the duration filter.</p>
   <div id="lombok-soft-suggest" style="display:none; margin:0 32px 24px; padding:16px 18px; background:#FBF0E4; border:1.5px solid #E8B98A; border-radius:12px;">
     <a href="/lombok" id="lombok-soft-suggest-link" style="color:#8A4A1F; font-weight:700; font-size:1.02rem; text-decoration:none; display:flex; align-items:center; gap:10px;"><span style="font-size:1.3rem;">🏝️</span><span>Meintest du Lombok? → Hier entlang</span></a>
@@ -10414,6 +10471,7 @@ const translations = {
     filters_btn: "Filters",
     search_btn: "Search",
     results_heading: "Available this week", search_results_in_prefix: "Drivers in",
+    tours_heading: "Available tours this week", order_toggle_drivers: "Drivers first", order_toggle_tours: "Tours first", reset_filters_link: "Reset filters",
     plan_with_driver: "ⓘ The exact attractions and what's included you plan directly with your driver.",
     support_btn: "✉️ Message to Rydanu Support", dp_qr_dash_btn: "📱 Your Rydanu QR code",
     support_modal_title: "Message to Rydanu Support",
@@ -10745,6 +10803,7 @@ const translations = {
     filters_btn: "Filter",
     search_btn: "Suchen",
     results_heading: "Diese Woche verfügbar", search_results_in_prefix: "Fahrer in",
+    tours_heading: "Verfügbare Touren diese Woche", order_toggle_drivers: "Fahrer zuerst", order_toggle_tours: "Touren zuerst", reset_filters_link: "Filter zurücksetzen",
     plan_with_driver: "ⓘ Die genauen Attraktionen und was enthalten ist, planst du direkt mit deinem Fahrer.",
     support_btn: "✉️ Nachricht an Rydanu Support", dp_qr_dash_btn: "📱 Dein Rydanu QR-Code",
     support_modal_title: "Nachricht an Rydanu Support",
@@ -11076,6 +11135,7 @@ const translations = {
     filters_btn: "Filter",
     search_btn: "Cari",
     results_heading: "Tersedia minggu ini", search_results_in_prefix: "Sopir di",
+    tours_heading: "Tur tersedia minggu ini", order_toggle_drivers: "Sopir dulu", order_toggle_tours: "Tur dulu", reset_filters_link: "Setel ulang filter",
     plan_with_driver: "ⓘ Atraksi yang tepat dan apa saja yang termasuk Anda rencanakan langsung dengan sopir Anda.",
     support_btn: "✉️ Pesan ke Dukungan Rydanu", dp_qr_dash_btn: "📱 Kode QR Rydanu Anda",
     support_modal_title: "Pesan ke Dukungan Rydanu",
@@ -11508,6 +11568,7 @@ function renderDriverGrid(list){
     grid.appendChild(card);
    } catch(err){ console.error('Card render error for', d && d.name, err); }
   });
+  renderDriversOnlyGrid(list);
   document.getElementById('result-count').textContent = list.length + (list.length===1 ? ' driver found' : ' drivers found');
   document.getElementById('no-results').style.display = list.length===0 ? 'block' : 'none';
   // Bauplan Kap. 2.5: sanfter Lombok-Hinweis, wenn die Bali-Suche leer bleibt UND der eingetippte
@@ -11520,6 +11581,47 @@ function renderDriverGrid(list){
     const suggestEl = document.getElementById('lombok-soft-suggest');
     if(suggestEl) suggestEl.style.display = 'none';
   }
+}
+// Ebene 1 der neu geordneten Suchansicht (18.8.): reine Fahrer-Karten, eine pro Fahrer statt eine
+// pro Tour-Angebot. Dedup-Schluessel (d.ownerId || d.name) ist dieselbe Logik, die an anderer Stelle
+// im Code schon benutzt wird, um "andere Touren desselben Fahrers" zu gruppieren (siehe openModal /
+// sameDriver) -- kein neues Konzept, nur an dieser Stelle neu verwendet. Klick oeffnet die echte
+// oeffentliche Fahrerseite (openDriverPage) -- dieselbe, bereits laufende Funktion wie beim
+// "Zur Fahrerseite"-Link im Tour-Detail-Modal.
+function renderDriversOnlyGrid(list){
+  const grid = document.getElementById('drivers-only-grid');
+  if(!grid) return;
+  grid.innerHTML = '';
+  const seen = new Set();
+  list.forEach(d=>{
+    const key = d.ownerId || d.name;
+    if(!key || seen.has(key)) return;
+    seen.add(key);
+    try{
+      const card = document.createElement('div');
+      card.className = 'driver-only-card';
+      if(d.ownerId){
+        card.addEventListener('click', () => {
+          try{ openDriverPage(d.ownerId, 'visitor'); } catch(err){ console.error('Driver page open error:', err); }
+        });
+      } else {
+        card.style.cursor = 'default';
+      }
+      card.innerHTML = `
+        <span class="badge">${d.badge}</span>
+        <div class="driver-photo">
+          <div class="initials photo-lg" ${d.photo ? `style="background-image:url('${d.photo}'); background-size:cover; background-position:center;"` : ''}>${d.photo ? '' : initials(d.name)}</div>
+        </div>
+        <div class="name-row">
+          <h3>${d.name}</h3>
+          ${ownerRankBadgeHTML(d, 'sm')}
+        </div>
+        <div class="rating">${formatRatingHTML(d.rating)}</div>
+        ${trustBadgesHTML(d)}
+      `;
+      grid.appendChild(card);
+    } catch(err){ console.error('Driver-only card render error for', d && d.name, err); }
+  });
 }
 function viewTourOnMap(e, i){
   e.stopPropagation();
@@ -11723,6 +11825,8 @@ function updateFilterCount(){
   const badge = document.getElementById('filter-count');
   badge.textContent = total;
   badge.style.display = total>0 ? 'inline-flex' : 'none';
+  const resetLink = document.getElementById('reset-filters-link');
+  if(resetLink) resetLink.style.display = total>0 ? 'inline' : 'none';
 }
 function applyFilters(){
   updateFilterCount();
@@ -11800,6 +11904,38 @@ document.addEventListener('click', e=>{
   if(!wrap) return;
   if(!e.target.closest('.searchbar-input-wrap')) wrap.style.display = 'none';
 });
+// Neu (18.8.): zwei sichtbare Sortier-Dropdowns (unter "Diese Woche verfuegbar" und unter
+// "Verfuegbare Touren diese Woche") -- beide steuern dieselbe Sortierung, bleiben synchron.
+function handleSortChange(value){
+  const s1 = document.getElementById('sort-select');
+  const s2 = document.getElementById('sort-select-2');
+  if(s1) s1.value = value;
+  if(s2) s2.value = value;
+  runSearch();
+}
+// Neu (18.8.): Umschalter "Fahrer zuerst / Touren zuerst" -- reine Reihenfolge der beiden Bloecke,
+// filtert nichts weg, aendert nur die CSS-order (kein DOM-Umbau, kein Risiko fuer bestehende
+// Event-Handler in den beiden Bloecken).
+function setResultOrder(mode){
+  const driversBlock = document.getElementById('drivers-block');
+  const toursBlock = document.getElementById('tours-block');
+  if(!driversBlock || !toursBlock) return;
+  if(mode === 'tours'){
+    driversBlock.style.order = '2';
+    toursBlock.style.order = '1';
+  } else {
+    driversBlock.style.order = '1';
+    toursBlock.style.order = '2';
+  }
+  document.getElementById('order-toggle-drivers').classList.toggle('active', mode!=='tours');
+  document.getElementById('order-toggle-tours').classList.toggle('active', mode==='tours');
+}
+// Kleiner, dezenter "Filter zuruecksetzen"-Link direkt bei der Trefferzahl (bisher nur ganz unten
+// im Filter-Popup versteckt) -- ruft dieselbe, bereits bestehende clearFilters()-Funktion auf.
+function clearFiltersAndSearch(){
+  clearFilters();
+  runSearch();
+}
 function runSearch(){
   const q = document.getElementById('search-input').value.trim().toLowerCase();
   const airportVal = currentAirportValue();
@@ -15987,7 +16123,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v254</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v255</div>
 
 </body>
 </html>
