@@ -1154,7 +1154,7 @@
     font-family:'Public Sans'; font-size:0.78rem; font-weight:600; color:var(--ink-soft);
   }
   .period-btn.active{ background:var(--ink); color:var(--paper); border-color:var(--ink); }
-  .row-actions{ display:flex; align-items:center; gap:8px; margin-left:auto; }
+  .row-actions{ display:flex; flex-wrap:wrap; align-items:center; justify-content:flex-end; gap:8px; margin-left:auto; }
   .accept-btn{
     background:var(--teal); border:1px solid var(--teal); color:#fff; font-family:'Public Sans'; font-weight:700;
     font-size:0.72rem; padding:5px 12px; border-radius:14px; cursor:pointer; white-space:nowrap;
@@ -1278,10 +1278,20 @@
   footer{ text-align:center; padding:28px; font-family:'JetBrains Mono'; font-size:0.72rem; color:var(--ink-soft); border-top:1px solid var(--line); }
 
   @media (max-width:800px){
-    .dash-wrap{ grid-template-columns:1fr; }
-    .dash-nav{ display:flex; flex-wrap:wrap; overflow-x:auto; border-right:none; border-bottom:1px solid var(--line); padding:14px 16px; gap:8px; }
+    .dash-wrap{ grid-template-columns:1fr; min-width:0; }
+    .dash-nav{ display:flex; flex-wrap:wrap; overflow-x:auto; border-right:none; border-bottom:1px solid var(--line); padding:14px 16px; gap:8px; min-width:0; }
     .dash-nav .profile-chip{ margin-bottom:10px; width:100%; }
     .dash-nav .demo-switcher{ width:100%; flex-basis:100%; box-sizing:border-box; margin:4px 0 10px; }
+    /* Bugfix (20.8., Joerg gemeldet per Screenrecording + Pixel-Messung): Grid-Kinder haben per
+       CSS-Voreinstellung min-width:auto -- das heisst, die Breite der Grid-Spalte richtet sich
+       nach dem UNGEWRAPPTEN Inhalt (z.B. lange Buchungstexte/Status-Buttons in "Übersicht" und
+       "Buchungen"), auch wenn der sichtbare Text am Ende ganz normal umbricht. Dadurch wurde die
+       ganze Spalte (und mit ihr das Fahrerprofil-Foto) unbemerkt breiter als der Bildschirm,
+       sichtbar als leichter Rechts-Versatz von Foto+Name. min-width:0 erzwingt, dass sich die
+       Spalte an die tatsaechliche Bildschirmbreite haelt statt am laengsten ungewrappten Inhalt.
+       Mit echten Buchungsdaten getestet und bestaetigt (vorher 447px breit auf 393px Bildschirm,
+       danach exakt 393px). */
+    .dash-main{ min-width:0; }
     .stat-row{ grid-template-columns:repeat(2,1fr); }
     .searchbar{ flex-direction:column; }
     .filter-toggle-btn{ border-left:none; border-top:1px solid rgba(242,236,216,0.15); }
@@ -2226,6 +2236,12 @@
         <button type="button" onclick="resetDemoData()" style="background:none;border:1px solid var(--line);color:var(--ink-soft);border-radius:8px;padding:6px 10px;cursor:pointer;font-family:'JetBrains Mono';font-size:0.68rem;">Reset demo data</button>
         <button type="button" onclick="openDataTransfer('export')" style="background:none;border:1px solid var(--line);color:var(--ink-soft);border-radius:8px;padding:6px 10px;cursor:pointer;font-family:'JetBrains Mono';font-size:0.68rem;">Export data</button>
         <button type="button" onclick="openDataTransfer('import')" style="background:none;border:1px solid var(--line);color:var(--ink-soft);border-radius:8px;padding:6px 10px;cursor:pointer;font-family:'JetBrains Mono';font-size:0.68rem;">Import data</button>
+        <!-- Admin-Testzugang (20.8., Joerg-Wunsch): das normale "+ Als Fahrer registrieren" ist
+             absichtlich versteckt, sobald man als echter Fahrer eingeloggt ist (verhindert den
+             verwirrenden Sprung ins eigene Dashboard fuer normale Besucher). Als Admin will Joerg
+             das Formular trotzdem ab und zu testen koennen -- dieser Button zeigt es IMMER, ohne
+             an der normalen Logik fuer echte Besucher etwas zu aendern. -->
+        <button type="button" onclick="openRegisterDriverTestAccess()" style="background:none;border:1px solid var(--line);color:var(--ink-soft);border-radius:8px;padding:6px 10px;cursor:pointer;font-family:'JetBrains Mono';font-size:0.68rem;">🧪 Registrierungsformular testen</button>
       </div>
     </details>
 
@@ -14007,6 +14023,17 @@ function toggleAuthForm(which){
   document.getElementById('auth-signup-form').style.display = which==='signup' ? 'block' : 'none';
   document.getElementById('auth-error').textContent = '';
 }
+// Admin-only Testzugang (20.8., Joerg-Wunsch): zeigt das Registrierungsformular IMMER, auch wenn
+// man gerade als echter Fahrer eingeloggt ist -- normale Besucher sehen den "+ Als Fahrer
+// registrieren"-Button in diesem Fall bewusst gar nicht (verhindert den verwirrenden Sprung ins
+// eigene Dashboard), aber als Admin will Joerg das Formular trotzdem ab und zu testen koennen.
+// Aendert NICHTS an realDriverProfile / der echten Login-Sitzung -- rein visuell fuer den Test.
+function openRegisterDriverTestAccess(){
+  switchView('driver');
+  document.getElementById('driver-auth-gate').style.display = 'flex';
+  document.getElementById('driver-dash-wrap').style.display = 'none';
+  toggleAuthForm('signup');
+}
 
 function setAuthLoading(isLoading){
   document.getElementById('auth-loading').style.display = isLoading ? 'block' : 'none';
@@ -16318,7 +16345,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v271</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v273</div>
 
 </body>
 </html>
