@@ -13369,6 +13369,24 @@ function unlockSite(){
   try{ localStorage.setItem(DOOR_UNLOCK_KEY, '1'); }catch(e){}
   loadRealPublicListings();
   updateLombokBandVisibility('customer');
+  // Bugfix (20.8., Joerg gemeldet): checkDriverAuthState() lief bisher nur beim aktiven Wechsel
+  // auf den "Fahrer-Dashboard"-Tab -- auf der Startseite wusste die App darum kurz noch nicht,
+  // dass schon ein echter Fahrer eingeloggt ist. Der "+ Als Fahrer registrieren"-Button war
+  // dadurch faelschlich sichtbar; ein Klick sprang dann ueberraschend ins eigene Dashboard statt
+  // ins Registrierungsformular. Jetzt wird der Login-Status sofort beim Seitenaufruf geprueft
+  // (silent=true, damit keine Fehlermeldung fuer normale Besucher ohne Fahrerkonto erscheint).
+  checkDriverAuthState(true);
+  // Bugfix (20.8., Joerg gemeldet): das Lombok-Band wird erst per JS eingeblendet, NACHDEM die
+  // Seite schon sichtbar ist -- iOS im installierten App-Modus verrechnet sich dabei manchmal
+  // beim Layout und zeigt alles bis zum naechsten Pinch-Zoom nicht sauber zentriert an. Ein
+  // unsichtbarer Mini-Scroll (1px hoch, sofort wieder zurueck) zwingt Safari zu einem sauberen
+  // Neuaufbau, ohne dass man davon etwas sieht.
+  requestAnimationFrame(()=>{
+    requestAnimationFrame(()=>{
+      window.scrollTo(0, 1);
+      window.scrollTo(0, 0);
+    });
+  });
 }
 
 async function checkSiteLock(){
@@ -16237,7 +16255,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v266</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v267</div>
 
 </body>
 </html>
