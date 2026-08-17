@@ -1,5 +1,5 @@
 // Rydanu — simple offline-friendly cache-first service worker
-const CACHE_NAME = 'rydanu-cache-v273';
+const CACHE_NAME = 'rydanu-cache-v274';
 const CORE_ASSETS = [
   './',
   './manifest.json'
@@ -39,7 +39,14 @@ self.addEventListener('fetch', (event) => {
         .then((res) => {
           const clean = stripRedirect(res);
           if (clean && clean.status === 200) {
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clean.clone()));
+            // Bugfix (20.8., Joerg gemeldet ueber Konsolen-Fehler "Response body is already
+            // used"): .clone() muss SOFORT/synchron passieren, direkt hier -- nicht erst
+            // innerhalb des asynchronen caches.open().then(...). Vorher lief das Zurueckgeben der
+            // Antwort an die Seite (naechste Zeile) oft schneller als der Cache-Put, wodurch der
+            // Cache manchmal eine kaputte/leere Kopie bekam (Wettlauf-Bedingung). Das konnte zu
+            // fehlerhaft ausgelieferten CSS-/Font-/Bild-Dateien beim naechsten Laden fuehren.
+            const cacheCopy = clean.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, cacheCopy));
           }
           return clean;
         })
@@ -54,7 +61,9 @@ self.addEventListener('fetch', (event) => {
         .then((networkResponse) => {
           const clean = stripRedirect(networkResponse);
           if (clean && clean.status === 200) {
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clean.clone()));
+            // Gleicher Bugfix wie oben: sofort/synchron klonen statt erst im async .then().
+            const cacheCopy = clean.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, cacheCopy));
           }
           return clean;
         })
