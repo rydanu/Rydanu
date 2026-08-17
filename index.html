@@ -718,7 +718,7 @@
     padding:13px; border-radius:8px; cursor:pointer; margin-top:14px; -webkit-tap-highlight-color:transparent;
   }
   .request-tour-link-btn:hover{ background:var(--gold-deep); color:var(--ink); }
-  .profile-links-row{ display:flex; justify-content:flex-start; gap:28px; align-items:center; margin-top:6px; }
+  .profile-links-row{ display:flex; flex-wrap:wrap; justify-content:flex-start; gap:12px 28px; align-items:center; margin-top:6px; }
   .register-driver-btn{
     width:100%; background:var(--gold); color:var(--ink); border:none; font-weight:700; font-size:0.82rem;
     padding:10px; border-radius:5px; cursor:pointer; margin-bottom:20px; font-family:'Public Sans';
@@ -13376,17 +13376,8 @@ function unlockSite(){
   // ins Registrierungsformular. Jetzt wird der Login-Status sofort beim Seitenaufruf geprueft
   // (silent=true, damit keine Fehlermeldung fuer normale Besucher ohne Fahrerkonto erscheint).
   checkDriverAuthState(true);
-  // Bugfix (20.8., Joerg gemeldet): das Lombok-Band wird erst per JS eingeblendet, NACHDEM die
-  // Seite schon sichtbar ist -- iOS im installierten App-Modus verrechnet sich dabei manchmal
-  // beim Layout und zeigt alles bis zum naechsten Pinch-Zoom nicht sauber zentriert an. Ein
-  // unsichtbarer Mini-Scroll (1px hoch, sofort wieder zurueck) zwingt Safari zu einem sauberen
-  // Neuaufbau, ohne dass man davon etwas sieht.
-  requestAnimationFrame(()=>{
-    requestAnimationFrame(()=>{
-      window.scrollTo(0, 1);
-      window.scrollTo(0, 0);
-    });
-  });
+  // Bugfix (20.8., Joerg gemeldet): siehe forceLayoutReflow() weiter unten im Code.
+  forceLayoutReflow();
 }
 
 async function checkSiteLock(){
@@ -14379,6 +14370,21 @@ function updateLombokBandVisibility(view){
     backBtn.style.display = (view==='customer') ? 'inline-flex' : 'none';
   }
 }
+// Bugfix (20.8., Joerg gemeldet): iOS/Chrome verrechnen sich manchmal beim Layout, wenn ein
+// grosser, vorher unsichtbarer Bereich (z.B. das komplette Fahrer-Dashboard) per display:none ->
+// aktiv umgeschaltet wird -- sichtbar als "alles zu breit, erst nach Pinch-Zoom passt es". Diese
+// Funktion erzwingt nach so einem Sichtbarkeits-Wechsel einen sauberen, unsichtbaren Reflow
+// (Mini-Scroll 1px hoch und sofort zurueck). Wird an jeder Stelle aufgerufen, die einen grossen
+// Bereich neu sichtbar macht: Tuer-Freischaltung (unlockSite) UND Tab-Wechsel (switchView/
+// switchViewProgrammatic), da beide denselben Effekt ausloesen koennen.
+function forceLayoutReflow(){
+  requestAnimationFrame(()=>{
+    requestAnimationFrame(()=>{
+      window.scrollTo(0, 1);
+      window.scrollTo(0, 0);
+    });
+  });
+}
 function switchView(view){
   document.getElementById('view-customer').classList.toggle('active', view==='customer');
   document.getElementById('view-driver').classList.toggle('active', view==='driver');
@@ -14387,6 +14393,7 @@ function switchView(view){
   document.getElementById('tab-driver').classList.toggle('active', view==='driver');
   document.getElementById('tab-admin').classList.toggle('active', view==='admin');
   updateLombokBandVisibility(view);
+  forceLayoutReflow();
   const regBtn = document.getElementById('tab-register-btn');
   if(regBtn) regBtn.classList.remove('active');
   // Bugfix (5. August): Klick auf "Fahrer-Dashboard" soll IMMER mit der Login-Maske starten,
@@ -14404,6 +14411,7 @@ function switchViewProgrammatic(view){
   document.getElementById('tab-driver').classList.toggle('active', view==='driver');
   document.getElementById('tab-admin').classList.toggle('active', view==='admin');
   updateLombokBandVisibility(view);
+  forceLayoutReflow();
   const regBtn2 = document.getElementById('tab-register-btn');
   if(regBtn2) regBtn2.classList.remove('active');
   if(view==='driver'){ toggleAuthForm('login'); }
@@ -16255,7 +16263,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v267</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v268</div>
 
 </body>
 </html>
