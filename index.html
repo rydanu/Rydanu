@@ -342,6 +342,13 @@
   }
   .driver-card-header .name-row, .driver-only-card .name-row{ display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:6px; }
   .driver-card-header h3{ font-size:1.05rem; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0; }
+  /* Bugfix (17.8., Joerg gemeldet per Screenshot-Vergleich Fahrerkarte vs. Tourenkarte): fuer
+     .driver-only-card (reine Fahrerkarte, sichtbar im "Fahrer zuerst"-Modus) gab es bisher gar
+     keine eigene h3-Regel -- der Name lief auf dem Browser-Standard fuer <h3> (typischerweise
+     groesser, ~1.17em statt 1.05rem, ohne Zeilenumbruch-Schutz). Dadurch wirkte der Name optisch
+     nicht identisch zur Tourenkarte, obwohl beide official denselben Fahrernamen zeigen. Jetzt
+     exakt dieselbe Regel wie bei .driver-card-header h3. */
+  .driver-only-card h3{ font-size:1.05rem; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0; }
   .driver-body{ padding:16px; display:flex; flex-direction:column; flex:1; }
   .rating{ font-family:'JetBrains Mono'; font-size:0.78rem; color:var(--gold-deep); display:flex; align-items:center; gap:10px; flex-wrap:nowrap; overflow:hidden; font-weight:700; margin-bottom:8px; }
   .rating .r-part{ font-weight:700; }
@@ -16345,7 +16352,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v274</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v275</div>
 
 </body>
 </html>
