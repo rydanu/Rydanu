@@ -14254,6 +14254,7 @@ async function handleSetNewPassword(){
 async function handleDriverLogout(){
   await supabaseClient.auth.signOut();
   realDriverProfile = null;
+  clearDriverProfileHint();
   updateRegisterButtonVisibility();
   await checkDriverAuthState(true);
   // Baustellen-Tür (Phase 3): nach dem Abmelden wieder sperren, statt die Plattform offen zu lassen
@@ -14269,7 +14270,42 @@ async function handleDriverLogout(){
 // rote Fehlermeldung, wenn eine Sitzung ohne echtes Fahrerprofil vorliegt (z.B. die
 // Baustellen-Tuer-Sitzung von taschner.joerg@gmail.com, die bewusst kein Fahrerprofil hat) -
 // die Meldung soll nur nach einem tatsaechlichen Login-/Registrierungsversuch erscheinen.
+// Performance (20.8., Joerg-Wunsch: "Ladezeiten schneller machen"): kein echtes Caching-System,
+// sondern nur ein kleiner "Sofort-Hinweis" mit den zuletzt bekannten, ohnehin oeffentlichen
+// Profildaten (Name, Foto, Region, RY-Nummer -- exakt dieselben Felder, die applyRealDriverProfileToUI
+// verwendet). Zeigt das Dashboard beim erneuten Oeffnen sofort an, statt kurz leer/falsch zu wirken,
+// waehrend der ECHTE Login-Check im Hintergrund weiterlaeuft und alles bei Bedarf korrigiert.
+// Keine sicherheitsrelevanten Daten (kein Telefon, keine E-Mail, keine Dokumente/Zahlungsdaten).
+const DRIVER_PROFILE_HINT_KEY = 'rydanu_driver_profile_hint';
+function cacheDriverProfileHint(d){
+  try{
+    localStorage.setItem(DRIVER_PROFILE_HINT_KEY, JSON.stringify({
+      name: d.name, home_area: d.home_area, region: d.region, lw_number: d.lw_number, avatar_url: d.avatar_url
+    }));
+  }catch(e){}
+}
+function clearDriverProfileHint(){
+  try{ localStorage.removeItem(DRIVER_PROFILE_HINT_KEY); }catch(e){}
+}
+function loadDriverProfileHint(){
+  try{
+    const raw = localStorage.getItem(DRIVER_PROFILE_HINT_KEY);
+    return raw ? JSON.parse(raw) : null;
+  }catch(e){ return null; }
+}
 async function checkDriverAuthState(silent){
+  // Sofort-Hinweis anzeigen, noch bevor der echte (asynchrone) Login-Check zurueckkommt --
+  // rein kosmetisch, wird unten in jedem Fall durch den echten Check ueberschrieben/korrigiert.
+  const hint = loadDriverProfileHint();
+  if(hint){
+    const gateEl = document.getElementById('driver-auth-gate');
+    const dashEl = document.getElementById('driver-dash-wrap');
+    if(gateEl) gateEl.style.display = 'none';
+    if(dashEl) dashEl.style.display = 'grid';
+    applyRealDriverProfileToUI(hint);
+    const regBtnHint = document.getElementById('tab-register-btn');
+    if(regBtnHint) regBtnHint.style.display = 'none';
+  }
   const { data: { session } } = await supabaseClient.auth.getSession();
   updateIsAdminSession();
   const gate = document.getElementById('driver-auth-gate');
@@ -14280,6 +14316,7 @@ async function checkDriverAuthState(silent){
     dash.style.display = 'none';
     pendingBanner.style.display = 'none';
     realDriverProfile = null;
+    clearDriverProfileHint();
     updateRegisterButtonVisibility();
     return;
   }
@@ -14294,6 +14331,7 @@ async function checkDriverAuthState(silent){
     gate.style.display = 'flex';
     dash.style.display = 'none';
     realDriverProfile = null;
+    clearDriverProfileHint();
     updateRegisterButtonVisibility();
     if(!silent){
       showAuthError({message:'Profil konnte nicht geladen werden. Bitte nochmal versuchen.'});
@@ -14303,6 +14341,7 @@ async function checkDriverAuthState(silent){
     return;
   }
   realDriverProfile = driverRow;
+  cacheDriverProfileHint(driverRow);
   updateRegisterButtonVisibility();
   gate.style.display = 'none';
   dash.style.display = 'grid';
@@ -16274,7 +16313,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v269</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v270</div>
 
 </body>
 </html>
