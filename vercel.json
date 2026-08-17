@@ -1,2 +1,1 @@
-{ "rewrites": [ { "source": "/lombok", "destination": "/index.html" }, { "source": "/v/:slug", "destination": "/index.html" } ] }
-
+{ "rewrites": [ { "source": "/lombok", "destination": "/index.html" }, { "source": "/v/:slug", "destination": "/index.html" } ], "headers": [ { "source": "/service-worker.js", "headers": [ { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" } ] } ] }
