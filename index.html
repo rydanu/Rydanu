@@ -10022,6 +10022,11 @@ function initials(name){ return name.split(' ').map(w=>w[0]).slice(0,2).join('')
 
 // ---- echte freigeschaltete Fahrer + aktive Angebote fuer die Kunden-Suche laden ----
 async function loadRealPublicListings(){
+  // Performance (20.8., Joerg-Wunsch: "flüssiger Kundenfluss"): get_driver_public_stats() hängt
+  // inhaltlich von NICHTS ab (liefert Zahlen für alle freigeschalteten Fahrer auf einmal) -- lief
+  // bisher aber erst NACH den beiden anderen Abfragen, obwohl nichts dagegen spricht, sie parallel
+  // zu starten. Spart bei jedem Laden der Startseite eine komplette Server-Hin-und-Rück-Runde.
+  const statsPromise = supabaseClient.rpc('get_driver_public_stats');
   const { data: approvedDrivers, error: dErr } = await supabaseClient
     .from('drivers')
     .select('id, name, region, home_area, lw_number, avatar_url, bio, languages, vehicle, services, rank_points')
@@ -10046,7 +10051,7 @@ async function loadRealPublicListings(){
   // bzw. Admin lesbar, nicht oeffentlich -- die echten Zahlen wurden hier nie geladen. Neue
   // SECURITY DEFINER Funktion get_driver_public_stats() liefert pro Fahrer sicher nur die
   // aggregierten Zahlen (keine einzelnen Buchungsdaten) oeffentlich aus.
-  const { data: statsRows, error: statsErr } = await supabaseClient.rpc('get_driver_public_stats');
+  const { data: statsRows, error: statsErr } = await statsPromise;
   if(statsErr) console.error('Fahrer-Statistiken konnten nicht geladen werden:', statsErr);
   const statsMap = {};
   (statsRows || []).forEach(s => { statsMap[s.driver_id] = s; });
@@ -16313,7 +16318,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v270</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v271</div>
 
 </body>
 </html>
