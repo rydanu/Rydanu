@@ -1553,12 +1553,10 @@
             <button type="button" class="order-toggle-btn active" id="order-toggle-drivers" data-i18n="order_toggle_drivers" onclick="setResultOrder('drivers')">Drivers first</button>
             <button type="button" class="order-toggle-btn" id="order-toggle-tours" data-i18n="order_toggle_tours" onclick="setResultOrder('tours')">Tours first</button>
           </div>
-          <select id="sort-select" class="sort-select" onchange="handleSortChange(this.value)">
-            <option value="best" data-i18n="sort_best">Best match</option>
+          <select id="sort-select" class="sort-select" onchange="handleSortChange()">
             <option value="rating" data-i18n="sort_rating">Highest rated</option>
             <option value="reviews" data-i18n="sort_reviews">Most reviewed</option>
-            <option value="price_low" data-i18n="sort_price_low">Price: low to high</option>
-            <option value="price_high" data-i18n="sort_price_high">Price: high to low</option>
+            <option value="most_tours" data-i18n="sort_most_tours">Most tours</option>
           </select>
         </div>
       </div>
@@ -1596,10 +1594,10 @@
             <button type="button" class="order-toggle-btn active" id="order-toggle-drivers-2" data-i18n="order_toggle_drivers" onclick="setResultOrder('drivers')">Drivers first</button>
             <button type="button" class="order-toggle-btn" id="order-toggle-tours-2" data-i18n="order_toggle_tours" onclick="setResultOrder('tours')">Tours first</button>
           </div>
-          <select id="sort-select-2" class="sort-select" onchange="handleSortChange(this.value)">
-            <option value="best" data-i18n="sort_best">Best match</option>
+          <select id="sort-select-2" class="sort-select" onchange="handleSortChange()">
             <option value="rating" data-i18n="sort_rating">Highest rated</option>
             <option value="reviews" data-i18n="sort_reviews">Most reviewed</option>
+            <option value="most_tours" data-i18n="sort_most_tours">Most tours</option>
             <option value="price_low" data-i18n="sort_price_low">Price: low to high</option>
             <option value="price_high" data-i18n="sort_price_high">Price: high to low</option>
           </select>
@@ -2088,6 +2086,11 @@
           <button type="button" class="period-btn" data-view="completed" onclick="setBookingsViewTab('completed')"><span data-i18n="bookings_tab_completed">Completed</span> <span class="tab-count" id="bookings-count-completed"></span></button>
           <button type="button" class="period-btn" data-view="cancelled" onclick="setBookingsViewTab('cancelled')"><span data-i18n="bookings_tab_cancelled">Cancelled</span> <span class="tab-count" id="bookings-count-cancelled"></span></button>
         </div>
+        <!-- Punkt 2 (Joerg, 20.8.): Monats-Filter, nur bei Abgeschlossen/Storniert sichtbar --
+             sonst wird die Liste nach ein paar Monaten unuebersichtlich. -->
+        <div id="bookings-period-filter-row" style="display:none; margin:10px 20px 0;">
+          <select id="bookings-period-filter" class="sort-select" style="max-width:240px;" onchange="applyHistoryPeriodFilter('bookings', this.value, renderAllBookings)"></select>
+        </div>
         <div class="panel">
           <div class="panel-head"><h3 data-i18n="booking_history_title">Booking history</h3></div>
           <div id="all-bookings-list"></div>
@@ -2102,6 +2105,9 @@
           <button type="button" class="period-btn" data-view="offered" onclick="setRequestsViewTab('offered')"><span data-i18n="requests_tab_offered">Completed</span> <span class="tab-count" id="requests-count-offered"></span></button>
           <button type="button" class="period-btn" data-view="declined" onclick="setRequestsViewTab('declined')"><span data-i18n="requests_tab_declined">Declined</span> <span class="tab-count" id="requests-count-declined"></span></button>
         </div>
+        <div id="requests-period-filter-row" style="display:none; margin:10px 0 0;">
+          <select id="requests-period-filter" class="sort-select" style="max-width:240px;" onchange="applyHistoryPeriodFilter('requests', this.value, renderTourRequests)"></select>
+        </div>
         <div class="panel" id="requests-list"></div>
         <button type="button" class="link-btn" style="margin:14px 20px 4px;" onclick="pendingOfferRequestIndex=null; openCustomOfferModal();" data-i18n="co_open_btn_standalone">✨ Or create a custom offer without a request</button>
       </div>
@@ -2111,6 +2117,9 @@
         <div class="period-tabs" id="villa-view-tabs">
           <button type="button" class="period-btn active" data-view="open" onclick="setVillaViewTab('open')"><span data-i18n="villa_tab_open">Open</span> <span class="tab-count" id="villa-count-open"></span></button>
           <button type="button" class="period-btn" data-view="archived" onclick="setVillaViewTab('archived')"><span data-i18n="villa_tab_archived">Archived</span> <span class="tab-count" id="villa-count-archived"></span></button>
+        </div>
+        <div id="villa-period-filter-row" style="display:none; margin:10px 0 0;">
+          <select id="villa-period-filter" class="sort-select" style="max-width:240px;" onchange="applyHistoryPeriodFilter('villa', this.value, renderVillaRequests)"></select>
         </div>
         <div class="panel" id="villa-requests-list"></div>
       </div>
@@ -8526,6 +8535,8 @@ let requestsViewTab = 'open';
 function setRequestsViewTab(view){
   requestsViewTab = view;
   document.querySelectorAll('#requests-view-tabs .period-btn').forEach(b=>b.classList.toggle('active', b.dataset.view===view));
+  const filterRow = document.getElementById('requests-period-filter-row');
+  if(filterRow) filterRow.style.display = view==='open' ? 'none' : 'block';
   renderTourRequests();
 }
 // Bugfix (heute): der Klick auf die Zeile oeffnete vorher zusaetzlich ein Detail-Popup mit einem
@@ -8539,13 +8550,19 @@ function renderTourRequests(){
   setCount('requests-count-open', allReqs.filter(r=>r.status==='pending').length);
   setCount('requests-count-offered', allReqs.filter(r=>r.status==='offered').length);
   setCount('requests-count-declined', allReqs.filter(r=>r.status==='declined').length);
-  const reqs = allReqs
+  const statusMatched = allReqs
     .map((r,i)=>({r,i}))
     .filter(({r}) => {
       if(requestsViewTab==='declined') return r.status==='declined';
       if(requestsViewTab==='offered') return r.status==='offered';
       return r.status==='pending';
     });
+  // Punkt 2 (20.8.): Monats-Filter, nur bei "Erledigt"/"Abgelehnt" sichtbar (siehe setRequestsViewTab)
+  if(requestsViewTab!=='open'){
+    renderHistoryPeriodFilter('requests-period-filter', 'requests', statusMatched.map(x=>x.r), r=>r.dateWanted || r.date_wanted);
+  }
+  const reqs = requestsViewTab==='open' ? statusMatched
+    : statusMatched.filter(({r}) => matchesHistoryPeriod('requests', r.dateWanted || r.date_wanted));
   const el = document.getElementById('requests-list');
   if(reqs.length === 0){
     const emptyKey = requestsViewTab==='declined' ? 'requests_empty_declined' : (requestsViewTab==='offered' ? 'requests_empty_offered' : 'requests_empty');
@@ -8676,6 +8693,8 @@ let villaViewTab = 'open';
 function setVillaViewTab(view){
   villaViewTab = view;
   document.querySelectorAll('#villa-view-tabs .period-btn').forEach(b=>b.classList.toggle('active', b.dataset.view===view));
+  const filterRow = document.getElementById('villa-period-filter-row');
+  if(filterRow) filterRow.style.display = view==='archived' ? 'block' : 'none';
   renderVillaRequests();
 }
 // Bugfix (17.8., Joerg gemeldet): eine Villa-Anfrage, die der Gast bereits bestaetigt hat (status
@@ -8692,7 +8711,14 @@ function renderVillaRequests(){
   const isOpenView = r => r.status==='open' || (r.claimed_by_driver_id===realDriverProfile.id && r.status!=='booked' && r.status!=='declined');
   setCount('villa-count-open', realVillaRequests.filter(isOpenView).length);
   setCount('villa-count-archived', realVillaRequests.filter(isArchived).length);
-  const visible = realVillaRequests.filter(r => villaViewTab==='archived' ? isArchived(r) : isOpenView(r));
+  // Punkt 2 (20.8.): Monats-Filter, nur im Archiviert-Reiter sichtbar (siehe setVillaViewTab)
+  const archivedList = realVillaRequests.filter(isArchived);
+  if(villaViewTab==='archived'){
+    renderHistoryPeriodFilter('villa-period-filter', 'villa', archivedList, r=>r.request_date);
+  }
+  const visible = villaViewTab==='archived'
+    ? archivedList.filter(r => matchesHistoryPeriod('villa', r.request_date))
+    : realVillaRequests.filter(isOpenView);
   if(visible.length === 0){
     el.innerHTML = `<div class="empty-state">${t(villaViewTab==='archived' ? 'villa_empty_archived' : 'villa_empty')}</div>`;
     return;
@@ -9808,10 +9834,48 @@ function addListing(){
   }
 }
 
+// Punkt 2 (Joerg, 20.8.): generischer Monats-/Jahres-Filter fuer alle drei Verlaufslisten
+// (Buchungen abgeschlossen/storniert, Anfragen erledigt/abgelehnt, Villa archiviert) -- sonst
+// wird's nach ein paar Monaten bei viel Betrieb unuebersichtlich. Ein Dropdown pro Liste, nur
+// mit Monaten, die in den Daten wirklich vorkommen (keine leeren Optionen).
+let historyPeriodFilter = { bookings: 'all', requests: 'all', villa: 'all' };
+function monthKeyFromDate(dateStr){
+  if(!dateStr) return null;
+  const s = String(dateStr).slice(0,7); // "YYYY-MM"
+  return /^\d{4}-\d{2}$/.test(s) ? s : null;
+}
+function monthLabelFromKey(key){
+  const [y,m] = key.split('-').map(Number);
+  const localeMap = {en:'en-GB', de:'de-DE', id:'id-ID'};
+  return new Date(y, m-1, 1).toLocaleDateString(localeMap[currentLang] || 'en-GB', {month:'long', year:'numeric'});
+}
+// Baut/aktualisiert das <select> mit den tatsaechlich vorkommenden Monaten (neuester zuerst).
+function renderHistoryPeriodFilter(selectId, scopeKey, items, dateFn){
+  const sel = document.getElementById(selectId);
+  if(!sel) return;
+  const keys = Array.from(new Set(items.map(dateFn).map(monthKeyFromDate).filter(Boolean))).sort().reverse();
+  let current = historyPeriodFilter[scopeKey];
+  if(current!=='all' && !keys.includes(current)) current = 'all'; // gewaehlter Monat hat keine Eintraege mehr
+  historyPeriodFilter[scopeKey] = current;
+  sel.innerHTML = `<option value="all">${t('period_filter_all')}</option>` +
+    keys.map(k => `<option value="${k}">${monthLabelFromKey(k)}</option>`).join('');
+  sel.value = current;
+}
+function applyHistoryPeriodFilter(scopeKey, value, rerenderFn){
+  historyPeriodFilter[scopeKey] = value;
+  rerenderFn();
+}
+function matchesHistoryPeriod(scopeKey, dateStr){
+  const filterVal = historyPeriodFilter[scopeKey];
+  return filterVal==='all' || monthKeyFromDate(dateStr)===filterVal;
+}
+
 let bookingsViewTab = 'open';
 function setBookingsViewTab(view){
   bookingsViewTab = view;
   document.querySelectorAll('#bookings-view-tabs .period-btn').forEach(b=>b.classList.toggle('active', b.dataset.view===view));
+  const filterRow = document.getElementById('bookings-period-filter-row');
+  if(filterRow) filterRow.style.display = view==='open' ? 'none' : 'block';
   renderAllBookings();
 }
 // eine Buchung gilt als "storniert" unabhaengig davon, ob es ein Demo- oder ein echter Fahrer ist —
@@ -9855,9 +9919,13 @@ function renderAllBookings(){
     // "completed" zeigt standardmaessig nur wirklich abgeschlossene Touren; stornierte
     // (egal aus welchem Grund) landen jetzt in ihrem eigenen Reiter "Storniert"
     const wantCancelled = bookingsViewTab === 'cancelled';
-    const rows = completedBookings
+    const statusMatched = completedBookings
       .map((b, idx) => ({ b, idx }))
       .filter(({b}) => isCancelledBookingStatus(b.status) === wantCancelled);
+    // Punkt 2 (20.8.): Monats-Filter -- Dropdown nur mit Monaten befuellen, die in DIESEM Reiter
+    // (also schon status-gefiltert) tatsaechlich vorkommen, dann zusaetzlich danach filtern.
+    renderHistoryPeriodFilter('bookings-period-filter', 'bookings', statusMatched.map(x=>x.b), b=>b.dateISO);
+    const rows = statusMatched.filter(({b}) => matchesHistoryPeriod('bookings', b.dateISO));
     if(rows.length === 0){
       el.innerHTML = `<div class="empty-state">${wantCancelled ? t('empty_cancelled') : t('empty_history')}</div>`;
       return;
@@ -9972,11 +10040,26 @@ async function loadRealPublicListings(){
     .eq('active', true)
     .in('driver_id', ids);
   if(lErr){ console.error('Echte Angebote konnten nicht geladen werden:', lErr); return; }
+  // Bugfix (20.8., Joerg gemeldet): Suchkarten zeigten fuer jeden echten Fahrer immer fix
+  // "New . 0 tours", egal wie viele Touren tatsaechlich schon abgeschlossen waren (z.B. Joerg
+  // Wayne mit 51 abgeschlossenen Touren). Grund: bookings ist per RLS nur fuer den Fahrer selbst
+  // bzw. Admin lesbar, nicht oeffentlich -- die echten Zahlen wurden hier nie geladen. Neue
+  // SECURITY DEFINER Funktion get_driver_public_stats() liefert pro Fahrer sicher nur die
+  // aggregierten Zahlen (keine einzelnen Buchungsdaten) oeffentlich aus.
+  const { data: statsRows, error: statsErr } = await supabaseClient.rpc('get_driver_public_stats');
+  if(statsErr) console.error('Fahrer-Statistiken konnten nicht geladen werden:', statsErr);
+  const statsMap = {};
+  (statsRows || []).forEach(s => { statsMap[s.driver_id] = s; });
   const realCards = (listings || []).map(l => {
     const d = driverMap[l.driver_id] || {};
     const det = l.details || {};
     const vehicle = d.vehicle || {};
     const driverBadges = d.services || [];
+    const stats = statsMap[l.driver_id] || { completed_tours_count: 0, avg_rating: 0, review_count: 0 };
+    const avgRating = Number(stats.avg_rating) || 0;
+    const toursCompletedCount = Number(stats.completed_tours_count) || 0;
+    const reviewCount = Number(stats.review_count) || 0;
+    const tourWord = toursCompletedCount === 1 ? t('lbl_tour_singular') : t('lbl_tour_plural');
     return {
       isReal: true,
       dbListingId: l.id,
@@ -9987,7 +10070,10 @@ async function loadRealPublicListings(){
       vehicle: vehicleDisplayString(vehicle),
       vehicleType: vehicle.vtype || '',
       lang: (d.languages && d.languages.length) ? d.languages : ['EN'],
-      rating: 'New · 0 tours',
+      rating: (avgRating ? avgRating.toFixed(1) : t('lbl_rating_new')) + ' · ' + toursCompletedCount + ' ' + tourWord,
+      avgRating: avgRating,
+      reviewCount: reviewCount,
+      toursCompletedCount: toursCompletedCount,
       price: l.price_display || '',
       badge: '',
       region: det.area || l.region,
@@ -10577,7 +10663,7 @@ const translations = {
     vt_standard: "Standard Car", vt_family: "Family Car", vt_minivan: "Minivan", vt_luxury: "Luxury Car", vt_large: "More than 5 seats",
     badge_female: "Female", badge_child: "Child-friendly", badge_guide: "Tour guide", badge_firstaid: "First aid",
     filter_trust_title: "Trust & safety", filter_vtype_title: "Vehicle type", lbl_trust_badges: "Trust badges",
-    sort_best: "Best match", sort_rating: "Highest rated", sort_reviews: "Most reviewed", sort_price_low: "Price: low to high", sort_price_high: "Price: high to low", currency_picker_label: "Show prices in",
+    sort_best: "Best match", sort_rating: "Highest rated", sort_reviews: "Most reviewed", sort_most_tours: "Most tours completed", sort_price_low: "Price: low to high", sort_price_high: "Price: high to low", currency_picker_label: "Show prices in",
     sr_open_btn: "Already traveled with this driver? Leave a review", sr_eyebrow: "Leave a review", sr_title: "How was your trip?", mb_review_title2: "Your name", sr_err_name: "Please enter your name.",
     nav_requests: "Requests", requests_title: "Custom tour requests", requests_sub: "Travelers who couldn't find exactly what they wanted asked you directly. Reply by creating a real tour offer through Rydanu.", requests_empty: "No custom tour requests yet.",
     nav_villa: "Villa Requests", villa_title: "Villa Partner requests", villa_sub: "Private booking requests from partner villas & hotels — first come, first served.", villa_empty: "No open villa requests right now.",
@@ -10619,7 +10705,7 @@ const translations = {
     btn_cancel: "Cancel", btn_deposit_received: "Accept booking", tap_to_pay: "Tap to pay", all_regions: "All regions",
     dur_day_tour: "Day tour", dur_half_day_tour: "Half-day tour", dur_fixed_rate: "Fixed rate", dur_full_day: "Full day",
     new_booking_banner_one: "You have a new booking request — tap to view it", new_booking_banner_many: "You have {n} new booking requests — tap to view them",
-    bookings_tab_cancelled: "Cancelled", empty_cancelled: "No cancelled bookings.",
+    bookings_tab_cancelled: "Cancelled", empty_cancelled: "No cancelled bookings.", period_filter_all: "All time",
     mailbox_tab_deleted: "Deleted", empty_deleted: "Nothing in Deleted.", restore_btn: "↩ Restore", confirm_move_to_deleted: "Move this message to Deleted? It will be permanently removed after 30 days.", inbox_select_all: "Select all", inbox_delete_selected: "Delete selected", confirm_move_to_deleted_bulk: "Move the selected messages to Deleted? They will be permanently removed after 30 days.",
     co_open_btn: "✨ Create a custom offer", co_title: "Create custom offer",
     co_intro: "Create a one-off offer for a specific traveler. They'll get a link to review and confirm it — no Rydanu account needed for them.",
@@ -10909,7 +10995,7 @@ const translations = {
     vt_standard: "Standardauto", vt_family: "Familienauto", vt_minivan: "Minivan", vt_luxury: "Luxusauto", vt_large: "Mehr als 5 Sitzplätze",
     badge_female: "Weiblich", badge_child: "Kinderfreundlich", badge_guide: "Reiseleiter", badge_firstaid: "Erste Hilfe",
     filter_trust_title: "Vertrauen & Sicherheit", filter_vtype_title: "Fahrzeugtyp", lbl_trust_badges: "Vertrauens-Merkmale",
-    sort_best: "Beste Übereinstimmung", sort_rating: "Beste Bewertung", sort_reviews: "Meiste Bewertungen", sort_price_low: "Preis aufsteigend", sort_price_high: "Preis absteigend", currency_picker_label: "Preise anzeigen in",
+    sort_best: "Beste Übereinstimmung", sort_rating: "Beste Bewertung", sort_reviews: "Meiste Bewertungen", sort_most_tours: "Meiste Touren", sort_price_low: "Preis aufsteigend", sort_price_high: "Preis absteigend", currency_picker_label: "Preise anzeigen in",
     sr_open_btn: "Schon mal mit diesem Fahrer unterwegs gewesen? Bewertung hinterlassen", sr_eyebrow: "Bewertung hinterlassen", sr_title: "Wie war deine Tour?", mb_review_title2: "Dein Name", sr_err_name: "Bitte gib deinen Namen ein.",
     nav_requests: "Anfragen", requests_title: "Individuelle Touranfragen", requests_sub: "Reisende, die nicht genau das Passende gefunden haben, haben dich direkt angefragt. Antworte, indem du über Rydanu ein echtes Tourangebot erstellst.", requests_empty: "Noch keine individuellen Touranfragen.",
     nav_villa: "Villa-Anfragen", villa_title: "Villa-Partner-Anfragen", villa_sub: "Private Buchungsanfragen von Partner-Villen & Hotels — wer zuerst übernimmt, bekommt die Anfrage.", villa_empty: "Aktuell keine offenen Villa-Anfragen.",
@@ -10951,7 +11037,7 @@ const translations = {
     btn_cancel: "Stornieren", btn_deposit_received: "Buchung annehmen", tap_to_pay: "Zum Bezahlen tippen", all_regions: "Alle Regionen",
     dur_day_tour: "Tagestour", dur_half_day_tour: "Halbtagestour", dur_fixed_rate: "Festpreis", dur_full_day: "Ganztägig",
     new_booking_banner_one: "Du hast eine neue Buchungsanfrage — antippen zum Ansehen", new_booking_banner_many: "Du hast {n} neue Buchungsanfragen — antippen zum Ansehen",
-    bookings_tab_cancelled: "Storniert", empty_cancelled: "Keine stornierten Buchungen.",
+    bookings_tab_cancelled: "Storniert", empty_cancelled: "Keine stornierten Buchungen.", period_filter_all: "Gesamter Zeitraum",
     mailbox_tab_deleted: "Gelöscht", empty_deleted: "Nichts im Ordner Gelöscht.", restore_btn: "↩ Wiederherstellen", confirm_move_to_deleted: "Diese Nachricht in den Ordner Gelöscht verschieben? Sie wird nach 30 Tagen endgültig gelöscht.", inbox_select_all: "Alle auswählen", inbox_delete_selected: "Ausgewählte löschen", confirm_move_to_deleted_bulk: "Die ausgewählten Nachrichten in den Ordner Gelöscht verschieben? Sie werden nach 30 Tagen endgültig gelöscht.",
     co_open_btn: "✨ Individuelles Angebot erstellen", co_title: "Individuelles Angebot erstellen",
     co_intro: "Erstelle ein einmaliges Angebot für einen bestimmten Reisenden. Er bekommt einen Link zum Ansehen und Bestätigen — kein Rydanu-Konto nötig.",
@@ -11241,7 +11327,7 @@ const translations = {
     vt_standard: "Mobil Standar", vt_family: "Mobil Keluarga", vt_minivan: "Minivan", vt_luxury: "Mobil Mewah", vt_large: "Lebih dari 5 kursi",
     badge_female: "Wanita", badge_child: "Ramah anak", badge_guide: "Pemandu wisata", badge_firstaid: "P3K",
     filter_trust_title: "Kepercayaan & keamanan", filter_vtype_title: "Jenis kendaraan", lbl_trust_badges: "Lencana kepercayaan",
-    sort_best: "Kecocokan terbaik", sort_rating: "Rating tertinggi", sort_reviews: "Paling banyak diulas", sort_price_low: "Harga: rendah ke tinggi", sort_price_high: "Harga: tinggi ke rendah", currency_picker_label: "Tampilkan harga dalam",
+    sort_best: "Kecocokan terbaik", sort_rating: "Rating tertinggi", sort_reviews: "Paling banyak diulas", sort_most_tours: "Tur terbanyak", sort_price_low: "Harga: rendah ke tinggi", sort_price_high: "Harga: tinggi ke rendah", currency_picker_label: "Tampilkan harga dalam",
     sr_open_btn: "Pernah bepergian dengan sopir ini? Tinggalkan ulasan", sr_eyebrow: "Tinggalkan ulasan", sr_title: "Bagaimana perjalanan Anda?", mb_review_title2: "Nama Anda", sr_err_name: "Mohon masukkan nama Anda.",
     nav_requests: "Permintaan", requests_title: "Permintaan tur khusus", requests_sub: "Wisatawan yang tidak menemukan yang mereka cari langsung menghubungi Anda. Balas dengan membuat penawaran tur nyata melalui Rydanu.", requests_empty: "Belum ada permintaan tur khusus.",
     nav_villa: "Permintaan Villa", villa_title: "Permintaan Villa Partner", villa_sub: "Permintaan booking pribadi dari villa & hotel mitra — siapa cepat, dia dapat.", villa_empty: "Belum ada permintaan villa yang terbuka.",
@@ -11283,7 +11369,7 @@ const translations = {
     btn_cancel: "Batalkan", btn_deposit_received: "Terima pemesanan", tap_to_pay: "Ketuk untuk bayar", all_regions: "Semua wilayah",
     dur_day_tour: "Tur sehari", dur_half_day_tour: "Tur setengah hari", dur_fixed_rate: "Harga tetap", dur_full_day: "Sehari penuh",
     new_booking_banner_one: "Anda memiliki permintaan pemesanan baru — ketuk untuk melihatnya", new_booking_banner_many: "Anda memiliki {n} permintaan pemesanan baru — ketuk untuk melihatnya",
-    bookings_tab_cancelled: "Dibatalkan", empty_cancelled: "Tidak ada pemesanan yang dibatalkan.",
+    bookings_tab_cancelled: "Dibatalkan", empty_cancelled: "Tidak ada pemesanan yang dibatalkan.", period_filter_all: "Semua waktu",
     mailbox_tab_deleted: "Dihapus", empty_deleted: "Tidak ada apa pun di folder Dihapus.", restore_btn: "↩ Pulihkan", confirm_move_to_deleted: "Pindahkan pesan ini ke folder Dihapus? Akan dihapus permanen setelah 30 hari.", inbox_select_all: "Pilih semua", inbox_delete_selected: "Hapus yang dipilih", confirm_move_to_deleted_bulk: "Pindahkan pesan terpilih ke folder Dihapus? Akan dihapus permanen setelah 30 hari.",
     co_open_btn: "✨ Buat penawaran khusus", co_title: "Buat penawaran khusus",
     co_intro: "Buat penawaran satu kali untuk wisatawan tertentu. Mereka akan mendapatkan tautan untuk melihat dan mengonfirmasi — tidak perlu akun Rydanu.",
@@ -11513,13 +11599,18 @@ function parseRatingInfo(str){
   if(m) return {rating:parseFloat(m[1]), count:parseInt(m[2])};
   return {rating:0, count:0}; // "New" or unparseable
 }
-function sortDriverList(list){
-  const mode = (document.getElementById('sort-select') || {}).value || 'best';
+// Punkt 1 (20.8., Joerg-Wunsch): die beiden Sortier-Dropdowns (Fahrer-Block oben, Touren-Block
+// unten) sind jetzt unabhaengig voneinander -- jeder Block sortiert nach seinem EIGENEN Dropdown,
+// nicht mehr synchron. Sortiert außerdem ueber die echten Zahlenfelder (avgRating/reviewCount/
+// toursCompletedCount), nicht mehr per fragilem String-Parsing aus dem Anzeige-Text.
+function sortByMode(list, mode){
   const sorted = [...list];
   if(mode==='rating'){
-    sorted.sort((a,b)=> parseRatingInfo(b.rating).rating - parseRatingInfo(a.rating).rating);
+    sorted.sort((a,b)=> (b.avgRating||0) - (a.avgRating||0));
   } else if(mode==='reviews'){
-    sorted.sort((a,b)=> parseRatingInfo(b.rating).count - parseRatingInfo(a.rating).count);
+    sorted.sort((a,b)=> (b.reviewCount||0) - (a.reviewCount||0));
+  } else if(mode==='most_tours'){
+    sorted.sort((a,b)=> (b.toursCompletedCount||0) - (a.toursCompletedCount||0));
   } else if(mode==='price_low'){
     sorted.sort((a,b)=> parseIDR(a.price) - parseIDR(b.price));
   } else if(mode==='price_high'){
@@ -11529,8 +11620,9 @@ function sortDriverList(list){
   }
   return sorted;
 }
-function renderDriverGrid(list){
-  list = sortDriverList(list);
+function renderDriverGrid(rawList){
+  const sortMode2 = (document.getElementById('sort-select-2') || {}).value || 'rating';
+  const list = sortByMode(rawList, sortMode2);
   lastGridList = list;
   const grid = document.getElementById('driver-grid');
   grid.innerHTML = '';
@@ -11586,7 +11678,7 @@ function renderDriverGrid(list){
     grid.appendChild(card);
    } catch(err){ console.error('Card render error for', d && d.name, err); }
   });
-  renderDriversOnlyGrid(list);
+  renderDriversOnlyGrid(rawList);
   document.getElementById('result-count').textContent = list.length + (list.length===1 ? ' driver found' : ' drivers found');
   document.getElementById('no-results').style.display = list.length===0 ? 'block' : 'none';
   // Bauplan Kap. 2.5: sanfter Lombok-Hinweis, wenn die Bali-Suche leer bleibt UND der eingetippte
@@ -11606,9 +11698,11 @@ function renderDriverGrid(list){
 // sameDriver) -- kein neues Konzept, nur an dieser Stelle neu verwendet. Klick oeffnet die echte
 // oeffentliche Fahrerseite (openDriverPage) -- dieselbe, bereits laufende Funktion wie beim
 // "Zur Fahrerseite"-Link im Tour-Detail-Modal.
-function renderDriversOnlyGrid(list){
+function renderDriversOnlyGrid(rawList){
   const grid = document.getElementById('drivers-only-grid');
   if(!grid) return;
+  const sortMode1 = (document.getElementById('sort-select') || {}).value || 'rating';
+  const list = sortByMode(rawList, sortMode1);
   grid.innerHTML = '';
   const seen = new Set();
   list.forEach(d=>{
@@ -11924,11 +12018,9 @@ document.addEventListener('click', e=>{
 });
 // Neu (18.8.): zwei sichtbare Sortier-Dropdowns (unter "Diese Woche verfuegbar" und unter
 // "Verfuegbare Touren diese Woche") -- beide steuern dieselbe Sortierung, bleiben synchron.
-function handleSortChange(value){
-  const s1 = document.getElementById('sort-select');
-  const s2 = document.getElementById('sort-select-2');
-  if(s1) s1.value = value;
-  if(s2) s2.value = value;
+function handleSortChange(){
+  // Punkt 1 (20.8.): sort-select (Fahrer-Block) und sort-select-2 (Touren-Block) haben jetzt
+  // unterschiedliche Optionen und sortieren unabhaengig -- kein erzwungener Gleichlauf mehr.
   runSearch();
 }
 // Neu (18.8.): Umschalter "Fahrer zuerst / Touren zuerst" -- reine Reihenfolge der beiden Bloecke,
@@ -16145,7 +16237,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v262</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v266</div>
 
 </body>
 </html>
