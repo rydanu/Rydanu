@@ -7557,6 +7557,7 @@ function confirmCancellation(i){
       supabaseClient.functions.invoke('send-tour-offer-email', { body: { type: 'booking_cancelled', bookingId: b.dbId, cancelReason: 'customer_request' } })
         .catch(err=>console.error('Storno-Bestaetigungs-Mail fehlgeschlagen:', err));
     });
+    alert(t('cancel_outcome_customer_1') + ' ' + b.who + '.\n\n' + t('cancel_outcome_request_2'));
     return;
   }
   moveBookingToCompleted(currentDriverId, i, 'cancelled', 'customer');
@@ -10799,7 +10800,8 @@ const translations = {
     fees_featured_placement: "Featured placement", fees_featured_desc: "Higher spot in search results — auto-expires after 1 month", fees_featured_price: "IDR 100,000 / month",
     fees_open_fees_title: "Open fees this month", fees_open_fees_desc: "Pay your accumulated booking fees",
     fees_cancellation_title: "Includes a cancellation fee", fees_cancellation_desc: "For tours you cancelled yourself — see Bookings for details",
-    cancel_outcome_customer_1: "Cancelled —", cancel_outcome_customer_2: "Since the customer didn't show up, there's no further payout — the platform fee already charged for this booking is not refunded. The customer has been informed by email.",
+    cancel_outcome_customer_1: "Cancelled —", cancel_outcome_customer_2: "Since the customer didn't show up, the platform fee already charged for this booking has been refunded to you. The customer has been informed by email.",
+    cancel_outcome_request_2: "The platform fee already charged for this booking has been refunded to you. The customer has been informed by email.",
     cancel_outcome_driver_1: "Cancelled —", cancel_outcome_driver_2: "No regular Rydanu fee applies to this booking, but a cancellation fee of", cancel_outcome_driver_3: "The customer has been informed by email and pointed to Rydanu to find another driver.",
     cancel_note_customer: "Customer no-show", cancel_note_driver: "Cancelled by you — IDR 30,000 cancellation fee",
     btn_pay_now: "Pay now", fees_tier_note: "Per confirmed booking, the fee scales with the trip's price — small trips cost small fees:",
@@ -11134,7 +11136,8 @@ const translations = {
     fees_featured_placement: "Featured Placement", fees_featured_desc: "Höhere Platzierung in den Suchergebnissen — läuft automatisch nach 1 Monat aus", fees_featured_price: "IDR 100.000 / Monat",
     fees_open_fees_title: "Offene Gebühren diesen Monat", fees_open_fees_desc: "Bezahle deine angesammelten Buchungsgebühren — eine Rechnung wird dir automatisch per E-Mail zugesendet",
     fees_cancellation_title: "Enthält eine Stornogebühr", fees_cancellation_desc: "Für Touren, die du selbst storniert hast — Details unter Buchungen",
-    cancel_outcome_customer_1: "Storniert —", cancel_outcome_customer_2: "Da der Kunde nicht erschienen ist, gibt es keine weitere Auszahlung — die bereits belastete Plattformgebühr für diese Buchung wird nicht erstattet. Der Kunde wurde per E-Mail informiert.",
+    cancel_outcome_customer_1: "Storniert —", cancel_outcome_customer_2: "Da der Kunde nicht erschienen ist, wurde dir die bereits belastete Plattformgebühr für diese Buchung zurückerstattet. Der Kunde wurde per E-Mail informiert.",
+    cancel_outcome_request_2: "Die bereits belastete Plattformgebühr für diese Buchung wurde dir zurückerstattet. Der Kunde wurde per E-Mail informiert.",
     cancel_outcome_driver_1: "Storniert —", cancel_outcome_driver_2: "Für diese Buchung fällt keine reguläre Rydanu-Gebühr an, aber eine Stornogebühr von", cancel_outcome_driver_3: "Der Kunde wurde per E-Mail informiert und auf Rydanu verwiesen, um einen anderen Fahrer zu finden.",
     cancel_note_customer: "Kunde nicht erschienen", cancel_note_driver: "Von dir storniert — IDR 30.000 Stornogebühr",
     btn_pay_now: "Jetzt bezahlen", fees_tier_note: "Pro bestätigter Buchung richtet sich die Gebühr nach dem Reisepreis — kleine Touren, kleine Gebühren:",
@@ -11469,7 +11472,8 @@ const translations = {
     fees_featured_placement: "Featured placement", fees_featured_desc: "Posisi lebih tinggi di hasil pencarian — otomatis berakhir setelah 1 bulan", fees_featured_price: "IDR 100.000 / bulan",
     fees_open_fees_title: "Biaya terbuka bulan ini", fees_open_fees_desc: "Bayar biaya pemesanan terkumpul Anda — faktur dikirim otomatis melalui email",
     fees_cancellation_title: "Termasuk biaya pembatalan", fees_cancellation_desc: "Untuk tur yang Anda batalkan sendiri — lihat Pemesanan untuk detail",
-    cancel_outcome_customer_1: "Dibatalkan —", cancel_outcome_customer_2: "Karena pelanggan tidak datang, tidak ada pembayaran lebih lanjut — biaya platform yang sudah dibebankan untuk pemesanan ini tidak dikembalikan. Pelanggan telah diberi tahu melalui email.",
+    cancel_outcome_customer_1: "Dibatalkan —", cancel_outcome_customer_2: "Karena pelanggan tidak datang, biaya platform yang sudah dibebankan untuk pemesanan ini telah dikembalikan kepada Anda. Pelanggan telah diberi tahu melalui email.",
+    cancel_outcome_request_2: "Biaya platform yang sudah dibebankan untuk pemesanan ini telah dikembalikan kepada Anda. Pelanggan telah diberi tahu melalui email.",
     cancel_outcome_driver_1: "Dibatalkan —", cancel_outcome_driver_2: "Tidak ada biaya Rydanu reguler untuk pemesanan ini, tetapi ada biaya pembatalan sebesar", cancel_outcome_driver_3: "Pelanggan telah diberi tahu melalui email dan diarahkan ke Rydanu untuk mencari sopir lain.",
     cancel_note_customer: "Pelanggan tidak datang", cancel_note_driver: "Dibatalkan oleh Anda — biaya pembatalan IDR 30.000",
     btn_pay_now: "Bayar sekarang", fees_tier_note: "Per pemesanan terkonfirmasi, biaya menyesuaikan harga perjalanan — perjalanan kecil, biaya kecil:",
@@ -16538,7 +16542,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v286</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v287</div>
 
 </body>
 </html>
