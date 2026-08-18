@@ -424,10 +424,15 @@
     width:100%; padding:13px 12px; border:1px solid var(--line); border-radius:5px;
     font-family:'Public Sans'; font-size:0.95rem; line-height:1.4; background:#fff; color:var(--ink); outline:none;
   }
-  /* Bugfix (22.8.): input[type=date] und select auf exakt gleiche Hoehe zwingen (siehe Kommentar oben) */
-  .form-field input[type="date"], .form-field input[type="time"], .form-field select{ height:48px; box-sizing:border-box; }
+  /* Bugfix (22.8., zweiter Anlauf -- Joerg meldete auf iPhone weiterhin einen Groessenunterschied):
+     input[type=date]/[type=time] bekommen jetzt zusaetzlich -webkit-appearance:none wie das select.
+     Grund: iOS Safari kann bei input[type=date] trotz gesetzter Hoehe eine eigene, groessere
+     Eigenhoehe fuers native Kalender-Bedienelement erzwingen (bekannter iOS-Effekt) -- appearance:none
+     nimmt Safari die native Kontrolle darueber komplett ab, erst dann greift unsere Hoehe zuverlaessig. */
+  .form-field input[type="date"], .form-field input[type="time"], .form-field select{
+    height:48px; box-sizing:border-box; -webkit-appearance:none; -moz-appearance:none; appearance:none;
+  }
   .form-field select{
-    -webkit-appearance:none; -moz-appearance:none; appearance:none;
     background-image:url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='16' height='16'%3E%3Cpath fill='%233F5449' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
     background-repeat:no-repeat; background-position:right 12px center; padding-right:34px;
   }
@@ -10773,7 +10778,7 @@ const translations = {
     villa_push_title: "Get notified instantly", villa_push_sub: "Turn on push notifications so you never miss a new villa request.", villa_push_enable_btn: "Enable push notifications",
     villa_push_enabled: "✓ Push notifications enabled", villa_push_ios_hint: "On iPhone: add Rydanu to your Home Screen first (Share → Add to Home Screen), otherwise push notifications won't arrive.",
     villa_push_error: "Could not enable push notifications. Please check your browser permissions.", villa_push_unsupported: "Push notifications aren't supported in this browser.",
-    vr_title: "Book your Rydanu transfer", vr_intro: "{villa} has partnered with Rydanu to arrange reliable drivers for you.",
+    vr_title: "Book your Rydanu ride", vr_intro: "{villa} has partnered with Rydanu to arrange reliable drivers for you.",
     vr_pickup: "Pickup location", vr_destination: "Destination", vr_date: "Date", vr_time: "Time",
     vr_passengers: "Passengers", vr_luggage: "Luggage", vr_name: "Your name", vr_phone: "Your phone number", vr_email: "Your email",
     vr_email_hint: "so we can reach you about this request", vr_notes: "Notes", vr_optional: "(optional)",
@@ -11108,7 +11113,7 @@ const translations = {
     villa_push_title: "Sofort benachrichtigt werden", villa_push_sub: "Aktiviere Push-Benachrichtigungen, damit du keine neue Villa-Anfrage verpasst.", villa_push_enable_btn: "Push-Benachrichtigungen aktivieren",
     villa_push_enabled: "✓ Push-Benachrichtigungen aktiviert", villa_push_ios_hint: "Am iPhone: Rydanu zuerst zum Homescreen hinzufügen (Teilen → Zum Home-Bildschirm), sonst kommen keine Push-Benachrichtigungen an.",
     villa_push_error: "Push-Benachrichtigungen konnten nicht aktiviert werden. Bitte Browser-Berechtigungen prüfen.", villa_push_unsupported: "Push-Benachrichtigungen werden von diesem Browser nicht unterstützt.",
-    vr_title: "Buchen Sie Ihren Rydanu-Transfer", vr_intro: "{villa} arbeitet mit Rydanu zusammen, um Ihnen zuverlässige Fahrer zu vermitteln.",
+    vr_title: "Buchen Sie Ihre Rydanu-Fahrt", vr_intro: "{villa} arbeitet mit Rydanu zusammen, um Ihnen zuverlässige Fahrer zu vermitteln.",
     vr_pickup: "Abholort", vr_destination: "Ziel", vr_date: "Datum", vr_time: "Zeit",
     vr_passengers: "Passagiere", vr_luggage: "Gepäck", vr_name: "Ihr Name", vr_phone: "Ihre Telefonnummer", vr_email: "Ihre E-Mail-Adresse",
     vr_email_hint: "damit wir Sie bezüglich dieser Anfrage kontaktieren können", vr_notes: "Anmerkungen", vr_optional: "(optional)",
@@ -11443,7 +11448,7 @@ const translations = {
     villa_push_title: "Dapatkan notifikasi instan", villa_push_sub: "Aktifkan notifikasi push agar tidak melewatkan permintaan villa baru.", villa_push_enable_btn: "Aktifkan notifikasi push",
     villa_push_enabled: "✓ Notifikasi push aktif", villa_push_ios_hint: "Di iPhone: tambahkan Rydanu ke Layar Utama dulu (Bagikan → Tambah ke Layar Utama), jika tidak notifikasi push tidak akan masuk.",
     villa_push_error: "Notifikasi push tidak dapat diaktifkan. Silakan periksa izin browser Anda.", villa_push_unsupported: "Notifikasi push tidak didukung di browser ini.",
-    vr_title: "Pesan Transfer Rydanu Anda", vr_intro: "{villa} bekerja sama dengan Rydanu untuk menyediakan pengemudi terpercaya untuk Anda.",
+    vr_title: "Pesan Perjalanan Rydanu Anda", vr_intro: "{villa} bekerja sama dengan Rydanu untuk menyediakan pengemudi terpercaya untuk Anda.",
     vr_pickup: "Lokasi penjemputan", vr_destination: "Tujuan", vr_date: "Tanggal", vr_time: "Waktu",
     vr_passengers: "Penumpang", vr_luggage: "Bagasi", vr_name: "Nama Anda", vr_phone: "Nomor telepon Anda", vr_email: "Email Anda",
     vr_email_hint: "agar kami dapat menghubungi Anda mengenai permintaan ini", vr_notes: "Catatan", vr_optional: "(opsional)",
@@ -13577,6 +13582,19 @@ function resolveRegionFromArea(areaText, fullText){
   return null;
 }
 let vrPickupRegion = null;
+let vrSelectedTripType = null;
+function selectVrTripType(value){
+  vrSelectedTripType = value;
+  document.querySelectorAll('#vr-trip-type-row .chip').forEach(ch=>ch.classList.toggle('chip-active', ch.dataset.value===value));
+  const timeField = document.getElementById('vr-time-field');
+  const timeInput = document.getElementById('vr-time');
+  if(value === 'transfer'){
+    timeField.style.display = 'block';
+  } else {
+    timeField.style.display = 'none';
+    if(timeInput) timeInput.value = '';
+  }
+}
 let vrPickupSearchDebounce = null;
 let vrPickupSearchToken = 0;
 function vrRunAddressSearch(inputId, boxId, confirmedId){
@@ -13635,6 +13653,7 @@ async function initVillaRequestPage(slug){
   const page = document.getElementById('villa-request-page');
   const body = document.getElementById('villa-request-body');
   page.style.display = 'flex';
+  vrSelectedTripType = null;
   const { data, error } = await supabaseClient.rpc('get_villa_partner_by_slug', { p_slug: slug });
   const villa = (data && data[0]) || null;
   if(error || !villa){
@@ -13645,6 +13664,14 @@ async function initVillaRequestPage(slug){
     <h2>${t('vr_title')}</h2>
     <p class="note" style="margin-bottom:18px;">${t('vr_intro').replace('{villa}', escapeHtml(villa.name))}</p>
     <form id="villa-request-form" onsubmit="return false;" style="text-align:left;">
+      <div class="spots-section" style="margin-bottom:16px;">
+        <div class="filter-group-title">${t('tr_trip_type_title')}</div>
+        <div class="chip-row" id="vr-trip-type-row">
+          <button type="button" class="chip" data-value="half_day" onclick="selectVrTripType('half_day')">${t('tr_trip_half_day')}</button>
+          <button type="button" class="chip" data-value="full_day" onclick="selectVrTripType('full_day')">${t('tr_trip_full_day')}</button>
+          <button type="button" class="chip" data-value="transfer" onclick="selectVrTripType('transfer')">${t('tr_trip_transfer')}</button>
+        </div>
+      </div>
       <div class="form-field autocomplete-wrap" style="margin-bottom:12px;">
         <label>${t('vr_pickup')}</label>
         <input type="text" id="vr-pickup" required autocomplete="off" oninput="vrRunAddressSearch('vr-pickup','vr-pickup-suggestions','vr-pickup-confirmed')" onfocus="vrRunAddressSearch('vr-pickup','vr-pickup-suggestions','vr-pickup-confirmed')" style="width:100%; margin-top:4px;">
@@ -13661,8 +13688,8 @@ async function initVillaRequestPage(slug){
         <label style="flex:1; display:block; margin-bottom:12px;">${t('vr_date')}
           <input type="date" id="vr-date" required style="width:100%; margin-top:4px;">
         </label>
-        <label style="flex:1; display:block; margin-bottom:12px;">${t('vr_time')}
-          <input type="time" id="vr-time" required style="width:100%; margin-top:4px;">
+        <label style="flex:1; display:none; margin-bottom:12px;" id="vr-time-field">${t('vr_time')}
+          <input type="time" id="vr-time" style="width:100%; margin-top:4px;">
         </label>
       </div>
       <div style="display:flex; gap:10px;">
@@ -13730,7 +13757,7 @@ async function submitVillaRequest(slug){
   if(!pickup) missing.push(t('vr_pickup'));
   if(!destination) missing.push(t('vr_destination'));
   if(!dateVal) missing.push(t('vr_date'));
-  if(!timeVal) missing.push(t('vr_time'));
+  if(vrSelectedTripType === 'transfer' && !timeVal) missing.push(t('vr_time'));
   if(!guests) missing.push(t('vr_passengers'));
   if(!name) missing.push(t('vr_name'));
   if(!phoneRaw) missing.push(t('vr_phone'));
@@ -13760,7 +13787,8 @@ async function submitVillaRequest(slug){
     p_luggage: document.getElementById('vr-luggage').value.trim() || null,
     p_notes: document.getElementById('vr-notes').value.trim() || null,
     p_pickup_region: vrPickupRegion,
-    p_customer_phone: phone
+    p_customer_phone: phone,
+    p_trip_type: vrSelectedTripType || null
   });
   if(error){
     console.error('Villa-Anfrage fehlgeschlagen:', error);
@@ -16435,7 +16463,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v280</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v281</div>
 
 </body>
 </html>
