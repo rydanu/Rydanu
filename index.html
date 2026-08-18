@@ -430,7 +430,13 @@
      Eigenhoehe fuers native Kalender-Bedienelement erzwingen (bekannter iOS-Effekt) -- appearance:none
      nimmt Safari die native Kontrolle darueber komplett ab, erst dann greift unsere Hoehe zuverlaessig. */
   .form-field input[type="date"], .form-field input[type="time"], .form-field select{
-    height:48px; box-sizing:border-box; -webkit-appearance:none; -moz-appearance:none; appearance:none;
+    height:48px; box-sizing:border-box;
+  }
+  .form-field input[type="date"], .form-field select{
+    -webkit-appearance:none; -moz-appearance:none; appearance:none;
+  }
+  .form-field input[type="time"]{
+    background:#fff;
   }
   .form-field select{
     background-image:url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='16' height='16'%3E%3Cpath fill='%233F5449' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
@@ -10806,8 +10812,8 @@ const translations = {
     vr_title: "Book your Rydanu ride", vr_intro: "{villa} has partnered with Rydanu to arrange reliable drivers for you.",
     vr_pickup: "Pickup location", vr_destination: "Destination", vr_date: "Date", vr_time: "Time",
     vr_passengers: "Passengers", vr_luggage: "Luggage", vr_name: "Your name", vr_phone: "Your phone number", vr_email: "Your email",
-    vr_email_hint: "so we can reach you about this request", vr_notes: "Notes", vr_optional: "(optional)",
-    vr_submit_btn: "Request transfer", vr_err_required: "Please fill in destination and email.",
+    vr_email_hint: "so we can reach you about this request", vr_notes: "Anything else / what do you have planned?", vr_optional: "(optional)",
+    vr_submit_btn: "Request your ride", vr_err_required: "Please fill in destination and email.",
     vr_err_required_list: "Please fill in: {fields}", vr_err_phone_format: "Please select your country code and enter a valid phone number.", vr_phone_placeholder: "e.g. 812 345 6789",
     vr_err_generic: "Something went wrong. Please try again or contact the villa directly.",
     vr_not_found_title: "Link not found", vr_not_found_body: "This booking link doesn't seem to be active anymore. Please contact your villa or hotel directly.",
@@ -11138,15 +11144,15 @@ const translations = {
     villa_push_title: "Sofort benachrichtigt werden", villa_push_sub: "Aktiviere Push-Benachrichtigungen, damit du keine neue Villa-Anfrage verpasst.", villa_push_enable_btn: "Push-Benachrichtigungen aktivieren",
     villa_push_enabled: "✓ Push-Benachrichtigungen aktiviert", villa_push_ios_hint: "Am iPhone: Rydanu zuerst zum Homescreen hinzufügen (Teilen → Zum Home-Bildschirm), sonst kommen keine Push-Benachrichtigungen an.",
     villa_push_error: "Push-Benachrichtigungen konnten nicht aktiviert werden. Bitte Browser-Berechtigungen prüfen.", villa_push_unsupported: "Push-Benachrichtigungen werden von diesem Browser nicht unterstützt.",
-    vr_title: "Buchen Sie Ihre Rydanu-Fahrt", vr_intro: "{villa} arbeitet mit Rydanu zusammen, um Ihnen zuverlässige Fahrer zu vermitteln.",
+    vr_title: "Buche hier deine Rydanu-Fahrt", vr_intro: "{villa} arbeitet mit Rydanu zusammen, um dir zuverlässige Fahrer zu vermitteln.",
     vr_pickup: "Abholort", vr_destination: "Ziel", vr_date: "Datum", vr_time: "Zeit",
-    vr_passengers: "Passagiere", vr_luggage: "Gepäck", vr_name: "Ihr Name", vr_phone: "Ihre Telefonnummer", vr_email: "Ihre E-Mail-Adresse",
-    vr_email_hint: "damit wir Sie bezüglich dieser Anfrage kontaktieren können", vr_notes: "Anmerkungen", vr_optional: "(optional)",
-    vr_submit_btn: "Transfer anfragen", vr_err_required: "Bitte Ziel und E-Mail-Adresse ausfüllen.",
+    vr_passengers: "Passagiere", vr_luggage: "Gepäck", vr_name: "Dein Name", vr_phone: "Deine Telefonnummer", vr_email: "Deine E-Mail-Adresse",
+    vr_email_hint: "damit wir dich bezüglich dieser Anfrage kontaktieren können", vr_notes: "Anmerkung / Was hast du geplant?", vr_optional: "(optional)",
+    vr_submit_btn: "Fahrt anfragen", vr_err_required: "Bitte Ziel und E-Mail-Adresse ausfüllen.",
     vr_err_required_list: "Bitte ausfüllen: {fields}", vr_err_phone_format: "Bitte Landesvorwahl auswählen und eine gültige Telefonnummer eingeben.", vr_phone_placeholder: "z.B. 812 345 6789",
     vr_err_generic: "Etwas ist schiefgelaufen. Bitte nochmal versuchen oder direkt die Villa kontaktieren.",
-    vr_not_found_title: "Link nicht gefunden", vr_not_found_body: "Dieser Buchungslink scheint nicht mehr aktiv zu sein. Bitte kontaktieren Sie Ihre Villa oder Ihr Hotel direkt.",
-    vr_sent_title: "Anfrage gesendet!", vr_sent_body: "Danke — ein Rydanu-Fahrer meldet sich in Kürze bei Ihnen. Wir kontaktieren {email} mit den Details.",
+    vr_not_found_title: "Link nicht gefunden", vr_not_found_body: "Dieser Buchungslink scheint nicht mehr aktiv zu sein. Bitte kontaktiere deine Villa oder dein Hotel direkt.",
+    vr_sent_title: "Anfrage gesendet!", vr_sent_body: "Danke — ein Rydanu-Fahrer meldet sich in Kürze bei dir. Wir kontaktieren {email} mit den Details.",
     vr_matched_to: "✓ {area} auf der Karte gefunden",
     fees_overview_new_title: "Gebühren diesen Monat", fees_overview_villa_note: "Plattformgebühr für Villa-Partner-Buchungen (statt sonst 10%)", fees_how_it_works_title: "So funktionieren Gebühren",
     requests_tab_open: "Offen", requests_tab_offered: "Abgeschlossen", requests_empty_offered: "Noch keine abgeschlossenen Anfragen.", requests_tab_declined: "Abgelehnt", requests_empty_declined: "Keine abgelehnten Anfragen.",
@@ -11476,8 +11482,8 @@ const translations = {
     vr_title: "Pesan Perjalanan Rydanu Anda", vr_intro: "{villa} bekerja sama dengan Rydanu untuk menyediakan pengemudi terpercaya untuk Anda.",
     vr_pickup: "Lokasi penjemputan", vr_destination: "Tujuan", vr_date: "Tanggal", vr_time: "Waktu",
     vr_passengers: "Penumpang", vr_luggage: "Bagasi", vr_name: "Nama Anda", vr_phone: "Nomor telepon Anda", vr_email: "Email Anda",
-    vr_email_hint: "agar kami dapat menghubungi Anda mengenai permintaan ini", vr_notes: "Catatan", vr_optional: "(opsional)",
-    vr_submit_btn: "Ajukan permintaan transfer", vr_err_required: "Silakan isi tujuan dan email.",
+    vr_email_hint: "agar kami dapat menghubungi Anda mengenai permintaan ini", vr_notes: "Catatan lain / apa rencana Anda?", vr_optional: "(opsional)",
+    vr_submit_btn: "Ajukan perjalanan Anda", vr_err_required: "Silakan isi tujuan dan email.",
     vr_err_required_list: "Silakan isi: {fields}", vr_err_phone_format: "Silakan pilih kode negara dan masukkan nomor telepon yang valid.", vr_phone_placeholder: "mis. 812 345 6789",
     vr_err_generic: "Terjadi kesalahan. Silakan coba lagi atau hubungi villa langsung.",
     vr_not_found_title: "Tautan tidak ditemukan", vr_not_found_body: "Tautan pemesanan ini sepertinya sudah tidak aktif. Silakan hubungi villa atau hotel Anda langsung.",
@@ -13697,6 +13703,9 @@ async function initVillaRequestPage(slug){
           <button type="button" class="chip" data-value="transfer" onclick="selectVrTripType('transfer')">${t('tr_trip_transfer')}</button>
         </div>
       </div>
+      <label style="display:block; margin-bottom:16px;">${t('vr_notes')} <span style="font-weight:400; opacity:0.7;">${t('vr_optional')}</span>
+        <textarea id="vr-notes" rows="2" style="width:100%; margin-top:4px;"></textarea>
+      </label>
       <div class="form-field autocomplete-wrap" style="margin-bottom:12px;">
         <label>${t('vr_pickup')}</label>
         <input type="text" id="vr-pickup" required autocomplete="off" oninput="vrRunAddressSearch('vr-pickup','vr-pickup-suggestions','vr-pickup-confirmed')" onfocus="vrRunAddressSearch('vr-pickup','vr-pickup-suggestions','vr-pickup-confirmed')" style="width:100%; margin-top:4px;">
@@ -13747,9 +13756,6 @@ async function initVillaRequestPage(slug){
       </label>
       <label style="display:block; margin-bottom:12px;">${t('vr_email')} <span style="font-weight:400; opacity:0.7;">(${t('vr_email_hint')})</span>
         <input type="email" id="vr-email" required style="width:100%; margin-top:4px;">
-      </label>
-      <label style="display:block; margin-bottom:16px;">${t('vr_notes')} <span style="font-weight:400; opacity:0.7;">${t('vr_optional')}</span>
-        <textarea id="vr-notes" rows="2" style="width:100%; margin-top:4px;"></textarea>
       </label>
       <button type="button" class="book-btn" id="vr-submit-btn" onclick="submitVillaRequest('${slug}')" style="width:100%;">${t('vr_submit_btn')}</button>
       <p class="note" id="vr-error" style="color:var(--danger); margin-top:10px;"></p>
@@ -16487,7 +16493,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v283</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v284</div>
 
 </body>
 </html>
