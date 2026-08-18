@@ -424,19 +424,14 @@
     width:100%; padding:13px 12px; border:1px solid var(--line); border-radius:5px;
     font-family:'Public Sans'; font-size:0.95rem; line-height:1.4; background:#fff; color:var(--ink); outline:none;
   }
-  /* Bugfix (22.8., zweiter Anlauf -- Joerg meldete auf iPhone weiterhin einen Groessenunterschied):
-     input[type=date]/[type=time] bekommen jetzt zusaetzlich -webkit-appearance:none wie das select.
-     Grund: iOS Safari kann bei input[type=date] trotz gesetzter Hoehe eine eigene, groessere
-     Eigenhoehe fuers native Kalender-Bedienelement erzwingen (bekannter iOS-Effekt) -- appearance:none
-     nimmt Safari die native Kontrolle darueber komplett ab, erst dann greift unsere Hoehe zuverlaessig. */
-  .form-field input[type="date"], .form-field input[type="time"], .form-field select{
-    height:48px; box-sizing:border-box;
-  }
+  /* Bugfix (22.8.): input[type=date] und select auf exakt gleiche Hoehe zwingen. iOS Safari kann bei
+     input[type=date] trotz gesetzter Hoehe eine eigene, groessere Eigenhoehe fuers native
+     Kalender-Bedienelement erzwingen (bekannter iOS-Effekt) -- appearance:none nimmt Safari die
+     native Kontrolle darueber komplett ab, erst dann greift unsere Hoehe zuverlaessig.
+     Zeit-Felder sind seit heute keine input[type=time] mehr (siehe Formulare) -- normale Textfelder
+     brauchen diese Sonderbehandlung nicht, sehen dadurch garantiert exakt wie alle anderen Felder aus. */
   .form-field input[type="date"], .form-field select{
-    -webkit-appearance:none; -moz-appearance:none; appearance:none;
-  }
-  .form-field input[type="time"]{
-    background:#fff;
+    height:48px; box-sizing:border-box; -webkit-appearance:none; -moz-appearance:none; appearance:none;
   }
   .form-field select{
     background-image:url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='16' height='16'%3E%3Cpath fill='%233F5449' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
@@ -1768,7 +1763,7 @@
       </div>
       <div class="form-field">
         <label data-i18n="lbl_time">Time <span class="optional" data-i18n="lbl_optional_inline">(optional)</span></label>
-        <input type="time" id="f-time">
+        <input type="text" inputmode="numeric" id="f-time" placeholder="14:30" maxlength="5" oninput="formatTimeInputValue(this)">
       </div>
       <div class="form-field autocomplete-wrap">
         <label id="f-pickup-label" data-i18n="lbl_pickup_loc">Pickup location</label>
@@ -3326,7 +3321,7 @@
       </div>
       <div class="form-field" id="tr-time-field">
         <label data-i18n="tr_time_label">Pickup time <span class="optional" data-i18n="lbl_optional_inline">(optional)</span></label>
-        <input type="time" id="tr-time">
+        <input type="text" inputmode="numeric" id="tr-time" placeholder="14:30" maxlength="5" oninput="formatTimeInputValue(this)">
       </div>
       <div class="form-field">
         <label data-i18n="tr_notes_label">Notes <span class="optional" data-i18n="lbl_optional_inline">(optional)</span></label>
@@ -3788,7 +3783,7 @@
           </div>
           <div class="form-field">
             <label data-i18n="co_time_label">Pickup time (optional)</label>
-            <input type="time" id="co-time">
+            <input type="text" inputmode="numeric" id="co-time" placeholder="14:30" maxlength="5" oninput="formatTimeInputValue(this)">
           </div>
         </div>
         <div class="form-field">
@@ -12333,6 +12328,14 @@ function formatIDR(num){ return 'IDR ' + Math.round(num).toLocaleString('en-US')
 // die Nummer urspruenglich eingetippt/gespeichert wurde.
 function telLink(phone){ return 'tel:' + String(phone||'').replace(/[^\d+]/g,''); }
 function waCallLink(phone){ return 'https://wa.me/' + String(phone||'').replace(/[^\d]/g,''); }
+// Zeit-Textfelder (22.8., dritter Anlauf): input[type=time] liess sich auf iOS trotz mehrerer CSS-
+// Versuche nicht zuverlaessig an die anderen Felder angleichen (blieb eine graue "Pille"). Jetzt
+// ganz normale Textfelder mit automatischer HH:MM-Formatierung beim Tippen, damit die Eingabe
+// trotzdem bequem bleibt.
+function formatTimeInputValue(el){
+  let digits = el.value.replace(/[^\d]/g, '').slice(0,4);
+  el.value = digits.length >= 3 ? digits.slice(0,2) + ':' + digits.slice(2) : digits;
+}
 function todayMsgDate(){ return new Date().toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'}); }
 
 // ============ Driver rank & badge system ============
@@ -13765,7 +13768,7 @@ async function initVillaRequestPage(slug){
           <input type="date" id="vr-date" required style="width:100%; margin-top:4px;">
         </label>
         <label style="flex:1; display:block; margin-bottom:12px;" id="vr-time-field">${t('vr_time')} <span style="font-weight:400; opacity:0.7;">${t('vr_optional')}</span>
-          <input type="time" id="vr-time" style="width:100%; margin-top:4px;">
+          <input type="text" inputmode="numeric" id="vr-time" placeholder="14:30" maxlength="5" oninput="formatTimeInputValue(this)" style="width:100%; margin-top:4px;">
         </label>
       </div>
       <div style="display:flex; gap:10px;">
@@ -16535,7 +16538,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v285</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v286</div>
 
 </body>
 </html>
