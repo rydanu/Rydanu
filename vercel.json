@@ -1,1 +1,20 @@
-{ "rewrites": [ { "source": "/lombok", "destination": "/index.html" }, { "source": "/v/:slug", "destination": "/index.html" } ], "headers": [ { "source": "/service-worker.js", "headers": [ { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" } ] } ] }
+{
+  "rewrites": [
+    { "source": "/lombok", "destination": "/index.html" },
+    { "source": "/v/:slug", "destination": "/index.html" }
+  ],
+  "headers": [
+    {
+      "source": "/service-worker.js",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
+      ]
+    },
+    {
+      "source": "/:path*.(woff2|woff|png|jpg|jpeg|svg|ico)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    }
+  ]
+}
