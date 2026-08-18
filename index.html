@@ -424,6 +424,13 @@
     width:100%; padding:13px 12px; border:1px solid var(--line); border-radius:5px;
     font-family:'Public Sans'; font-size:0.95rem; line-height:1.4; background:#fff; color:var(--ink); outline:none;
   }
+  /* Bugfix (22.8.): input[type=date] und select auf exakt gleiche Hoehe zwingen (siehe Kommentar oben) */
+  .form-field input[type="date"], .form-field input[type="time"], .form-field select{ height:48px; box-sizing:border-box; }
+  .form-field select{
+    -webkit-appearance:none; -moz-appearance:none; appearance:none;
+    background-image:url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='16' height='16'%3E%3Cpath fill='%233F5449' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+    background-repeat:no-repeat; background-position:right 12px center; padding-right:34px;
+  }
   /* Villa-Transferformular (17.8., Joerg-Wunsch): noch leere Pflichtfelder zart Rydanu-gruen
      einfaerben, damit auf einen Blick klar ist, was noch auszufuellen ist -- sobald ausgefuellt,
      wieder normales Weiss. Bewusst nur hier (oeffentliches, kontoloses Formular) und nicht
@@ -1721,7 +1728,7 @@
         <input type="email" id="f-email" placeholder="you@email.com">
       </div>
       <div class="form-field">
-        <label data-i18n="lbl_whatsapp">WhatsApp number</label>
+        <label data-i18n-html="lbl_whatsapp">WhatsApp number <span class="optional">(for booking confirmation)</span></label>
         <input type="tel" id="f-phone" required placeholder="+62 812 3456 7890">
       </div>
       <div class="form-row">
@@ -3232,12 +3239,20 @@
         <input type="text" id="tr-name" placeholder="e.g. Sarah Miller">
       </div>
       <div class="form-field">
+        <label data-i18n-html="lbl_whatsapp">WhatsApp number <span class="optional">(for booking confirmation)</span></label>
+        <input type="tel" id="tr-phone" placeholder="+62 812 3456 7890">
+      </div>
+      <div class="form-field">
         <label data-i18n="lbl_email_address">Email address</label>
         <input type="email" id="tr-email" placeholder="you@email.com">
       </div>
-      <div class="form-field">
-        <label data-i18n-html="lbl_whatsapp">WhatsApp number <span class="optional">(for booking confirmation)</span></label>
-        <input type="tel" id="tr-phone" placeholder="+62 812 3456 7890">
+      <div class="spots-section">
+        <div class="filter-group-title" data-i18n="tr_trip_type_title">What kind of trip?</div>
+        <div class="chip-row" id="tr-trip-type-row">
+          <button type="button" class="chip" data-value="half_day" onclick="selectTrTripType('half_day')" data-i18n="tr_trip_half_day">Half-day</button>
+          <button type="button" class="chip" data-value="full_day" onclick="selectTrTripType('full_day')" data-i18n="tr_trip_full_day">Full-day</button>
+          <button type="button" class="chip" data-value="transfer" onclick="selectTrTripType('transfer')" data-i18n="tr_trip_transfer">Transfer</button>
+        </div>
       </div>
       <div class="form-field">
         <label data-i18n="tr_destination_label">What would you like to do / see?</label>
@@ -3265,6 +3280,10 @@
           <label data-i18n="lbl_guests">Guests</label>
           <select id="tr-guests"><option>1</option><option selected>2</option><option>3</option><option>4</option><option>5+</option></select>
         </div>
+      </div>
+      <div class="form-field" id="tr-time-field" style="display:none;">
+        <label data-i18n="tr_time_label">Pickup time</label>
+        <input type="time" id="tr-time">
       </div>
       <div class="form-field">
         <label data-i18n="tr_notes_label">Notes <span class="optional" data-i18n="lbl_optional_inline">(optional)</span></label>
@@ -3678,7 +3697,7 @@
         </div>
         <div class="form-field">
           <label data-i18n="co_phone_label">Customer phone (optional)</label>
-          <input type="text" id="co-phone">
+          <input type="text" id="co-phone" data-i18n-placeholder="co_phone_ph" placeholder="Auto-filled from the request if the customer gave one">
         </div>
         <div class="form-field">
           <label data-i18n="co_desc_label">Tour description *</label>
@@ -3709,9 +3728,15 @@
           </div>
           <p class="note" id="co-price-fx" style="margin-top:6px; text-align:left;"></p>
         </div>
-        <div class="form-field">
-          <label data-i18n="co_date_label">Proposed date (optional)</label>
-          <input type="date" id="co-date">
+        <div class="form-row">
+          <div class="form-field">
+            <label data-i18n="co_date_label">Proposed date (optional)</label>
+            <input type="date" id="co-date">
+          </div>
+          <div class="form-field">
+            <label data-i18n="co_time_label">Pickup time (optional)</label>
+            <input type="time" id="co-time">
+          </div>
         </div>
         <div class="form-field">
           <label data-i18n="co_pickup_label">Pickup</label>
@@ -4457,15 +4482,31 @@ async function submitStandaloneReview(){
 
 // ---- driver's own Rydanu page (Instagram-style profile page) ----
 let trRequestDriverId = null;
+let trSelectedTripType = null;
+function selectTrTripType(value){
+  trSelectedTripType = value;
+  document.querySelectorAll('#tr-trip-type-row .chip').forEach(ch=>ch.classList.toggle('chip-active', ch.dataset.value===value));
+  const timeField = document.getElementById('tr-time-field');
+  const timeInput = document.getElementById('tr-time');
+  if(value === 'transfer'){
+    timeField.style.display = 'block';
+  } else {
+    timeField.style.display = 'none';
+    timeInput.value = '';
+  }
+}
 function openTourRequest(driverId){
   trRequestDriverId = driverId || dpDriverId;
   document.getElementById('tr-form-step').style.display = 'block';
   document.getElementById('tr-confirm-step').style.display = 'none';
-  ['tr-name','tr-email','tr-phone','tr-destination','tr-pickup','tr-notes'].forEach(id=>document.getElementById(id).value = '');
+  ['tr-name','tr-email','tr-phone','tr-destination','tr-pickup','tr-notes','tr-time'].forEach(id=>document.getElementById(id).value = '');
   document.getElementById('tr-pickup-confirmed').textContent = '';
   document.getElementById('tr-pickup-suggestions').classList.remove('open');
   trSelectedHighlights = [];
   renderHighlightChips('tr-highlights-row');
+  trSelectedTripType = null;
+  document.querySelectorAll('#tr-trip-type-row .chip').forEach(ch=>ch.classList.remove('chip-active'));
+  document.getElementById('tr-time-field').style.display = 'none';
   document.getElementById('tr-date').value = '';
   document.getElementById('tr-date').min = new Date().toISOString().slice(0,10);
   document.getElementById('tr-error').textContent = '';
@@ -4477,8 +4518,13 @@ async function submitTourRequest(){
   const email = document.getElementById('tr-email').value.trim();
   const phone = document.getElementById('tr-phone').value.trim();
   const destination = document.getElementById('tr-destination').value.trim();
+  const trTime = document.getElementById('tr-time').value;
   if(!name || !destination){
     document.getElementById('tr-error').textContent = t('tr_err');
+    return;
+  }
+  if(trSelectedTripType === 'transfer' && !trTime){
+    document.getElementById('tr-error').textContent = t('tr_time_err');
     return;
   }
   document.getElementById('tr-error').textContent = '';
@@ -4486,6 +4532,7 @@ async function submitTourRequest(){
   const pickup = document.getElementById('tr-pickup').value.trim();
   const guests = document.getElementById('tr-guests').value;
   const notes = document.getElementById('tr-notes').value.trim();
+  const pickupTimeVal = trSelectedTripType === 'transfer' ? trTime : null;
   const ref = 'TR-' + Math.floor(10000 + Math.random()*89999);
   // Punkt 3 (heute): echte Fahrer haben kein driverProfiles[id] (das ist nur die Demo-Liste) --
   // dasselbe Erkennungsmuster wie beim Ein-/Ausblenden des Buttons weiter oben im Code.
@@ -4498,7 +4545,8 @@ async function submitTourRequest(){
     const { error } = await supabaseClient.from('tour_inquiries').insert({
       id: newId, driver_id: trRequestDriverId, customer_name: name, customer_email: email || null,
       customer_phone: phone || null, destination, date_wanted: dateWanted || null, pickup: pickup || null,
-      guests, notes: notes || null, ref, highlights: trSelectedHighlights
+      guests, notes: notes || null, ref, highlights: trSelectedHighlights,
+      trip_type: trSelectedTripType || null, pickup_time: pickupTimeVal
     });
     if(error){
       console.error('Anfrage konnte nicht gespeichert werden:', error);
@@ -4532,6 +4580,7 @@ async function submitTourRequest(){
   store.tourRequests.unshift({
     ref, name, email, phone,
     destination, dateWanted, pickup, guests, notes, highlights: trSelectedHighlights.slice(),
+    tripType: trSelectedTripType || null, pickupTime: pickupTimeVal,
     status: 'pending', offeredTourName: null, date: 'Jul 21, 2026'
   });
   pushInboxMessage(trRequestDriverId, t('tr_inbox_title'), name + ' — ' + destination + (dateWanted ? ' (' + dateWanted + ')' : ''), {type:'tourRequest', ref});
@@ -7245,7 +7294,7 @@ function mapBookingRowToUI(row){
     when: formatDateDisplay(row.booking_date),
     dateISO: row.booking_date,
     status: row.status,
-    email: '', phone: row.customer_phone || '', pickup: '',
+    email: '', phone: (row.status !== 'pending' && row.status !== 'declined_by_driver') ? (row.customer_phone || '') : '', pickup: '',
     price: formatIDR(row.price_idr),
     balance: formatIDR(row.price_idr || 0),
     priceIdrRaw: row.price_idr || 0,
@@ -7463,7 +7512,11 @@ function confirmCancellation(i){
 function acceptBooking(i){
   const b = driverBookings[i];
   if(realDriverProfile && b.dbId){
-    supabaseClient.from('bookings').update({ status: 'confirmed' }).eq('id', b.dbId).then(({error})=>{
+    const timeInput = prompt(t('prompt_pickup_time_msg'), b.pickupTime || '');
+    const pickupTimeVal = (timeInput && timeInput.trim()) ? timeInput.trim() : null;
+    const updatePayload = { status: 'confirmed' };
+    if(pickupTimeVal) updatePayload.pickup_time = pickupTimeVal;
+    supabaseClient.from('bookings').update(updatePayload).eq('id', b.dbId).then(({error})=>{
       if(error){ console.error('Konnte nicht bestätigt werden:', error); return; }
       loadRealBookings();
       supabaseClient.functions.invoke('send-tour-offer-email', { body: { type: 'booking_confirmed', bookingId: b.dbId } })
@@ -8793,14 +8846,15 @@ function renderVillaRequests(){
     return `
       <div class="booking-row">
         <div>
-          <!-- Bugfix (21.8., Joerg gemeldet per Screenshot): bei abgelehnten Villa-Anfragen (status
-               'declined') sah der Fahrer weiterhin die Telefonnummer des Gasts, obwohl die Anfrage
-               fuer ihn erledigt ist -- keine sinnvolle Nutzung mehr moeglich, unnoetiger Datenzugriff.
-               Telefonnummer wird jetzt nur noch angezeigt, solange die Anfrage nicht abgelehnt ist. -->
+          <!-- Grundsatzentscheidung (22.8., Joerg): Telefonnummer nur noch sichtbar, wenn die Anfrage
+               wirklich zu einer bestaetigten Buchung gefuehrt hat (status 'booked') -- nicht mehr schon
+               bei offener oder gerade erst uebernommener Anfrage (Weiterentwicklung des 21.8.-Fixes,
+               der nur den 'declined'-Fall abgedeckt hatte). Gleiches Prinzip wie bei normalen Buchungen
+               und individuellen Touranfragen: der Fahrer bekommt die Nummer erst, wenn es losgeht. -->
           <div class="who">🏠 ${escapeHtml(villaName)} — ${escapeHtml(r.destination)}</div>
           <div class="when">${whenText} · ${r.guests || '—'} ${t('lbl_guests')}</div>
           ${r.pickup ? `<div class="when">📍 ${escapeHtml(r.pickup)}</div>` : ''}
-          ${(r.customer_phone && r.status !== 'declined') ? `<div class="when">📞 ${escapeHtml(r.customer_phone)}</div>` : ''}
+          ${(r.customer_phone && r.status === 'booked') ? `<div class="when">📞 ${escapeHtml(r.customer_phone)}</div>` : ''}
           ${r.notes ? `<div class="when" style="font-style:italic;">"${escapeHtml(r.notes)}"</div>` : ''}
           <span class="status-pill" style="background:var(--accent-light,#eef4ee);">${t('villa_source_tag')}</span>
         </div>
@@ -8814,6 +8868,7 @@ function renderVillaRequests(){
 // die Villa-Zuordnung + der 20%-Satz laufen dabei transparent im Hintergrund mit (siehe
 // confirm_custom_tour_request in der Datenbank).
 let pendingVillaRequest = null;
+let pendingOfferCustomerPhone = null;
 async function claimVillaRequest(requestId){
   const { data: claimed, error } = await supabaseClient.rpc('claim_villa_request', { p_request_id: requestId });
   if(error){ console.error('Uebernahme fehlgeschlagen:', error); alert(t('villa_claim_taken')); return; }
@@ -8827,7 +8882,7 @@ async function claimVillaRequest(requestId){
   openCustomOfferModal();
   document.getElementById('co-name').value = r.customer_name || '';
   document.getElementById('co-email').value = r.customer_email || '';
-  document.getElementById('co-phone').value = r.customer_phone || '';
+  pendingOfferCustomerPhone = r.customer_phone || null;
   document.getElementById('co-desc').value = `${villaName}: ${r.destination}`;
   if(r.request_date) document.getElementById('co-date').value = r.request_date;
   const coPickup = document.getElementById('co-pickup');
@@ -8898,7 +8953,7 @@ async function editAndResendVillaOffer(villaRequestId){
   openCustomOfferModal();
   document.getElementById('co-name').value = r.customer_name || '';
   document.getElementById('co-email').value = r.customer_email || '';
-  document.getElementById('co-phone').value = r.customer_phone || '';
+  pendingOfferCustomerPhone = r.customer_phone || null;
   document.getElementById('co-desc').value = `${villaName}: ${r.destination}`;
   document.getElementById('co-price').value = offerRow ? (offerRow.price_idr || '') : '';
   if(offerRow && offerRow.proposed_date) document.getElementById('co-date').value = offerRow.proposed_date;
@@ -9423,9 +9478,10 @@ function createOfferFromRequest(i){
     openCustomOfferModal();
     document.getElementById('co-name').value = r.customer_name || '';
     document.getElementById('co-email').value = r.customer_email || '';
-    document.getElementById('co-phone').value = r.customer_phone || '';
+    pendingOfferCustomerPhone = r.customer_phone || null;
     document.getElementById('co-desc').value = r.destination || '';
     if(r.date_wanted) document.getElementById('co-date').value = r.date_wanted;
+    if(r.pickup_time) document.getElementById('co-time').value = r.pickup_time;
     // Punkt 8 (5. August): Abholort wurde vom Kunden bereits bei der Anfrage festgelegt --
     // deshalb hier fixiert (nicht mehr editierbar) statt als "(optional)"-Feld. Aenderungen
     // dazu traegt der Fahrer stattdessen in "Notiz an den Kunden" ein.
@@ -9480,9 +9536,10 @@ function openCustomOfferModal(){
   // ein normaler "Anfrage beantworten" oder "Angebot ohne Anfrage"-Aufruf darf das nicht erben.
   if(!openCustomOfferModal._keepVillaContext) pendingVillaRequest = null;
   openCustomOfferModal._keepVillaContext = false;
+  pendingOfferCustomerPhone = null;
   document.getElementById('co-form-step').style.display = 'block';
   document.getElementById('co-result-step').style.display = 'none';
-  ['co-name','co-email','co-phone','co-desc','co-price','co-date','co-pickup','co-notes'].forEach(id=>{
+  ['co-name','co-email','co-phone','co-desc','co-price','co-date','co-time','co-pickup','co-notes'].forEach(id=>{
     const el = document.getElementById(id);
     if(el) el.value = '';
   });
@@ -9524,12 +9581,13 @@ document.getElementById('co-currency').addEventListener('change', updateCoPriceF
 async function submitCustomOffer(){
   const name = document.getElementById('co-name').value.trim();
   const email = document.getElementById('co-email').value.trim();
-  const phone = document.getElementById('co-phone').value.trim();
+  const phone = document.getElementById('co-phone').value.trim() || pendingOfferCustomerPhone || '';
   const desc = document.getElementById('co-desc').value.trim();
   const currency = document.getElementById('co-currency').value;
   const amountEntered = parseAmount(document.getElementById('co-price').value);
   const priceNum = Math.round(amountEntered * CO_EXCHANGE_RATES[currency]);
   const dateVal = document.getElementById('co-date').value || null;
+  const timeVal = document.getElementById('co-time').value || null;
   const pickupVal = document.getElementById('co-pickup').value.trim() || null;
   const notesVal = document.getElementById('co-notes').value.trim() || null;
   const errEl = document.getElementById('co-error');
@@ -9544,7 +9602,7 @@ async function submitCustomOffer(){
     driver_id: realDriverProfile.id,
     customer_name: name, customer_email: email, customer_phone: phone || null,
     tour_description: desc, price_idr: priceNum, currency, price_original: currency==='IDR' ? null : amountEntered,
-    proposed_date: dateVal, pickup: pickupVal, notes: notesVal,
+    proposed_date: dateVal, pickup_time: timeVal, pickup: pickupVal, notes: notesVal,
     highlights: coSelectedHighlights, extras: coSelectedExtras,
     villa_request_id: pendingVillaRequest ? pendingVillaRequest.villaRequestId : null,
     villa_partner_id: pendingVillaRequest ? pendingVillaRequest.villaPartnerId : null
@@ -10732,6 +10790,8 @@ const translations = {
     tr_open_btn: "Don't see what you want? Request a custom tour", tr_eyebrow: "Custom tour request", tr_title: "Tell us what you'd like",
     tr_hint: "Your driver will review this and, if they can help, prepare a tour offer for you through Rydanu — with a proper price and booking, not a private side deal.",
     tr_destination_label: "What would you like to do / see?", tr_destination_ph: "e.g. 3-day trip to Sidemen & Munduk", tr_pickup_ph: "e.g. your hotel or villa name",
+    tr_trip_type_title: "What kind of trip?", tr_trip_half_day: "Half-day", tr_trip_full_day: "Full-day", tr_trip_transfer: "Transfer",
+    tr_time_label: "Pickup time", tr_time_err: "Please add a pickup time for your transfer.",
     tr_notes_label: "Notes", tr_notes_ph: "Anything else your driver should know...",
     tr_submit_btn: "Send request", tr_sent_note: "Your request has been sent to your driver.", tr_check_hint: "Keep this reference — use \"Find my booking\" on the homepage anytime to check whether your driver has prepared an offer yet.", tr_done_btn: "Done",
     tr_err: "Please enter your name and what you'd like to do.", tr_inbox_title: "✨ New custom tour request",
@@ -10753,8 +10813,8 @@ const translations = {
     mailbox_tab_deleted: "Deleted", empty_deleted: "Nothing in Deleted.", restore_btn: "↩ Restore", confirm_move_to_deleted: "Move this message to Deleted? It will be permanently removed after 30 days.", inbox_select_all: "Select all", inbox_delete_selected: "Delete selected", confirm_move_to_deleted_bulk: "Move the selected messages to Deleted? They will be permanently removed after 30 days.",
     co_open_btn: "✨ Create a custom offer", co_title: "Create custom offer",
     co_intro: "Create a one-off offer for a specific traveler. They'll get a link to review and confirm it — no Rydanu account needed for them.",
-    co_name_label: "Customer name *", co_email_label: "Customer email *", co_phone_label: "Customer phone (optional)",
-    co_desc_label: "Tour description *", co_date_label: "Proposed date (optional)", co_pickup_label: "Pickup", co_price_label: "Price *",
+    co_name_label: "Customer name *", co_email_label: "Customer email *", co_phone_label: "Customer phone (optional)", co_phone_ph: "Auto-filled from the request if the customer gave one",
+    co_desc_label: "Tour description *", co_date_label: "Proposed date (optional)", co_time_label: "Pickup time (optional)", co_pickup_label: "Pickup", co_price_label: "Price *",
     co_pickup_fixed_hint: "Set by the customer in their request. Need to note a change? Add it below in your note to the customer.",
     co_price_fx_note: "approximate, for your reference", highlights_title: "Fancy something specific? Tap all that interest you — your driver will plan the exact spots with you",
     co_notes_label: "Note to customer (optional)", co_submit_btn: "Create offer & generate link",
@@ -10773,6 +10833,7 @@ const translations = {
     cancel_reason_eyebrow: "Cancel booking", cancel_reason_prompt: "Why are you cancelling this tour? The guest will be notified.", cancel_reason_customer: "Customer didn't show up", cancel_reason_driver: "I need to cancel the tour",
     cancel_confirm_prompt: "Are you sure you want to cancel this tour? This cannot be undone.", cancel_confirm_back: "No, go back", cancel_confirm_yes: "Yes, cancel tour",
     alert_deposit_confirmed_1: "Booking accepted — now final with", alert_deposit_confirmed_2: "The guest has been notified by email & WhatsApp.",
+    prompt_pickup_time_msg: "What pickup time did you agree with the customer? (optional, leave blank to skip)",
     alert_no_fees: "No open fees — everything is paid. ✓", confirm_pay_fees: "Pay your open Rydanu fees of", confirm_pay_fees_credit_note: "after applying your referral credit of", confirm_pay_fees_fully_covered: "Your open fees are fully covered by your referral credit —", referral_credit_lbl: "Referral credit", admin_credit_lbl: "Credit", referral_title: "🎁 Refer a driver, earn IDR 100,000", referral_body: "Share your Rydanu number with another driver. Once they're approved and complete their first booking, you get an IDR 100,000 credit — automatically applied to your next fee payment.", referral_your_code: "Your referral code", referral_bonus_inbox_title: "🎁 Referral bonus credited!", referral_bonus_inbox_body: "{name} completed their first booking — you've been credited {amount} toward your Rydanu fees. Thanks for growing the community!", referral_no_payout: "This credit cannot be paid out in cash — it can only be used to offset your Rydanu booking fees.", referral_promo_note: "If you're currently fee-exempt through a special Rydanu promotion, the referral bonus won't apply to drivers you refer during that time.", tier_transfer_note: "Transfer bookings (with or without airport pickup) use the exact same price-based fee table above — there's no separate flat rate.", referral_credit_pending_note: "available — applied automatically when you next pay your fees", fees_charged_when_note: "\u24d8 Fees are only actually charged when you tap \"Pay now\", or automatically on the last day of the month. Any referral credit is applied at that moment, not before.",
     alert_fees_paid_1: "Payment successful:", alert_fees_paid_2: "Your receipt is available under \"Fee statements\":",
     alert_listing_pending: "Your listing is saved, but it will only appear to travelers once your Rydanu account has been approved.",
@@ -11062,13 +11123,15 @@ const translations = {
     co_open_btn_standalone: "✨ Oder individuelles Angebot ohne Anfrage erstellen",
     new_request_banner_one: "Du hast eine neue individuelle Touranfrage — antippen zum Ansehen", new_request_banner_many: "Du hast {n} neue individuelle Touranfragen — antippen zum Ansehen", new_villa_banner_one: "🏠 Neue Villa-Partner-Anfrage — antippen zum Ansehen", new_villa_banner_many: "🏠 {n} neue Villa-Partner-Anfragen — antippen zum Ansehen",
     tr_open_btn: "Nicht das Richtige dabei? Individuelle Tour anfragen", tr_eyebrow: "Individuelle Touranfrage", tr_title: "Sag uns, was du dir wünschst",
-    tr_hint: "Dein Fahrer prüft die Anfrage und erstellt, falls möglich, ein Tourangebot über Rydanu für dich — mit richtigem Preis und Buchung, kein privates Nebengeschäft.",
-    tr_destination_label: "Was möchtest du unternehmen / sehen?", tr_destination_ph: "z.B. 3-tägige Tour nach Sidemen &amp; Munduk", tr_pickup_ph: "z.B. dein Hotel oder Villa-Name",
+    tr_hint: "Dein Fahrer meldet sich und unterbreitet dir, falls möglich, ein individuelles Angebot über Rydanu — mit richtigem Preis und echter Buchung, kein privates Nebengeschäft.",
+    tr_destination_label: "Was möchtest du unternehmen / sehen?", tr_destination_ph: "z.B. 3-tägige Tour nach Sidemen & Munduk", tr_pickup_ph: "z.B. dein Hotel oder Villa-Name",
+    tr_trip_type_title: "Was für eine Tour?", tr_trip_half_day: "Halbtags", tr_trip_full_day: "Ganztags", tr_trip_transfer: "Transfer",
+    tr_time_label: "Abholzeit", tr_time_err: "Bitte gib eine Abholzeit für deinen Transfer an.",
     tr_notes_label: "Notizen", tr_notes_ph: "Was dein Fahrer sonst noch wissen sollte...",
     tr_submit_btn: "Anfrage senden", tr_sent_note: "Deine Anfrage wurde an deinen Fahrer gesendet.", tr_check_hint: "Notiere dir diese Referenz — prüfe jederzeit über \"Meine Buchung finden\" auf der Startseite, ob dein Fahrer ein Angebot erstellt hat.", tr_done_btn: "Fertig",
     tr_err: "Bitte gib deinen Namen und dein Wunsch ein.", tr_inbox_title: "✨ Neue individuelle Touranfrage",
     tr_save_err: "Anfrage konnte nicht gesendet werden — bitte erneut versuchen.", co_prefill_from_request: "Aus der Anfrage des Reisenden:",
-    tr_create_offer_btn: "Tourangebot erstellen", tr_offered_tag: "Angeboten", tr_offered_tour_label: "Angebotene Tour", tr_view_book_btn: "Tour ansehen &amp; buchen",
+    tr_create_offer_btn: "Tourangebot erstellen", tr_offered_tag: "Angeboten", tr_offered_tour_label: "Angebotene Tour", tr_view_book_btn: "Tour ansehen & buchen",
     rd_detail_eyebrow: "Touranfrage", rd_detail_msg_label: "Nachricht des Reisenden", rd_detail_no_msg: "Keine Nachricht angegeben.",
     tr_status_offered: "Angebot bereit", tr_status_pending: "Wartet auf Fahrer", tr_note_offered: "Gute Nachricht — dein Fahrer hat eine Tour für deine Anfrage erstellt. Tippe unten, um sie anzusehen und zu buchen.", tr_note_pending: "Dein Fahrer hat noch kein Angebot erstellt. Schau später nochmal vorbei oder kontaktiere ihn direkt.", tr_decline_btn: "Ablehnen", tr_declined_tag: "Abgelehnt", confirm_decline_request: "Diese Anfrage ablehnen von", cal_conflict_alert: "Achtung — du hast am {date} schon eine Tour geplant!", tr_status_declined: "Nicht möglich", tr_note_declined: "Dieser Fahrer kann deine Anfrage aktuell leider nicht annehmen. Bitte frag gerne einen anderen Fahrer auf Rydanu nach einer individuellen Tour an — viele andere passen bestimmt gut zu dem, was du suchst.",
     tr_go_to_request_btn: "Zur Anfrage &amp; Angebot erstellen",
@@ -11085,8 +11148,8 @@ const translations = {
     mailbox_tab_deleted: "Gelöscht", empty_deleted: "Nichts im Ordner Gelöscht.", restore_btn: "↩ Wiederherstellen", confirm_move_to_deleted: "Diese Nachricht in den Ordner Gelöscht verschieben? Sie wird nach 30 Tagen endgültig gelöscht.", inbox_select_all: "Alle auswählen", inbox_delete_selected: "Ausgewählte löschen", confirm_move_to_deleted_bulk: "Die ausgewählten Nachrichten in den Ordner Gelöscht verschieben? Sie werden nach 30 Tagen endgültig gelöscht.",
     co_open_btn: "✨ Individuelles Angebot erstellen", co_title: "Individuelles Angebot erstellen",
     co_intro: "Erstelle ein einmaliges Angebot für einen bestimmten Reisenden. Er bekommt einen Link zum Ansehen und Bestätigen — kein Rydanu-Konto nötig.",
-    co_name_label: "Name des Kunden *", co_email_label: "E-Mail des Kunden *", co_phone_label: "Telefon des Kunden (optional)",
-    co_desc_label: "Tour-Beschreibung *", co_date_label: "Vorgeschlagenes Datum (optional)", co_pickup_label: "Abholort", co_price_label: "Preis *",
+    co_name_label: "Name des Kunden *", co_email_label: "E-Mail des Kunden *", co_phone_label: "Telefon des Kunden (optional)", co_phone_ph: "Wird automatisch aus der Anfrage übernommen, falls vom Kunden angegeben",
+    co_desc_label: "Tour-Beschreibung *", co_date_label: "Vorgeschlagenes Datum (optional)", co_time_label: "Abholzeit (optional)", co_pickup_label: "Abholort", co_price_label: "Preis *",
     co_pickup_fixed_hint: "Vom Kunden bei der Anfrage festgelegt. Muss sich etwas ändern? Bitte unten in der Notiz an den Kunden vermerken.",
     co_price_fx_note: "ungefähr, nur zur Orientierung", highlights_title: "Was Bestimmtes im Kopf? Antippen, was interessiert — die genauen Stopps plant ihr gemeinsam mit dem Fahrer",
     co_notes_label: "Notiz an den Kunden (optional)", co_submit_btn: "Angebot erstellen & Link generieren",
@@ -11105,6 +11168,7 @@ const translations = {
     cancel_reason_eyebrow: "Buchung stornieren", cancel_reason_prompt: "Warum stornierst du die Tour? Der Gast wird benachrichtigt.", cancel_reason_customer: "Kunde ist nicht gekommen", cancel_reason_driver: "Ich muss die Tour absagen",
     cancel_confirm_prompt: "Willst du diese Tour wirklich stornieren? Das kann nicht rückgängig gemacht werden.", cancel_confirm_back: "Nein, zurück", cancel_confirm_yes: "Ja, Tour stornieren",
     alert_deposit_confirmed_1: "Buchung angenommen — jetzt final mit", alert_deposit_confirmed_2: "Der Gast wurde per E-Mail & WhatsApp benachrichtigt.",
+    prompt_pickup_time_msg: "Welche Abholzeit habt ihr vereinbart? (optional, leer lassen zum Überspringen)",
     alert_no_fees: "Keine offenen Gebühren — alles bezahlt. ✓", confirm_pay_fees: "Deine offenen Rydanu-Gebühren jetzt bezahlen:", confirm_pay_fees_credit_note: "nach Anrechnung deiner Empfehlungs-Gutschrift von", confirm_pay_fees_fully_covered: "Deine offenen Gebühren sind vollständig durch deine Empfehlungs-Gutschrift gedeckt —", referral_credit_lbl: "Empfehlungs-Gutschrift", admin_credit_lbl: "Gutschrift", referral_title: "🎁 Fahrer werben, IDR 100.000 verdienen", referral_body: "Teile deine Rydanu-Nummer mit einem anderen Fahrer. Sobald er freigeschaltet ist und seine erste Buchung abgeschlossen hat, bekommst du eine Gutschrift von IDR 100.000 — automatisch bei deiner nächsten Gebührenzahlung angerechnet.", referral_your_code: "Deine Empfehlungs-Nummer", referral_bonus_inbox_title: "🎁 Empfehlungsbonus gutgeschrieben!", referral_bonus_inbox_body: "{name} hat seine erste Buchung abgeschlossen — dir wurden {amount} auf deine Rydanu-Gebühren gutgeschrieben. Danke, dass du die Community wachsen lässt!", referral_no_payout: "Diese Gutschrift kann nicht ausgezahlt werden — sie kann nur zur Verrechnung mit deinen Rydanu-Gebühren verwendet werden.", referral_promo_note: "Bist du selbst gerade durch eine Rydanu-Sonderaktion von Gebühren befreit, entfällt die Werbeprämie für Fahrer, die du in dieser Zeit wirbst.", tier_transfer_note: "Transfer-Buchungen (mit oder ohne Flughafenabholung) nutzen genau dieselbe preisbasierte Gebührentabelle oben — es gibt keinen separaten Pauschalsatz.", referral_credit_pending_note: "verf\u00fcgbar — wird automatisch bei deiner n\u00e4chsten Gebührenzahlung angerechnet", fees_charged_when_note: "\u24d8 Geb\u00fchren werden erst berechnet, wenn du auf \"Jetzt bezahlen\" tippst, oder automatisch am letzten Tag des Monats. Eine Empfehlungs-Gutschrift wird erst zu diesem Zeitpunkt angerechnet, nicht vorher.",
     alert_fees_paid_1: "Zahlung erfolgreich:", alert_fees_paid_2: "Dein Beleg liegt unter \"Gebührenabrechnung\":",
     alert_listing_pending: "Dein Angebot ist gespeichert, erscheint für Reisende aber erst, sobald dein Rydanu-Konto freigeschaltet wurde.",
@@ -11395,12 +11459,14 @@ const translations = {
     new_request_banner_one: "Anda memiliki permintaan tur khusus baru — ketuk untuk melihatnya", new_request_banner_many: "Anda memiliki {n} permintaan tur khusus baru — ketuk untuk melihatnya", new_villa_banner_one: "🏠 Permintaan Villa Partner baru — ketuk untuk melihatnya", new_villa_banner_many: "🏠 {n} permintaan Villa Partner baru — ketuk untuk melihatnya",
     tr_open_btn: "Tidak menemukan yang Anda cari? Minta tur khusus", tr_eyebrow: "Permintaan tur khusus", tr_title: "Beri tahu kami keinginan Anda",
     tr_hint: "Sopir Anda akan meninjau ini dan, jika bisa membantu, menyiapkan penawaran tur untuk Anda melalui Rydanu — dengan harga dan pemesanan yang tepat, bukan kesepakatan pribadi.",
-    tr_destination_label: "Apa yang ingin Anda lakukan / lihat?", tr_destination_ph: "mis. perjalanan 3 hari ke Sidemen &amp; Munduk", tr_pickup_ph: "mis. nama hotel atau vila Anda",
+    tr_destination_label: "Apa yang ingin Anda lakukan / lihat?", tr_destination_ph: "mis. perjalanan 3 hari ke Sidemen & Munduk", tr_pickup_ph: "mis. nama hotel atau vila Anda",
+    tr_trip_type_title: "Jenis perjalanan apa?", tr_trip_half_day: "Setengah hari", tr_trip_full_day: "Sehari penuh", tr_trip_transfer: "Transfer",
+    tr_time_label: "Waktu penjemputan", tr_time_err: "Silakan tambahkan waktu penjemputan untuk transfer Anda.",
     tr_notes_label: "Catatan", tr_notes_ph: "Hal lain yang perlu diketahui sopir Anda...",
     tr_submit_btn: "Kirim permintaan", tr_sent_note: "Permintaan Anda telah dikirim ke sopir Anda.", tr_check_hint: "Simpan referensi ini — gunakan \"Temukan pemesanan saya\" di beranda kapan saja untuk memeriksa apakah sopir Anda sudah menyiapkan penawaran.", tr_done_btn: "Selesai",
     tr_err: "Mohon masukkan nama Anda dan apa yang Anda inginkan.", tr_inbox_title: "✨ Permintaan tur khusus baru",
     tr_save_err: "Permintaan tidak dapat dikirim — silakan coba lagi.", co_prefill_from_request: "Dari permintaan wisatawan:",
-    tr_create_offer_btn: "Buat penawaran tur", tr_offered_tag: "Ditawarkan", tr_offered_tour_label: "Tur yang ditawarkan", tr_view_book_btn: "Lihat &amp; pesan tur ini",
+    tr_create_offer_btn: "Buat penawaran tur", tr_offered_tag: "Ditawarkan", tr_offered_tour_label: "Tur yang ditawarkan", tr_view_book_btn: "Lihat & pesan tur ini",
     rd_detail_eyebrow: "Permintaan tur", rd_detail_msg_label: "Pesan wisatawan", rd_detail_no_msg: "Tidak ada pesan.",
     tr_status_offered: "Penawaran siap", tr_status_pending: "Menunggu sopir", tr_note_offered: "Kabar baik — sopir Anda telah menyiapkan tur untuk permintaan Anda. Ketuk di bawah untuk melihat dan memesannya.", tr_note_pending: "Sopir Anda belum menyiapkan penawaran. Periksa lagi nanti, atau hubungi mereka langsung.", tr_decline_btn: "Tolak", tr_declined_tag: "Ditolak", confirm_decline_request: "Tolak permintaan ini dari", cal_conflict_alert: "Perhatian — Anda sudah punya tur pada {date}!", tr_status_declined: "Tidak tersedia", tr_note_declined: "Sayangnya sopir ini tidak dapat menerima permintaan Anda saat ini. Silakan coba minta tur khusus dari sopir lain di Rydanu — banyak sopir lain mungkin sangat cocok untuk apa yang Anda cari.",
     tr_go_to_request_btn: "Ke permintaan &amp; buat penawaran",
@@ -11417,8 +11483,8 @@ const translations = {
     mailbox_tab_deleted: "Dihapus", empty_deleted: "Tidak ada apa pun di folder Dihapus.", restore_btn: "↩ Pulihkan", confirm_move_to_deleted: "Pindahkan pesan ini ke folder Dihapus? Akan dihapus permanen setelah 30 hari.", inbox_select_all: "Pilih semua", inbox_delete_selected: "Hapus yang dipilih", confirm_move_to_deleted_bulk: "Pindahkan pesan terpilih ke folder Dihapus? Akan dihapus permanen setelah 30 hari.",
     co_open_btn: "✨ Buat penawaran khusus", co_title: "Buat penawaran khusus",
     co_intro: "Buat penawaran satu kali untuk wisatawan tertentu. Mereka akan mendapatkan tautan untuk melihat dan mengonfirmasi — tidak perlu akun Rydanu.",
-    co_name_label: "Nama pelanggan *", co_email_label: "Email pelanggan *", co_phone_label: "Telepon pelanggan (opsional)",
-    co_desc_label: "Deskripsi tur *", co_date_label: "Tanggal yang diusulkan (opsional)", co_pickup_label: "Titik jemput", co_price_label: "Harga *",
+    co_name_label: "Nama pelanggan *", co_email_label: "Email pelanggan *", co_phone_label: "Telepon pelanggan (opsional)", co_phone_ph: "Terisi otomatis dari permintaan, jika pelanggan memberikannya",
+    co_desc_label: "Deskripsi tur *", co_date_label: "Tanggal yang diusulkan (opsional)", co_time_label: "Waktu penjemputan (opsional)", co_pickup_label: "Titik jemput", co_price_label: "Harga *",
     co_pickup_fixed_hint: "Ditentukan oleh pelanggan saat mengajukan permintaan. Ada perubahan? Tambahkan di catatan untuk pelanggan di bawah.",
     co_price_fx_note: "perkiraan, hanya sebagai referensi", highlights_title: "Ada yang ingin dilihat secara spesifik? Ketuk yang menarik — sopir Anda akan merencanakan lokasi persisnya bersama Anda",
     co_notes_label: "Catatan untuk pelanggan (opsional)", co_submit_btn: "Buat penawaran & buat tautan",
@@ -11437,6 +11503,7 @@ const translations = {
     cancel_reason_eyebrow: "Batalkan pemesanan", cancel_reason_prompt: "Mengapa Anda membatalkan tur ini? Tamu akan diberi tahu.", cancel_reason_customer: "Pelanggan tidak datang", cancel_reason_driver: "Saya perlu membatalkan tur",
     cancel_confirm_prompt: "Apakah Anda yakin ingin membatalkan tur ini? Tindakan ini tidak dapat dibatalkan.", cancel_confirm_back: "Tidak, kembali", cancel_confirm_yes: "Ya, batalkan tur",
     alert_deposit_confirmed_1: "Pemesanan diterima — kini final dengan", alert_deposit_confirmed_2: "Tamu telah diberi tahu via email & WhatsApp.",
+    prompt_pickup_time_msg: "Jam berapa waktu penjemputan yang disepakati dengan pelanggan? (opsional, kosongkan untuk lewati)",
     alert_no_fees: "Tidak ada biaya terbuka — semuanya lunas. ✓", confirm_pay_fees: "Bayar biaya Rydanu terbuka Anda:", confirm_pay_fees_credit_note: "setelah menerapkan kredit referral Anda sebesar", confirm_pay_fees_fully_covered: "Biaya terbuka Anda telah sepenuhnya ditutupi oleh kredit referral Anda —", referral_credit_lbl: "Kredit referral", admin_credit_lbl: "Kredit", referral_title: "🎁 Ajak sopir, dapatkan IDR 100.000", referral_body: "Bagikan nomor Rydanu Anda kepada sopir lain. Setelah mereka disetujui dan menyelesaikan pemesanan pertama, Anda mendapat kredit IDR 100.000 — otomatis diterapkan pada pembayaran biaya berikutnya.", referral_your_code: "Kode referral Anda", referral_bonus_inbox_title: "🎁 Bonus referral dikreditkan!", referral_bonus_inbox_body: "{name} telah menyelesaikan pemesanan pertama mereka — Anda dikreditkan {amount} untuk biaya Rydanu Anda. Terima kasih telah mengembangkan komunitas!", referral_no_payout: "Kredit ini tidak dapat dicairkan secara tunai — hanya dapat digunakan untuk mengurangi biaya pemesanan Rydanu Anda.", referral_promo_note: "Jika Anda sedang dibebaskan dari biaya melalui promosi khusus Rydanu, bonus referral tidak berlaku untuk sopir yang Anda ajak selama periode tersebut.", tier_transfer_note: "Pemesanan transfer (dengan atau tanpa penjemputan bandara) menggunakan tabel biaya berbasis harga yang sama persis seperti di atas — tidak ada tarif tetap terpisah.", referral_credit_pending_note: "tersedia — otomatis diterapkan saat Anda membayar biaya berikutnya", fees_charged_when_note: "\u24d8 Biaya hanya benar-benar dikenakan saat Anda mengetuk \"Bayar sekarang\", atau otomatis pada hari terakhir bulan tersebut. Kredit referral apa pun diterapkan pada saat itu, bukan sebelumnya.",
     alert_fees_paid_1: "Pembayaran berhasil:", alert_fees_paid_2: "Kuitansi tersedia di \"Laporan biaya\":",
     alert_listing_pending: "Tur Anda tersimpan, tetapi baru terlihat oleh wisatawan setelah akun Rydanu Anda disetujui.",
@@ -16368,7 +16435,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v278</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v280</div>
 
 </body>
 </html>
