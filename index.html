@@ -1234,7 +1234,6 @@
   .chip.chip-active{ background:var(--teal); border-color:var(--teal); color:#fff; }
 
   .cal-modal{ max-width:420px; }
-  .cal-legend{ display:flex; gap:16px; flex-wrap:wrap; font-size:0.75rem; color:var(--ink-soft); margin-bottom:16px; }
   .cal-nav{ display:flex; align-items:center; justify-content:center; gap:14px; }
   .cal-nav h2{ margin:0; min-width:150px; text-align:center; }
   .cal-nav-btn{
@@ -1242,12 +1241,6 @@
     line-height:1; cursor:pointer; color:var(--paper); flex-shrink:0;
   }
   .cal-nav-btn:hover{ border-color:var(--gold); color:var(--gold); }
-  .cal-legend span{ display:flex; align-items:center; gap:6px; }
-  .dot{ width:8px; height:8px; border-radius:50%; display:inline-block; }
-  .dot.booked{ background:var(--teal); }
-  .dot.pending{ background:var(--gold); }
-  .dot.past{ background:var(--danger); }
-  .dot.blocked{ background:#8a8a8a; }
   .cal-grid{ display:grid; grid-template-columns:repeat(7,1fr); gap:5px; }
   .cal-dow{ text-align:center; font-family:'JetBrains Mono'; font-size:0.62rem; color:var(--ink-soft); padding-bottom:4px; text-transform:uppercase; }
   .cal-day{
@@ -1257,10 +1250,11 @@
   }
   .cal-day:hover{ background:var(--paper-dim); }
   .cal-day.empty{ background:transparent; border:none; cursor:default; }
-  .cal-day .cal-dot{ width:5px; height:5px; border-radius:50%; position:absolute; bottom:6px; }
-  .cal-day.booked .cal-dot{ background:var(--teal); }
-  .cal-day.pending .cal-dot{ background:var(--gold); }
-  .cal-day.past .cal-dot{ background:var(--danger); }
+  /* Vereinheitlicht (21. August, Jörgs Wunsch): frueher 3 verschiedene Punktfarben je nach Status
+     (Tuerkis/Gold/Rot) -- wirkte zu unruhig, und der Status steht ohnehin klar in der einzelnen
+     Tour selbst. Jetzt nur noch EIN Punkt in kraeftigem Rydanu-Gruen fuer jeden Tag, an dem etwas
+     ansteht (egal welcher Status) -- etwas groesser als vorher, damit er im Auge bleibt. */
+  .cal-day .cal-dot{ width:7px; height:7px; border-radius:50%; position:absolute; bottom:5px; background:var(--teal); }
   .cal-day-card{
     background:var(--paper-dim); border:1px solid var(--line); border-left:5px solid var(--teal);
     border-radius:8px; padding:12px 14px; margin-bottom:10px; cursor:pointer; transition:transform .1s ease;
@@ -4024,12 +4018,6 @@
       </div>
     </div>
     <div class="modal-body">
-      <div class="cal-legend">
-        <span><i class="dot booked"></i> <span data-i18n="cal_legend_confirmed">Confirmed booking</span></span>
-        <span><i class="dot pending"></i> <span data-i18n="cal_legend_pending">Awaiting reply</span></span>
-        <span><i class="dot past"></i> <span data-i18n="cal_legend_past">Completed / cancelled tour</span></span>
-        <span><i class="dot blocked"></i> <span data-i18n="cal_legend_blocked">Blocked by you</span></span>
-      </div>
       <div class="cal-grid" id="cal-grid"></div>
       <p class="note" data-i18n="cal_hint">Tap a booked or pending day to open the trip. Tap a free day to block it — blocked days never show up in traveler search.</p>
     </div>
@@ -8781,10 +8769,14 @@ function renderVillaRequests(){
     return `
       <div class="booking-row">
         <div>
+          <!-- Bugfix (21.8., Joerg gemeldet per Screenshot): bei abgelehnten Villa-Anfragen (status
+               'declined') sah der Fahrer weiterhin die Telefonnummer des Gasts, obwohl die Anfrage
+               fuer ihn erledigt ist -- keine sinnvolle Nutzung mehr moeglich, unnoetiger Datenzugriff.
+               Telefonnummer wird jetzt nur noch angezeigt, solange die Anfrage nicht abgelehnt ist. -->
           <div class="who">🏠 ${escapeHtml(villaName)} — ${escapeHtml(r.destination)}</div>
           <div class="when">${whenText} · ${r.guests || '—'} ${t('lbl_guests')}</div>
           ${r.pickup ? `<div class="when">📍 ${escapeHtml(r.pickup)}</div>` : ''}
-          ${r.customer_phone ? `<div class="when">📞 ${escapeHtml(r.customer_phone)}</div>` : ''}
+          ${(r.customer_phone && r.status !== 'declined') ? `<div class="when">📞 ${escapeHtml(r.customer_phone)}</div>` : ''}
           ${r.notes ? `<div class="when" style="font-style:italic;">"${escapeHtml(r.notes)}"</div>` : ''}
           <span class="status-pill" style="background:var(--accent-light,#eef4ee);">${t('villa_source_tag')}</span>
         </div>
@@ -16352,7 +16344,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v275</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v277</div>
 
 </body>
 </html>
