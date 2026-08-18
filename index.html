@@ -1746,6 +1746,10 @@
           <select id="f-guests"><option>1</option><option selected>2</option><option>3</option><option>4</option><option>5+</option></select>
         </div>
       </div>
+      <div class="form-field">
+        <label data-i18n="lbl_time">Time <span class="optional" data-i18n="lbl_optional_inline">(optional)</span></label>
+        <input type="time" id="f-time">
+      </div>
       <div class="form-field autocomplete-wrap">
         <label id="f-pickup-label" data-i18n="lbl_pickup_loc">Pickup location</label>
         <div class="map-input">
@@ -3286,8 +3290,8 @@
           <select id="tr-guests"><option>1</option><option selected>2</option><option>3</option><option>4</option><option>5+</option></select>
         </div>
       </div>
-      <div class="form-field" id="tr-time-field" style="display:none;">
-        <label data-i18n="tr_time_label">Pickup time</label>
+      <div class="form-field" id="tr-time-field">
+        <label data-i18n="tr_time_label">Pickup time <span class="optional" data-i18n="lbl_optional_inline">(optional)</span></label>
         <input type="time" id="tr-time">
       </div>
       <div class="form-field">
@@ -3505,6 +3509,7 @@
     <div class="modal-body">
       <div class="row"><span class="k" data-i18n="lbl_tour">Tour</span><span class="v" id="bd-tour"></span></div>
       <div class="row"><span class="k" data-i18n="lbl_date">Date</span><span class="v" id="bd-when"></span></div>
+      <div class="row" id="bd-row-time"><span class="k" data-i18n="lbl_time">Time</span><span class="v" id="bd-time"></span></div>
       <div class="row" id="bd-row-email"><span class="k" data-i18n="bd_email">Email</span><span class="v" id="bd-email"></span></div>
       <div class="row" id="bd-row-phone"><span class="k" data-i18n="bd_phone">WhatsApp</span><span class="v" id="bd-phone"></span></div>
       <div class="row" id="bd-row-pickup"><span class="k" data-i18n="lbl_pickup_loc">Pickup location</span><span class="v" id="bd-pickup"></span></div>
@@ -4491,14 +4496,6 @@ let trSelectedTripType = null;
 function selectTrTripType(value){
   trSelectedTripType = value;
   document.querySelectorAll('#tr-trip-type-row .chip').forEach(ch=>ch.classList.toggle('chip-active', ch.dataset.value===value));
-  const timeField = document.getElementById('tr-time-field');
-  const timeInput = document.getElementById('tr-time');
-  if(value === 'transfer'){
-    timeField.style.display = 'block';
-  } else {
-    timeField.style.display = 'none';
-    timeInput.value = '';
-  }
 }
 function openTourRequest(driverId){
   trRequestDriverId = driverId || dpDriverId;
@@ -4511,7 +4508,6 @@ function openTourRequest(driverId){
   renderHighlightChips('tr-highlights-row');
   trSelectedTripType = null;
   document.querySelectorAll('#tr-trip-type-row .chip').forEach(ch=>ch.classList.remove('chip-active'));
-  document.getElementById('tr-time-field').style.display = 'none';
   document.getElementById('tr-date').value = '';
   document.getElementById('tr-date').min = new Date().toISOString().slice(0,10);
   document.getElementById('tr-error').textContent = '';
@@ -4528,16 +4524,12 @@ async function submitTourRequest(){
     document.getElementById('tr-error').textContent = t('tr_err');
     return;
   }
-  if(trSelectedTripType === 'transfer' && !trTime){
-    document.getElementById('tr-error').textContent = t('tr_time_err');
-    return;
-  }
   document.getElementById('tr-error').textContent = '';
   const dateWanted = document.getElementById('tr-date').value;
   const pickup = document.getElementById('tr-pickup').value.trim();
   const guests = document.getElementById('tr-guests').value;
   const notes = document.getElementById('tr-notes').value.trim();
-  const pickupTimeVal = trSelectedTripType === 'transfer' ? trTime : null;
+  const pickupTimeVal = trTime || null;
   const ref = 'TR-' + Math.floor(10000 + Math.random()*89999);
   // Punkt 3 (heute): echte Fahrer haben kein driverProfiles[id] (das ist nur die Demo-Liste) --
   // dasselbe Erkennungsmuster wie beim Ein-/Ausblenden des Buttons weiter oben im Code.
@@ -7300,6 +7292,7 @@ function mapBookingRowToUI(row){
     dateISO: row.booking_date,
     status: row.status,
     email: '', phone: (row.status !== 'pending' && row.status !== 'declined_by_driver') ? (row.customer_phone || '') : '', pickup: '',
+    pickupTime: row.pickup_time || '',
     price: formatIDR(row.price_idr),
     balance: formatIDR(row.price_idr || 0),
     priceIdrRaw: row.price_idr || 0,
@@ -10076,6 +10069,7 @@ function openBookingDetail(source, idx){
     : (b.priceIdrRaw ? formatIDR(b.priceIdrRaw * 0.1) : '');
   const rows = [
     ['bd-row-email', 'bd-email', b.email],
+    ['bd-row-time', 'bd-time', b.pickupTime],
     ['bd-row-phone', 'bd-phone', b.phone],
     ['bd-row-pickup', 'bd-pickup', b.pickup],
     ['bd-row-destination', 'bd-destination', b.destination],
@@ -10699,7 +10693,7 @@ const translations = {
     driver_stat_bookings: "Bookings", driver_stat_revenue: "Revenue", driver_stat_fees: "Fees", driver_stat_cancelled: "Cancelled",
     lbl_tour: "Tour", lbl_duration: "Duration", lbl_vehicle: "Vehicle", lbl_languages: "Languages",
     lbl_rating: "Rating", lbl_price: "Price", lbl_not_included: "Not included", lbl_driver: "Driver",
-    lbl_date: "Date", lbl_guests: "Guests", lbl_notes_for_driver: "Notes for the driver", join_rydanu_eyebrow: "Join Rydanu", register_driver_modal_title: "Register as new driver", pm_conv_not_found_title: "Conversation not found", pm_conv_not_found_body: "This link may be invalid, or the conversation may have been removed. Please contact your driver directly.", pm_conv_with_prefix: "Your conversation with", pm_your_reply_label: "Your reply", pm_reply_placeholder: "Write your reply...", pm_send_reply_btn: "Send reply", pm_write_message_first: "Please write a message first.", oc_offer_not_found_title: "Offer not found", oc_offer_not_found_body: "This link may be invalid, or the offer may have been withdrawn. Please contact your driver directly.", oc_already_confirmed_title: "Already confirmed", oc_already_confirmed_body: "You already confirmed this booking — see you soon!", oc_no_longer_available_title: "This offer is no longer available", oc_no_longer_available_body: "Please contact your driver directly for an updated offer.", oc_offer_from_prefix: "Your tour offer from", oc_confirm_btn: "Confirm this booking", oc_confirm_payment_note: "By confirming, you agree to arrange payment directly with your driver, as usual on Rydanu.", oc_decline_btn: "Decline this offer", oc_decline_confirm: "Decline this offer? This offer will be closed and cannot be un-declined — if you still want a transfer, you will need to submit a new request.", oc_declined_title: "Offer declined", oc_declined_body: "Your driver has been informed. This offer is now closed and can't be confirmed later — if you'd still like a transfer or tour, please submit a new request and a driver will get back to you with a fresh offer.", oc_confirm_err: "Something went wrong confirming this booking. Please try again, or contact your driver directly.", lbl_total: "Total tour price", lbl_pickup: "Pickup", lbl_tour_singular: "tour", lbl_tour_plural: "tours", lbl_rating_new: "New",
+    lbl_date: "Date", lbl_time: "Time", lbl_guests: "Guests", lbl_notes_for_driver: "Notes for the driver", join_rydanu_eyebrow: "Join Rydanu", register_driver_modal_title: "Register as new driver", pm_conv_not_found_title: "Conversation not found", pm_conv_not_found_body: "This link may be invalid, or the conversation may have been removed. Please contact your driver directly.", pm_conv_with_prefix: "Your conversation with", pm_your_reply_label: "Your reply", pm_reply_placeholder: "Write your reply...", pm_send_reply_btn: "Send reply", pm_write_message_first: "Please write a message first.", oc_offer_not_found_title: "Offer not found", oc_offer_not_found_body: "This link may be invalid, or the offer may have been withdrawn. Please contact your driver directly.", oc_already_confirmed_title: "Already confirmed", oc_already_confirmed_body: "You already confirmed this booking — see you soon!", oc_no_longer_available_title: "This offer is no longer available", oc_no_longer_available_body: "Please contact your driver directly for an updated offer.", oc_offer_from_prefix: "Your tour offer from", oc_confirm_btn: "Confirm this booking", oc_confirm_payment_note: "By confirming, you agree to arrange payment directly with your driver, as usual on Rydanu.", oc_decline_btn: "Decline this offer", oc_decline_confirm: "Decline this offer? This offer will be closed and cannot be un-declined — if you still want a transfer, you will need to submit a new request.", oc_declined_title: "Offer declined", oc_declined_body: "Your driver has been informed. This offer is now closed and can't be confirmed later — if you'd still like a transfer or tour, please submit a new request and a driver will get back to you with a fresh offer.", oc_confirm_err: "Something went wrong confirming this booking. Please try again, or contact your driver directly.", lbl_total: "Total tour price", lbl_pickup: "Pickup", lbl_tour_singular: "tour", lbl_tour_plural: "tours", lbl_rating_new: "New",
     lbl_total_price_due: "Total — pay driver directly", lbl_ryvio_fee: "Rydanu fee (10%)", lbl_your_car: "Your driver's car",
     lbl_fullname: "Full name", lbl_whatsapp: 'WhatsApp number <span class="optional">(for booking confirmation)</span>', ep_eyebrow: "Your profile", ep_title: "Edit profile",
     lbl_pickup_loc: "Pickup location", lbl_pickup_dropoff_loc: "Pickup / drop-off location", lbl_airport_destination: "Destination region", lbl_transfer_destination: "Destination", lbl_pickup_region: "Your pickup region",
@@ -11034,7 +11028,7 @@ const translations = {
     driver_stat_bookings: "Buchungen", driver_stat_revenue: "Umsatz", driver_stat_fees: "Gebühren", driver_stat_cancelled: "Storniert",
     lbl_tour: "Tour", lbl_duration: "Dauer", lbl_vehicle: "Fahrzeug", lbl_languages: "Sprachen",
     lbl_rating: "Bewertung", lbl_price: "Preis", lbl_not_included: "Nicht enthalten", lbl_driver: "Fahrer",
-    lbl_date: "Datum", lbl_guests: "Gäste", lbl_notes_for_driver: "Notizen für den Fahrer", join_rydanu_eyebrow: "Rydanu beitreten", register_driver_modal_title: "Als neuer Fahrer registrieren", pm_conv_not_found_title: "Unterhaltung nicht gefunden", pm_conv_not_found_body: "Dieser Link ist evtl. ungültig, oder die Unterhaltung wurde entfernt. Bitte kontaktiere deinen Fahrer direkt.", pm_conv_with_prefix: "Deine Unterhaltung mit", pm_your_reply_label: "Deine Antwort", pm_reply_placeholder: "Antwort schreiben...", pm_send_reply_btn: "Antwort senden", pm_write_message_first: "Bitte zuerst eine Nachricht schreiben.", oc_offer_not_found_title: "Angebot nicht gefunden", oc_offer_not_found_body: "Dieser Link ist evtl. ungültig, oder das Angebot wurde zurückgezogen. Bitte kontaktiere deinen Fahrer direkt.", oc_already_confirmed_title: "Bereits bestätigt", oc_already_confirmed_body: "Du hast diese Buchung bereits bestätigt — bis bald!", oc_no_longer_available_title: "Dieses Angebot ist nicht mehr verfügbar", oc_no_longer_available_body: "Bitte kontaktiere deinen Fahrer direkt für ein aktuelles Angebot.", oc_offer_from_prefix: "Dein Tour-Angebot von", oc_confirm_btn: "Diese Buchung bestätigen", oc_confirm_payment_note: "Mit der Bestätigung erklärst du dich einverstanden, die Zahlung wie gewohnt bei Rydanu direkt mit deinem Fahrer zu klären.", oc_decline_btn: "Angebot ablehnen", oc_decline_confirm: "Dieses Angebot ablehnen? Es wird geschlossen und kann danach nicht mehr bestätigt werden — falls du weiterhin einen Transfer möchtest, musst du eine neue Anfrage stellen.", oc_declined_title: "Angebot abgelehnt", oc_declined_body: "Dein Fahrer wurde informiert. Dieses Angebot ist jetzt geschlossen und kann später nicht mehr bestätigt werden — falls du weiterhin einen Transfer oder eine Tour möchtest, stelle bitte eine neue Anfrage, ein Fahrer meldet sich dann mit einem neuen Angebot.", oc_confirm_err: "Bei der Bestätigung ist etwas schiefgelaufen. Bitte nochmal versuchen oder deinen Fahrer direkt kontaktieren.", lbl_total: "Gesamtpreis der Tour", lbl_pickup: "Abholung", lbl_tour_singular: "Tour", lbl_tour_plural: "Touren", lbl_rating_new: "Neu",
+    lbl_date: "Datum", lbl_time: "Uhrzeit", lbl_guests: "Gäste", lbl_notes_for_driver: "Notizen für den Fahrer", join_rydanu_eyebrow: "Rydanu beitreten", register_driver_modal_title: "Als neuer Fahrer registrieren", pm_conv_not_found_title: "Unterhaltung nicht gefunden", pm_conv_not_found_body: "Dieser Link ist evtl. ungültig, oder die Unterhaltung wurde entfernt. Bitte kontaktiere deinen Fahrer direkt.", pm_conv_with_prefix: "Deine Unterhaltung mit", pm_your_reply_label: "Deine Antwort", pm_reply_placeholder: "Antwort schreiben...", pm_send_reply_btn: "Antwort senden", pm_write_message_first: "Bitte zuerst eine Nachricht schreiben.", oc_offer_not_found_title: "Angebot nicht gefunden", oc_offer_not_found_body: "Dieser Link ist evtl. ungültig, oder das Angebot wurde zurückgezogen. Bitte kontaktiere deinen Fahrer direkt.", oc_already_confirmed_title: "Bereits bestätigt", oc_already_confirmed_body: "Du hast diese Buchung bereits bestätigt — bis bald!", oc_no_longer_available_title: "Dieses Angebot ist nicht mehr verfügbar", oc_no_longer_available_body: "Bitte kontaktiere deinen Fahrer direkt für ein aktuelles Angebot.", oc_offer_from_prefix: "Dein Tour-Angebot von", oc_confirm_btn: "Diese Buchung bestätigen", oc_confirm_payment_note: "Mit der Bestätigung erklärst du dich einverstanden, die Zahlung wie gewohnt bei Rydanu direkt mit deinem Fahrer zu klären.", oc_decline_btn: "Angebot ablehnen", oc_decline_confirm: "Dieses Angebot ablehnen? Es wird geschlossen und kann danach nicht mehr bestätigt werden — falls du weiterhin einen Transfer möchtest, musst du eine neue Anfrage stellen.", oc_declined_title: "Angebot abgelehnt", oc_declined_body: "Dein Fahrer wurde informiert. Dieses Angebot ist jetzt geschlossen und kann später nicht mehr bestätigt werden — falls du weiterhin einen Transfer oder eine Tour möchtest, stelle bitte eine neue Anfrage, ein Fahrer meldet sich dann mit einem neuen Angebot.", oc_confirm_err: "Bei der Bestätigung ist etwas schiefgelaufen. Bitte nochmal versuchen oder deinen Fahrer direkt kontaktieren.", lbl_total: "Gesamtpreis der Tour", lbl_pickup: "Abholung", lbl_tour_singular: "Tour", lbl_tour_plural: "Touren", lbl_rating_new: "Neu",
     lbl_total_price_due: "Gesamtbetrag — direkt an den Fahrer", lbl_ryvio_fee: "Rydanu-Gebühr (10%)", lbl_your_car: "Das Auto deines Fahrers",
     lbl_fullname: "Vollständiger Name", lbl_whatsapp: 'WhatsApp-Nummer <span class="optional">(für die Buchungsbestätigung)</span>', ep_eyebrow: "Dein Profil", ep_title: "Profil bearbeiten",
     lbl_pickup_loc: "Abholort", lbl_pickup_dropoff_loc: "Abhol-/Zielort", lbl_airport_destination: "Zielregion", lbl_transfer_destination: "Ziel", lbl_pickup_region: "Deine Abholregion",
@@ -11369,7 +11363,7 @@ const translations = {
     driver_stat_bookings: "Pemesanan", driver_stat_revenue: "Pendapatan", driver_stat_fees: "Biaya", driver_stat_cancelled: "Dibatalkan",
     lbl_tour: "Tur", lbl_duration: "Durasi", lbl_vehicle: "Kendaraan", lbl_languages: "Bahasa",
     lbl_rating: "Rating", lbl_price: "Harga", lbl_not_included: "Tidak termasuk", lbl_driver: "Sopir",
-    lbl_date: "Tanggal", lbl_guests: "Tamu", lbl_notes_for_driver: "Catatan untuk sopir", join_rydanu_eyebrow: "Bergabung dengan Rydanu", register_driver_modal_title: "Daftar sebagai sopir baru", pm_conv_not_found_title: "Percakapan tidak ditemukan", pm_conv_not_found_body: "Tautan ini mungkin tidak valid, atau percakapan telah dihapus. Silakan hubungi sopir Anda langsung.", pm_conv_with_prefix: "Percakapan Anda dengan", pm_your_reply_label: "Balasan Anda", pm_reply_placeholder: "Tulis balasan Anda...", pm_send_reply_btn: "Kirim balasan", pm_write_message_first: "Silakan tulis pesan terlebih dahulu.", oc_offer_not_found_title: "Penawaran tidak ditemukan", oc_offer_not_found_body: "Tautan ini mungkin tidak valid, atau penawaran telah ditarik. Silakan hubungi sopir Anda langsung.", oc_already_confirmed_title: "Sudah dikonfirmasi", oc_already_confirmed_body: "Anda sudah mengonfirmasi pemesanan ini — sampai jumpa!", oc_no_longer_available_title: "Penawaran ini sudah tidak tersedia", oc_no_longer_available_body: "Silakan hubungi sopir Anda langsung untuk penawaran terbaru.", oc_offer_from_prefix: "Penawaran tur Anda dari", oc_confirm_btn: "Konfirmasi pemesanan ini", oc_confirm_payment_note: "Dengan mengonfirmasi, Anda setuju untuk mengatur pembayaran langsung dengan sopir Anda, seperti biasa di Rydanu.", oc_decline_btn: "Tolak penawaran ini", oc_decline_confirm: "Tolak penawaran ini? Penawaran ini akan ditutup dan tidak dapat dibatalkan penolakannya — jika Anda masih ingin transfer, Anda perlu mengajukan permintaan baru.", oc_declined_title: "Penawaran ditolak", oc_declined_body: "Sopir Anda telah diberi tahu. Penawaran ini sekarang ditutup dan tidak dapat dikonfirmasi lagi — jika Anda masih ingin transfer atau tur, silakan ajukan permintaan baru dan sopir akan menghubungi Anda dengan penawaran baru.", oc_confirm_err: "Terjadi kesalahan saat mengonfirmasi pemesanan ini. Silakan coba lagi, atau hubungi sopir Anda langsung.", lbl_total: "Total harga tur", lbl_pickup: "Penjemputan", lbl_tour_singular: "tur", lbl_tour_plural: "tur", lbl_rating_new: "Baru",
+    lbl_date: "Tanggal", lbl_time: "Waktu", lbl_guests: "Tamu", lbl_notes_for_driver: "Catatan untuk sopir", join_rydanu_eyebrow: "Bergabung dengan Rydanu", register_driver_modal_title: "Daftar sebagai sopir baru", pm_conv_not_found_title: "Percakapan tidak ditemukan", pm_conv_not_found_body: "Tautan ini mungkin tidak valid, atau percakapan telah dihapus. Silakan hubungi sopir Anda langsung.", pm_conv_with_prefix: "Percakapan Anda dengan", pm_your_reply_label: "Balasan Anda", pm_reply_placeholder: "Tulis balasan Anda...", pm_send_reply_btn: "Kirim balasan", pm_write_message_first: "Silakan tulis pesan terlebih dahulu.", oc_offer_not_found_title: "Penawaran tidak ditemukan", oc_offer_not_found_body: "Tautan ini mungkin tidak valid, atau penawaran telah ditarik. Silakan hubungi sopir Anda langsung.", oc_already_confirmed_title: "Sudah dikonfirmasi", oc_already_confirmed_body: "Anda sudah mengonfirmasi pemesanan ini — sampai jumpa!", oc_no_longer_available_title: "Penawaran ini sudah tidak tersedia", oc_no_longer_available_body: "Silakan hubungi sopir Anda langsung untuk penawaran terbaru.", oc_offer_from_prefix: "Penawaran tur Anda dari", oc_confirm_btn: "Konfirmasi pemesanan ini", oc_confirm_payment_note: "Dengan mengonfirmasi, Anda setuju untuk mengatur pembayaran langsung dengan sopir Anda, seperti biasa di Rydanu.", oc_decline_btn: "Tolak penawaran ini", oc_decline_confirm: "Tolak penawaran ini? Penawaran ini akan ditutup dan tidak dapat dibatalkan penolakannya — jika Anda masih ingin transfer, Anda perlu mengajukan permintaan baru.", oc_declined_title: "Penawaran ditolak", oc_declined_body: "Sopir Anda telah diberi tahu. Penawaran ini sekarang ditutup dan tidak dapat dikonfirmasi lagi — jika Anda masih ingin transfer atau tur, silakan ajukan permintaan baru dan sopir akan menghubungi Anda dengan penawaran baru.", oc_confirm_err: "Terjadi kesalahan saat mengonfirmasi pemesanan ini. Silakan coba lagi, atau hubungi sopir Anda langsung.", lbl_total: "Total harga tur", lbl_pickup: "Penjemputan", lbl_tour_singular: "tur", lbl_tour_plural: "tur", lbl_rating_new: "Baru",
     lbl_total_price_due: "Total — bayar langsung ke sopir", lbl_ryvio_fee: "Biaya Rydanu (10%)", lbl_your_car: "Mobil sopir Anda",
     lbl_fullname: "Nama lengkap", lbl_whatsapp: 'Nomor WhatsApp <span class="optional">(untuk konfirmasi pemesanan)</span>', ep_eyebrow: "Profil Anda", ep_title: "Edit profil",
     lbl_pickup_loc: "Lokasi penjemputan", lbl_pickup_dropoff_loc: "Lokasi jemput/antar", lbl_airport_destination: "Wilayah tujuan", lbl_transfer_destination: "Tujuan", lbl_pickup_region: "Wilayah penjemputan Anda",
@@ -13158,6 +13152,8 @@ ${bpt('driverFeeLine')}</div>`;
     const priceNum = parseIDR(currentDriver.price) || 0;
     const bookingDriverId = currentDriver.ownerId;
     const bookingDate = document.getElementById('f-date').value || new Date().toISOString().slice(0,10);
+    const bookingTimeEl = document.getElementById('f-time');
+    const bookingTime = bookingTimeEl ? (bookingTimeEl.value || null) : null;
     (async () => {
       // Bugfix (5. August): vorher stand hier immer fest 10% -- eine Sonderkondition (z.B. VIP-Bonus
       // 0%) wurde beim Anlegen einer neuen Buchung schlicht ignoriert. Jetzt wird die tatsaechlich
@@ -13185,6 +13181,7 @@ ${bpt('driverFeeLine')}</div>`;
         customer_phone: phoneRaw || null,
         pickup: pickup,
         booking_date: bookingDate,
+        pickup_time: bookingTime,
         status: 'pending',
         price_idr: priceNum,
         fee_percent_applied: feePercent,
@@ -13253,7 +13250,7 @@ function viewAsDriver(){
 
 function closeModal(){
   document.getElementById('modal-bg').classList.remove('active');
-  ['f-name','f-email','f-phone','f-pickup','f-notes'].forEach(id=>{ document.getElementById(id).value=''; });
+  ['f-name','f-email','f-phone','f-pickup','f-notes','f-time'].forEach(id=>{ document.getElementById(id).value=''; });
   document.getElementById('form-error').textContent = '';
   document.getElementById('pickup-confirmed').textContent = '';
   // restore the original card price if a destination region temporarily changed it
@@ -13586,14 +13583,6 @@ let vrSelectedTripType = null;
 function selectVrTripType(value){
   vrSelectedTripType = value;
   document.querySelectorAll('#vr-trip-type-row .chip').forEach(ch=>ch.classList.toggle('chip-active', ch.dataset.value===value));
-  const timeField = document.getElementById('vr-time-field');
-  const timeInput = document.getElementById('vr-time');
-  if(value === 'transfer'){
-    timeField.style.display = 'block';
-  } else {
-    timeField.style.display = 'none';
-    if(timeInput) timeInput.value = '';
-  }
 }
 let vrPickupSearchDebounce = null;
 let vrPickupSearchToken = 0;
@@ -13688,7 +13677,7 @@ async function initVillaRequestPage(slug){
         <label style="flex:1; display:block; margin-bottom:12px;">${t('vr_date')}
           <input type="date" id="vr-date" required style="width:100%; margin-top:4px;">
         </label>
-        <label style="flex:1; display:none; margin-bottom:12px;" id="vr-time-field">${t('vr_time')}
+        <label style="flex:1; display:block; margin-bottom:12px;" id="vr-time-field">${t('vr_time')} <span style="font-weight:400; opacity:0.7;">${t('vr_optional')}</span>
           <input type="time" id="vr-time" style="width:100%; margin-top:4px;">
         </label>
       </div>
@@ -13757,7 +13746,6 @@ async function submitVillaRequest(slug){
   if(!pickup) missing.push(t('vr_pickup'));
   if(!destination) missing.push(t('vr_destination'));
   if(!dateVal) missing.push(t('vr_date'));
-  if(vrSelectedTripType === 'transfer' && !timeVal) missing.push(t('vr_time'));
   if(!guests) missing.push(t('vr_passengers'));
   if(!name) missing.push(t('vr_name'));
   if(!phoneRaw) missing.push(t('vr_phone'));
@@ -16463,7 +16451,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v281</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v282</div>
 
 </body>
 </html>
