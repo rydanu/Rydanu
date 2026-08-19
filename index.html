@@ -1016,12 +1016,21 @@
      das jeweilige Bild fertig geladen ist (siehe onload="this.classList.remove('img-skeleton')" an den
      einzelnen <img>-Tags). Wiederverwendbare Klasse -- gilt fuer Avatar, Galerie und Fahrer-Suchkarten.*/
   @keyframes rydanu-skeleton-shimmer{
-    0%{ background-position:-450px 0; }
-    100%{ background-position:450px 0; }
+    0%{ background-position:0% 0; }
+    100%{ background-position:100% 0; }
   }
+  /* Bugfix Runde 2 (23.8., Joerg per Screen-Recording gemeldet): die erste Version hat mit festen
+     Pixelwerten (450px) gearbeitet -- das passte einigermassen fuer die quadratischen Galerie-Kacheln,
+     aber beim runden Avatar (253px bzw. 176px auf Handy) rutschte der Farbverlauf bei bestimmten
+     Animations-Momenten komplett aus dem sichtbaren Kreis raus (background-repeat:no-repeat liess dann
+     NICHTS mehr sehen, die reine Grundfarbe (Teal) schien durch -- daher der haessliche halb-Teal/
+     halb-Creme-Split im Video). Jetzt die uebliche, robuste Skeleton-Technik: background-size in
+     PROZENT (bezogen auf die Elementgroesse selbst, nicht auf feste Pixel) + background-position in
+     Prozent -- das garantiert lueckenlose Deckung bei JEDER Elementgroesse, egal ob kleiner Avatar
+     oder grosse Galerie-Kachel, ohne Sonderfaelle noetig. */
   .img-skeleton{
-    background-image:linear-gradient(90deg, var(--paper-dim) 22%, rgba(0,0,0,0.07) 40%, var(--paper-dim) 58%) !important;
-    background-size:450px 100% !important;
+    background-image:linear-gradient(90deg, var(--paper-dim) 25%, rgba(0,0,0,0.08) 50%, var(--paper-dim) 75%) !important;
+    background-size:300% 100% !important;
     background-repeat:no-repeat !important;
     animation:rydanu-skeleton-shimmer 1.3s ease-in-out infinite;
   }
@@ -16723,7 +16732,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v296</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v297</div>
 
 </body>
 </html>
