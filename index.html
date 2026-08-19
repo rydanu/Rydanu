@@ -3153,7 +3153,7 @@
       </div>
       <label class="nl-service-check" style="margin-bottom:12px;"><input type="checkbox" id="ep-qris"> <span data-i18n="rd_qris_label">I accept QRIS (GoPay / OVO / DANA)</span></label>
       <p class="form-error" id="ep-error"></p>
-      <button class="book-btn" onclick="saveEditProfile()">Save changes</button>
+      <button class="book-btn" onclick="saveEditProfile()" data-i18n="el_save_btn">Save changes</button>
     </div>
   </div>
 </div>
@@ -13912,7 +13912,7 @@ async function initVillaRequestPage(slug){
           <button type="button" class="chip" data-value="transfer" onclick="selectVrTripType('transfer')">${t('tr_trip_transfer')}</button>
         </div>
       </div>
-      <label style="display:block; margin-bottom:16px;">${t('vr_notes')} <span style="font-weight:400; opacity:0.7;">${t('vr_optional')}</span>
+      <label class="form-field" style="display:block; margin-bottom:16px;">${t('vr_notes')} <span style="font-weight:400; opacity:0.7;">${t('vr_optional')}</span>
         <textarea id="vr-notes" rows="2" style="width:100%; margin-top:4px;"></textarea>
       </label>
       <div class="form-field autocomplete-wrap" style="margin-bottom:12px;">
@@ -13928,25 +13928,25 @@ async function initVillaRequestPage(slug){
         <p class="map-hint" id="vr-destination-confirmed"></p>
       </div>
       <div style="display:flex; gap:10px;">
-        <label style="flex:1; display:block; margin-bottom:12px;">${t('vr_date')}
+        <label class="form-field" style="flex:1; display:block; margin-bottom:12px;">${t('vr_date')}
           <input type="date" id="vr-date" required style="width:100%; margin-top:4px;">
         </label>
-        <label style="flex:1; display:block; margin-bottom:12px;" id="vr-time-field">${t('vr_time')} <span style="font-weight:400; opacity:0.7;">${t('vr_optional')}</span>
+        <label class="form-field" style="flex:1; display:block; margin-bottom:12px;" id="vr-time-field">${t('vr_time')} <span style="font-weight:400; opacity:0.7;">${t('vr_optional')}</span>
           <input type="text" inputmode="numeric" id="vr-time" placeholder="14:30" maxlength="5" oninput="formatTimeInputValue(this)" style="width:100%; margin-top:4px;">
         </label>
       </div>
       <div style="display:flex; gap:10px;">
-        <label style="flex:1; display:block; margin-bottom:12px;">${t('vr_passengers')}
+        <label class="form-field" style="flex:1; display:block; margin-bottom:12px;">${t('vr_passengers')}
           <input type="text" id="vr-guests" required value="2" style="width:100%; margin-top:4px;">
         </label>
-        <label style="flex:1; display:block; margin-bottom:12px;">${t('vr_luggage')} <span style="font-weight:400; opacity:0.7;">${t('vr_optional')}</span>
+        <label class="form-field" style="flex:1; display:block; margin-bottom:12px;">${t('vr_luggage')} <span style="font-weight:400; opacity:0.7;">${t('vr_optional')}</span>
           <input type="text" id="vr-luggage" style="width:100%; margin-top:4px;">
         </label>
       </div>
-      <label style="display:block; margin-bottom:12px;">${t('vr_name')}
+      <label class="form-field" style="display:block; margin-bottom:12px;">${t('vr_name')}
         <input type="text" id="vr-name" required style="width:100%; margin-top:4px;">
       </label>
-      <label style="display:block; margin-bottom:12px;">${t('vr_phone')}
+      <label class="form-field" style="display:block; margin-bottom:12px;">${t('vr_phone')}
         <div style="display:flex; gap:8px; margin-top:4px;">
           <select id="vr-country" style="flex:0 0 112px;">
             <option value="62" selected>🇮🇩 +62</option>
@@ -13963,7 +13963,7 @@ async function initVillaRequestPage(slug){
           <input type="tel" id="vr-phone" required inputmode="tel" placeholder="${t('vr_phone_placeholder')}" style="flex:1;">
         </div>
       </label>
-      <label style="display:block; margin-bottom:12px;">${t('vr_email')} <span style="font-weight:400; opacity:0.7;">(${t('vr_email_hint')})</span>
+      <label class="form-field" style="display:block; margin-bottom:12px;">${t('vr_email')} <span style="font-weight:400; opacity:0.7;">(${t('vr_email_hint')})</span>
         <input type="email" id="vr-email" required style="width:100%; margin-top:4px;">
       </label>
       <button type="button" class="book-btn" id="vr-submit-btn" onclick="submitVillaRequest('${slug}')" style="width:100%;">${t('vr_submit_btn')}</button>
@@ -16714,7 +16714,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v292</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v293</div>
 
 </body>
 </html>
