@@ -5566,7 +5566,7 @@ async function handleRealPageMediaUpload(event){
     resizeImageToBlob(file, 1080, 0.82, async (blob) => {
       try{
         const path = `${dpDriverId}/photo_${Date.now()}.jpg`;
-        const { error: upErr } = await supabaseClient.storage.from('driver-media').upload(path, blob, { contentType:'image/jpeg' });
+        const { error: upErr } = await supabaseClient.storage.from('driver-media').upload(path, blob, { contentType:'image/jpeg', cacheControl:'31536000' });
         if(upErr){ console.error('Foto-Upload fehlgeschlagen:', upErr); alert('Foto-Upload ist fehlgeschlagen. Bitte nochmal versuchen.'); return; }
         const { data: pub } = supabaseClient.storage.from('driver-media').getPublicUrl(path);
         const { error: insErr } = await supabaseClient.from('driver_media').insert({ driver_id: dpDriverId, media_type:'photo', url: pub.publicUrl });
@@ -5614,13 +5614,13 @@ async function handleRealPageMediaUpload(event){
         try{
           const stamp = Date.now();
           const videoPath = `${dpDriverId}/video_${stamp}.mp4`;
-          const { error: upErr } = await supabaseClient.storage.from('driver-media').upload(videoPath, file, { contentType: file.type || 'video/mp4' });
+          const { error: upErr } = await supabaseClient.storage.from('driver-media').upload(videoPath, file, { contentType: file.type || 'video/mp4', cacheControl:'31536000' });
           if(upErr){ console.error('Video-Upload fehlgeschlagen:', upErr); alert('Video-Upload ist fehlgeschlagen. Bitte nochmal versuchen.'); return; }
           const { data: videoPub } = supabaseClient.storage.from('driver-media').getPublicUrl(videoPath);
           let thumbnailUrl = null;
           if(thumbBlob){
             const thumbPath = `${dpDriverId}/video_${stamp}_thumb.jpg`;
-            const { error: thumbErr } = await supabaseClient.storage.from('driver-media').upload(thumbPath, thumbBlob, { contentType:'image/jpeg' });
+            const { error: thumbErr } = await supabaseClient.storage.from('driver-media').upload(thumbPath, thumbBlob, { contentType:'image/jpeg', cacheControl:'31536000' });
             if(!thumbErr){
               const { data: thumbPub } = supabaseClient.storage.from('driver-media').getPublicUrl(thumbPath);
               thumbnailUrl = thumbPub.publicUrl;
@@ -12958,7 +12958,7 @@ async function handleRealPhotoUpload(event){
     try{
       const blob = await (await fetch(dataUrl)).blob();
       const path = `${realDriverProfile.id}/avatar.jpg`;
-      const { error: upErr } = await supabaseClient.storage.from('avatars').upload(path, blob, { contentType:'image/jpeg', upsert:true });
+      const { error: upErr } = await supabaseClient.storage.from('avatars').upload(path, blob, { contentType:'image/jpeg', upsert:true, cacheControl:'31536000' });
       if(upErr){ console.error('Foto-Upload fehlgeschlagen:', upErr); alert('Foto-Upload ist fehlgeschlagen. Bitte nochmal versuchen.'); return; }
       const { data: pub } = supabaseClient.storage.from('avatars').getPublicUrl(path);
       // Datum als Cache-Buster anhaengen, sonst zeigt der Browser das alte gecachte Foto weiter an
@@ -16732,7 +16732,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v297</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v298</div>
 
 </body>
 </html>
