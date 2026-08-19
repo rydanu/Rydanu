@@ -7412,7 +7412,7 @@ function mapBookingRowToUI(row){
     when: formatDateDisplay(row.booking_date),
     dateISO: row.booking_date,
     status: row.status,
-    email: '', phone: (row.status !== 'pending' && row.status !== 'declined_by_driver') ? (row.customer_phone || '') : '', pickup: '',
+    email: '', phone: (row.status !== 'pending' && row.status !== 'declined_by_driver') ? (row.customer_phone || '') : '', pickup: row.pickup || '',
     pickupTime: row.pickup_time || '',
     price: formatIDR(row.price_idr),
     balance: formatIDR(row.price_idr || 0),
@@ -16671,7 +16671,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v289</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v290</div>
 
 </body>
 </html>
