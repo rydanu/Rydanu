@@ -9068,6 +9068,7 @@ async function withdrawVillaOffer(villaRequestId){
     // zwischendurch geschlossen) -- kein Token vorhanden, also direkt zuruecksetzen.
     const { data: released, error: releaseErr } = await supabaseClient.rpc('release_villa_claim', { p_request_id: villaRequestId });
     if(releaseErr || !released){ console.error('Zuruecksetzen fehlgeschlagen:', releaseErr); alert(t('villa_action_err')); return; }
+    await dismissVillaRequestSilently(villaRequestId);
     await loadVillaRequests();
     return;
   }
@@ -9077,7 +9078,21 @@ async function withdrawVillaOffer(villaRequestId){
   if(releasedVillaRequestId){
     supabaseClient.functions.invoke('notify-villa-request', { body: { requestId: releasedVillaRequestId } }).catch(err=>console.error('Erneute Fahrer-Benachrichtigung fehlgeschlagen:', err));
   }
+  // Bugfix (23.8., Joerg-Wunsch): "zurueckziehen" heisst fuer DIESEN Fahrer wirklich raus -- er soll
+  // die Anfrage in seiner eigenen Liste nicht als neue "offene" Karte wiedersehen, auch wenn sie fuer
+  // ALLE ANDEREN Fahrer jetzt wieder ganz normal offen und uebernehmbar ist. Nutzt dafuer denselben
+  // Mechanismus wie "Nicht fuer mich" (villa_request_dismissals) -- pro Fahrer, nicht global.
+  await dismissVillaRequestSilently(villaRequestId);
   await loadVillaRequests();
+}
+// Gleiche DB-Aktion wie dismissVillaRequest(), aber ohne eigenes Re-Render dazwischen -- wird direkt
+// vor einem sowieso folgenden loadVillaRequests() aufgerufen (siehe withdrawVillaOffer oben).
+async function dismissVillaRequestSilently(requestId){
+  if(!realDriverProfile) return;
+  const { error } = await supabaseClient.from('villa_request_dismissals').upsert({
+    driver_id: realDriverProfile.id, villa_request_id: requestId
+  });
+  if(error) console.error('Ausblenden nach Zurueckziehen fehlgeschlagen:', error);
 }
 // Fahrer will sein Angebot aendern (z.B. Preis anpassen) und erneut senden -- das alte Angebot wird
 // storniert (verhindert doppelte Buchung, falls der Gast noch den alten Link anklickt), ein neues
@@ -16671,7 +16686,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v290</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v291</div>
 
 </body>
 </html>
