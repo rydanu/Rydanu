@@ -1009,6 +1009,22 @@
   .dp-media-cell{ display:flex; flex-direction:column; gap:4px; }
   .dp-media-item{ position:relative; aspect-ratio:1; border-radius:6px; overflow:hidden; background:var(--paper-dim); }
   .dp-media-item img, .dp-media-item video{ width:100%; height:100%; object-fit:cover; display:block; }
+  /* Skeleton-Ladeeffekt (23.8., Joerg-Wunsch: Ladezeiten beim ersten Besuch spuerbar, v.a. Bilder auf
+     My Page). Bisher zeigte ein Bild bis zum vollstaendigen Laden nur die flache Hintergrundfarbe --
+     wirkt "eingefroren"/leblos, v.a. auf einer noch leeren mobilen Verbindung ohne Cache. Jetzt ein
+     dezentes, animiertes Schimmern (klassischer Skeleton-Loader), das automatisch verschwindet, sobald
+     das jeweilige Bild fertig geladen ist (siehe onload="this.classList.remove('img-skeleton')" an den
+     einzelnen <img>-Tags). Wiederverwendbare Klasse -- gilt fuer Avatar, Galerie und Fahrer-Suchkarten.*/
+  @keyframes rydanu-skeleton-shimmer{
+    0%{ background-position:-450px 0; }
+    100%{ background-position:450px 0; }
+  }
+  .img-skeleton{
+    background-image:linear-gradient(90deg, var(--paper-dim) 22%, rgba(0,0,0,0.07) 40%, var(--paper-dim) 58%) !important;
+    background-size:450px 100% !important;
+    background-repeat:no-repeat !important;
+    animation:rydanu-skeleton-shimmer 1.3s ease-in-out infinite;
+  }
   .dp-caption-input{
     width:100%; box-sizing:border-box; font-size:0.68rem; padding:5px 6px; border:1px solid var(--line);
     border-radius:4px; font-family:'Public Sans'; background:#fff;
@@ -5309,8 +5325,8 @@ function renderDriverPage(){
   const store = driverDataStore[dpDriverId] || {};
   const isOwner = dpMode === 'owner';
   const avatar = document.getElementById('dp-avatar');
-  if(p.photo){ avatar.style.backgroundImage = `url(${p.photo})`; avatar.textContent=''; }
-  else { avatar.style.backgroundImage='none'; avatar.textContent = initials(p.fullName); }
+  if(p.photo){ setAvatarWithSkeleton(avatar, p.photo, initials(p.fullName)); }
+  else { avatar.classList.remove('img-skeleton'); avatar.style.backgroundImage='none'; avatar.textContent = initials(p.fullName); }
   document.getElementById('dp-name').textContent = p.fullName;
   document.getElementById('dp-meta').textContent = '🚩 ' + (p.region || '—') + ' · ' + (p.langs || []).join(', ');
   const dpLwEl = document.getElementById('dp-lw');
@@ -5332,12 +5348,12 @@ function renderDriverPage(){
   } else {
     gallery.innerHTML = media.map((m,i)=>`
       <div class="dp-media-cell">
-        <div class="dp-media-item" ${m.type==='video' ? `onclick="openVideoLightbox(${i})" style="cursor:pointer;"` : ''}>
+        <div class="dp-media-item img-skeleton" ${m.type==='video' ? `onclick="openVideoLightbox(${i})" style="cursor:pointer;"` : ''}>
           ${m.type==='video'
             ? (m.thumbnail
-                ? `<img src="${m.thumbnail}" alt="${(m.caption||'').replace(/"/g,'&quot;')}"><span class="dp-play-badge">▶</span>`
+                ? `<img src="${m.thumbnail}" alt="${(m.caption||'').replace(/"/g,'&quot;')}" onload="this.parentElement.classList.remove('img-skeleton')" onerror="this.parentElement.classList.remove('img-skeleton')"><span class="dp-play-badge">▶</span>`
                 : `<div class="dp-video-noThumb"><span class="dp-play-badge">▶</span></div>`)
-            : `<img src="${m.dataUrl}" alt="${(m.caption||'').replace(/"/g,'&quot;')}">`}
+            : `<img src="${m.dataUrl}" alt="${(m.caption||'').replace(/"/g,'&quot;')}" onload="this.parentElement.classList.remove('img-skeleton')" onerror="this.parentElement.classList.remove('img-skeleton')">`}
           ${isOwner ? `<button type="button" class="dp-media-del" onclick="event.stopPropagation(); deletePageMedia(${i})">✕</button>` : ''}
         </div>
         ${isOwner
@@ -5390,11 +5406,23 @@ function renderDriverPage(){
 }
 // echte "My Page" rendern (Baustein 10) — nutzt dieselben dp-* Elemente wie die Demo-Seite,
 // aber Fotos/Galerie-Upload und die Demo-only Kontakt-/Bewertungsformulare kommen erst spaeter
+// Bild vorab laden (Preload), bevor es als CSS-Hintergrund gesetzt wird -- verhindert das ploetzliche
+// "Reinpoppen" eines Bildes mitten im Nutzer-Blick und ersetzt die Wartezeit durch das Skeleton-
+// Schimmern (siehe .img-skeleton CSS). Bei Fehler wird trotzdem sauber auf die Initialen zurueckgefallen.
+function setAvatarWithSkeleton(el, url, fallbackInitials){
+  if(!el) return;
+  if(!url){ el.classList.remove('img-skeleton'); el.style.backgroundImage = 'none'; el.textContent = fallbackInitials; return; }
+  el.classList.add('img-skeleton');
+  el.textContent = '';
+  const preload = new Image();
+  preload.onload = () => { el.classList.remove('img-skeleton'); el.style.backgroundImage = `url(${url})`; };
+  preload.onerror = () => { el.classList.remove('img-skeleton'); el.style.backgroundImage = 'none'; el.textContent = fallbackInitials; };
+  preload.src = url;
+}
 function renderRealDriverPage(isOwner){
   const d = dpRealData.driver;
   const avatar = document.getElementById('dp-avatar');
-  if(d.avatar_url){ avatar.style.backgroundImage = `url(${d.avatar_url})`; avatar.textContent = ''; }
-  else { avatar.style.backgroundImage = 'none'; avatar.textContent = initials(d.name || '?'); }
+  setAvatarWithSkeleton(avatar, d.avatar_url, initials(d.name || '?'));
   document.getElementById('dp-name').textContent = d.name || '—';
   const langs = (d.languages && d.languages.length) ? d.languages.join(', ') : 'EN';
   document.getElementById('dp-meta').textContent = '🚩 ' + (d.home_area || (d.region === 'lombok' ? 'Lombok' : 'Bali')) + ' · ' + langs;
@@ -5469,12 +5497,12 @@ function renderRealGallery(isOwner){
     const safeCaption = (m.caption||'').replace(/"/g,'&quot;');
     return `
     <div class="dp-media-cell">
-      <div class="dp-media-item" ${m.media_type==='video' ? `onclick="openRealVideoLightbox('${m.id}')" style="cursor:pointer;"` : ''}>
+      <div class="dp-media-item img-skeleton" ${m.media_type==='video' ? `onclick="openRealVideoLightbox('${m.id}')" style="cursor:pointer;"` : ''}>
         ${m.media_type==='video'
           ? (m.thumbnail_url
-              ? `<img src="${m.thumbnail_url}" alt="${safeCaption}"><span class="dp-play-badge">▶</span>`
+              ? `<img src="${m.thumbnail_url}" alt="${safeCaption}" onload="this.parentElement.classList.remove('img-skeleton')" onerror="this.parentElement.classList.remove('img-skeleton')"><span class="dp-play-badge">▶</span>`
               : `<div class="dp-video-noThumb"><span class="dp-play-badge">▶</span></div>`)
-          : `<img src="${m.url}" alt="${safeCaption}">`}
+          : `<img src="${m.url}" alt="${safeCaption}" onload="this.parentElement.classList.remove('img-skeleton')" onerror="this.parentElement.classList.remove('img-skeleton')">`}
         ${isOwner ? `<button type="button" class="dp-media-del" onclick="event.stopPropagation(); deleteRealPageMedia('${m.id}')">✕</button>` : ''}
       </div>
       ${isOwner
@@ -11962,7 +11990,7 @@ function renderDriverGrid(rawList){
       <div class="driver-card-header">
         ${d.badge ? `<span class="badge">${d.badge}</span>` : ''}
         <div class="driver-photo">
-          <div class="initials photo-lg" ${d.photo ? `style="background-image:url('${d.photo}'); background-size:cover; background-position:center;"` : ''}>${d.photo ? '' : initials(d.name)}</div>
+          <div class="initials photo-lg${d.photo ? ' img-skeleton' : ''}">${d.photo ? `<img src="${d.photo}" alt="${escapeHtml(d.name||'')}" style="width:100%; height:100%; object-fit:cover; border-radius:inherit; display:block;" onload="this.parentElement.classList.remove('img-skeleton')" onerror="this.parentElement.classList.remove('img-skeleton'); this.remove(); this.parentElement.textContent='${(initials(d.name)||'').replace(/'/g,"\\'")}';">` : initials(d.name)}</div>
         </div>
         <div class="name-row">
           <h3>${d.name}</h3>
@@ -12038,7 +12066,7 @@ function renderDriversOnlyGrid(rawList){
       card.innerHTML = `
         ${d.badge ? `<span class="badge">${d.badge}</span>` : ''}
         <div class="driver-photo">
-          <div class="initials photo-lg" ${d.photo ? `style="background-image:url('${d.photo}'); background-size:cover; background-position:center;"` : ''}>${d.photo ? '' : initials(d.name)}</div>
+          <div class="initials photo-lg${d.photo ? ' img-skeleton' : ''}">${d.photo ? `<img src="${d.photo}" alt="${escapeHtml(d.name||'')}" style="width:100%; height:100%; object-fit:cover; border-radius:inherit; display:block;" onload="this.parentElement.classList.remove('img-skeleton')" onerror="this.parentElement.classList.remove('img-skeleton'); this.remove(); this.parentElement.textContent='${(initials(d.name)||'').replace(/'/g,"\\'")}';">` : initials(d.name)}</div>
         </div>
         <div class="name-row">
           <h3>${d.name}</h3>
@@ -16686,7 +16714,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v291</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v292</div>
 
 </body>
 </html>
