@@ -1051,6 +1051,15 @@
     display:block; margin:10px auto 0; background:none; border:none; cursor:pointer;
     font-family:'JetBrains Mono'; font-size:0.78rem; color:var(--teal); text-decoration:underline;
   }
+  /* Zeilenumbruch-Fix Runde 2 (22.8., Joerg gemeldet dass Runde 1 nicht reichte): das vorherige <wbr>
+     half nur zwischen Domain und Pfad -- der Bindestrich MITTEN im Slug (z.B. "test-villa") ist nach
+     den normalen Zeilenumbruch-Regeln des Browsers selbst ein erlaubter Umbruchpunkt, unabhaengig vom
+     <wbr>. Jetzt strikt einzeilig erzwungen (white-space:nowrap) mit horizontalem Scrollen als
+     Rueckfalloption fuer den seltenen Fall eines wirklich sehr schmalen Bildschirms + langen Slugs. */
+  .villa-link-mono{
+    display:block; white-space:nowrap; overflow-x:auto; font-size:0.82rem; padding-bottom:2px;
+    -webkit-overflow-scrolling:touch; scrollbar-width:thin;
+  }
   .dp-review .r-head{ display:flex; justify-content:space-between; margin-bottom:4px; }
   .dp-review .r-name{ font-weight:700; font-size:0.88rem; }
   .dp-review .r-stars{ color:var(--gold-deep); }
@@ -2566,7 +2575,7 @@
     <div class="panel" style="padding:16px; margin-bottom:20px;">
       <h3 style="margin-top:0;">Bewerbungslink für neue Villen</h3>
       <p class="dash-head" style="display:block; margin-bottom:10px;">Diesen Link kannst du an Villa-/Hotel-Manager schicken — sie tragen sich damit selbst ein, du bestätigst und legst die Provision danach hier fest.</p>
-      <div class="when">🔗 <span id="villa-apply-link" class="mono"></span></div>
+      <div class="when">🔗 <span id="villa-apply-link" class="mono villa-link-mono"></span></div>
       <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;">
         <button type="button" class="link-btn" style="width:auto; text-decoration:none; background:var(--paper-dim); padding:8px 12px; border-radius:6px;" id="villa-apply-copy-btn" onclick="copyVillaApplyLink()">📋 Link kopieren</button>
         <button type="button" class="link-btn" style="width:auto; text-decoration:none; background:var(--paper-dim); padding:8px 12px; border-radius:6px;" onclick="toggleVillaApplyQr()">📱 QR-Code</button>
@@ -2676,7 +2685,7 @@
         <p class="form-error" id="villa-edit-status"></p>
 
         <div style="margin-top:18px; padding-top:14px; border-top:1px solid var(--line);">
-          <div class="when">🔗 <span id="villa-edit-link" class="mono"></span></div>
+          <div class="when">🔗 <span id="villa-edit-link" class="mono villa-link-mono"></span></div>
           <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;">
             <button type="button" class="link-btn" style="width:auto; text-decoration:none; background:var(--paper-dim); padding:8px 12px; border-radius:6px;" id="villa-edit-copy-btn" onclick="copyVillaLink()">📋 Link kopieren</button>
             <button type="button" class="link-btn" style="width:auto; text-decoration:none; background:var(--paper-dim); padding:8px 12px; border-radius:6px;" onclick="toggleVillaQr()">📱 QR-Code</button>
@@ -9280,9 +9289,7 @@ async function loadVillaAdminData(){
   const sel = document.getElementById('villa-manage-select');
   if(!sel) return;
   const linkEl = document.getElementById('villa-apply-link');
-  // Zeilenumbruch-Fix (22.8., Joerg-Wunsch): <wbr> statt freiem Umbruch, damit der Link -- falls
-  // die Breite doch mal nicht reicht -- sauber zwischen Domain und Pfad umbricht statt mitten im Wort.
-  if(linkEl) linkEl.innerHTML = escapeHtml(location.origin) + '<wbr>' + escapeHtml('/?apply=villa');
+  if(linkEl) linkEl.textContent = location.origin + '/?apply=villa';
   const { data: villas, error: villasErr } = await supabaseClient.from('villa_partners').select('*').order('name');
   if(villasErr){ console.error('Villen konnten nicht geladen werden:', villasErr); return; }
   villaAdminCache = villas || [];
@@ -9413,8 +9420,9 @@ async function loadVillaIntoManageForm(){
   document.getElementById('villa-edit-status').textContent = '';
   const activeBtn = document.getElementById('villa-edit-toggle-active-btn');
   activeBtn.textContent = v.active ? '🚫 Villa deaktivieren' : '✓ Villa aktivieren';
-  // Gleicher Zeilenumbruch-Fix wie beim Bewerbungslink: <wbr> als sauberer Umbruchpunkt.
-  document.getElementById('villa-edit-link').innerHTML = escapeHtml(location.origin) + '<wbr>' + escapeHtml('/v/' + v.slug);
+  // Zeilenumbruch-Fix Runde 2 (siehe .villa-link-mono CSS): einfacher Text reicht jetzt, das
+  // erzwungene white-space:nowrap dort uebernimmt die Ein-Zeiligkeit zuverlaessig.
+  document.getElementById('villa-edit-link').textContent = location.origin + '/v/' + v.slug;
   document.getElementById('villa-edit-qr-wrap').style.display = 'none';
 
   const [{ data: commissions }, { data: openReqs }] = await Promise.all([
@@ -16663,7 +16671,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v288</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v289</div>
 
 </body>
 </html>
