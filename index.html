@@ -291,13 +291,13 @@
   .section-controls-row{ display:flex; justify-content:flex-start; align-items:center; gap:10px; flex-wrap:wrap; }
   .order-toggle{ display:flex; gap:6px; }
   .order-toggle-btn{
-    font-family:'JetBrains Mono'; font-size:0.8rem; color:var(--ink-soft); background:var(--paper);
-    border:1px solid var(--line); border-radius:20px; padding:8px 18px; cursor:pointer; transition:all .15s ease;
+    font-family:'JetBrains Mono'; font-size:0.85rem; color:var(--ink-soft); background:var(--paper);
+    border:1px solid var(--line); border-radius:20px; padding:9px 20px; cursor:pointer; transition:all .15s ease;
   }
   .order-toggle-btn.active{ background:var(--teal); color:#fff; border-color:var(--teal); font-weight:700; }
   .sort-select{
-    font-family:'JetBrains Mono'; font-size:0.66rem; color:var(--ink-soft); background:var(--paper);
-    border:1px solid var(--line); border-radius:5px; padding:4px 6px; cursor:pointer;
+    font-family:'JetBrains Mono'; font-size:0.62rem; color:var(--ink-soft); background:var(--paper);
+    border:1px solid var(--line); border-radius:5px; padding:3px 5px; cursor:pointer;
   }
   /* Ebene 1: reine Fahrer-Karten (nur der gruene Kopfbereich, keine Tour-Details) */
   .drivers-only-grid{
@@ -432,6 +432,14 @@
      brauchen diese Sonderbehandlung nicht, sehen dadurch garantiert exakt wie alle anderen Felder aus. */
   .form-field input[type="date"], .form-field select{
     height:48px; box-sizing:border-box; -webkit-appearance:none; -moz-appearance:none; appearance:none;
+  }
+  /* Ergaenzung (22.8., Joerg-Test): der obige Trick (feste Hoehe + appearance:none) betraf bisher nur
+     Datum und Select-Felder. Text-/Tel-/E-Mail-/Zahlenfelder kamen zwar durch padding+line-height
+     schon sehr nah an 48px, aber nicht exakt -- auf manchen Geraeten/Browsern minimal abweichend
+     (Villa-Formular: Abholort/Ziel/Name/Telefon/E-Mail wirkten dadurch uneinheitlich hoch neben
+     Datum/Zeit/Passagiere). Jetzt alle Zeilen-Felder auf exakt dieselbe Hoehe gezwungen. */
+  .form-field input[type="text"], .form-field input[type="email"], .form-field input[type="tel"], .form-field input[type="number"]{
+    height:48px; box-sizing:border-box;
   }
   .form-field select{
     background-image:url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='16' height='16'%3E%3Cpath fill='%233F5449' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
@@ -732,6 +740,17 @@
   .referral-banner{
     background:var(--paper-dim); border:1px dashed var(--gold-deep); border-radius:8px; padding:18px 20px; margin:0 0 18px;
   }
+  /* Kompakte Variante (22.8., Joerg-Wunsch): die alte, grosse Werbe-Kachel nahm in der Uebersicht zu
+     viel Platz weg -- jetzt ein schlanker Streifen mit einem einzigen gruenen WhatsApp-Button statt
+     langem Fliesstext + separater Codebox. */
+  .referral-banner-compact{
+    display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap;
+    padding:12px 16px;
+  }
+  .referral-banner-compact .note{ font-size:0.8rem; }
+  .referral-wa-btn{
+    background:var(--teal); border-color:var(--teal); color:#fff; white-space:nowrap; flex-shrink:0;
+  }
   .driver-card.featured{ border:2px solid var(--gold); box-shadow:0 6px 18px rgba(201,162,39,0.25); position:relative; }
   .driver-card.featured .badge{ background:var(--gold); color:var(--ink); }
   .nl-featured-check{ color:var(--gold-deep); font-weight:700; }
@@ -1018,7 +1037,7 @@
   #dp-tours .empty-state{ grid-column:1 / -1; }
   .dp-tour-row{
     display:flex; justify-content:space-between; align-items:center; gap:10px; padding:13px 15px;
-    border:1px solid var(--line); border-radius:8px; margin-bottom:0; background:#fff;
+    border:1px solid var(--teal); border-radius:8px; margin-bottom:0; background:var(--teal-soft);
   }
   @media (max-width:520px){
     #dp-tours{ grid-template-columns:1fr; }
@@ -1027,6 +1046,11 @@
   .dp-tour-row .tmeta{ font-family:'JetBrains Mono'; font-size:0.72rem; color:var(--ink-soft); }
   .dp-tour-arrow{ font-size:1.3rem; color:var(--gold-deep); font-weight:700; }
   .dp-review{ border-bottom:1px solid var(--line); padding:13px 0; }
+  .dp-review-hidden{ display:none; }
+  .dp-reviews-more-btn{
+    display:block; margin:10px auto 0; background:none; border:none; cursor:pointer;
+    font-family:'JetBrains Mono'; font-size:0.78rem; color:var(--teal); text-decoration:underline;
+  }
   .dp-review .r-head{ display:flex; justify-content:space-between; margin-bottom:4px; }
   .dp-review .r-name{ font-weight:700; font-size:0.88rem; }
   .dp-review .r-stars{ color:var(--gold-deep); }
@@ -1736,7 +1760,7 @@
       <div class="form-field">
         <label data-i18n-html="lbl_whatsapp">WhatsApp number <span class="optional">(for booking confirmation)</span></label>
         <div style="display:flex; gap:8px;">
-          <select id="f-country" style="flex:0 0 92px;">
+          <select id="f-country" style="flex:0 0 112px;">
             <option value="62" selected>🇮🇩 +62</option>
             <option value="49">🇩🇪 +49</option>
             <option value="61">🇦🇺 +61</option>
@@ -1870,7 +1894,7 @@
         <p class="note" style="margin-top:0;">Neues Fahrerkonto anlegen.</p>
         <input type="text" id="auth-signup-name" placeholder="Dein Name *" class="auth-input">
         <div style="display:flex; gap:8px;">
-          <select id="auth-signup-country" class="auth-input" style="flex:0 0 92px;">
+          <select id="auth-signup-country" class="auth-input" style="flex:0 0 112px;">
             <option value="62" selected>🇮🇩 +62</option>
             <option value="49">🇩🇪 +49</option>
             <option value="61">🇦🇺 +61</option>
@@ -2026,15 +2050,12 @@
           </div>
         </div>
 
-        <div class="referral-banner">
-          <div class="filter-group-title" style="margin-bottom:8px;" data-i18n="referral_title">🎁 Refer a driver, earn IDR 100,000</div>
-          <p class="note" style="margin:0 0 10px;" data-i18n="referral_body">Share your Rydanu number with another driver. Once they're approved and complete their first booking, you get an IDR 100,000 credit — automatically applied to your next fee payment.</p>
-          <p class="note" style="margin:0 0 10px;" data-i18n="referral_promo_note">ⓘ If you're currently fee-exempt through a special Rydanu promotion, the referral bonus won't apply to drivers you refer during that time.</p>
-          <p class="note" style="margin:0 0 10px; font-weight:700; color:var(--ink);" data-i18n="referral_no_payout">⚠️ This credit cannot be paid out in cash — it can only be used to offset your Rydanu booking fees.</p>
-          <div class="referral-code-box">
-            <span data-i18n="referral_your_code">Your referral code</span>
-            <span class="mono" id="referral-code-display" onclick="copyRyvioNumber('referral-code-display')" style="font-weight:700; cursor:pointer;" title="Klicken zum Kopieren">RY-000</span>
+        <div class="referral-banner referral-banner-compact">
+          <div>
+            <div class="filter-group-title" style="margin-bottom:2px;" data-i18n="referral_title">🎁 Refer a driver, earn IDR 100,000</div>
+            <p class="note" style="margin:0;" data-i18n="referral_body_short">Send your invite link via WhatsApp — your code is filled in automatically for them.</p>
           </div>
+          <button type="button" class="add-btn referral-wa-btn" onclick="shareReferralLinkWhatsapp()">📲 <span data-i18n="referral_wa_btn">Invite via WhatsApp</span></button>
         </div>
 
         <div class="panel" style="margin-bottom:18px;">
@@ -2043,6 +2064,11 @@
         </div>
 
         <div class="panel" style="margin-bottom:18px;">
+          <div class="panel-head"><h3 data-i18n="upcoming_bookings">Upcoming bookings</h3><button class="add-btn" onclick="openCalendar()" data-i18n="view_calendar_btn">View calendar</button></div>
+          <div id="driver-bookings-list"></div>
+        </div>
+
+        <div class="panel">
           <div class="panel-head"><h3 data-i18n="driver_perf_title">Your bookings &amp; revenue</h3></div>
           <div style="padding:14px 20px;">
             <div class="period-tabs" id="driver-period-tabs">
@@ -2052,11 +2078,6 @@
             </div>
             <div class="stat-row" id="driver-perf-row" style="margin-bottom:0;"></div>
           </div>
-        </div>
-
-        <div class="panel">
-          <div class="panel-head"><h3 data-i18n="upcoming_bookings">Upcoming bookings</h3><button class="add-btn" onclick="openCalendar()" data-i18n="view_calendar_btn">View calendar</button></div>
-          <div id="driver-bookings-list"></div>
         </div>
 
         <div class="panel" id="real-reviews-panel" style="display:none; margin-top:18px;">
@@ -2094,10 +2115,10 @@
             <div class="spots-section">
               <div class="filter-group-title" data-i18n="nl_extras_title">Extra costs not included — tap all that apply</div>
               <div class="chip-row" id="nl-extras-row">
-                <button type="button" class="chip" data-value="Entrance fees">Entrance fees</button>
-                <button type="button" class="chip" data-value="Parking">Parking</button>
-                <button type="button" class="chip" data-value="Fuel">Fuel</button>
-                <button type="button" class="chip" data-value="Other">Other</button>
+                <button type="button" class="chip" data-value="Entrance fees" data-i18n="extras_chip_entrance">Entrance fees</button>
+                <button type="button" class="chip" data-value="Parking" data-i18n="extras_chip_parking">Parking</button>
+                <button type="button" class="chip" data-value="Fuel" data-i18n="extras_chip_fuel">Fuel</button>
+                <button type="button" class="chip" data-value="Other" data-i18n="extras_chip_other">Other</button>
               </div>
             </div>
             <div class="spots-section" id="nl-airportregions-section" style="display:none;">
@@ -2131,7 +2152,7 @@
               <button type="button" class="link-btn" onclick="addSpecialRateRow('nl')" data-i18n="nl_special_rates_add">+ Add destination</button>
             </div>
             <p class="form-error" id="nl-error" style="width:100%;"></p>
-            <button class="add-btn" onclick="addListing()">Save</button>
+            <button class="add-btn" onclick="addListing()" data-i18n="nl_save_btn">Save</button>
           </div>
           <div class="period-tabs" id="listings-view-tabs" style="margin:16px 20px 14px;">
             <button type="button" class="period-btn active" data-view="active" onclick="setListingsViewTab('active')" data-i18n="listings_tab_active">Active</button>
@@ -2161,7 +2182,7 @@
 
       <div class="dash-section" id="sec-requests" style="display:none;">
         <div class="dash-head"><div><h2 data-i18n="requests_title">Custom tour requests</h2><p style="line-height:1.5;" data-i18n="requests_sub">Travelers who couldn't find exactly what they wanted asked you directly. Reply by creating a real tour offer through Rydanu.</p></div></div>
-        <p class="note" style="margin:-8px 0 16px; color:var(--danger); line-height:1.5;" data-i18n="requests_rule_note">⚠️ All requests must be answered with a tour offer created here. Arranging payment or bookings privately, outside Rydanu, is not allowed and may lead to account suspension.</p>
+        <p class="note" style="margin:-8px 0 16px; color:var(--danger); line-height:1.5; font-size:0.9rem;" data-i18n="requests_rule_note">⚠️ All requests must be answered with a tour offer created here. Arranging bookings privately, outside Rydanu, is not allowed and may lead to account suspension.</p>
         <div class="period-tabs" id="requests-view-tabs">
           <button type="button" class="period-btn active" data-view="open" onclick="setRequestsViewTab('open')"><span data-i18n="requests_tab_open">Open</span> <span class="tab-count" id="requests-count-open"></span></button>
           <button type="button" class="period-btn" data-view="offered" onclick="setRequestsViewTab('offered')"><span data-i18n="requests_tab_offered">Completed</span> <span class="tab-count" id="requests-count-offered"></span></button>
@@ -3265,7 +3286,7 @@
       <div class="form-field">
         <label data-i18n-html="lbl_whatsapp">WhatsApp number <span class="optional">(for booking confirmation)</span></label>
         <div style="display:flex; gap:8px;">
-          <select id="tr-country" style="flex:0 0 92px;">
+          <select id="tr-country" style="flex:0 0 112px;">
             <option value="62" selected>🇮🇩 +62</option>
             <option value="49">🇩🇪 +49</option>
             <option value="61">🇦🇺 +61</option>
@@ -3487,10 +3508,10 @@
       <div class="spots-section">
         <div class="filter-group-title" data-i18n="nl_extras_title">Extra costs not included — tap all that apply</div>
         <div class="chip-row" id="el-extras-row">
-          <button type="button" class="chip" data-value="Entrance fees">Entrance fees</button>
-          <button type="button" class="chip" data-value="Parking">Parking</button>
-          <button type="button" class="chip" data-value="Fuel">Fuel</button>
-          <button type="button" class="chip" data-value="Other">Other</button>
+          <button type="button" class="chip" data-value="Entrance fees" data-i18n="extras_chip_entrance">Entrance fees</button>
+          <button type="button" class="chip" data-value="Parking" data-i18n="extras_chip_parking">Parking</button>
+          <button type="button" class="chip" data-value="Fuel" data-i18n="extras_chip_fuel">Fuel</button>
+          <button type="button" class="chip" data-value="Other" data-i18n="extras_chip_other">Other</button>
         </div>
       </div>
       <div class="spots-section" id="el-airportregions-section" style="display:none;">
@@ -3758,10 +3779,10 @@
         <div class="spots-section">
           <div class="filter-group-title" data-i18n="nl_extras_title">Extra costs not included — tap all that apply</div>
           <div class="chip-row" id="co-extras-row">
-            <button type="button" class="chip" data-value="Entrance fees">Entrance fees</button>
-            <button type="button" class="chip" data-value="Parking">Parking</button>
-            <button type="button" class="chip" data-value="Fuel">Fuel</button>
-            <button type="button" class="chip" data-value="Other">Other</button>
+            <button type="button" class="chip" data-value="Entrance fees" data-i18n="extras_chip_entrance">Entrance fees</button>
+            <button type="button" class="chip" data-value="Parking" data-i18n="extras_chip_parking">Parking</button>
+            <button type="button" class="chip" data-value="Fuel" data-i18n="extras_chip_fuel">Fuel</button>
+            <button type="button" class="chip" data-value="Other" data-i18n="extras_chip_other">Other</button>
           </div>
         </div>
         <div class="form-field">
@@ -5255,6 +5276,14 @@ async function loadAndRenderRealDriverPage(driverId, mode){
   }
   dpRealData = { driver: driverRow, tours: listingRows || [], reviews: reviewRows || [], media: mediaRows || [] };
   renderRealDriverPage(mode === 'owner');
+  // Bugfix (22.8., Joerg gemeldet: "Profilaufrufe zeigt immer 0"): das Zaehlen von Profilaufrufen war
+  // bisher schlicht noch nicht gebaut (Anzeige zeigte fest "-"). Jetzt: jeder Aufruf durch einen
+  // Besucher (nicht der Fahrer selbst) zaehlt ueber eine SECURITY-DEFINER-Funktion einen echten
+  // Zaehler auf der drivers-Zeile hoch. Bewusst nicht await't/blockierend -- ein Fehlschlag hier soll
+  // die Seite fuer den Besucher nie beeintraechtigen.
+  if(mode !== 'owner'){
+    supabaseClient.rpc('increment_profile_views', { p_driver_id: driverId }).catch(err=>console.error('Profilaufruf konnte nicht gezaehlt werden:', err));
+  }
 }
 function openDriverPageFromModal(){
   if(!currentDriver || !currentDriver.ownerId) return;
@@ -5334,13 +5363,13 @@ function renderDriverPage(){
     summaryEl.innerHTML = '';
   }
   document.getElementById('dp-reviews').innerHTML = revs.length
-    ? revs.map(r=>`
-        <div class="dp-review">
+    ? revs.map((r,i)=>`
+        <div class="dp-review${i>=5 ? ' dp-review-hidden' : ''}">
           <div class="r-head"><span class="r-name">${r.name}</span><span class="r-stars">${r.stars}</span></div>
           <div class="r-text">${r.text}</div>
           ${r.photo ? `<img src="${r.photo}" alt="Bewertungsfoto" style="max-width:130px; border-radius:8px; margin-top:8px;">` : ''}
         </div>
-      `).join('')
+      `).join('') + (revs.length>5 ? `<button type="button" class="dp-reviews-more-btn" onclick="expandReviewsList('dp-reviews')">${t('dp_reviews_more')}</button>` : '')
     : `<div class="empty-state">${t('dp_reviews_empty')}</div>`;
   document.getElementById('dp-message-section').style.display = isOwner ? 'none' : 'block';
   document.getElementById('dp-leave-review-btn').style.display = isOwner ? 'none' : 'block';
@@ -5405,12 +5434,12 @@ function renderRealDriverPage(isOwner){
     summaryEl.innerHTML = '';
   }
   document.getElementById('dp-reviews').innerHTML = revs.length
-    ? revs.map(r => `
-        <div class="dp-review">
+    ? revs.map((r,i) => `
+        <div class="dp-review${i>=5 ? ' dp-review-hidden' : ''}">
           <div class="r-head"><span class="r-name">${formatDateDisplay((r.created_at||'').slice(0,10))}</span><span class="r-stars">${'★'.repeat(r.stars)}${'☆'.repeat(5-r.stars)}</span></div>
           <div class="r-text">${r.comment || ''}</div>
         </div>
-      `).join('')
+      `).join('') + (revs.length>5 ? `<button type="button" class="dp-reviews-more-btn" onclick="expandReviewsList('dp-reviews')">${t('dp_reviews_more')}</button>` : '')
     : `<div class="empty-state">${t('dp_reviews_empty')}</div>`;
   // Kontaktformular, Standalone-Bewertung und individuelle Touranfrage sind jetzt alle auch fuer
   // echte Fahrer angebunden (siehe sendPageMessage / submitStandaloneReview / submitTourRequest).
@@ -6513,7 +6542,7 @@ function renderProfileChip(){
     if(l.serviceRegions==='all') allRegions = true;
     else if(Array.isArray(l.serviceRegions)) l.serviceRegions.forEach(r=>regionSet.add(r));
   });
-  const startLabel = allRegions ? 'All regions' : (regionSet.size ? [...regionSet].join(', ') : p.region);
+  const startLabel = allRegions ? t('all_regions') : (regionSet.size ? [...regionSet].join(', ') : p.region);
   document.getElementById('profile-ploc').textContent = '🚐 ' + t('modal_start_label') + ': ' + startLabel;
   const avatar = document.getElementById('driver-avatar');
   if(p.photo){
@@ -6554,6 +6583,22 @@ function renderProfileChip(){
     banner.style.display = 'none';
     banner.classList.remove('rejected');
   }
+}
+// Fahrer werben Fahrer: kompakter WhatsApp-Button in der Uebersicht (22.8., Joerg-Wunsch, ersetzt die
+// alte grosse Kachel). Baut einen Link mit ?ref=<eigene RY-Nummer> -- landet ein neuer Fahrer darueber,
+// wird die Empfehlungs-Nummer automatisch in sein Registrierungsformular eingetragen (siehe Seiten-Init
+// weiter unten), er muss also nichts mehr selbst abtippen.
+function shareReferralLinkWhatsapp(){
+  const myNumber = realDriverProfile ? realDriverProfile.lw_number : (driverProfiles[currentDriverId] && driverProfiles[currentDriverId].lwNumber);
+  if(!myNumber){ alert(t('villa_action_err')); return; }
+  const link = location.origin + '/?ref=' + encodeURIComponent(myNumber);
+  const texts = {
+    de: `Hey! Ich fahre für Rydanu auf Bali und würde dich gerne empfehlen — meld dich einfach über meinen Link an, dann ist meine Nummer direkt hinterlegt: ${link}`,
+    en: `Hey! I'm driving for Rydanu in Bali and would love to refer you — just sign up through my link, my number is already filled in: ${link}`,
+    id: `Hai! Saya jadi sopir di Rydanu Bali dan ingin mengajak Anda — daftar saja lewat link saya, nomor saya sudah otomatis terisi: ${link}`
+  };
+  const text = texts[currentLang] || texts.en;
+  window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
 }
 function copyRyvioNumber(elId){
   const el = document.getElementById(elId || 'profile-lwnumber');
@@ -6737,6 +6782,15 @@ function renderCurrentFeeRate(){
     el.innerHTML = `<span class="fee-rate-badge-main">${t('fee_rate_current')} <strong>${DEFAULT_FEE_PERCENT}%</strong></span><span class="fee-rate-badge-sub">${t('fee_rate_standard')}</span>`;
   }
 }
+// Bewertungen: nach den ersten 5 einklappen, "Mehr anzeigen" blendet den Rest ein (22.8.-Wunsch,
+// Seite wurde bei vielen Bewertungen zu lang). Generisch fuer alle drei Bewertungslisten nutzbar.
+function expandReviewsList(containerId){
+  const el = document.getElementById(containerId);
+  if(!el) return;
+  el.querySelectorAll('.dp-review-hidden').forEach(r=>r.classList.remove('dp-review-hidden'));
+  const btn = el.querySelector('.dp-reviews-more-btn');
+  if(btn) btn.remove();
+}
 function escapeHtml(str){
   return String(str||'').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 }
@@ -6756,14 +6810,14 @@ function renderRealReviewsList(revs){
     summaryEl.innerHTML = '';
   }
   listEl.innerHTML = revs.length
-    ? revs.map(r=>{
+    ? revs.map((r,i)=>{
         const starsHTML = '★'.repeat(r.stars) + '☆'.repeat(5-r.stars);
         return `
-        <div class="dp-review">
+        <div class="dp-review${i>=5 ? ' dp-review-hidden' : ''}">
           <div class="r-head"><span class="r-stars">${starsHTML}</span></div>
           ${r.comment ? `<div class="r-text">${escapeHtml(r.comment)}</div>` : ''}
         </div>`;
-      }).join('')
+      }).join('') + (revs.length>5 ? `<button type="button" class="dp-reviews-more-btn" onclick="expandReviewsList('real-reviews-list')">${t('dp_reviews_more')}</button>` : '')
     : `<div class="empty-state">${t('dp_reviews_empty')}</div>`;
 }
 // echte Übersicht (Bewertungen + Punkte + Gebühren/Guthaben) fuer einen eingeloggten, echten Fahrer laden und anzeigen
@@ -6919,7 +6973,7 @@ async function renderRealOverviewStats(){
   if(!realDriverProfile) return;
   const today = new Date().toISOString().slice(0,10);
   const [{ data: freshDriver }, { data: reviews, error: revErr }, { data: overrides }, { data: credits }] = await Promise.all([
-    supabaseClient.from('drivers').select('rank_points, fees_due_idr, balance_idr, is_locked').eq('id', realDriverProfile.id).single(),
+    supabaseClient.from('drivers').select('rank_points, fees_due_idr, balance_idr, is_locked, profile_views').eq('id', realDriverProfile.id).single(),
     supabaseClient.from('reviews').select('stars, comment, created_at').eq('driver_id', realDriverProfile.id).order('created_at', { ascending:false }),
     supabaseClient.from('fee_overrides').select('*').eq('driver_id', realDriverProfile.id).lte('starts_at', today).or(`ends_at.is.null,ends_at.gte.${today}`).order('created_at', { ascending:false }).limit(1),
     supabaseClient.from('fee_credits').select('amount_idr, source').eq('driver_id', realDriverProfile.id).eq('applied', false)
@@ -6935,7 +6989,7 @@ async function renderRealOverviewStats(){
   const ratingEl = document.getElementById('stat-rating');
   if(ratingEl) ratingEl.textContent = avg ? avg.toFixed(1) : '–';
   const viewsEl = document.getElementById('stat-views');
-  if(viewsEl) viewsEl.textContent = '–'; // Profilaufrufe werden noch nicht gezaehlt
+  if(viewsEl) viewsEl.textContent = String((freshDriver && typeof freshDriver.profile_views === 'number') ? freshDriver.profile_views : 0);
   const requestsEl = document.getElementById('stat-requests');
   if(requestsEl) requestsEl.textContent = String((driverBookings.length||0) + (completedBookings.length||0));
 
@@ -7466,8 +7520,9 @@ function confirmFinalCancel(){
     const newStatus = reason === 'driver' ? 'cancelled_by_driver' : 'cancelled_by_customer';
     const updates = { status: newStatus };
     if(reason === 'driver') updates.cancellation_fee_idr = CANCELLATION_FEE_IDR;
+    updateRealBookingLocally(i, newStatus, reason === 'driver' ? { cancellationFeeIdr: CANCELLATION_FEE_IDR } : {});
     supabaseClient.from('bookings').update(updates).eq('id', b.dbId).then(({error})=>{
-      if(error){ console.error('Stornierung konnte nicht gespeichert werden:', error); return; }
+      if(error){ console.error('Stornierung konnte nicht gespeichert werden:', error); loadRealBookings(); return; }
       loadRealBookings();
       supabaseClient.functions.invoke('send-tour-offer-email', { body: { type: 'booking_cancelled', bookingId: b.dbId, cancelReason: reason } })
         .catch(err=>console.error('Storno-Mail fehlgeschlagen:', err));
@@ -7504,14 +7559,45 @@ function moveBookingToCompleted(driverId, index, finalStatus, cancelReason){
   if(!Array.isArray(store.completed)) store.completed = [];
   store.completed.unshift({...b, status: finalStatus, cancelReason: cancelReason || null});
 }
+// Bugfix (22.8., Joerg-Test): fuer ECHTE Fahrer (Supabase) hing das Dashboard nach einer Aktion
+// (annehmen/stornieren/abschliessen) sichtbar fest -- Buttons/Status blieben auf altem Stand, bis
+// man einmal die Ansicht wechselte und zurueckkam. Ursache: die realen Aktionsfunktionen haben bisher
+// NUR den Supabase-Schreibvorgang angestossen und erst in dessen .then()-Callback per loadRealBookings()
+// neu geladen -- direkt danach folgte aber ein blockierender alert()-Dialog, der den Browser-Thread
+// anhaelt und damit das Verarbeiten der bereits eingetroffenen Server-Antwort verzoegert (auf manchen
+// mobilen Browsern/PWA-Modi spuerbar lange). Die Demo-Faher-Variante direkt darunter hat dagegen immer
+// schon SOFORT lokal aktualisiert und neu gerendert, bevor ueberhaupt ein alert() kommt.
+// Diese Hilfsfunktion bringt genau dieses sofortige, optimistische Verhalten auch fuer echte Fahrer:
+// lokal wird der Status schon vor der Server-Antwort aktualisiert, das Dashboard rendert sofort neu.
+// loadRealBookings() laeuft im Hintergrund trotzdem weiter mit und gleicht bei Bedarf wieder ab
+// (z.B. falls der Schreibvorgang doch fehlschlaegt -- dann zeigt der naechste Reload den echten Stand).
+function updateRealBookingLocally(i, newStatus, extra){
+  const b = driverBookings[i];
+  if(!b) return;
+  Object.assign(b, extra || {}, { status:newStatus });
+  if(newStatus === 'declined_by_driver'){
+    // abgelehnte Anfragen verschwinden komplett aus der eigenen Ansicht (nicht in "Abgeschlossen")
+    driverBookings.splice(i, 1);
+  } else if(newStatus === 'pending' || newStatus === 'confirmed' || newStatus === 'cancel_requested'){
+    // bleibt in der offenen Liste, nur der Status/die Buttons aendern sich
+  } else {
+    // alles andere (completed, cancelled_by_*, cancelled_by_request) wandert in "Abgeschlossen"
+    driverBookings.splice(i, 1);
+    if(typeof completedBookings !== 'undefined' && Array.isArray(completedBookings)) completedBookings.unshift(b);
+  }
+  renderDriverBookings();
+  if(typeof renderAllBookings === 'function') renderAllBookings();
+  if(typeof renderOverviewStats === 'function') renderOverviewStats();
+}
 // driver confirms the trip actually happened — the only trigger for "first completed booking" referral bonuses
 function completeBooking(i){
   const b = driverBookings[i];
   if(!b) return;
   if(!confirm(t('confirm_complete_booking') + ' ' + b.who + '?')) return;
   if(realDriverProfile && b.dbId){
+    updateRealBookingLocally(i, 'completed');
     supabaseClient.from('bookings').update({ status: 'completed' }).eq('id', b.dbId).then(({error})=>{
-      if(error){ console.error('Konnte nicht abgeschlossen werden:', error); return; }
+      if(error){ console.error('Konnte nicht abgeschlossen werden:', error); loadRealBookings(); return; }
       loadRealBookings();
       supabaseClient.functions.invoke('send-tour-offer-email', { body: { type: 'booking_completed', bookingId: b.dbId } })
         .catch(err=>console.error('Dankes-Mail (Tour abgeschlossen) fehlgeschlagen:', err));
@@ -7551,8 +7637,9 @@ function confirmCancellation(i){
   if(!b) return;
   if(!confirm(t('confirm_ack_cancel') + ' ' + b.who + '?')) return;
   if(realDriverProfile && b.dbId){
+    updateRealBookingLocally(i, 'cancelled_by_request');
     supabaseClient.from('bookings').update({ status: 'cancelled_by_request' }).eq('id', b.dbId).then(({error})=>{
-      if(error){ console.error('Storno konnte nicht bestätigt werden:', error); return; }
+      if(error){ console.error('Storno konnte nicht bestätigt werden:', error); loadRealBookings(); return; }
       loadRealBookings();
       supabaseClient.functions.invoke('send-tour-offer-email', { body: { type: 'booking_cancelled', bookingId: b.dbId, cancelReason: 'customer_request' } })
         .catch(err=>console.error('Storno-Bestaetigungs-Mail fehlgeschlagen:', err));
@@ -7573,8 +7660,9 @@ function acceptBooking(i){
     const pickupTimeVal = (timeInput && timeInput.trim()) ? timeInput.trim() : null;
     const updatePayload = { status: 'confirmed' };
     if(pickupTimeVal) updatePayload.pickup_time = pickupTimeVal;
+    updateRealBookingLocally(i, 'confirmed', pickupTimeVal ? { pickupTime: pickupTimeVal } : {});
     supabaseClient.from('bookings').update(updatePayload).eq('id', b.dbId).then(({error})=>{
-      if(error){ console.error('Konnte nicht bestätigt werden:', error); return; }
+      if(error){ console.error('Konnte nicht bestätigt werden:', error); loadRealBookings(); return; }
       loadRealBookings();
       supabaseClient.functions.invoke('send-tour-offer-email', { body: { type: 'booking_confirmed', bookingId: b.dbId } })
         .catch(err=>console.error('Bestaetigungs-Mail (Buchung bestaetigt) fehlgeschlagen:', err));
@@ -7600,8 +7688,9 @@ function declineBooking(i){
   if(!b) return;
   if(!confirm(t('confirm_decline_booking') + ' ' + b.who + '?')) return;
   if(realDriverProfile && b.dbId){
+    updateRealBookingLocally(i, 'declined_by_driver');
     supabaseClient.from('bookings').update({ status: 'declined_by_driver' }).eq('id', b.dbId).then(({error})=>{
-      if(error){ console.error('Buchung konnte nicht abgelehnt werden:', error); return; }
+      if(error){ console.error('Buchung konnte nicht abgelehnt werden:', error); loadRealBookings(); return; }
       loadRealBookings();
       supabaseClient.functions.invoke('send-tour-offer-email', { body: { type: 'booking_declined', bookingId: b.dbId, origin: location.origin } })
         .catch(err=>console.error('Absage-Mail fehlgeschlagen:', err));
@@ -8331,11 +8420,11 @@ function renderListings(){
     <div class="listing-row ${l.active?'':'paused'}" style="cursor:pointer;" onclick="openEditListing(${i})">
       <div>
         <div class="lname">${l.name} ${driverRankBadgeHTML(realDriverProfile ? realDriverProfile.id : currentDriverId, 'sm')}</div>
-        <div class="lmeta">${l.price} · ${spotLabel(l.duration)} · <span style="white-space:nowrap;">${l.bookings} bookings</span> <span class="fee-badge">${l.fee} / booking</span></div>
-        <div class="lmeta">${l.region ? '🚩 '+l.region : '<em>No starting point set</em>'} ${l.services && l.services.length ? '· '+serviceLabel(l.services) : ''}</div>
+        <div class="lmeta">${l.price} · ${spotLabel(l.duration)} · <span style="white-space:nowrap;">${l.bookings} ${t('lst_bookings_suffix')}</span> <span class="fee-badge">${l.fee} ${t('lst_per_booking_suffix')}</span></div>
+        <div class="lmeta">${l.region ? '🚩 '+l.region : `<em>${t('lst_no_start_point')}</em>`} ${l.services && l.services.length ? '· '+serviceLabel(l.services) : ''}</div>
         ${l.spots && l.spots.length ? `<div class="spots-line">✦ ${l.spots.map(spotLabel).join(' · ')}</div>` : ''}
-        ${l.extras && l.extras.length ? `<div class="extras-line">⚠ Not included: ${l.extras.join(', ')}</div>` : ''}
-        ${l.serviceRegions ? `<div class="spots-line" style="color:var(--teal);">🚐 Pickup: ${l.serviceRegions==='all' ? 'All regions' : l.serviceRegions.join(', ')}</div>` : ''}
+        ${l.extras && l.extras.length ? `<div class="extras-line">⚠ ${t('lst_not_included_prefix')} ${l.extras.map(v=>t(EXTRAS_LABEL_KEY[v]||v)).join(', ')}</div>` : ''}
+        ${l.serviceRegions ? `<div class="spots-line" style="color:var(--teal);">🚐 ${t('lst_pickup_prefix')} ${l.serviceRegions==='all' ? t('all_regions') : l.serviceRegions.join(', ')}</div>` : ''}
         ${l.airportRegions && Object.keys(l.airportRegions).length ? `<div class="spots-line" style="color:var(--teal);">✈️ ${Object.entries(l.airportRegions).map(([r,p])=>r+': '+p).join(' · ')}</div>` : ''}
         ${l.transferRegions && Object.keys(l.transferRegions).length ? `<div class="spots-line" style="color:var(--teal);">🚐 ${Object.entries(l.transferRegions).map(([r,p])=>r+': '+p).join(' · ')}</div>` : ''}
         ${l.pickupRegionPrices && Object.keys(l.pickupRegionPrices).length ? `<div class="spots-line" style="color:var(--teal);">🚩 ${Object.entries(l.pickupRegionPrices).map(([r,p])=>r+': '+p).join(' · ')}</div>` : ''}
@@ -9191,7 +9280,9 @@ async function loadVillaAdminData(){
   const sel = document.getElementById('villa-manage-select');
   if(!sel) return;
   const linkEl = document.getElementById('villa-apply-link');
-  if(linkEl) linkEl.textContent = location.origin + '/?apply=villa';
+  // Zeilenumbruch-Fix (22.8., Joerg-Wunsch): <wbr> statt freiem Umbruch, damit der Link -- falls
+  // die Breite doch mal nicht reicht -- sauber zwischen Domain und Pfad umbricht statt mitten im Wort.
+  if(linkEl) linkEl.innerHTML = escapeHtml(location.origin) + '<wbr>' + escapeHtml('/?apply=villa');
   const { data: villas, error: villasErr } = await supabaseClient.from('villa_partners').select('*').order('name');
   if(villasErr){ console.error('Villen konnten nicht geladen werden:', villasErr); return; }
   villaAdminCache = villas || [];
@@ -9322,7 +9413,8 @@ async function loadVillaIntoManageForm(){
   document.getElementById('villa-edit-status').textContent = '';
   const activeBtn = document.getElementById('villa-edit-toggle-active-btn');
   activeBtn.textContent = v.active ? '🚫 Villa deaktivieren' : '✓ Villa aktivieren';
-  document.getElementById('villa-edit-link').textContent = location.origin + '/v/' + v.slug;
+  // Gleicher Zeilenumbruch-Fix wie beim Bewerbungslink: <wbr> als sauberer Umbruchpunkt.
+  document.getElementById('villa-edit-link').innerHTML = escapeHtml(location.origin) + '<wbr>' + escapeHtml('/v/' + v.slug);
   document.getElementById('villa-edit-qr-wrap').style.display = 'none';
 
   const [{ data: commissions }, { data: openReqs }] = await Promise.all([
@@ -10826,7 +10918,7 @@ const translations = {
     dp_qr_title: "Your Rydanu QR code", dp_qr_note: "Share this with travelers — they'll land straight on your page to book.", dp_qr_send_btn: "Send QR code via WhatsApp", dp_qr_wa_text: "Check out my Rydanu driver page and book directly with me:",
     dp_gallery_title: "Photos & videos", dp_upload_btn: "Upload photo or video", dp_gallery_empty: "No photos or videos yet.", dp_gallery_empty_owner: "Upload photos and short videos of your tours — travelers love seeing real impressions!", dp_photo_upload_soon: "Photo upload is coming soon.",
     dp_tours_title: "My tours on Rydanu", dp_tours_empty: "No active tours right now.",
-    dp_reviews_title: "What guests say", dp_reviews_empty: "No reviews yet.", dp_review_singular: "review", dp_review_plural: "reviews",
+    dp_reviews_title: "What guests say", dp_reviews_empty: "No reviews yet.", dp_review_singular: "review", dp_review_plural: "reviews", dp_reviews_more: "Show more",
     dp_msg_title: "Send me a message", dp_msg_name_ph: "Your name", dp_msg_email_ph: "Your email (so the driver can reply)", dp_msg_text_ph: "Your message to the driver...", dp_msg_send: "✉️ Send message",
     dp_msg_err: "Please enter your name, a valid email, and a message.", dp_msg_sent: "✓ Message sent — you'll get an email when the driver replies.", dp_msg_inbox_title: "New message via your Rydanu page — from", dp_msg_save_err: "Couldn't send your message — please try again.",
     rd_vtype_label: "Vehicle type *", lbl_optional_inline: "(optional)", rd_seats_label: "Number of seats", trust_badges_label: "Trust badges (shown on your profile)", rd_referral_label: "Referral code", rd_referral_ph: "e.g. RY-104 — the Rydanu number of the driver who invited you", rd_referral_hint: "Were you invited by another driver? Enter their Rydanu number — they'll receive an IDR 100,000 fee credit once your account is approved and you complete your first booking.",
@@ -10869,7 +10961,7 @@ const translations = {
     tr_status_offered: "Offer ready", tr_status_pending: "Awaiting driver", tr_note_offered: "Good news — your driver has prepared a tour for your request. Tap below to view and book it.", tr_note_pending: "Your driver hasn't prepared an offer yet. Check back later, or contact them directly.", tr_decline_btn: "Decline", tr_declined_tag: "Declined", confirm_decline_request: "Decline this request from", cal_conflict_alert: "Heads up — you already have a tour scheduled on {date}!", tr_status_declined: "Not available", tr_note_declined: "Unfortunately this driver isn't able to take on your request right now. Please try requesting a custom tour from another driver on Rydanu — many others may be a great fit for what you're looking for.",
     tr_go_to_request_btn: "Go to request &amp; create offer",
     nl_request_context_note: "You are creating this tour for {name}\u2019s request (Ref: {ref}). Once published it will also appear publicly in Rydanu search \u2014 any traveler will be able to book it, not only {name}.",
-    requests_rule_note: "⚠️ All requests must be answered with a tour offer created here. Arranging payment or bookings privately, outside Rydanu, is not allowed and may lead to account suspension.",
+    requests_rule_note: "⚠️ All requests must be answered with a tour offer created here. Arranging bookings privately, outside Rydanu, is not allowed and may lead to account suspension.",
     dp_media_del_confirm: "Remove this photo/video from your page?", dp_media_limits: "Up to 20 photos and 5 short videos (max 30 seconds each).",
     dp_unsupported_file: "Please choose a photo or video file.", dp_photo_limit: "Max 20 photos — please remove one first.", dp_video_limit: "Max 5 videos — please remove one first.",
     dp_video_too_long: "This video is longer than 30 seconds — please trim it first.", dp_video_too_big: "This video file is too large (max 6 MB). Please choose a shorter or lower-resolution clip.",
@@ -10902,7 +10994,7 @@ const translations = {
     cancel_confirm_prompt: "Are you sure you want to cancel this tour? This cannot be undone.", cancel_confirm_back: "No, go back", cancel_confirm_yes: "Yes, cancel tour",
     alert_deposit_confirmed_1: "Booking accepted — now final with", alert_deposit_confirmed_2: "The guest has been notified by email & WhatsApp.",
     prompt_pickup_time_msg: "What pickup time did you agree with the customer? (optional, leave blank to skip)",
-    alert_no_fees: "No open fees — everything is paid. ✓", confirm_pay_fees: "Pay your open Rydanu fees of", confirm_pay_fees_credit_note: "after applying your referral credit of", confirm_pay_fees_fully_covered: "Your open fees are fully covered by your referral credit —", referral_credit_lbl: "Referral credit", admin_credit_lbl: "Credit", referral_title: "🎁 Refer a driver, earn IDR 100,000", referral_body: "Share your Rydanu number with another driver. Once they're approved and complete their first booking, you get an IDR 100,000 credit — automatically applied to your next fee payment.", referral_your_code: "Your referral code", referral_bonus_inbox_title: "🎁 Referral bonus credited!", referral_bonus_inbox_body: "{name} completed their first booking — you've been credited {amount} toward your Rydanu fees. Thanks for growing the community!", referral_no_payout: "This credit cannot be paid out in cash — it can only be used to offset your Rydanu booking fees.", referral_promo_note: "If you're currently fee-exempt through a special Rydanu promotion, the referral bonus won't apply to drivers you refer during that time.", tier_transfer_note: "Transfer bookings (with or without airport pickup) use the exact same price-based fee table above — there's no separate flat rate.", referral_credit_pending_note: "available — applied automatically when you next pay your fees", fees_charged_when_note: "\u24d8 Fees are only actually charged when you tap \"Pay now\", or automatically on the last day of the month. Any referral credit is applied at that moment, not before.",
+    alert_no_fees: "No open fees — everything is paid. ✓", confirm_pay_fees: "Pay your open Rydanu fees of", confirm_pay_fees_credit_note: "after applying your referral credit of", confirm_pay_fees_fully_covered: "Your open fees are fully covered by your referral credit —", referral_credit_lbl: "Referral credit", admin_credit_lbl: "Credit", referral_title: "🎁 Refer a driver, earn IDR 100,000", referral_body_short: "Send your invite link via WhatsApp — your code is filled in automatically for them.", referral_wa_btn: "Invite via WhatsApp", referral_body: "Share your Rydanu number with another driver. Once they're approved and complete their first booking, you get an IDR 100,000 credit — automatically applied to your next fee payment.", referral_your_code: "Your referral code", referral_bonus_inbox_title: "🎁 Referral bonus credited!", referral_bonus_inbox_body: "{name} completed their first booking — you've been credited {amount} toward your Rydanu fees. Thanks for growing the community!", referral_no_payout: "This credit cannot be paid out in cash — it can only be used to offset your Rydanu booking fees.", referral_promo_note: "If you're currently fee-exempt through a special Rydanu promotion, the referral bonus won't apply to drivers you refer during that time.", tier_transfer_note: "Transfer bookings (with or without airport pickup) use the exact same price-based fee table above — there's no separate flat rate.", referral_credit_pending_note: "available — applied automatically when you next pay your fees", fees_charged_when_note: "\u24d8 Fees are only actually charged when you tap \"Pay now\", or automatically on the last day of the month. Any referral credit is applied at that moment, not before.",
     alert_fees_paid_1: "Payment successful:", alert_fees_paid_2: "Your receipt is available under \"Fee statements\":",
     alert_listing_pending: "Your listing is saved, but it will only appear to travelers once your Rydanu account has been approved.",
     empty_bookings: "No bookings yet. Add your first listing to start receiving requests.",
@@ -11054,6 +11146,9 @@ const translations = {
     svc_filter_chip: "📸 Photo & drone service",
     svc_offer_photo_only: "📸 Photo service", svc_offer_drone_only: "🚁 Drone service", svc_on_request_suffix: "(price on request)",
     svc_offer_boat: "🎫 Boat tickets", svc_boat: "Boat tickets", svc_filter_boat: "🎫 Boat tickets", filter_service_title: "Service (on request)",
+    extras_chip_entrance: "Entrance fees", extras_chip_parking: "Parking", extras_chip_fuel: "Fuel", extras_chip_other: "Other", nl_save_btn: "Save",
+    od_price_label: "Price:", od_date_label: "Proposed date:", od_pickup_label: "Pickup:", od_note_label: "Note from your driver:", od_highlights_label: "Highlights:", od_not_included_label: "Not included:",
+    lst_bookings_suffix: "bookings", lst_per_booking_suffix: "/ booking", lst_no_start_point: "No starting point set", lst_pickup_prefix: "Pickup:", lst_not_included_prefix: "Not included:",
   },
   de: {
     tab_travelers: "Für Reisende",
@@ -11162,7 +11257,7 @@ const translations = {
     dp_qr_title: "Dein Rydanu QR-Code", dp_qr_note: "Teile ihn mit Reisenden — sie landen direkt auf deiner Seite und können buchen.", dp_qr_send_btn: "QR-Code per WhatsApp senden", dp_qr_wa_text: "Schau dir meine Rydanu-Fahrerseite an und buche direkt bei mir:",
     dp_gallery_title: "Fotos & Videos", dp_upload_btn: "Foto oder Video hochladen", dp_gallery_empty: "Noch keine Fotos oder Videos.", dp_gallery_empty_owner: "Lade Fotos und kurze Videos deiner Touren hoch — Reisende lieben echte Eindrücke!", dp_photo_upload_soon: "Foto-Upload kommt bald.",
     dp_tours_title: "Meine Touren auf Rydanu", dp_tours_empty: "Aktuell keine aktiven Touren.",
-    dp_reviews_title: "Das sagen Gäste", dp_reviews_empty: "Noch keine Bewertungen.", dp_review_singular: "Bewertung", dp_review_plural: "Bewertungen",
+    dp_reviews_title: "Das sagen Gäste", dp_reviews_empty: "Noch keine Bewertungen.", dp_review_singular: "Bewertung", dp_review_plural: "Bewertungen", dp_reviews_more: "Mehr anzeigen",
     dp_msg_title: "Schreib mir eine Nachricht", dp_msg_name_ph: "Dein Name", dp_msg_email_ph: "Deine E-Mail (damit der Fahrer antworten kann)", dp_msg_text_ph: "Deine Nachricht an den Fahrer...", dp_msg_send: "✉️ Nachricht senden",
     dp_msg_err: "Bitte gib deinen Namen, eine gültige E-Mail-Adresse und eine Nachricht ein.", dp_msg_sent: "✓ Nachricht gesendet — du bekommst eine E-Mail, sobald der Fahrer antwortet.", dp_msg_inbox_title: "Neue Nachricht über deine Rydanu-Seite — von", dp_msg_save_err: "Nachricht konnte nicht gesendet werden — bitte erneut versuchen.",
     rd_vtype_label: "Fahrzeugtyp *", lbl_optional_inline: "(optional)", rd_seats_label: "Anzahl Sitzplätze", trust_badges_label: "Vertrauens-Merkmale (auf deinem Profil sichtbar)", rd_referral_label: "Empfehlungs-Code", rd_referral_ph: "z.B. RY-104 — die Rydanu-Nummer des werbenden Fahrers", rd_referral_hint: "Wurdest du von einem anderen Fahrer geworben? Gib seine Rydanu-Nummer ein — er bekommt eine Gutschrift von IDR 100.000, sobald dein Konto freigeschaltet ist und du deine erste Buchung abgeschlossen hast.",
@@ -11205,7 +11300,7 @@ const translations = {
     tr_status_offered: "Angebot bereit", tr_status_pending: "Wartet auf Fahrer", tr_note_offered: "Gute Nachricht — dein Fahrer hat eine Tour für deine Anfrage erstellt. Tippe unten, um sie anzusehen und zu buchen.", tr_note_pending: "Dein Fahrer hat noch kein Angebot erstellt. Schau später nochmal vorbei oder kontaktiere ihn direkt.", tr_decline_btn: "Ablehnen", tr_declined_tag: "Abgelehnt", confirm_decline_request: "Diese Anfrage ablehnen von", cal_conflict_alert: "Achtung — du hast am {date} schon eine Tour geplant!", tr_status_declined: "Nicht möglich", tr_note_declined: "Dieser Fahrer kann deine Anfrage aktuell leider nicht annehmen. Bitte frag gerne einen anderen Fahrer auf Rydanu nach einer individuellen Tour an — viele andere passen bestimmt gut zu dem, was du suchst.",
     tr_go_to_request_btn: "Zur Anfrage &amp; Angebot erstellen",
     nl_request_context_note: "Du erstellst diese Tour f\u00fcr die Anfrage von {name} (Ref: {ref}). Sobald ver\u00f6ffentlicht, erscheint sie auch \u00f6ffentlich in der Rydanu-Suche \u2014 jeder Reisende kann sie buchen, nicht nur {name}.",
-    requests_rule_note: "⚠️ Alle Anfragen müssen mit einem hier erstellten Tourangebot beantwortet werden. Zahlungen oder Buchungen privat außerhalb von Rydanu zu vereinbaren ist nicht erlaubt und kann zur Kontosperrung führen.",
+    requests_rule_note: "⚠️ Alle Anfragen müssen mit einem hier erstellten Tourangebot beantwortet werden. Buchungen privat außerhalb von Rydanu zu vereinbaren ist nicht erlaubt und kann zur Kontosperrung führen.",
     dp_media_del_confirm: "Dieses Foto/Video von deiner Seite entfernen?", dp_media_limits: "Bis zu 20 Fotos und 5 kurze Videos (max. 30 Sekunden je Video).",
     dp_unsupported_file: "Bitte wähle eine Foto- oder Videodatei.", dp_photo_limit: "Maximal 20 Fotos — bitte erst eins entfernen.", dp_video_limit: "Maximal 5 Videos — bitte erst eins entfernen.",
     dp_video_too_long: "Dieses Video ist länger als 30 Sekunden — bitte erst kürzen.", dp_video_too_big: "Diese Videodatei ist zu groß (max. 6 MB). Bitte wähle einen kürzeren Clip oder eine niedrigere Auflösung.",
@@ -11238,7 +11333,7 @@ const translations = {
     cancel_confirm_prompt: "Willst du diese Tour wirklich stornieren? Das kann nicht rückgängig gemacht werden.", cancel_confirm_back: "Nein, zurück", cancel_confirm_yes: "Ja, Tour stornieren",
     alert_deposit_confirmed_1: "Buchung angenommen — jetzt final mit", alert_deposit_confirmed_2: "Der Gast wurde per E-Mail & WhatsApp benachrichtigt.",
     prompt_pickup_time_msg: "Welche Abholzeit habt ihr vereinbart? (optional, leer lassen zum Überspringen)",
-    alert_no_fees: "Keine offenen Gebühren — alles bezahlt. ✓", confirm_pay_fees: "Deine offenen Rydanu-Gebühren jetzt bezahlen:", confirm_pay_fees_credit_note: "nach Anrechnung deiner Empfehlungs-Gutschrift von", confirm_pay_fees_fully_covered: "Deine offenen Gebühren sind vollständig durch deine Empfehlungs-Gutschrift gedeckt —", referral_credit_lbl: "Empfehlungs-Gutschrift", admin_credit_lbl: "Gutschrift", referral_title: "🎁 Fahrer werben, IDR 100.000 verdienen", referral_body: "Teile deine Rydanu-Nummer mit einem anderen Fahrer. Sobald er freigeschaltet ist und seine erste Buchung abgeschlossen hat, bekommst du eine Gutschrift von IDR 100.000 — automatisch bei deiner nächsten Gebührenzahlung angerechnet.", referral_your_code: "Deine Empfehlungs-Nummer", referral_bonus_inbox_title: "🎁 Empfehlungsbonus gutgeschrieben!", referral_bonus_inbox_body: "{name} hat seine erste Buchung abgeschlossen — dir wurden {amount} auf deine Rydanu-Gebühren gutgeschrieben. Danke, dass du die Community wachsen lässt!", referral_no_payout: "Diese Gutschrift kann nicht ausgezahlt werden — sie kann nur zur Verrechnung mit deinen Rydanu-Gebühren verwendet werden.", referral_promo_note: "Bist du selbst gerade durch eine Rydanu-Sonderaktion von Gebühren befreit, entfällt die Werbeprämie für Fahrer, die du in dieser Zeit wirbst.", tier_transfer_note: "Transfer-Buchungen (mit oder ohne Flughafenabholung) nutzen genau dieselbe preisbasierte Gebührentabelle oben — es gibt keinen separaten Pauschalsatz.", referral_credit_pending_note: "verf\u00fcgbar — wird automatisch bei deiner n\u00e4chsten Gebührenzahlung angerechnet", fees_charged_when_note: "\u24d8 Geb\u00fchren werden erst berechnet, wenn du auf \"Jetzt bezahlen\" tippst, oder automatisch am letzten Tag des Monats. Eine Empfehlungs-Gutschrift wird erst zu diesem Zeitpunkt angerechnet, nicht vorher.",
+    alert_no_fees: "Keine offenen Gebühren — alles bezahlt. ✓", confirm_pay_fees: "Deine offenen Rydanu-Gebühren jetzt bezahlen:", confirm_pay_fees_credit_note: "nach Anrechnung deiner Empfehlungs-Gutschrift von", confirm_pay_fees_fully_covered: "Deine offenen Gebühren sind vollständig durch deine Empfehlungs-Gutschrift gedeckt —", referral_credit_lbl: "Empfehlungs-Gutschrift", admin_credit_lbl: "Gutschrift", referral_title: "🎁 Fahrer werben, IDR 100.000 verdienen", referral_body_short: "Schick deinen Einladungslink per WhatsApp — deine Nummer wird automatisch für ihn eingetragen.", referral_wa_btn: "Per WhatsApp einladen", referral_body: "Teile deine Rydanu-Nummer mit einem anderen Fahrer. Sobald er freigeschaltet ist und seine erste Buchung abgeschlossen hat, bekommst du eine Gutschrift von IDR 100.000 — automatisch bei deiner nächsten Gebührenzahlung angerechnet.", referral_your_code: "Deine Empfehlungs-Nummer", referral_bonus_inbox_title: "🎁 Empfehlungsbonus gutgeschrieben!", referral_bonus_inbox_body: "{name} hat seine erste Buchung abgeschlossen — dir wurden {amount} auf deine Rydanu-Gebühren gutgeschrieben. Danke, dass du die Community wachsen lässt!", referral_no_payout: "Diese Gutschrift kann nicht ausgezahlt werden — sie kann nur zur Verrechnung mit deinen Rydanu-Gebühren verwendet werden.", referral_promo_note: "Bist du selbst gerade durch eine Rydanu-Sonderaktion von Gebühren befreit, entfällt die Werbeprämie für Fahrer, die du in dieser Zeit wirbst.", tier_transfer_note: "Transfer-Buchungen (mit oder ohne Flughafenabholung) nutzen genau dieselbe preisbasierte Gebührentabelle oben — es gibt keinen separaten Pauschalsatz.", referral_credit_pending_note: "verf\u00fcgbar — wird automatisch bei deiner n\u00e4chsten Gebührenzahlung angerechnet", fees_charged_when_note: "\u24d8 Geb\u00fchren werden erst berechnet, wenn du auf \"Jetzt bezahlen\" tippst, oder automatisch am letzten Tag des Monats. Eine Empfehlungs-Gutschrift wird erst zu diesem Zeitpunkt angerechnet, nicht vorher.",
     alert_fees_paid_1: "Zahlung erfolgreich:", alert_fees_paid_2: "Dein Beleg liegt unter \"Gebührenabrechnung\":",
     alert_listing_pending: "Dein Angebot ist gespeichert, erscheint für Reisende aber erst, sobald dein Rydanu-Konto freigeschaltet wurde.",
     empty_bookings: "Noch keine Buchungen. Lege dein erstes Angebot an, um Anfragen zu erhalten.",
@@ -11390,6 +11485,9 @@ const translations = {
     svc_filter_chip: "📸 Foto- & Drohnenservice",
     svc_offer_photo_only: "📸 Fotoservice", svc_offer_drone_only: "🚁 Drohnenservice", svc_on_request_suffix: "(Preis auf Anfrage)",
     svc_offer_boat: "🎫 Boots-Tickets", svc_boat: "Boots-Tickets", svc_filter_boat: "🎫 Boots-Tickets", filter_service_title: "Service (auf Anfrage)",
+    extras_chip_entrance: "Eintritt", extras_chip_parking: "Parken", extras_chip_fuel: "Benzin", extras_chip_other: "Sonstiges", nl_save_btn: "Speichern",
+    od_price_label: "Preis:", od_date_label: "Vorgeschlagenes Datum:", od_pickup_label: "Abholung:", od_note_label: "Nachricht von deinem Fahrer:", od_highlights_label: "Highlights:", od_not_included_label: "Nicht enthalten:",
+    lst_bookings_suffix: "Buchungen", lst_per_booking_suffix: "/ Buchung", lst_no_start_point: "Kein Startpunkt festgelegt", lst_pickup_prefix: "Abholung:", lst_not_included_prefix: "Nicht enthalten:",
   },
   id: {
     tab_travelers: "Untuk Wisatawan",
@@ -11498,7 +11596,7 @@ const translations = {
     dp_qr_title: "Kode QR Rydanu Anda", dp_qr_note: "Bagikan ini kepada wisatawan — mereka akan langsung ke halaman Anda untuk memesan.", dp_qr_send_btn: "Kirim kode QR via WhatsApp", dp_qr_wa_text: "Lihat halaman sopir Rydanu saya dan pesan langsung dengan saya:",
     dp_gallery_title: "Foto & video", dp_upload_btn: "Unggah foto atau video", dp_gallery_empty: "Belum ada foto atau video.", dp_gallery_empty_owner: "Unggah foto dan video singkat tur Anda — wisatawan suka melihat kesan nyata!", dp_photo_upload_soon: "Unggah foto akan segera hadir.",
     dp_tours_title: "Tur saya di Rydanu", dp_tours_empty: "Tidak ada tur aktif saat ini.",
-    dp_reviews_title: "Kata para tamu", dp_reviews_empty: "Belum ada ulasan.", dp_review_singular: "ulasan", dp_review_plural: "ulasan",
+    dp_reviews_title: "Kata para tamu", dp_reviews_empty: "Belum ada ulasan.", dp_review_singular: "ulasan", dp_review_plural: "ulasan", dp_reviews_more: "Tampilkan lebih banyak",
     dp_msg_title: "Kirim saya pesan", dp_msg_name_ph: "Nama Anda", dp_msg_email_ph: "Email Anda (agar sopir dapat membalas)", dp_msg_text_ph: "Pesan Anda untuk sopir...", dp_msg_send: "✉️ Kirim pesan",
     dp_msg_err: "Mohon isi nama, email yang valid, dan pesan Anda.", dp_msg_sent: "✓ Pesan terkirim — Anda akan menerima email saat sopir membalas.", dp_msg_inbox_title: "Pesan baru melalui halaman Rydanu Anda — dari", dp_msg_save_err: "Pesan tidak dapat dikirim — silakan coba lagi.",
     rd_vtype_label: "Jenis kendaraan *", lbl_optional_inline: "(opsional)", rd_seats_label: "Jumlah kursi", trust_badges_label: "Lencana kepercayaan (ditampilkan di profil Anda)", rd_referral_label: "Kode referral", rd_referral_ph: "mis. RY-104 — nomor Rydanu sopir yang mengundang Anda", rd_referral_hint: "Diundang oleh sopir lain? Masukkan nomor Rydanu mereka — mereka akan menerima kredit biaya IDR 100.000 setelah akun Anda disetujui dan Anda menyelesaikan pemesanan pertama.",
@@ -11541,7 +11639,7 @@ const translations = {
     tr_status_offered: "Penawaran siap", tr_status_pending: "Menunggu sopir", tr_note_offered: "Kabar baik — sopir Anda telah menyiapkan tur untuk permintaan Anda. Ketuk di bawah untuk melihat dan memesannya.", tr_note_pending: "Sopir Anda belum menyiapkan penawaran. Periksa lagi nanti, atau hubungi mereka langsung.", tr_decline_btn: "Tolak", tr_declined_tag: "Ditolak", confirm_decline_request: "Tolak permintaan ini dari", cal_conflict_alert: "Perhatian — Anda sudah punya tur pada {date}!", tr_status_declined: "Tidak tersedia", tr_note_declined: "Sayangnya sopir ini tidak dapat menerima permintaan Anda saat ini. Silakan coba minta tur khusus dari sopir lain di Rydanu — banyak sopir lain mungkin sangat cocok untuk apa yang Anda cari.",
     tr_go_to_request_btn: "Ke permintaan &amp; buat penawaran",
     nl_request_context_note: "Anda membuat tur ini untuk permintaan {name} (Ref: {ref}). Setelah dipublikasikan, tur ini juga akan muncul secara publik di pencarian Rydanu \u2014 wisatawan mana pun dapat memesannya, bukan hanya {name}.",
-    requests_rule_note: "⚠️ Semua permintaan harus dijawab dengan penawaran tur yang dibuat di sini. Mengatur pembayaran atau pemesanan secara pribadi di luar Rydanu tidak diizinkan dan dapat menyebabkan penangguhan akun.",
+    requests_rule_note: "⚠️ Semua permintaan harus dijawab dengan penawaran tur yang dibuat di sini. Mengatur pemesanan secara pribadi di luar Rydanu tidak diizinkan dan dapat menyebabkan penangguhan akun.",
     dp_media_del_confirm: "Hapus foto/video ini dari halaman Anda?", dp_media_limits: "Hingga 20 foto dan 5 video pendek (maks 30 detik per video).",
     dp_unsupported_file: "Mohon pilih file foto atau video.", dp_photo_limit: "Maksimal 20 foto — mohon hapus satu terlebih dahulu.", dp_video_limit: "Maksimal 5 video — mohon hapus satu terlebih dahulu.",
     dp_video_too_long: "Video ini lebih dari 30 detik — mohon potong terlebih dahulu.", dp_video_too_big: "File video ini terlalu besar (maks 6 MB). Mohon pilih klip yang lebih pendek atau resolusi lebih rendah.",
@@ -11574,7 +11672,7 @@ const translations = {
     cancel_confirm_prompt: "Apakah Anda yakin ingin membatalkan tur ini? Tindakan ini tidak dapat dibatalkan.", cancel_confirm_back: "Tidak, kembali", cancel_confirm_yes: "Ya, batalkan tur",
     alert_deposit_confirmed_1: "Pemesanan diterima — kini final dengan", alert_deposit_confirmed_2: "Tamu telah diberi tahu via email & WhatsApp.",
     prompt_pickup_time_msg: "Jam berapa waktu penjemputan yang disepakati dengan pelanggan? (opsional, kosongkan untuk lewati)",
-    alert_no_fees: "Tidak ada biaya terbuka — semuanya lunas. ✓", confirm_pay_fees: "Bayar biaya Rydanu terbuka Anda:", confirm_pay_fees_credit_note: "setelah menerapkan kredit referral Anda sebesar", confirm_pay_fees_fully_covered: "Biaya terbuka Anda telah sepenuhnya ditutupi oleh kredit referral Anda —", referral_credit_lbl: "Kredit referral", admin_credit_lbl: "Kredit", referral_title: "🎁 Ajak sopir, dapatkan IDR 100.000", referral_body: "Bagikan nomor Rydanu Anda kepada sopir lain. Setelah mereka disetujui dan menyelesaikan pemesanan pertama, Anda mendapat kredit IDR 100.000 — otomatis diterapkan pada pembayaran biaya berikutnya.", referral_your_code: "Kode referral Anda", referral_bonus_inbox_title: "🎁 Bonus referral dikreditkan!", referral_bonus_inbox_body: "{name} telah menyelesaikan pemesanan pertama mereka — Anda dikreditkan {amount} untuk biaya Rydanu Anda. Terima kasih telah mengembangkan komunitas!", referral_no_payout: "Kredit ini tidak dapat dicairkan secara tunai — hanya dapat digunakan untuk mengurangi biaya pemesanan Rydanu Anda.", referral_promo_note: "Jika Anda sedang dibebaskan dari biaya melalui promosi khusus Rydanu, bonus referral tidak berlaku untuk sopir yang Anda ajak selama periode tersebut.", tier_transfer_note: "Pemesanan transfer (dengan atau tanpa penjemputan bandara) menggunakan tabel biaya berbasis harga yang sama persis seperti di atas — tidak ada tarif tetap terpisah.", referral_credit_pending_note: "tersedia — otomatis diterapkan saat Anda membayar biaya berikutnya", fees_charged_when_note: "\u24d8 Biaya hanya benar-benar dikenakan saat Anda mengetuk \"Bayar sekarang\", atau otomatis pada hari terakhir bulan tersebut. Kredit referral apa pun diterapkan pada saat itu, bukan sebelumnya.",
+    alert_no_fees: "Tidak ada biaya terbuka — semuanya lunas. ✓", confirm_pay_fees: "Bayar biaya Rydanu terbuka Anda:", confirm_pay_fees_credit_note: "setelah menerapkan kredit referral Anda sebesar", confirm_pay_fees_fully_covered: "Biaya terbuka Anda telah sepenuhnya ditutupi oleh kredit referral Anda —", referral_credit_lbl: "Kredit referral", admin_credit_lbl: "Kredit", referral_title: "🎁 Ajak sopir, dapatkan IDR 100.000", referral_body_short: "Kirim link undangan Anda lewat WhatsApp — kode Anda otomatis terisi untuknya.", referral_wa_btn: "Ajak lewat WhatsApp", referral_body: "Bagikan nomor Rydanu Anda kepada sopir lain. Setelah mereka disetujui dan menyelesaikan pemesanan pertama, Anda mendapat kredit IDR 100.000 — otomatis diterapkan pada pembayaran biaya berikutnya.", referral_your_code: "Kode referral Anda", referral_bonus_inbox_title: "🎁 Bonus referral dikreditkan!", referral_bonus_inbox_body: "{name} telah menyelesaikan pemesanan pertama mereka — Anda dikreditkan {amount} untuk biaya Rydanu Anda. Terima kasih telah mengembangkan komunitas!", referral_no_payout: "Kredit ini tidak dapat dicairkan secara tunai — hanya dapat digunakan untuk mengurangi biaya pemesanan Rydanu Anda.", referral_promo_note: "Jika Anda sedang dibebaskan dari biaya melalui promosi khusus Rydanu, bonus referral tidak berlaku untuk sopir yang Anda ajak selama periode tersebut.", tier_transfer_note: "Pemesanan transfer (dengan atau tanpa penjemputan bandara) menggunakan tabel biaya berbasis harga yang sama persis seperti di atas — tidak ada tarif tetap terpisah.", referral_credit_pending_note: "tersedia — otomatis diterapkan saat Anda membayar biaya berikutnya", fees_charged_when_note: "\u24d8 Biaya hanya benar-benar dikenakan saat Anda mengetuk \"Bayar sekarang\", atau otomatis pada hari terakhir bulan tersebut. Kredit referral apa pun diterapkan pada saat itu, bukan sebelumnya.",
     alert_fees_paid_1: "Pembayaran berhasil:", alert_fees_paid_2: "Kuitansi tersedia di \"Laporan biaya\":",
     alert_listing_pending: "Tur Anda tersimpan, tetapi baru terlihat oleh wisatawan setelah akun Rydanu Anda disetujui.",
     empty_bookings: "Belum ada pemesanan. Tambahkan tur pertama Anda untuk menerima permintaan.",
@@ -11726,6 +11824,9 @@ const translations = {
     svc_filter_chip: "📸 Layanan foto & drone",
     svc_offer_photo_only: "📸 Layanan foto", svc_offer_drone_only: "🚁 Layanan drone", svc_on_request_suffix: "(harga atas permintaan)",
     svc_offer_boat: "🎫 Tiket kapal", svc_boat: "Tiket kapal", svc_filter_boat: "🎫 Tiket kapal", filter_service_title: "Layanan (atas permintaan)",
+    extras_chip_entrance: "Biaya masuk", extras_chip_parking: "Parkir", extras_chip_fuel: "Bahan bakar", extras_chip_other: "Lainnya", nl_save_btn: "Simpan",
+    od_price_label: "Harga:", od_date_label: "Tanggal yang diusulkan:", od_pickup_label: "Penjemputan:", od_note_label: "Catatan dari sopir Anda:", od_highlights_label: "Sorotan:", od_not_included_label: "Tidak termasuk:",
+    lst_bookings_suffix: "pemesanan", lst_per_booking_suffix: "/ pemesanan", lst_no_start_point: "Belum ada titik keberangkatan", lst_pickup_prefix: "Penjemputan:", lst_not_included_prefix: "Tidak termasuk:",
   }
 };
 function t(key){
@@ -11855,7 +11956,7 @@ function renderDriverGrid(rawList){
         ${!matrixPickupPrice && d.pickupRegionPrices && Object.keys(d.pickupRegionPrices).length ? `<div class="spots-line airport-price-lines" style="margin-bottom:6px;">${Object.entries(d.pickupRegionPrices).map(([r,p])=>`<div class="region-price-row"><span class="rp-label">🚩 ${r}</span><span class="rp-value">${p}</span></div>`).join('')}</div>` : ''}
         ${d.tourSpecialRates && d.tourSpecialRates.length ? `<div class="spots-line airport-price-lines" style="margin-bottom:6px;">${d.tourSpecialRates.map(r=>`<div class="region-price-row"><span class="rp-label">📍 ${escapeHtml(r.label)}</span><span class="rp-value">${escapeHtml(r.price)}</span></div>`).join('')}</div>` : ''}
         ${matrixPrice ? `<div class="spots-line airport-price-lines" style="margin-bottom:6px;">✈️ ${cityAirportCity} ⇄ ${t('map_dropoff_area')}</div>` : ''}
-        ${d.extras && d.extras.length ? `<div class="extras-line" style="margin-bottom:8px;">⚠ Not included: ${d.extras.join(', ')}</div>` : ''}
+        ${d.extras && d.extras.length ? `<div class="extras-line" style="margin-bottom:8px;">⚠ ${t('lst_not_included_prefix')} ${d.extras.map(v=>t(EXTRAS_LABEL_KEY[v]||v)).join(', ')}</div>` : ''}
         <div class="region-tag">
           🚐 ${t('modal_start_label')}: ${regionDisplayLabel(d)}
           <button type="button" class="mini-map-btn" onclick="viewTourOnMap(event, ${i})">🗺️ Tour map</button>
@@ -13607,13 +13708,17 @@ async function checkSiteLock(){
   // sonst: Sperrseite bleibt sichtbar (Standardzustand), nichts weiter tun
 }
 const EXTRAS_EMOJI = { 'Entrance fees':'🎟️', 'Parking':'🅿️', 'Fuel':'⛽', 'Other':'➕' };
+// Uebersetzt die intern englischen Extras-Werte (data-value, siehe Formular-Chips) fuer die Anzeige --
+// gleiches Prinzip wie SPOT_LABEL_KEYS bei den Tour-Dauern: Rohwert bleibt Englisch/stabil in der DB,
+// nur die ANZEIGE wechselt mit der Sprache.
+const EXTRAS_LABEL_KEY = { 'Entrance fees':'extras_chip_entrance', 'Parking':'extras_chip_parking', 'Fuel':'extras_chip_fuel', 'Other':'extras_chip_other' };
 function emojiForHighlight(value){
   const found = HIGHLIGHT_OPTIONS.find(o => o.value === value);
   return found ? found.emoji : '📍';
 }
-function highlightListHTML(items, emojiLookupFn){
+function highlightListHTML(items, emojiLookupFn, labelLookupFn){
   return `<div style="display:flex; flex-direction:column; gap:4px; margin-top:4px;">
-    ${items.map(v => `<div style="display:flex; align-items:center; gap:8px;"><span>${emojiLookupFn(v)}</span><span>${escapeHtml(v)}</span></div>`).join('')}
+    ${items.map(v => `<div style="display:flex; align-items:center; gap:8px;"><span>${emojiLookupFn(v)}</span><span>${escapeHtml(labelLookupFn ? labelLookupFn(v) : v)}</span></div>`).join('')}
   </div>`;
 }
 function offerDetailsHTML(row){
@@ -13623,18 +13728,22 @@ function offerDetailsHTML(row){
   // Punkt 1 (5. August): Highlights/Extras jetzt als Liste untereinander mit Emoji statt einer
   // einzelnen Komma-getrennten Zeile -- deutlich besser lesbar auf einen Blick.
   const highlightsLine = (row.highlights && row.highlights.length)
-    ? `<div style="margin:10px 0;"><strong>Highlights:</strong>${highlightListHTML(row.highlights, emojiForHighlight)}</div>` : '';
+    ? `<div style="margin:10px 0;"><strong>${t('od_highlights_label')}</strong>${highlightListHTML(row.highlights, emojiForHighlight)}</div>` : '';
+  // Bugfix (22.8., Uebersetzungs-Sweep): diese ganze Angebots-Detailkarte (Kunden sehen sie bei jedem
+  // individuellen Tourangebot) war komplett hardcoded Englisch, unabhaengig von der gewaehlten Sprache
+  // -- inkl. der Extras-Werte selbst (die intern als englische data-value-Strings gespeichert sind,
+  // siehe EXTRAS_LABEL_KEY unten). Jetzt vollstaendig ueber t()/currentLang.
   const extrasLine = (row.extras && row.extras.length)
-    ? `<div style="margin:10px 0;"><strong>Not included:</strong>${highlightListHTML(row.extras, v => EXTRAS_EMOJI[v] || '➕')}</div>` : '';
+    ? `<div style="margin:10px 0;"><strong>${t('od_not_included_label')}</strong>${highlightListHTML(row.extras, v => EXTRAS_EMOJI[v] || '➕', v => t(EXTRAS_LABEL_KEY[v] || v))}</div>` : '';
   return `
     <div class="panel" style="padding:16px; margin:16px 0; text-align:left;">
       <p style="white-space:pre-wrap; margin:0 0 10px;">${escapeHtml(row.tour_description)}</p>
-      <p style="margin:6px 0;"><strong>Price:</strong> ${priceLine}</p>
-      ${row.proposed_date ? `<p style="margin:6px 0;"><strong>Proposed date:</strong> ${formatDateDisplay(row.proposed_date)}</p>` : ''}
-      ${row.pickup ? `<p style="margin:6px 0;"><strong>Pickup:</strong> ${escapeHtml(row.pickup)}</p>` : ''}
+      <p style="margin:6px 0;"><strong>${t('od_price_label')}</strong> ${priceLine}</p>
+      ${row.proposed_date ? `<p style="margin:6px 0;"><strong>${t('od_date_label')}</strong> ${formatDateDisplay(row.proposed_date)}</p>` : ''}
+      ${row.pickup ? `<p style="margin:6px 0;"><strong>${t('od_pickup_label')}</strong> ${escapeHtml(row.pickup)}</p>` : ''}
       ${highlightsLine}
       ${extrasLine}
-      ${row.notes ? `<p style="margin:6px 0;"><strong>Note from your driver:</strong> ${escapeHtml(row.notes)}</p>` : ''}
+      ${row.notes ? `<p style="margin:6px 0;"><strong>${t('od_note_label')}</strong> ${escapeHtml(row.notes)}</p>` : ''}
     </div>`;
 }
 // ============================================
@@ -13788,7 +13897,7 @@ async function initVillaRequestPage(slug){
       </label>
       <label style="display:block; margin-bottom:12px;">${t('vr_phone')}
         <div style="display:flex; gap:8px; margin-top:4px;">
-          <select id="vr-country" style="flex:0 0 92px;">
+          <select id="vr-country" style="flex:0 0 112px;">
             <option value="62" selected>🇮🇩 +62</option>
             <option value="49">🇩🇪 +49</option>
             <option value="61">🇦🇺 +61</option>
@@ -14144,6 +14253,18 @@ if(_villaSlug){
       openMyBooking();
       const refEl = document.getElementById('mb-ref');
       if(refEl) refEl.value = _myBookingRef;
+    }, 300);
+  }
+  // Fahrer-werben-Fahrer per WhatsApp-Link (22.8., Joerg-Wunsch): der Link aus shareReferralLinkWhatsapp()
+  // enthaengt ?ref=<RY-Nummer> -- landet ein neuer Besucher darueber, wird direkt die
+  // Fahrer-Registrierung geoeffnet und die Empfehlungs-Nummer schon eingetragen, statt dass der neue
+  // Fahrer sie manuell abtippen muss.
+  const _refCode = new URLSearchParams(location.search).get('ref');
+  if(_refCode){
+    setTimeout(()=>{
+      openRealRegisterDriver();
+      const refField = document.getElementById('auth-signup-referral');
+      if(refField) refField.value = _refCode;
     }, 300);
   }
   // Punkt 2 (5. August): der Alternative-Link aus der "Fahrer kann leider nicht"-Mail traegt die
@@ -16542,7 +16663,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v287</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v288</div>
 
 </body>
 </html>

@@ -1,5 +1,5 @@
 // Rydanu — simple offline-friendly cache-first service worker
-const CACHE_NAME = 'rydanu-cache-v287';
+const CACHE_NAME = 'rydanu-cache-v288';
 const CORE_ASSETS = [
   './',
   './manifest.json'
@@ -32,6 +32,22 @@ function stripRedirect(response) {
 
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
+
+  // Bugfix (22.8., Joerg gemeldet: Dashboard "haengt" nach Aktionen wie Buchung annehmen/Nachricht
+  // lesen -- erst ein Ansichtswechsel zeigte den richtigen Stand). Ursache gefunden: die
+  // Cache-first-Strategie unten galt bisher fuer JEDE GET-Anfrage, auch fuer die Supabase-Datenabfragen
+  // (bookings, messages, villa_requests, ...) -- die laufen technisch ebenfalls als ganz normale
+  // Cross-Origin-GET-Requests. Der Service Worker hat darum manchmal eine AELTERE, zwischengespeicherte
+  // Server-Antwort ausgeliefert statt des frischen Stands nach einer Aktion. Ein andersartiger,
+  // spaeterer Request (z.B. beim Ansichtswechsel) hat die Cache-Kopie dann zufaellig aktualisiert --
+  // daher wirkte es dort "repariert". Fix: Anfragen an die Supabase-Domain (Datenbank + Edge Functions)
+  // laufen ab jetzt IMMER direkt ans Netzwerk, nie ueber den Cache -- nur echte statische Dateien
+  // (App selbst, Schriften, cdnjs, Bilder) bleiben weiterhin cache-first fuer Geschwindigkeit/Offline.
+  const reqUrl = new URL(event.request.url);
+  if (reqUrl.hostname.endsWith('.supabase.co')) {
+    event.respondWith(fetch(event.request));
+    return;
+  }
 
   if (event.request.mode === 'navigate') {
     event.respondWith(
