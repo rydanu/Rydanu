@@ -2801,6 +2801,10 @@
         <label data-i18n="admin_filter_by_driver">Nach Fahrer filtern</label>
         <select id="fee-overrides-filter-select" onchange="renderFeeOverridesList()"></select>
       </div>
+      <label class="nl-service-check" style="margin-bottom:14px;">
+        <input type="checkbox" id="fee-overrides-active-only" checked onchange="renderFeeOverridesList()">
+        <span data-i18n="admin_fo_active_only">Nur aktive anzeigen</span>
+      </label>
       <div id="admin-fee-overrides-list"></div>
     </div>
   </div>
@@ -11200,7 +11204,7 @@ const translations = {
     admin_fo_notify_body_vip: "🌟 You've got VIP status: 0% fees on all your bookings ({range})! You can see your current rate anytime under \"Fees & billing\".",
     admin_fo_notify_body_removed: "Your individual fee rate has been removed. You are now back to the standard rate of 10% per booking.",
     admin_fo_range_from_to: "{start} to {end}", admin_fo_range_immediate: "effective immediately, ongoing",
-    admin_fo_active_tag: "active", admin_fo_unlimited: "unlimited",
+    admin_fo_active_tag: "active", admin_fo_unlimited: "unlimited", admin_fo_active_only: "Show active only",
     admin_fo_empty_default: "No individual fee rates set yet — the standard 10% applies to all drivers.", admin_fo_empty_filtered: "No individual fee rate set for this driver.",
     admin_fc_fill_required: "Please select a driver and an amount greater than 0.", admin_fc_driver_not_found: "Driver not found.",
     admin_fc_created: "✓ Credit applied — the driver's fee balance was reduced right away.", admin_fc_created_to_balance: "✓ Applied: {due} to open fees, {balance} added to the driver's balance for future fees.", admin_fc_notify_title: "💚 You received a credit",
@@ -11539,7 +11543,7 @@ const translations = {
     admin_fo_notify_body_vip: "🌟 Du hast jetzt VIP-Status: 0% Gebühren auf alle deine Buchungen ({range})! Deinen aktuellen Satz siehst du jederzeit in deinem Profil unter \"Gebühren & Abrechnung\".",
     admin_fo_notify_body_removed: "Dein individueller Gebührensatz wurde entfernt. Für dich gilt jetzt wieder der Standardsatz von 10% pro Buchung.",
     admin_fo_range_from_to: "{start} bis {end}", admin_fo_range_immediate: "ab sofort, unbefristet",
-    admin_fo_active_tag: "aktiv", admin_fo_unlimited: "unbegrenzt",
+    admin_fo_active_tag: "aktiv", admin_fo_unlimited: "unbegrenzt", admin_fo_active_only: "Nur aktive anzeigen",
     admin_fo_empty_default: "Noch keine individuellen Gebührensätze festgelegt — Standard 10% gilt für alle Fahrer.", admin_fo_empty_filtered: "Für diesen Fahrer sind keine individuellen Gebührensätze festgelegt.",
     admin_fc_fill_required: "Bitte Fahrer und einen Betrag über 0 angeben.", admin_fc_driver_not_found: "Fahrer nicht gefunden.",
     admin_fc_created: "✓ Gutschrift verrechnet — die Gebühren des Fahrers wurden sofort reduziert.", admin_fc_created_to_balance: "✓ Verrechnet: {due} mit offenen Gebühren, {balance} als Guthaben für künftige Gebühren gutgeschrieben.", admin_fc_notify_title: "💚 Gutschrift erhalten",
@@ -11878,7 +11882,7 @@ const translations = {
     admin_fo_notify_body_vip: "🌟 Anda mendapat status VIP: 0% biaya untuk semua pemesanan Anda ({range})! Anda dapat melihat tarif Anda saat ini kapan saja di \"Biaya & tagihan\".",
     admin_fo_notify_body_removed: "Tarif biaya individual Anda telah dihapus. Anda sekarang kembali ke tarif standar 10% per pemesanan.",
     admin_fo_range_from_to: "{start} hingga {end}", admin_fo_range_immediate: "berlaku segera, tanpa batas waktu",
-    admin_fo_active_tag: "aktif", admin_fo_unlimited: "tanpa batas",
+    admin_fo_active_tag: "aktif", admin_fo_unlimited: "tanpa batas", admin_fo_active_only: "Tampilkan yang aktif saja",
     admin_fo_empty_default: "Belum ada tarif biaya individual yang ditetapkan — tarif standar 10% berlaku untuk semua sopir.", admin_fo_empty_filtered: "Tidak ada tarif biaya individual untuk sopir ini.",
     admin_fc_fill_required: "Harap pilih sopir dan jumlah lebih dari 0.", admin_fc_driver_not_found: "Sopir tidak ditemukan.",
     admin_fc_created: "✓ Kredit diterapkan — biaya sopir langsung dikurangi.", admin_fc_created_to_balance: "✓ Diterapkan: {due} untuk biaya terbuka, {balance} ditambahkan ke saldo untuk biaya mendatang.", admin_fc_notify_title: "💚 Anda menerima kredit",
@@ -15573,12 +15577,15 @@ function renderFeeOverridesList(){
   if(!el) return;
   const filterSel = document.getElementById('fee-overrides-filter-select');
   const filterDriverId = filterSel ? filterSel.value : '';
-  const list = filterDriverId ? feeOverrides.filter(o => o.driverId === filterDriverId) : feeOverrides;
+  const activeOnlyEl = document.getElementById('fee-overrides-active-only');
+  const activeOnly = activeOnlyEl ? activeOnlyEl.checked : true;
+  let list = filterDriverId ? feeOverrides.filter(o => o.driverId === filterDriverId) : feeOverrides;
+  const todayISO = new Date().toISOString().slice(0,10);
+  if(activeOnly) list = list.filter(o => (!o.startDate || o.startDate <= todayISO) && (!o.endDate || o.endDate >= todayISO));
   if(list.length === 0){
     el.innerHTML = `<div class="empty-state">${filterDriverId ? t('admin_fo_empty_filtered') : t('admin_fo_empty_default')}</div>`;
     return;
   }
-  const todayISO = new Date().toISOString().slice(0,10);
   el.innerHTML = list.slice().reverse().map(o=>{
     const p = driverProfiles[o.driverId];
     const name = p ? p.fullName : o.driverId;
@@ -15911,14 +15918,20 @@ async function renderRealFeeOverridesList(){
   if(!el) return;
   const filterSel = document.getElementById('fee-overrides-filter-select');
   const filterDriverId = filterSel ? filterSel.value : '';
-  const list = await loadRealFeeOverridesCache(filterDriverId || null);
+  const activeOnlyEl = document.getElementById('fee-overrides-active-only');
+  const activeOnly = activeOnlyEl ? activeOnlyEl.checked : true;
+  const all = await loadRealFeeOverridesCache(filterDriverId || null);
+  const today = new Date().toISOString().slice(0,10);
+  // Bugfix/Wunsch (24.8., Joerg): abgelaufene Sonderkonditionen sollen nicht ewig in der Liste stehen
+  // bleiben -- neue Checkbox "Nur aktive anzeigen", per Grundeinstellung angehakt (zeigt nur, was heute
+  // wirklich gilt). Abgehakt sieht man weiterhin die komplette Historie inkl. abgelaufener Eintraege.
+  const list = activeOnly ? all.filter(o => o.starts_at <= today && (!o.ends_at || o.ends_at >= today)) : all;
   const countEl = document.getElementById('fee-overrides-count');
-  if(countEl) countEl.textContent = list.length;
+  if(countEl) countEl.textContent = all.filter(o => o.starts_at <= today && (!o.ends_at || o.ends_at >= today)).length;
   if(list.length === 0){
     el.innerHTML = `<div class="empty-state">${filterDriverId ? t('admin_fo_empty_filtered') : t('admin_fo_empty_default')}</div>`;
     return;
   }
-  const today = new Date().toISOString().slice(0,10);
   el.innerHTML = list.map(o=>{
     const name = o.driver ? o.driver.name : o.driver_id;
     const active = o.starts_at <= today && (!o.ends_at || o.ends_at >= today);
@@ -16740,7 +16753,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v299</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v300</div>
 
 </body>
 </html>
