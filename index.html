@@ -6826,7 +6826,9 @@ function renderCurrentFeeRate(){
     const untilStr = override.endDate ? t('fee_rate_valid_until').replace('{date}', override.endDate) : t('fee_rate_valid_unlimited');
     el.classList.add('fee-rate-badge-vip');
     el.innerHTML = `<span class="fee-rate-badge-label">${t('fee_rate_vip_bonus')}</span><span class="fee-rate-badge-main">${t('fee_rate_zero_fees')}</span><span class="fee-rate-badge-sub">${untilStr}</span>`;
-  } else if(override){
+  } else if(override && Number(override.percent) !== DEFAULT_FEE_PERCENT){
+    // Gleicher Bugfix wie bei der echten Fahrer-Variante: Sonderkondition == Standardsatz zeigt jetzt
+    // ganz normal "Standard" an, statt faelschlich weiter als Sonderkondition markiert zu bleiben.
     el.classList.remove('fee-rate-badge-vip');
     const range = (override.startDate || override.endDate)
       ? `${override.startDate||'…'} – ${override.endDate||t('fee_rate_unlimited_short')}`
@@ -7117,7 +7119,13 @@ async function renderRealOverviewStats(){
       const untilStr = ov.ends_at ? t('fee_rate_valid_until').replace('{date}', formatDateDisplay(ov.ends_at)) : t('fee_rate_valid_unlimited');
       rateEl.classList.add('fee-rate-badge-vip');
       rateEl.innerHTML = `<span class="fee-rate-badge-label">${t('fee_rate_vip_bonus')}</span><span class="fee-rate-badge-main">${t('fee_rate_zero_fees')}</span><span class="fee-rate-badge-sub">${untilStr}</span>`;
-    } else if(ov){
+    } else if(ov && Number(ov.fee_percent) !== DEFAULT_FEE_PERCENT){
+      // Bugfix (24.8., Joerg gemeldet): eine Sonderkondition, die der Admin exakt auf den Standardsatz
+      // (10%) zurueckgesetzt hat -- z.B. indem er einfach eine neue Sonderkondition mit 10% angelegt hat,
+      // statt die alte zu loeschen -- zeigte trotzdem weiterhin das "Sonderkondition"-Badge an, obwohl
+      // sie inhaltlich genau dem Standard entspricht. Jetzt: nur noch als Sonderkondition anzeigen, wenn
+      // der Satz WIRKLICH vom Standard abweicht. Eine wirklich abgelaufene Sonderkondition faellt schon
+      // vorher aus der Datenbankabfrage raus (ends_at-Filter), landet also automatisch im "else"-Zweig.
       rateEl.classList.remove('fee-rate-badge-vip');
       const range = (ov.starts_at || ov.ends_at)
         ? `${ov.starts_at ? formatDateDisplay(ov.starts_at) : '…'} – ${ov.ends_at ? formatDateDisplay(ov.ends_at) : t('fee_rate_unlimited_short')}`
@@ -16732,7 +16740,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v298</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v299</div>
 
 </body>
 </html>
