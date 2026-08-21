@@ -792,6 +792,12 @@
   .dash-head{ display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:28px; }
   .dash-head h2, .dash-head h3{ font-size:1.15rem; }
   .dash-head p{ color:var(--ink-soft); font-size:0.9rem; margin-top:4px; }
+  /* Aenderung (22.8., Joerg-Wunsch): NUR die Begruessung "Hallo, ..." auf der Uebersichtsseite
+     soll groesser werden, nicht alle anderen Abschnittsueberschriften (Meine Angebote, Buchungen,
+     Villa Requests etc. nutzen dieselbe .dash-head-Klasse, insgesamt 24 Stellen) -- daher gezielt
+     per ID/Attribut ueberschrieben statt die geteilte Klasse global zu aendern. */
+  #dash-greeting{ font-size:1.3rem; }
+  #dash-greeting + p{ font-size:0.95rem; }
   .fee-badges-row{ display:grid; grid-template-columns:1fr; gap:10px; margin-bottom:22px; }
   .fee-badges-row .plan-chip, .fee-badges-row .fee-rate-badge{ display:block; width:auto; padding:10px 16px; }
   #view-admin h2, #view-admin h3{ font-size:1.15rem; }
@@ -16857,7 +16863,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v309</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v310</div>
 
 </body>
 </html>
