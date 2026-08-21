@@ -792,8 +792,8 @@
   .dash-head{ display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:28px; }
   .dash-head h2, .dash-head h3{ font-size:1.15rem; }
   .dash-head p{ color:var(--ink-soft); font-size:0.9rem; margin-top:4px; }
-  .fee-badges-row{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:28px; }
-  .fee-badges-row .plan-chip, .fee-badges-row .fee-rate-badge{ display:block; width:auto; }
+  .fee-badges-row{ display:grid; grid-template-columns:1fr; gap:12px; margin-bottom:28px; }
+  .fee-badges-row .plan-chip, .fee-badges-row .fee-rate-badge{ display:block; width:auto; padding:14px 18px; }
   #view-admin h2, #view-admin h3{ font-size:1.15rem; }
   #view-admin p.dash-head{ font-size:0.9rem; color:var(--ink-soft); }
   .my-booking-btn{
@@ -815,15 +815,14 @@
     border:1px solid var(--teal); background:var(--teal-soft); color:var(--teal);
     font-size:0.72rem; font-weight:700; line-height:1.45;
   }
-  .fee-rate-badge-label{ display:block; font-weight:700; font-size:0.72rem; margin-bottom:3px; opacity:0.9; }
-  .fee-rate-badge-main{ display:block; font-weight:800; font-size:1.05rem; margin:2px 0; }
-  .fee-rate-badge-main strong{ font-weight:800; }
-  .fee-rate-badge-sub{ display:block; font-weight:700; font-size:0.88rem; opacity:0.95; margin-top:3px; }
-  .fee-rate-badge-note{ display:block; font-weight:600; opacity:0.7; margin-top:4px; font-size:0.62rem; }
+  .fee-rate-badge-label{ display:block; font-weight:700; font-size:0.82rem; margin-bottom:3px; }
+  .fee-rate-badge-main{ display:block; font-weight:700; font-size:0.82rem; margin:2px 0; }
+  .fee-rate-badge-main strong, .fee-badge-hl{ font-weight:800; font-size:1.15rem; }
+  .fee-rate-badge-sub{ display:block; font-weight:700; font-size:0.82rem; opacity:0.9; margin-top:3px; }
+  .fee-rate-badge-note{ display:block; font-weight:600; opacity:0.7; margin-top:6px; font-size:0.62rem; }
   .fee-rate-badge-vip{
     border-color:var(--gold); background:#FFF7DA; color:#7A5C00;
   }
-  .fee-rate-badge-vip .fee-rate-badge-label{ font-size:0.95rem; font-weight:800; opacity:1; }
 
   .stat-row{ display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:32px; }
   .stat-card{ background:#fff; border:1px solid var(--line); border-radius:10px; padding:18px; box-shadow:var(--shadow-card); }
@@ -2072,14 +2071,16 @@
           </div>
         </div>
 
-        <!-- Aenderung (22.8., Joerg-Wunsch, 3. Anlauf): die beiden Gebuehren-Boxen passten rechts
-             neben der Begruessung nicht sauber ins Layout (auf dem Handy brachen sie um und wirkten
-             gequetscht/rechtsbuendig). Jetzt eigene volle Zeile unter der Begruessung, beide Boxen
-             nebeneinander ueber die volle Breite, Text linksbuendig -- gleiches Rasterprinzip wie
-             die Stat-Kacheln direkt darunter. -->
+        <!-- Aenderung (22.8., Joerg-Wunsch, 4. Anlauf): vorher 4 verschiedene Schriftgroessen in
+             den beiden Boxen -- wirkte unruhig/unprofessionell. Jetzt klare 3er-Hierarchie: nur die
+             Kernaussage je Zeile (Kostenlos / 10% / VIP / 0%) ist gross+fett (.fee-badge-hl), der
+             Rest ist einheitlich in einer Basisgroesse, die kleine Fussnote bleibt am kleinsten.
+             Ausserdem: beide Boxen jetzt als laengliche Buttons UNTEREINANDER statt nebeneinander. -->
         <div class="fee-badges-row">
           <span class="plan-chip plan-chip-clickable" style="text-align:left;" onclick="openTerms('fees')">
-            <span class="fee-rate-badge-label" data-i18n="plan_chip_line1">List for free</span><span class="fee-rate-badge-main" data-i18n="plan_chip_line2">10% commission per booking</span><span class="fee-rate-badge-sub" data-i18n="plan_chip_line3">20% for villa requests</span>
+            <span class="fee-rate-badge-label"><span class="fee-badge-hl" data-i18n="plan_chip_hl1">Free</span> <span data-i18n="plan_chip_rest1">listing</span></span>
+            <span class="fee-rate-badge-main"><span class="fee-badge-hl" data-i18n="plan_chip_hl2">10%</span> <span data-i18n="plan_chip_rest2">commission per booking</span></span>
+            <span class="fee-rate-badge-sub" data-i18n="plan_chip_line3">20% for villa requests</span>
           </span>
           <div id="current-fee-rate-display" class="fee-rate-badge" style="text-align:left; display:none;"></div>
         </div>
@@ -6872,7 +6873,7 @@ function renderCurrentFeeRate(){
   if(override && Number(override.percent) === 0){
     const untilStr = override.endDate ? t('fee_rate_valid_until').replace('{date}', override.endDate) : t('fee_rate_valid_unlimited');
     el.classList.add('fee-rate-badge-vip');
-    el.innerHTML = `<span class="fee-rate-badge-label">${t('fee_rate_vip_bonus')}</span><span class="fee-rate-badge-main">${t('fee_rate_zero_fees')}</span><span class="fee-rate-badge-sub">${untilStr}</span><span class="fee-rate-badge-note">${t('fee_rate_villa_excluded')}</span>`;
+    el.innerHTML = `<span class="fee-rate-badge-label">🌟 <span class="fee-badge-hl">${t('fee_rate_vip_label_hl')}</span> ${t('fee_rate_vip_label_rest')}</span><span class="fee-rate-badge-main"><span class="fee-badge-hl">${t('fee_rate_zero_fees_hl')}</span> ${t('fee_rate_zero_fees_rest')}</span><span class="fee-rate-badge-sub">${untilStr}</span><span class="fee-rate-badge-note">${t('fee_rate_villa_excluded')}</span>`;
   } else if(override && Number(override.percent) !== DEFAULT_FEE_PERCENT){
     // Gleicher Bugfix wie bei der echten Fahrer-Variante: Sonderkondition == Standardsatz zeigt jetzt
     // ganz normal "Standard" an, statt faelschlich weiter als Sonderkondition markiert zu bleiben.
@@ -6880,10 +6881,10 @@ function renderCurrentFeeRate(){
     const range = (override.startDate || override.endDate)
       ? `${override.startDate||'…'} – ${override.endDate||t('fee_rate_unlimited_short')}`
       : t('fee_rate_unlimited_short');
-    el.innerHTML = `<span class="fee-rate-badge-label">${t('fee_rate_special_condition')}</span><span class="fee-rate-badge-main">${t('fee_rate_current')} <strong>${override.percent}%</strong></span><span class="fee-rate-badge-sub">${range}</span>`;
+    el.innerHTML = `<span class="fee-rate-badge-label">${t('fee_rate_special_condition')}</span><span class="fee-rate-badge-main">${t('fee_rate_current')} <span class="fee-badge-hl">${override.percent}%</span></span><span class="fee-rate-badge-sub">${range}</span>`;
   } else {
     el.classList.remove('fee-rate-badge-vip');
-    el.innerHTML = `<span class="fee-rate-badge-main">${t('fee_rate_current')} <strong>${DEFAULT_FEE_PERCENT}%</strong></span><span class="fee-rate-badge-sub">${t('fee_rate_standard')}</span>`;
+    el.innerHTML = `<span class="fee-rate-badge-main">${t('fee_rate_current')} <span class="fee-badge-hl">${DEFAULT_FEE_PERCENT}%</span></span><span class="fee-rate-badge-sub">${t('fee_rate_standard')}</span>`;
   }
 }
 // Bewertungen: nach den ersten 5 einklappen, "Mehr anzeigen" blendet den Rest ein (22.8.-Wunsch,
@@ -7165,7 +7166,7 @@ async function renderRealOverviewStats(){
     if(ov && Number(ov.fee_percent) === 0){
       const untilStr = ov.ends_at ? t('fee_rate_valid_until').replace('{date}', formatDateDisplay(ov.ends_at)) : t('fee_rate_valid_unlimited');
       rateEl.classList.add('fee-rate-badge-vip');
-      rateEl.innerHTML = `<span class="fee-rate-badge-label">${t('fee_rate_vip_bonus')}</span><span class="fee-rate-badge-main">${t('fee_rate_zero_fees')}</span><span class="fee-rate-badge-sub">${untilStr}</span><span class="fee-rate-badge-note">${t('fee_rate_villa_excluded')}</span>`;
+      rateEl.innerHTML = `<span class="fee-rate-badge-label">🌟 <span class="fee-badge-hl">${t('fee_rate_vip_label_hl')}</span> ${t('fee_rate_vip_label_rest')}</span><span class="fee-rate-badge-main"><span class="fee-badge-hl">${t('fee_rate_zero_fees_hl')}</span> ${t('fee_rate_zero_fees_rest')}</span><span class="fee-rate-badge-sub">${untilStr}</span><span class="fee-rate-badge-note">${t('fee_rate_villa_excluded')}</span>`;
     } else if(ov && Number(ov.fee_percent) !== DEFAULT_FEE_PERCENT){
       // Bugfix (24.8., Joerg gemeldet): eine Sonderkondition, die der Admin exakt auf den Standardsatz
       // (10%) zurueckgesetzt hat -- z.B. indem er einfach eine neue Sonderkondition mit 10% angelegt hat,
@@ -7177,10 +7178,10 @@ async function renderRealOverviewStats(){
       const range = (ov.starts_at || ov.ends_at)
         ? `${ov.starts_at ? formatDateDisplay(ov.starts_at) : '…'} – ${ov.ends_at ? formatDateDisplay(ov.ends_at) : t('fee_rate_unlimited_short')}`
         : t('fee_rate_unlimited_short');
-      rateEl.innerHTML = `<span class="fee-rate-badge-label">${t('fee_rate_special_condition')}</span><span class="fee-rate-badge-main">${t('fee_rate_current')} <strong>${ov.fee_percent}%</strong></span><span class="fee-rate-badge-sub">${range}</span>`;
+      rateEl.innerHTML = `<span class="fee-rate-badge-label">${t('fee_rate_special_condition')}</span><span class="fee-rate-badge-main">${t('fee_rate_current')} <span class="fee-badge-hl">${ov.fee_percent}%</span></span><span class="fee-rate-badge-sub">${range}</span>`;
     } else {
       rateEl.classList.remove('fee-rate-badge-vip');
-      rateEl.innerHTML = `<span class="fee-rate-badge-main">${t('fee_rate_current')} <strong>${DEFAULT_FEE_PERCENT}%</strong></span><span class="fee-rate-badge-sub">${t('fee_rate_standard')}</span>`;
+      rateEl.innerHTML = `<span class="fee-rate-badge-main">${t('fee_rate_current')} <span class="fee-badge-hl">${DEFAULT_FEE_PERCENT}%</span></span><span class="fee-rate-badge-sub">${t('fee_rate_standard')}</span>`;
     }
   }
   const codeEl = document.getElementById('referral-code-display');
@@ -11209,7 +11210,7 @@ const translations = {
     switcher_label: "Logged in as",
     edit_profile_link: "Edit profile",
     dash_greeting_sub: "Here's how your listings are doing this week.",
-    plan_chip_line1: "List for free", plan_chip_line2: "10% commission per booking", plan_chip_line3: "20% for villa requests",
+    plan_chip_hl1: "Free", plan_chip_rest1: "listing", plan_chip_hl2: "10%", plan_chip_rest2: "commission per booking", plan_chip_line3: "20% for villa requests",
     stat_views: "Profile views",
     stat_requests: "Booking requests",
     stat_rating: "Avg. rating",
@@ -11290,7 +11291,7 @@ const translations = {
     unlock_notice_title: "Your account is active again ✓", unlock_notice_body: "Good news — your account has been unlocked. Your listings are visible again and you can receive new bookings.",
     admin_fc_cannot_delete_applied: "This credit was already used against a fee and can no longer be deleted.",
     admin_view_balances_btn: "View all balances",
-    fee_rate_vip_bonus: "🌟 VIP Bonus", fee_rate_zero_fees: "0% fees", fee_rate_valid_until: "valid until {date}", fee_rate_valid_unlimited: "valid indefinitely", fee_rate_villa_excluded: "*excludes villa bookings",
+    fee_rate_vip_label_hl: "VIP", fee_rate_vip_label_rest: "Bonus", fee_rate_zero_fees_hl: "0%", fee_rate_zero_fees_rest: "fees", fee_rate_valid_until: "valid until {date}", fee_rate_valid_unlimited: "valid indefinitely", fee_rate_villa_excluded: "*excludes villa bookings",
     fee_rate_current: "📊 Your current commission:", fee_rate_special_condition: "special rate", fee_rate_standard: "Standard", fee_rate_unlimited_short: "unlimited",
     admin_fo_fill_required: "Please select a driver and enter a percentage.", admin_fo_negative_error: "The percentage cannot be negative.",
     admin_fo_saved: "✓ Saved and driver notified.", admin_fo_confirm_delete: "Really delete this individual fee rate? The driver will pay the standard 10% again.",
@@ -11548,7 +11549,7 @@ const translations = {
     switcher_label: "Angemeldet als",
     edit_profile_link: "Profil bearbeiten",
     dash_greeting_sub: "So laufen deine Angebote diese Woche.",
-    plan_chip_line1: "Kostenlos einstellen", plan_chip_line2: "10% pro Buchung", plan_chip_line3: "20% bei Villa-Anfragen",
+    plan_chip_hl1: "Kostenlos", plan_chip_rest1: "einstellen", plan_chip_hl2: "10%", plan_chip_rest2: "pro Buchung", plan_chip_line3: "20% bei Villa-Anfragen",
     stat_views: "Profilaufrufe",
     stat_requests: "Buchungsanfragen",
     stat_rating: "Ø Bewertung",
@@ -11629,7 +11630,7 @@ const translations = {
     unlock_notice_title: "Dein Konto ist wieder aktiv ✓", unlock_notice_body: "Gute Nachricht — dein Konto wurde entsperrt. Deine Angebote sind wieder sichtbar und du kannst neue Buchungen erhalten.",
     admin_fc_cannot_delete_applied: "Diese Gutschrift wurde bereits mit einer Gebühr verrechnet und kann nicht mehr gelöscht werden.",
     admin_view_balances_btn: "Alle Guthaben anzeigen",
-    fee_rate_vip_bonus: "🌟 VIP Bonus", fee_rate_zero_fees: "0% Gebühren", fee_rate_valid_until: "gültig bis {date}", fee_rate_valid_unlimited: "unbefristet gültig", fee_rate_villa_excluded: "*ausgenommen Villa-Buchungen",
+    fee_rate_vip_label_hl: "VIP", fee_rate_vip_label_rest: "Bonus", fee_rate_zero_fees_hl: "0%", fee_rate_zero_fees_rest: "Gebühren", fee_rate_valid_until: "gültig bis {date}", fee_rate_valid_unlimited: "unbefristet gültig", fee_rate_villa_excluded: "*ausgenommen Villa-Buchungen",
     fee_rate_current: "📊 Deine aktuelle Provision:", fee_rate_special_condition: "Sonderkondition", fee_rate_standard: "Standard", fee_rate_unlimited_short: "unbefristet",
     admin_fo_fill_required: "Bitte Fahrer und Prozentsatz angeben.", admin_fo_negative_error: "Der Prozentsatz darf nicht negativ sein.",
     admin_fo_saved: "✓ Gespeichert und Fahrer benachrichtigt.", admin_fo_confirm_delete: "Diesen individuellen Gebührensatz wirklich löschen? Der Fahrer zahlt danach wieder den Standardsatz von 10%.",
@@ -11887,7 +11888,7 @@ const translations = {
     switcher_label: "Masuk sebagai",
     edit_profile_link: "Edit profil",
     dash_greeting_sub: "Begini performa tur Anda minggu ini.",
-    plan_chip_line1: "Daftar gratis", plan_chip_line2: "Komisi 10% per pemesanan", plan_chip_line3: "20% untuk permintaan villa",
+    plan_chip_hl1: "Gratis", plan_chip_rest1: "mendaftar", plan_chip_hl2: "10%", plan_chip_rest2: "komisi per pemesanan", plan_chip_line3: "20% untuk permintaan villa",
     stat_views: "Kunjungan profil",
     stat_requests: "Permintaan pemesanan",
     stat_rating: "Rating rata-rata",
@@ -11968,7 +11969,7 @@ const translations = {
     unlock_notice_title: "Akun Anda aktif kembali ✓", unlock_notice_body: "Kabar baik — akun Anda telah dibuka blokirnya. Tur Anda terlihat kembali dan Anda dapat menerima pemesanan baru.",
     admin_fc_cannot_delete_applied: "Kredit ini sudah digunakan untuk biaya dan tidak dapat dihapus lagi.",
     admin_view_balances_btn: "Lihat semua saldo",
-    fee_rate_vip_bonus: "🌟 VIP Bonus", fee_rate_zero_fees: "0% biaya", fee_rate_valid_until: "berlaku hingga {date}", fee_rate_valid_unlimited: "berlaku tanpa batas waktu", fee_rate_villa_excluded: "*tidak termasuk pemesanan villa",
+    fee_rate_vip_label_hl: "VIP", fee_rate_vip_label_rest: "Bonus", fee_rate_zero_fees_hl: "0%", fee_rate_zero_fees_rest: "biaya", fee_rate_valid_until: "berlaku hingga {date}", fee_rate_valid_unlimited: "berlaku tanpa batas waktu", fee_rate_villa_excluded: "*tidak termasuk pemesanan villa",
     fee_rate_current: "📊 Komisi Anda saat ini:", fee_rate_special_condition: "tarif khusus", fee_rate_standard: "Standar", fee_rate_unlimited_short: "tanpa batas",
     admin_fo_fill_required: "Harap pilih sopir dan masukkan persentase.", admin_fo_negative_error: "Persentase tidak boleh negatif.",
     admin_fo_saved: "✓ Disimpan dan sopir telah diberi tahu.", admin_fo_confirm_delete: "Yakin ingin menghapus tarif biaya individual ini? Sopir akan kembali membayar tarif standar 10%.",
@@ -16848,7 +16849,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v304</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v305</div>
 
 </body>
 </html>
