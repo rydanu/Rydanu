@@ -6693,14 +6693,18 @@ function renderProfileChip(){
 // alte grosse Kachel). Baut einen Link mit ?ref=<eigene RY-Nummer> -- landet ein neuer Fahrer darueber,
 // wird die Empfehlungs-Nummer automatisch in sein Registrierungsformular eingetragen (siehe Seiten-Init
 // weiter unten), er muss also nichts mehr selbst abtippen.
+// Textueberarbeitung (22.8., rechtlich noetig): "Ich fahre für Rydanu" klang nach Anstellung/eigenem
+// Fahrer bei Rydanu -- verstoesst gegen den Grundsatz "Rydanu ist kein Fahrdienst, hat keine eigenen
+// Fahrer". Jetzt gleiche Formulierung wie ueberall sonst in der App: unabhaengiger Fahrer, der seine
+// Fahrten UEBER die Plattform Rydanu anbietet.
 function shareReferralLinkWhatsapp(){
   const myNumber = realDriverProfile ? realDriverProfile.lw_number : (driverProfiles[currentDriverId] && driverProfiles[currentDriverId].lwNumber);
   if(!myNumber){ alert(t('villa_action_err')); return; }
   const link = location.origin + '/?ref=' + encodeURIComponent(myNumber);
   const texts = {
-    de: `Hey! Ich fahre für Rydanu auf Bali und würde dich gerne empfehlen — meld dich einfach über meinen Link an, dann ist meine Nummer direkt hinterlegt: ${link}`,
-    en: `Hey! I'm driving for Rydanu in Bali and would love to refer you — just sign up through my link, my number is already filled in: ${link}`,
-    id: `Hai! Saya jadi sopir di Rydanu Bali dan ingin mengajak Anda — daftar saja lewat link saya, nomor saya sudah otomatis terisi: ${link}`
+    de: `Hey! 👋 Ich biete meine Fahrten auf Bali als unabhängiger Fahrer über Rydanu an — läuft richtig gut! Willst du auch einsteigen? Meld dich einfach über meinen Link an, dann ist meine Nummer direkt als Empfehlung hinterlegt: ${link}`,
+    en: `Hey! 👋 I offer my rides in Bali as an independent driver through Rydanu — it's going great! Want to join too? Just sign up through my link and my number's already saved as your referral: ${link}`,
+    id: `Hai! 👋 Saya menawarkan perjalanan di Bali sebagai sopir independen lewat Rydanu — berjalan lancar banget! Mau ikut gabung? Daftar saja lewat link saya, nomor saya otomatis tersimpan sebagai referensi: ${link}`
   };
   const text = texts[currentLang] || texts.en;
   window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
@@ -16853,7 +16857,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v307</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v308</div>
 
 </body>
 </html>
