@@ -792,6 +792,8 @@
   .dash-head{ display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:28px; }
   .dash-head h2, .dash-head h3{ font-size:1.15rem; }
   .dash-head p{ color:var(--ink-soft); font-size:0.9rem; margin-top:4px; }
+  .fee-badges-row{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:28px; }
+  .fee-badges-row .plan-chip, .fee-badges-row .fee-rate-badge{ display:block; width:auto; }
   #view-admin h2, #view-admin h3{ font-size:1.15rem; }
   #view-admin p.dash-head{ font-size:0.9rem; color:var(--ink-soft); }
   .my-booking-btn{
@@ -2068,17 +2070,18 @@
             <h2 id="dash-greeting">Good morning, Wayan</h2>
             <p data-i18n="dash_greeting_sub">Here's how your listings are doing this week.</p>
           </div>
-          <div style="display:flex; flex-direction:column; align-items:flex-end; gap:8px;">
-            <!-- Aenderung (21.8., Joerg-Wunsch, 2. Anlauf): der einzeilige Chip reichte nicht,
-                 um den 20%-Villa-Satz unterzubringen, ohne dass es wie ein bemerkenswerter
-                 Extra-Hinweis wirkt oder den Kopfbereich sprengt. Jetzt ein einziger Chip mit
-                 3 kompakten Zeilen -- gleiches Bauprinzip wie der VIP-Bonus-Badge daneben
-                 (fee-rate-badge-label/-main/-sub), nur in Teal statt Gold. -->
-            <span class="plan-chip plan-chip-clickable" style="text-align:right; line-height:1.45;" onclick="openTerms('fees')">
-              <span class="fee-rate-badge-label" data-i18n="plan_chip_line1">List for free</span><span class="fee-rate-badge-main" data-i18n="plan_chip_line2">10% commission per booking</span><span class="fee-rate-badge-sub" data-i18n="plan_chip_line3">20% for villa requests</span>
-            </span>
-            <div id="current-fee-rate-display" class="fee-rate-badge" style="display:none;"></div>
-          </div>
+        </div>
+
+        <!-- Aenderung (22.8., Joerg-Wunsch, 3. Anlauf): die beiden Gebuehren-Boxen passten rechts
+             neben der Begruessung nicht sauber ins Layout (auf dem Handy brachen sie um und wirkten
+             gequetscht/rechtsbuendig). Jetzt eigene volle Zeile unter der Begruessung, beide Boxen
+             nebeneinander ueber die volle Breite, Text linksbuendig -- gleiches Rasterprinzip wie
+             die Stat-Kacheln direkt darunter. -->
+        <div class="fee-badges-row">
+          <span class="plan-chip plan-chip-clickable" style="text-align:left;" onclick="openTerms('fees')">
+            <span class="fee-rate-badge-label" data-i18n="plan_chip_line1">List for free</span><span class="fee-rate-badge-main" data-i18n="plan_chip_line2">10% commission per booking</span><span class="fee-rate-badge-sub" data-i18n="plan_chip_line3">20% for villa requests</span>
+          </span>
+          <div id="current-fee-rate-display" class="fee-rate-badge" style="text-align:left; display:none;"></div>
         </div>
 
         <div class="stat-row">
@@ -16845,7 +16848,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v302</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v303</div>
 
 </body>
 </html>
