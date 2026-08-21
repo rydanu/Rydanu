@@ -817,6 +817,7 @@
   .fee-rate-badge-main{ display:block; font-weight:500; }
   .fee-rate-badge-main strong{ font-weight:800; }
   .fee-rate-badge-sub{ display:block; font-weight:600; opacity:0.85; margin-top:2px; }
+  .fee-rate-badge-note{ display:block; font-weight:600; opacity:0.7; margin-top:3px; font-size:0.62rem; }
   .fee-rate-badge-vip{
     border-color:var(--gold); background:#FFF7DA; color:#7A5C00;
   }
@@ -2068,12 +2069,14 @@
             <p data-i18n="dash_greeting_sub">Here's how your listings are doing this week.</p>
           </div>
           <div style="display:flex; flex-direction:column; align-items:flex-end; gap:8px;">
-            <span class="plan-chip plan-chip-clickable" data-i18n="plan_chip_text" onclick="openTerms('fees')">Free listing · Commission per booking from $2</span>
-            <!-- Zusatzhinweis (21.8., Joerg-Wunsch): der 10%-Satz im Chip gilt nur fuer reguläre
-                 Buchungen -- Villa-Buchungen laufen mit 20% (siehe Villa Partner Provisionsmodell).
-                 Bewusst klein/dezent gehalten, kein eigener Kasten, damit der Kopfbereich nicht
-                 groesser wird. -->
-            <span style="font-size:0.68rem; color:var(--ink-soft); text-align:right; max-width:220px; line-height:1.3;" data-i18n="plan_chip_villa_note">Applies to regular bookings. Villa bookings: 20%.</span>
+            <!-- Aenderung (21.8., Joerg-Wunsch, 2. Anlauf): der einzeilige Chip reichte nicht,
+                 um den 20%-Villa-Satz unterzubringen, ohne dass es wie ein bemerkenswerter
+                 Extra-Hinweis wirkt oder den Kopfbereich sprengt. Jetzt ein einziger Chip mit
+                 3 kompakten Zeilen -- gleiches Bauprinzip wie der VIP-Bonus-Badge daneben
+                 (fee-rate-badge-label/-main/-sub), nur in Teal statt Gold. -->
+            <span class="plan-chip plan-chip-clickable" style="text-align:right; line-height:1.45;" onclick="openTerms('fees')">
+              <span class="fee-rate-badge-label" data-i18n="plan_chip_line1">List for free</span><span class="fee-rate-badge-main" data-i18n="plan_chip_line2">10% commission per booking</span><span class="fee-rate-badge-sub" data-i18n="plan_chip_line3">20% for villa requests</span>
+            </span>
             <div id="current-fee-rate-display" class="fee-rate-badge" style="display:none;"></div>
           </div>
         </div>
@@ -6866,7 +6869,7 @@ function renderCurrentFeeRate(){
   if(override && Number(override.percent) === 0){
     const untilStr = override.endDate ? t('fee_rate_valid_until').replace('{date}', override.endDate) : t('fee_rate_valid_unlimited');
     el.classList.add('fee-rate-badge-vip');
-    el.innerHTML = `<span class="fee-rate-badge-label">${t('fee_rate_vip_bonus')}</span><span class="fee-rate-badge-main">${t('fee_rate_zero_fees')}</span><span class="fee-rate-badge-sub">${untilStr}</span>`;
+    el.innerHTML = `<span class="fee-rate-badge-label">${t('fee_rate_vip_bonus')}</span><span class="fee-rate-badge-main">${t('fee_rate_zero_fees')}</span><span class="fee-rate-badge-sub">${untilStr}</span><span class="fee-rate-badge-note">${t('fee_rate_villa_excluded')}</span>`;
   } else if(override && Number(override.percent) !== DEFAULT_FEE_PERCENT){
     // Gleicher Bugfix wie bei der echten Fahrer-Variante: Sonderkondition == Standardsatz zeigt jetzt
     // ganz normal "Standard" an, statt faelschlich weiter als Sonderkondition markiert zu bleiben.
@@ -7159,7 +7162,7 @@ async function renderRealOverviewStats(){
     if(ov && Number(ov.fee_percent) === 0){
       const untilStr = ov.ends_at ? t('fee_rate_valid_until').replace('{date}', formatDateDisplay(ov.ends_at)) : t('fee_rate_valid_unlimited');
       rateEl.classList.add('fee-rate-badge-vip');
-      rateEl.innerHTML = `<span class="fee-rate-badge-label">${t('fee_rate_vip_bonus')}</span><span class="fee-rate-badge-main">${t('fee_rate_zero_fees')}</span><span class="fee-rate-badge-sub">${untilStr}</span>`;
+      rateEl.innerHTML = `<span class="fee-rate-badge-label">${t('fee_rate_vip_bonus')}</span><span class="fee-rate-badge-main">${t('fee_rate_zero_fees')}</span><span class="fee-rate-badge-sub">${untilStr}</span><span class="fee-rate-badge-note">${t('fee_rate_villa_excluded')}</span>`;
     } else if(ov && Number(ov.fee_percent) !== DEFAULT_FEE_PERCENT){
       // Bugfix (24.8., Joerg gemeldet): eine Sonderkondition, die der Admin exakt auf den Standardsatz
       // (10%) zurueckgesetzt hat -- z.B. indem er einfach eine neue Sonderkondition mit 10% angelegt hat,
@@ -11099,7 +11102,7 @@ const translations = {
     sr_open_btn: "Already traveled with this driver? Leave a review", sr_eyebrow: "Leave a review", sr_title: "How was your trip?", mb_review_title2: "Your name", sr_err_name: "Please enter your name.",
     nav_requests: "Requests", requests_title: "Custom tour requests", requests_sub: "Travelers who couldn't find exactly what they wanted asked you directly. Reply by creating a real tour offer through Rydanu.", requests_empty: "No custom tour requests yet.",
     nav_villa: "Villa Requests", villa_title: "Villa Partner requests", villa_sub: "Private booking requests from partner villas & hotels — first come, first served.", villa_empty: "No open villa requests right now.",
-    villa_claim_btn: "Accept request", villa_claimed_tag: "⏳ Offer sent — awaiting guest confirmation", villa_booked_tag: "✅ Guest confirmed — now a regular booking. Manage it under \"Bookings\".", villa_tab_open: "Open", villa_tab_archived: "Archived", villa_empty_archived: "No archived villa requests yet.", villa_claim_taken: "Sorry — another driver already accepted this request.", villa_source_tag: "Villa Partner", villa_dismiss_btn: "Not for me", villa_edit_resend_btn: "Edit & resend offer", villa_withdraw_btn: "Withdraw offer", villa_withdraw_confirm: "Withdraw this offer? The request goes back to open and other drivers in the area will be notified again.", villa_action_err: "Something went wrong. Please try again.", villa_declined_tag: "Guest declined this offer — no action needed. If they still want a transfer, they'll submit a new request.", villa_delete_btn: "🗑 Remove", villa_delete_confirm: "Remove this from your list? It only disappears for you — the request itself isn't affected.", villa_view_details_btn: "View details", villa_detail_eyebrow: "Villa request", villa_detail_luggage_lbl: "Luggage", villa_detail_trip_type_lbl: "Trip type", plan_chip_villa_note: "Applies to regular bookings. Villa bookings: 20%.",
+    villa_claim_btn: "Accept request", villa_claimed_tag: "⏳ Offer sent — awaiting guest confirmation", villa_booked_tag: "✅ Guest confirmed — now a regular booking. Manage it under \"Bookings\".", villa_tab_open: "Open", villa_tab_archived: "Archived", villa_empty_archived: "No archived villa requests yet.", villa_claim_taken: "Sorry — another driver already accepted this request.", villa_source_tag: "Villa Partner", villa_dismiss_btn: "Not for me", villa_edit_resend_btn: "Edit & resend offer", villa_withdraw_btn: "Withdraw offer", villa_withdraw_confirm: "Withdraw this offer? The request goes back to open and other drivers in the area will be notified again.", villa_action_err: "Something went wrong. Please try again.", villa_declined_tag: "Guest declined this offer — no action needed. If they still want a transfer, they'll submit a new request.", villa_delete_btn: "🗑 Remove", villa_delete_confirm: "Remove this from your list? It only disappears for you — the request itself isn't affected.", villa_view_details_btn: "View details", villa_detail_eyebrow: "Villa request", villa_detail_luggage_lbl: "Luggage", villa_detail_trip_type_lbl: "Trip type",
     villa_push_title: "Get notified instantly", villa_push_sub: "Turn on push notifications so you never miss a new villa request.", villa_push_enable_btn: "Enable push notifications",
     villa_push_enabled: "✓ Push notifications enabled", villa_push_ios_hint: "On iPhone: add Rydanu to your Home Screen first (Share → Add to Home Screen), otherwise push notifications won't arrive.",
     villa_push_error: "Could not enable push notifications. Please check your browser permissions.", villa_push_unsupported: "Push notifications aren't supported in this browser.",
@@ -11203,7 +11206,7 @@ const translations = {
     switcher_label: "Logged in as",
     edit_profile_link: "Edit profile",
     dash_greeting_sub: "Here's how your listings are doing this week.",
-    plan_chip_text: "List for free · 10% commission per booking",
+    plan_chip_line1: "List for free", plan_chip_line2: "10% commission per booking", plan_chip_line3: "20% for villa requests",
     stat_views: "Profile views",
     stat_requests: "Booking requests",
     stat_rating: "Avg. rating",
@@ -11284,7 +11287,7 @@ const translations = {
     unlock_notice_title: "Your account is active again ✓", unlock_notice_body: "Good news — your account has been unlocked. Your listings are visible again and you can receive new bookings.",
     admin_fc_cannot_delete_applied: "This credit was already used against a fee and can no longer be deleted.",
     admin_view_balances_btn: "View all balances",
-    fee_rate_vip_bonus: "🌟 VIP Bonus", fee_rate_zero_fees: "0% fees", fee_rate_valid_until: "valid until {date}", fee_rate_valid_unlimited: "valid indefinitely",
+    fee_rate_vip_bonus: "🌟 VIP Bonus", fee_rate_zero_fees: "0% fees", fee_rate_valid_until: "valid until {date}", fee_rate_valid_unlimited: "valid indefinitely", fee_rate_villa_excluded: "*excludes villa bookings",
     fee_rate_current: "📊 Your current commission:", fee_rate_special_condition: "special rate", fee_rate_standard: "Standard", fee_rate_unlimited_short: "unlimited",
     admin_fo_fill_required: "Please select a driver and enter a percentage.", admin_fo_negative_error: "The percentage cannot be negative.",
     admin_fo_saved: "✓ Saved and driver notified.", admin_fo_confirm_delete: "Really delete this individual fee rate? The driver will pay the standard 10% again.",
@@ -11438,7 +11441,7 @@ const translations = {
     sr_open_btn: "Schon mal mit diesem Fahrer unterwegs gewesen? Bewertung hinterlassen", sr_eyebrow: "Bewertung hinterlassen", sr_title: "Wie war deine Tour?", mb_review_title2: "Dein Name", sr_err_name: "Bitte gib deinen Namen ein.",
     nav_requests: "Anfragen", requests_title: "Individuelle Touranfragen", requests_sub: "Reisende, die nicht genau das Passende gefunden haben, haben dich direkt angefragt. Antworte, indem du über Rydanu ein echtes Tourangebot erstellst.", requests_empty: "Noch keine individuellen Touranfragen.",
     nav_villa: "Villa-Anfragen", villa_title: "Villa-Partner-Anfragen", villa_sub: "Private Buchungsanfragen von Partner-Villen & Hotels — wer zuerst übernimmt, bekommt die Anfrage.", villa_empty: "Aktuell keine offenen Villa-Anfragen.",
-    villa_claim_btn: "Anfrage übernehmen", villa_claimed_tag: "⏳ Angebot gesendet — wartet auf Bestätigung des Gasts", villa_booked_tag: "✅ Gast hat bestätigt — jetzt eine normale Buchung. Verwalte sie unter \"Buchungen\".", villa_tab_open: "Offen", villa_tab_archived: "Archiviert", villa_empty_archived: "Noch keine archivierten Villa-Anfragen.", villa_claim_taken: "Schade — ein anderer Fahrer hat diese Anfrage bereits übernommen.", villa_source_tag: "Villa-Partner", villa_dismiss_btn: "Nicht für mich", villa_edit_resend_btn: "Angebot bearbeiten & erneut senden", villa_withdraw_btn: "Angebot zurückziehen", villa_withdraw_confirm: "Dieses Angebot zurückziehen? Die Anfrage wird wieder offen und andere Fahrer in der Region werden erneut benachrichtigt.", villa_action_err: "Etwas ist schiefgelaufen. Bitte nochmal versuchen.", villa_declined_tag: "Gast hat das Angebot abgelehnt — keine Aktion nötig. Falls weiterhin ein Transfer gewünscht ist, stellt der Gast eine neue Anfrage.", villa_delete_btn: "🗑 Entfernen", villa_delete_confirm: "Aus deiner Liste entfernen? Verschwindet nur bei dir — an der Anfrage selbst ändert sich nichts.", villa_view_details_btn: "Details ansehen", villa_detail_eyebrow: "Villa-Anfrage", villa_detail_luggage_lbl: "Gepäck", villa_detail_trip_type_lbl: "Fahrtart", plan_chip_villa_note: "Gilt für reguläre Buchungen. Villa-Buchungen: 20%.",
+    villa_claim_btn: "Anfrage übernehmen", villa_claimed_tag: "⏳ Angebot gesendet — wartet auf Bestätigung des Gasts", villa_booked_tag: "✅ Gast hat bestätigt — jetzt eine normale Buchung. Verwalte sie unter \"Buchungen\".", villa_tab_open: "Offen", villa_tab_archived: "Archiviert", villa_empty_archived: "Noch keine archivierten Villa-Anfragen.", villa_claim_taken: "Schade — ein anderer Fahrer hat diese Anfrage bereits übernommen.", villa_source_tag: "Villa-Partner", villa_dismiss_btn: "Nicht für mich", villa_edit_resend_btn: "Angebot bearbeiten & erneut senden", villa_withdraw_btn: "Angebot zurückziehen", villa_withdraw_confirm: "Dieses Angebot zurückziehen? Die Anfrage wird wieder offen und andere Fahrer in der Region werden erneut benachrichtigt.", villa_action_err: "Etwas ist schiefgelaufen. Bitte nochmal versuchen.", villa_declined_tag: "Gast hat das Angebot abgelehnt — keine Aktion nötig. Falls weiterhin ein Transfer gewünscht ist, stellt der Gast eine neue Anfrage.", villa_delete_btn: "🗑 Entfernen", villa_delete_confirm: "Aus deiner Liste entfernen? Verschwindet nur bei dir — an der Anfrage selbst ändert sich nichts.", villa_view_details_btn: "Details ansehen", villa_detail_eyebrow: "Villa-Anfrage", villa_detail_luggage_lbl: "Gepäck", villa_detail_trip_type_lbl: "Fahrtart",
     villa_push_title: "Sofort benachrichtigt werden", villa_push_sub: "Aktiviere Push-Benachrichtigungen, damit du keine neue Villa-Anfrage verpasst.", villa_push_enable_btn: "Push-Benachrichtigungen aktivieren",
     villa_push_enabled: "✓ Push-Benachrichtigungen aktiviert", villa_push_ios_hint: "Am iPhone: Rydanu zuerst zum Homescreen hinzufügen (Teilen → Zum Home-Bildschirm), sonst kommen keine Push-Benachrichtigungen an.",
     villa_push_error: "Push-Benachrichtigungen konnten nicht aktiviert werden. Bitte Browser-Berechtigungen prüfen.", villa_push_unsupported: "Push-Benachrichtigungen werden von diesem Browser nicht unterstützt.",
@@ -11542,7 +11545,7 @@ const translations = {
     switcher_label: "Angemeldet als",
     edit_profile_link: "Profil bearbeiten",
     dash_greeting_sub: "So laufen deine Angebote diese Woche.",
-    plan_chip_text: "Kostenlos einstellen · 10% Provision pro Buchung",
+    plan_chip_line1: "Kostenlos einstellen", plan_chip_line2: "10% pro Buchung", plan_chip_line3: "20% bei Villa-Anfragen",
     stat_views: "Profilaufrufe",
     stat_requests: "Buchungsanfragen",
     stat_rating: "Ø Bewertung",
@@ -11623,7 +11626,7 @@ const translations = {
     unlock_notice_title: "Dein Konto ist wieder aktiv ✓", unlock_notice_body: "Gute Nachricht — dein Konto wurde entsperrt. Deine Angebote sind wieder sichtbar und du kannst neue Buchungen erhalten.",
     admin_fc_cannot_delete_applied: "Diese Gutschrift wurde bereits mit einer Gebühr verrechnet und kann nicht mehr gelöscht werden.",
     admin_view_balances_btn: "Alle Guthaben anzeigen",
-    fee_rate_vip_bonus: "🌟 VIP Bonus", fee_rate_zero_fees: "0% Gebühren", fee_rate_valid_until: "gültig bis {date}", fee_rate_valid_unlimited: "unbefristet gültig",
+    fee_rate_vip_bonus: "🌟 VIP Bonus", fee_rate_zero_fees: "0% Gebühren", fee_rate_valid_until: "gültig bis {date}", fee_rate_valid_unlimited: "unbefristet gültig", fee_rate_villa_excluded: "*ausgenommen Villa-Buchungen",
     fee_rate_current: "📊 Deine aktuelle Provision:", fee_rate_special_condition: "Sonderkondition", fee_rate_standard: "Standard", fee_rate_unlimited_short: "unbefristet",
     admin_fo_fill_required: "Bitte Fahrer und Prozentsatz angeben.", admin_fo_negative_error: "Der Prozentsatz darf nicht negativ sein.",
     admin_fo_saved: "✓ Gespeichert und Fahrer benachrichtigt.", admin_fo_confirm_delete: "Diesen individuellen Gebührensatz wirklich löschen? Der Fahrer zahlt danach wieder den Standardsatz von 10%.",
@@ -11777,7 +11780,7 @@ const translations = {
     sr_open_btn: "Pernah bepergian dengan sopir ini? Tinggalkan ulasan", sr_eyebrow: "Tinggalkan ulasan", sr_title: "Bagaimana perjalanan Anda?", mb_review_title2: "Nama Anda", sr_err_name: "Mohon masukkan nama Anda.",
     nav_requests: "Permintaan", requests_title: "Permintaan tur khusus", requests_sub: "Wisatawan yang tidak menemukan yang mereka cari langsung menghubungi Anda. Balas dengan membuat penawaran tur nyata melalui Rydanu.", requests_empty: "Belum ada permintaan tur khusus.",
     nav_villa: "Permintaan Villa", villa_title: "Permintaan Villa Partner", villa_sub: "Permintaan booking pribadi dari villa & hotel mitra — siapa cepat, dia dapat.", villa_empty: "Belum ada permintaan villa yang terbuka.",
-    villa_claim_btn: "Terima permintaan", villa_claimed_tag: "⏳ Penawaran terkirim — menunggu konfirmasi tamu", villa_booked_tag: "✅ Tamu telah konfirmasi — sekarang menjadi pemesanan biasa. Kelola di \"Pemesanan\".", villa_tab_open: "Terbuka", villa_tab_archived: "Diarsipkan", villa_empty_archived: "Belum ada permintaan villa yang diarsipkan.", villa_claim_taken: "Maaf — pengemudi lain sudah menerima permintaan ini.", villa_source_tag: "Villa Partner", villa_dismiss_btn: "Bukan untuk saya", villa_edit_resend_btn: "Edit & kirim ulang penawaran", villa_withdraw_btn: "Tarik penawaran", villa_withdraw_confirm: "Tarik penawaran ini? Permintaan akan terbuka kembali dan pengemudi lain di area tersebut akan diberi tahu lagi.", villa_action_err: "Terjadi kesalahan. Silakan coba lagi.", villa_declined_tag: "Tamu menolak penawaran ini — tidak perlu tindakan. Jika masih ingin transfer, tamu akan mengirim permintaan baru.", villa_delete_btn: "🗑 Hapus", villa_delete_confirm: "Hapus dari daftar Anda? Hanya hilang untuk Anda — permintaan itu sendiri tidak terpengaruh.", villa_view_details_btn: "Lihat detail", villa_detail_eyebrow: "Permintaan villa", villa_detail_luggage_lbl: "Bagasi", villa_detail_trip_type_lbl: "Jenis perjalanan", plan_chip_villa_note: "Berlaku untuk pemesanan reguler. Pemesanan villa: 20%.",
+    villa_claim_btn: "Terima permintaan", villa_claimed_tag: "⏳ Penawaran terkirim — menunggu konfirmasi tamu", villa_booked_tag: "✅ Tamu telah konfirmasi — sekarang menjadi pemesanan biasa. Kelola di \"Pemesanan\".", villa_tab_open: "Terbuka", villa_tab_archived: "Diarsipkan", villa_empty_archived: "Belum ada permintaan villa yang diarsipkan.", villa_claim_taken: "Maaf — pengemudi lain sudah menerima permintaan ini.", villa_source_tag: "Villa Partner", villa_dismiss_btn: "Bukan untuk saya", villa_edit_resend_btn: "Edit & kirim ulang penawaran", villa_withdraw_btn: "Tarik penawaran", villa_withdraw_confirm: "Tarik penawaran ini? Permintaan akan terbuka kembali dan pengemudi lain di area tersebut akan diberi tahu lagi.", villa_action_err: "Terjadi kesalahan. Silakan coba lagi.", villa_declined_tag: "Tamu menolak penawaran ini — tidak perlu tindakan. Jika masih ingin transfer, tamu akan mengirim permintaan baru.", villa_delete_btn: "🗑 Hapus", villa_delete_confirm: "Hapus dari daftar Anda? Hanya hilang untuk Anda — permintaan itu sendiri tidak terpengaruh.", villa_view_details_btn: "Lihat detail", villa_detail_eyebrow: "Permintaan villa", villa_detail_luggage_lbl: "Bagasi", villa_detail_trip_type_lbl: "Jenis perjalanan",
     villa_push_title: "Dapatkan notifikasi instan", villa_push_sub: "Aktifkan notifikasi push agar tidak melewatkan permintaan villa baru.", villa_push_enable_btn: "Aktifkan notifikasi push",
     villa_push_enabled: "✓ Notifikasi push aktif", villa_push_ios_hint: "Di iPhone: tambahkan Rydanu ke Layar Utama dulu (Bagikan → Tambah ke Layar Utama), jika tidak notifikasi push tidak akan masuk.",
     villa_push_error: "Notifikasi push tidak dapat diaktifkan. Silakan periksa izin browser Anda.", villa_push_unsupported: "Notifikasi push tidak didukung di browser ini.",
@@ -11881,7 +11884,7 @@ const translations = {
     switcher_label: "Masuk sebagai",
     edit_profile_link: "Edit profil",
     dash_greeting_sub: "Begini performa tur Anda minggu ini.",
-    plan_chip_text: "Daftar gratis · Komisi 10% per pemesanan",
+    plan_chip_line1: "Daftar gratis", plan_chip_line2: "Komisi 10% per pemesanan", plan_chip_line3: "20% untuk permintaan villa",
     stat_views: "Kunjungan profil",
     stat_requests: "Permintaan pemesanan",
     stat_rating: "Rating rata-rata",
@@ -11962,7 +11965,7 @@ const translations = {
     unlock_notice_title: "Akun Anda aktif kembali ✓", unlock_notice_body: "Kabar baik — akun Anda telah dibuka blokirnya. Tur Anda terlihat kembali dan Anda dapat menerima pemesanan baru.",
     admin_fc_cannot_delete_applied: "Kredit ini sudah digunakan untuk biaya dan tidak dapat dihapus lagi.",
     admin_view_balances_btn: "Lihat semua saldo",
-    fee_rate_vip_bonus: "🌟 VIP Bonus", fee_rate_zero_fees: "0% biaya", fee_rate_valid_until: "berlaku hingga {date}", fee_rate_valid_unlimited: "berlaku tanpa batas waktu",
+    fee_rate_vip_bonus: "🌟 VIP Bonus", fee_rate_zero_fees: "0% biaya", fee_rate_valid_until: "berlaku hingga {date}", fee_rate_valid_unlimited: "berlaku tanpa batas waktu", fee_rate_villa_excluded: "*tidak termasuk pemesanan villa",
     fee_rate_current: "📊 Komisi Anda saat ini:", fee_rate_special_condition: "tarif khusus", fee_rate_standard: "Standar", fee_rate_unlimited_short: "tanpa batas",
     admin_fo_fill_required: "Harap pilih sopir dan masukkan persentase.", admin_fo_negative_error: "Persentase tidak boleh negatif.",
     admin_fo_saved: "✓ Disimpan dan sopir telah diberi tahu.", admin_fo_confirm_delete: "Yakin ingin menghapus tarif biaya individual ini? Sopir akan kembali membayar tarif standar 10%.",
@@ -16842,7 +16845,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v301</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v302</div>
 
 </body>
 </html>
