@@ -2069,6 +2069,11 @@
           </div>
           <div style="display:flex; flex-direction:column; align-items:flex-end; gap:8px;">
             <span class="plan-chip plan-chip-clickable" data-i18n="plan_chip_text" onclick="openTerms('fees')">Free listing · Commission per booking from $2</span>
+            <!-- Zusatzhinweis (21.8., Joerg-Wunsch): der 10%-Satz im Chip gilt nur fuer reguläre
+                 Buchungen -- Villa-Buchungen laufen mit 20% (siehe Villa Partner Provisionsmodell).
+                 Bewusst klein/dezent gehalten, kein eigener Kasten, damit der Kopfbereich nicht
+                 groesser wird. -->
+            <span style="font-size:0.68rem; color:var(--ink-soft); text-align:right; max-width:220px; line-height:1.3;" data-i18n="plan_chip_villa_note">Applies to regular bookings. Villa bookings: 20%.</span>
             <div id="current-fee-rate-display" class="fee-rate-badge" style="display:none;"></div>
           </div>
         </div>
@@ -3959,6 +3964,38 @@
         <div class="rank-points-row"><span>🥈 <span data-i18n="rank_insider">Insider</span></span><span class="mono">60</span></div>
         <div class="rank-points-row"><span>🥇 <span data-i18n="rank_trusted">Trusted Driver</span></span><span class="mono">120</span></div>
         <div class="rank-points-row"><span>💎 <span data-i18n="rank_legend">Rydanu Legend</span></span><span class="mono">250</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Villa-Anfrage Detail-Modal (21.8., Joerg-Wunsch): voller Ueberblick ueber eine offene
+     Villa-Anfrage, bevor der Fahrer sich fuer "Annehmen" entscheidet. Zeigt Felder, die auf der
+     kompakten Kartenansicht keinen Platz haben (Gepaeck, Fahrtart). Telefonnummer/E-Mail des
+     Gasts werden hier bewusst NICHT gezeigt -- gleiche Regel wie ueberall sonst: der Fahrer
+     bekommt Kontaktdaten erst nach Uebernahme + Buchungsbestaetigung. -->
+<div class="modal-bg" id="villa-detail-modal-bg">
+  <div class="modal" style="max-width:460px;">
+    <div class="modal-header">
+      <button class="modal-close" onclick="closeVillaRequestDetailModal()">✕</button>
+      <span class="eyebrow" data-i18n="villa_detail_eyebrow">Villa request</span>
+      <h2 id="villa-detail-title">—</h2>
+    </div>
+    <div class="modal-body">
+      <div class="row"><span class="k" data-i18n="lbl_pickup">Pickup</span><span class="v" id="villa-detail-pickup">—</span></div>
+      <div class="row"><span class="k" data-i18n="vr_destination">Destination</span><span class="v" id="villa-detail-destination">—</span></div>
+      <div class="row"><span class="k" data-i18n="lbl_date">Date</span><span class="v" id="villa-detail-date">—</span></div>
+      <div class="row" id="villa-detail-time-row"><span class="k" data-i18n="lbl_time">Time</span><span class="v" id="villa-detail-time">—</span></div>
+      <div class="row"><span class="k" data-i18n="lbl_guests">Guests</span><span class="v" id="villa-detail-guests">—</span></div>
+      <div class="row" id="villa-detail-luggage-row"><span class="k" data-i18n="villa_detail_luggage_lbl">Luggage</span><span class="v" id="villa-detail-luggage">—</span></div>
+      <div class="row" id="villa-detail-triptype-row"><span class="k" data-i18n="villa_detail_trip_type_lbl">Trip type</span><span class="v" id="villa-detail-triptype">—</span></div>
+      <div id="villa-detail-notes-row" style="display:none; margin-top:10px;">
+        <span class="k" data-i18n="lbl_notes_for_driver">Notes for the driver</span>
+        <p class="note" style="margin-top:4px; text-align:left;" id="villa-detail-notes"></p>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:10px; margin-top:22px;">
+        <button type="button" class="accept-btn" style="width:100%; padding:12px; font-size:0.85rem; border-radius:8px;" onclick="claimVillaRequestFromDetail()">✨ <span id="villa-detail-claim-label">Accept request</span></button>
+        <button type="button" class="link-btn" style="width:100%;" onclick="dismissVillaRequestFromDetail()"><span id="villa-detail-dismiss-label">Not for me</span></button>
       </div>
     </div>
   </div>
@@ -9030,8 +9067,13 @@ function renderVillaRequests(){
     const whenText = r.request_date ? `${r.request_date}${r.request_time ? ' ' + r.request_time : ''}` : '—';
     let actionHtml;
     if(r.status === 'open'){
+      // Aenderung (21.8., Joerg-Wunsch): vor dem Annehmen muss die Anfrage erst in voller
+      // Ansicht geoeffnet werden koennen (inkl. Gepaeck/Fahrtart, die auf der kompakten Karte
+      // keinen Platz haben) -- Annehmen passiert jetzt aus dem Detail-Modal heraus, nicht mehr
+      // per Direkt-Klick auf der Karte. "Nicht für mich" bleibt als schneller Direkt-Ablehnen-Link
+      // auf der Karte, da das keine vorherige Pruefung braucht.
       actionHtml = `
-        <button type="button" class="accept-btn" onclick="claimVillaRequest('${r.id}')">✨ ${t('villa_claim_btn')}</button>
+        <button type="button" class="accept-btn" onclick="openVillaRequestDetailModal('${r.id}')">👁 ${t('villa_view_details_btn')}</button>
         <button type="button" class="link-btn" style="width:auto; margin-top:6px;" onclick="dismissVillaRequest('${r.id}')">${t('villa_dismiss_btn')}</button>
       `;
     } else if(r.status === 'booked'){
@@ -9080,6 +9122,53 @@ function renderVillaRequests(){
 // in das bestehende individuelle Angebot (gleicher Baustein wie bei normalen Touranfragen) --
 // die Villa-Zuordnung + der 20%-Satz laufen dabei transparent im Hintergrund mit (siehe
 // confirm_custom_tour_request in der Datenbank).
+// Villa-Anfrage Detail-Modal (21.8., Joerg-Wunsch): oeffnet die volle Ansicht einer offenen
+// Villa-Anfrage, bevor der Fahrer "Annehmen" antippen kann. villaDetailRequestId merkt sich,
+// welche Anfrage gerade offen ist, damit die beiden Modal-Buttons wissen, worauf sie sich beziehen.
+let villaDetailRequestId = null;
+function openVillaRequestDetailModal(requestId){
+  const r = realVillaRequests.find(x=>x.id===requestId);
+  if(!r) return;
+  villaDetailRequestId = requestId;
+  const villaName = (r.villa_partners && r.villa_partners.name) || t('villa_source_tag');
+  document.getElementById('villa-detail-title').textContent = villaName;
+  document.getElementById('villa-detail-pickup').textContent = r.pickup || '—';
+  document.getElementById('villa-detail-destination').textContent = r.destination || '—';
+  document.getElementById('villa-detail-date').textContent = r.request_date || '—';
+  const timeRow = document.getElementById('villa-detail-time-row');
+  if(r.request_time){ timeRow.style.display=''; document.getElementById('villa-detail-time').textContent = r.request_time; }
+  else { timeRow.style.display='none'; }
+  document.getElementById('villa-detail-guests').textContent = r.guests || '—';
+  const luggageRow = document.getElementById('villa-detail-luggage-row');
+  if(r.luggage){ luggageRow.style.display=''; document.getElementById('villa-detail-luggage').textContent = r.luggage; }
+  else { luggageRow.style.display='none'; }
+  const tripRow = document.getElementById('villa-detail-triptype-row');
+  if(r.trip_type){ tripRow.style.display=''; document.getElementById('villa-detail-triptype').textContent = r.trip_type; }
+  else { tripRow.style.display='none'; }
+  const notesRow = document.getElementById('villa-detail-notes-row');
+  if(r.notes){ notesRow.style.display=''; document.getElementById('villa-detail-notes').textContent = r.notes; }
+  else { notesRow.style.display='none'; }
+  document.getElementById('villa-detail-claim-label').textContent = t('villa_claim_btn');
+  document.getElementById('villa-detail-dismiss-label').textContent = t('villa_dismiss_btn');
+  document.getElementById('villa-detail-modal-bg').classList.add('active');
+}
+function closeVillaRequestDetailModal(){
+  document.getElementById('villa-detail-modal-bg').classList.remove('active');
+  villaDetailRequestId = null;
+}
+document.getElementById('villa-detail-modal-bg').addEventListener('click', e=>{ if(e.target.id==='villa-detail-modal-bg') closeVillaRequestDetailModal(); });
+function claimVillaRequestFromDetail(){
+  if(!villaDetailRequestId) return;
+  const id = villaDetailRequestId;
+  closeVillaRequestDetailModal();
+  claimVillaRequest(id);
+}
+function dismissVillaRequestFromDetail(){
+  if(!villaDetailRequestId) return;
+  const id = villaDetailRequestId;
+  closeVillaRequestDetailModal();
+  dismissVillaRequest(id);
+}
 let pendingVillaRequest = null;
 let pendingOfferCustomerPhone = null;
 async function claimVillaRequest(requestId){
@@ -11010,7 +11099,7 @@ const translations = {
     sr_open_btn: "Already traveled with this driver? Leave a review", sr_eyebrow: "Leave a review", sr_title: "How was your trip?", mb_review_title2: "Your name", sr_err_name: "Please enter your name.",
     nav_requests: "Requests", requests_title: "Custom tour requests", requests_sub: "Travelers who couldn't find exactly what they wanted asked you directly. Reply by creating a real tour offer through Rydanu.", requests_empty: "No custom tour requests yet.",
     nav_villa: "Villa Requests", villa_title: "Villa Partner requests", villa_sub: "Private booking requests from partner villas & hotels — first come, first served.", villa_empty: "No open villa requests right now.",
-    villa_claim_btn: "Accept request", villa_claimed_tag: "⏳ Offer sent — awaiting guest confirmation", villa_booked_tag: "✅ Guest confirmed — now a regular booking. Manage it under \"Bookings\".", villa_tab_open: "Open", villa_tab_archived: "Archived", villa_empty_archived: "No archived villa requests yet.", villa_claim_taken: "Sorry — another driver already accepted this request.", villa_source_tag: "Villa Partner", villa_dismiss_btn: "Not for me", villa_edit_resend_btn: "Edit & resend offer", villa_withdraw_btn: "Withdraw offer", villa_withdraw_confirm: "Withdraw this offer? The request goes back to open and other drivers in the area will be notified again.", villa_action_err: "Something went wrong. Please try again.", villa_declined_tag: "Guest declined this offer — no action needed. If they still want a transfer, they'll submit a new request.", villa_delete_btn: "🗑 Remove", villa_delete_confirm: "Remove this from your list? It only disappears for you — the request itself isn't affected.",
+    villa_claim_btn: "Accept request", villa_claimed_tag: "⏳ Offer sent — awaiting guest confirmation", villa_booked_tag: "✅ Guest confirmed — now a regular booking. Manage it under \"Bookings\".", villa_tab_open: "Open", villa_tab_archived: "Archived", villa_empty_archived: "No archived villa requests yet.", villa_claim_taken: "Sorry — another driver already accepted this request.", villa_source_tag: "Villa Partner", villa_dismiss_btn: "Not for me", villa_edit_resend_btn: "Edit & resend offer", villa_withdraw_btn: "Withdraw offer", villa_withdraw_confirm: "Withdraw this offer? The request goes back to open and other drivers in the area will be notified again.", villa_action_err: "Something went wrong. Please try again.", villa_declined_tag: "Guest declined this offer — no action needed. If they still want a transfer, they'll submit a new request.", villa_delete_btn: "🗑 Remove", villa_delete_confirm: "Remove this from your list? It only disappears for you — the request itself isn't affected.", villa_view_details_btn: "View details", villa_detail_eyebrow: "Villa request", villa_detail_luggage_lbl: "Luggage", villa_detail_trip_type_lbl: "Trip type", plan_chip_villa_note: "Applies to regular bookings. Villa bookings: 20%.",
     villa_push_title: "Get notified instantly", villa_push_sub: "Turn on push notifications so you never miss a new villa request.", villa_push_enable_btn: "Enable push notifications",
     villa_push_enabled: "✓ Push notifications enabled", villa_push_ios_hint: "On iPhone: add Rydanu to your Home Screen first (Share → Add to Home Screen), otherwise push notifications won't arrive.",
     villa_push_error: "Could not enable push notifications. Please check your browser permissions.", villa_push_unsupported: "Push notifications aren't supported in this browser.",
@@ -11349,7 +11438,7 @@ const translations = {
     sr_open_btn: "Schon mal mit diesem Fahrer unterwegs gewesen? Bewertung hinterlassen", sr_eyebrow: "Bewertung hinterlassen", sr_title: "Wie war deine Tour?", mb_review_title2: "Dein Name", sr_err_name: "Bitte gib deinen Namen ein.",
     nav_requests: "Anfragen", requests_title: "Individuelle Touranfragen", requests_sub: "Reisende, die nicht genau das Passende gefunden haben, haben dich direkt angefragt. Antworte, indem du über Rydanu ein echtes Tourangebot erstellst.", requests_empty: "Noch keine individuellen Touranfragen.",
     nav_villa: "Villa-Anfragen", villa_title: "Villa-Partner-Anfragen", villa_sub: "Private Buchungsanfragen von Partner-Villen & Hotels — wer zuerst übernimmt, bekommt die Anfrage.", villa_empty: "Aktuell keine offenen Villa-Anfragen.",
-    villa_claim_btn: "Anfrage übernehmen", villa_claimed_tag: "⏳ Angebot gesendet — wartet auf Bestätigung des Gasts", villa_booked_tag: "✅ Gast hat bestätigt — jetzt eine normale Buchung. Verwalte sie unter \"Buchungen\".", villa_tab_open: "Offen", villa_tab_archived: "Archiviert", villa_empty_archived: "Noch keine archivierten Villa-Anfragen.", villa_claim_taken: "Schade — ein anderer Fahrer hat diese Anfrage bereits übernommen.", villa_source_tag: "Villa-Partner", villa_dismiss_btn: "Nicht für mich", villa_edit_resend_btn: "Angebot bearbeiten & erneut senden", villa_withdraw_btn: "Angebot zurückziehen", villa_withdraw_confirm: "Dieses Angebot zurückziehen? Die Anfrage wird wieder offen und andere Fahrer in der Region werden erneut benachrichtigt.", villa_action_err: "Etwas ist schiefgelaufen. Bitte nochmal versuchen.", villa_declined_tag: "Gast hat das Angebot abgelehnt — keine Aktion nötig. Falls weiterhin ein Transfer gewünscht ist, stellt der Gast eine neue Anfrage.", villa_delete_btn: "🗑 Entfernen", villa_delete_confirm: "Aus deiner Liste entfernen? Verschwindet nur bei dir — an der Anfrage selbst ändert sich nichts.",
+    villa_claim_btn: "Anfrage übernehmen", villa_claimed_tag: "⏳ Angebot gesendet — wartet auf Bestätigung des Gasts", villa_booked_tag: "✅ Gast hat bestätigt — jetzt eine normale Buchung. Verwalte sie unter \"Buchungen\".", villa_tab_open: "Offen", villa_tab_archived: "Archiviert", villa_empty_archived: "Noch keine archivierten Villa-Anfragen.", villa_claim_taken: "Schade — ein anderer Fahrer hat diese Anfrage bereits übernommen.", villa_source_tag: "Villa-Partner", villa_dismiss_btn: "Nicht für mich", villa_edit_resend_btn: "Angebot bearbeiten & erneut senden", villa_withdraw_btn: "Angebot zurückziehen", villa_withdraw_confirm: "Dieses Angebot zurückziehen? Die Anfrage wird wieder offen und andere Fahrer in der Region werden erneut benachrichtigt.", villa_action_err: "Etwas ist schiefgelaufen. Bitte nochmal versuchen.", villa_declined_tag: "Gast hat das Angebot abgelehnt — keine Aktion nötig. Falls weiterhin ein Transfer gewünscht ist, stellt der Gast eine neue Anfrage.", villa_delete_btn: "🗑 Entfernen", villa_delete_confirm: "Aus deiner Liste entfernen? Verschwindet nur bei dir — an der Anfrage selbst ändert sich nichts.", villa_view_details_btn: "Details ansehen", villa_detail_eyebrow: "Villa-Anfrage", villa_detail_luggage_lbl: "Gepäck", villa_detail_trip_type_lbl: "Fahrtart", plan_chip_villa_note: "Gilt für reguläre Buchungen. Villa-Buchungen: 20%.",
     villa_push_title: "Sofort benachrichtigt werden", villa_push_sub: "Aktiviere Push-Benachrichtigungen, damit du keine neue Villa-Anfrage verpasst.", villa_push_enable_btn: "Push-Benachrichtigungen aktivieren",
     villa_push_enabled: "✓ Push-Benachrichtigungen aktiviert", villa_push_ios_hint: "Am iPhone: Rydanu zuerst zum Homescreen hinzufügen (Teilen → Zum Home-Bildschirm), sonst kommen keine Push-Benachrichtigungen an.",
     villa_push_error: "Push-Benachrichtigungen konnten nicht aktiviert werden. Bitte Browser-Berechtigungen prüfen.", villa_push_unsupported: "Push-Benachrichtigungen werden von diesem Browser nicht unterstützt.",
@@ -11688,7 +11777,7 @@ const translations = {
     sr_open_btn: "Pernah bepergian dengan sopir ini? Tinggalkan ulasan", sr_eyebrow: "Tinggalkan ulasan", sr_title: "Bagaimana perjalanan Anda?", mb_review_title2: "Nama Anda", sr_err_name: "Mohon masukkan nama Anda.",
     nav_requests: "Permintaan", requests_title: "Permintaan tur khusus", requests_sub: "Wisatawan yang tidak menemukan yang mereka cari langsung menghubungi Anda. Balas dengan membuat penawaran tur nyata melalui Rydanu.", requests_empty: "Belum ada permintaan tur khusus.",
     nav_villa: "Permintaan Villa", villa_title: "Permintaan Villa Partner", villa_sub: "Permintaan booking pribadi dari villa & hotel mitra — siapa cepat, dia dapat.", villa_empty: "Belum ada permintaan villa yang terbuka.",
-    villa_claim_btn: "Terima permintaan", villa_claimed_tag: "⏳ Penawaran terkirim — menunggu konfirmasi tamu", villa_booked_tag: "✅ Tamu telah konfirmasi — sekarang menjadi pemesanan biasa. Kelola di \"Pemesanan\".", villa_tab_open: "Terbuka", villa_tab_archived: "Diarsipkan", villa_empty_archived: "Belum ada permintaan villa yang diarsipkan.", villa_claim_taken: "Maaf — pengemudi lain sudah menerima permintaan ini.", villa_source_tag: "Villa Partner", villa_dismiss_btn: "Bukan untuk saya", villa_edit_resend_btn: "Edit & kirim ulang penawaran", villa_withdraw_btn: "Tarik penawaran", villa_withdraw_confirm: "Tarik penawaran ini? Permintaan akan terbuka kembali dan pengemudi lain di area tersebut akan diberi tahu lagi.", villa_action_err: "Terjadi kesalahan. Silakan coba lagi.", villa_declined_tag: "Tamu menolak penawaran ini — tidak perlu tindakan. Jika masih ingin transfer, tamu akan mengirim permintaan baru.", villa_delete_btn: "🗑 Hapus", villa_delete_confirm: "Hapus dari daftar Anda? Hanya hilang untuk Anda — permintaan itu sendiri tidak terpengaruh.",
+    villa_claim_btn: "Terima permintaan", villa_claimed_tag: "⏳ Penawaran terkirim — menunggu konfirmasi tamu", villa_booked_tag: "✅ Tamu telah konfirmasi — sekarang menjadi pemesanan biasa. Kelola di \"Pemesanan\".", villa_tab_open: "Terbuka", villa_tab_archived: "Diarsipkan", villa_empty_archived: "Belum ada permintaan villa yang diarsipkan.", villa_claim_taken: "Maaf — pengemudi lain sudah menerima permintaan ini.", villa_source_tag: "Villa Partner", villa_dismiss_btn: "Bukan untuk saya", villa_edit_resend_btn: "Edit & kirim ulang penawaran", villa_withdraw_btn: "Tarik penawaran", villa_withdraw_confirm: "Tarik penawaran ini? Permintaan akan terbuka kembali dan pengemudi lain di area tersebut akan diberi tahu lagi.", villa_action_err: "Terjadi kesalahan. Silakan coba lagi.", villa_declined_tag: "Tamu menolak penawaran ini — tidak perlu tindakan. Jika masih ingin transfer, tamu akan mengirim permintaan baru.", villa_delete_btn: "🗑 Hapus", villa_delete_confirm: "Hapus dari daftar Anda? Hanya hilang untuk Anda — permintaan itu sendiri tidak terpengaruh.", villa_view_details_btn: "Lihat detail", villa_detail_eyebrow: "Permintaan villa", villa_detail_luggage_lbl: "Bagasi", villa_detail_trip_type_lbl: "Jenis perjalanan", plan_chip_villa_note: "Berlaku untuk pemesanan reguler. Pemesanan villa: 20%.",
     villa_push_title: "Dapatkan notifikasi instan", villa_push_sub: "Aktifkan notifikasi push agar tidak melewatkan permintaan villa baru.", villa_push_enable_btn: "Aktifkan notifikasi push",
     villa_push_enabled: "✓ Notifikasi push aktif", villa_push_ios_hint: "Di iPhone: tambahkan Rydanu ke Layar Utama dulu (Bagikan → Tambah ke Layar Utama), jika tidak notifikasi push tidak akan masuk.",
     villa_push_error: "Notifikasi push tidak dapat diaktifkan. Silakan periksa izin browser Anda.", villa_push_unsupported: "Notifikasi push tidak didukung di browser ini.",
@@ -16753,7 +16842,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v300</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v301</div>
 
 </body>
 </html>
