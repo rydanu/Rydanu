@@ -4146,12 +4146,10 @@
         </div>
       </div>
 
-      <div class="filter-group" id="filter-city-airport-group" style="display:none;">
-        <div class="filter-group-title" id="filter-city-airport-title">✈️ <span data-i18n="filter_city_airport_title">Also need an airport transfer?</span></div>
-        <div class="chip-row" data-group="cityAirportToggle">
-          <button type="button" class="chip" data-value="airport" data-i18n="filter_city_airport_chip">✈️ Yes — to the airport</button>
-        </div>
-      </div>
+      <!-- Umschalter "Auch Flughafentransfer?" entfernt (22.8., Joerg-Wunsch): war ein eigener
+           Extra-Schritt fuer etwas, das jetzt einfach eine normale Auswahl-Option in der
+           "Transfer — wohin moechtest du?"-Liste ist (siehe filter-transfer-dest-group unten,
+           Airport-Chip wird dort per renderFilterDestChips() automatisch mit eingefuegt). -->
 
       <div class="filter-group" id="filter-transfer-dest-group" style="display:none;">
         <div class="filter-group-title" data-i18n="filter_transfer_dest_title">🚐 Transfer — where do you want to go?</div>
@@ -12122,7 +12120,7 @@ function renderDriverGrid(rawList){
   const grid = document.getElementById('driver-grid');
   grid.innerHTML = '';
   const cityAirportCity = getSingleCityStart();
-  const cityAirportActive = selectedFilters.cityAirportToggle.length > 0 && !!cityAirportCity;
+  const cityAirportActive = isCityToAirportActive() && !!cityAirportCity;
   list.forEach((d,i)=>{
    try{
     const isAirportTourCard = d.spots && d.spots.includes('Airport Transfer');
@@ -12242,7 +12240,7 @@ function visibleDrivers(){
   });
 }
 // ---- filter popup ----
-let selectedFilters = { regions:[], languages:[], services:[], spots:[], airportDest:[], trust:[], vtype:[], transferDest:[], cityAirportToggle:[] };
+let selectedFilters = { regions:[], languages:[], services:[], spots:[], airportDest:[], trust:[], vtype:[], transferDest:[] };
 let preferredCurrency = 'IDR';
 const FX_RATES = { USD: 15800, EUR: 17200, AUD: 10500 };
 const FX_SYMBOLS = { USD: '$', EUR: '€', AUD: 'A$' };
@@ -12260,11 +12258,18 @@ function renderFilterRegionChips(){
 }
 function renderFilterDestChips(){
   const cfg = REGION_CONFIG[selectedIsland] || REGION_CONFIG.bali;
-  ['filter-airportdest-row','filter-transferdest-row'].forEach(id=>{
-    const row = document.getElementById(id);
-    if(!row) return;
-    row.innerHTML = cfg.regions.map(r=>`<button type="button" class="chip" data-value="${escapeHtml(r.value)}">${r.icon} ${escapeHtml(r.label[currentLang]||r.label.en)}</button>`).join('');
-  });
+  const cityChips = cfg.regions.map(r=>`<button type="button" class="chip" data-value="${escapeHtml(r.value)}">${r.icon} ${escapeHtml(r.label[currentLang]||r.label.en)}</button>`).join('');
+  const airportDestRow = document.getElementById('filter-airportdest-row');
+  if(airportDestRow) airportDestRow.innerHTML = cityChips;
+  // Aenderung (22.8., Joerg-Wunsch): Airport ist jetzt eine ganz normale Zieloption in der
+  // Transfer-Liste (Transfer von einer Stadt ZUM Flughafen ist ja der haeufigste Fall) --
+  // deshalb hier zusaetzlich vorangestellt, nur in der Transfer-Liste, nicht in der
+  // Flughafen-Zielliste (Flughafen -> Flughafen ergaebe keinen Sinn).
+  const transferDestRow = document.getElementById('filter-transferdest-row');
+  if(transferDestRow){
+    const airportChip = `<button type="button" class="chip" data-value="${escapeHtml(cfg.airport.value)}">${cfg.airport.icon} ${escapeHtml(cfg.airport.label[currentLang]||cfg.airport.label.en)}</button>`;
+    transferDestRow.innerHTML = airportChip + cityChips;
+  }
 }
 // Regionen gehoeren immer eindeutig zu genau einer Insel (Kuta ≠ Kuta Lombok) — deshalb reicht
 // beim Insel-Wechsel ein einfaches Zuruecksetzen der regionsbezogenen Filter, keine Verwechslungsgefahr.
@@ -12277,7 +12282,6 @@ function setSelectedIsland(island){
   selectedFilters.regions = [];
   selectedFilters.airportDest = [];
   selectedFilters.transferDest = [];
-  selectedFilters.cityAirportToggle = [];
   renderFilterRegionChips();
   renderFilterDestChips();
   updateAllFilterVisibility();
@@ -12316,19 +12320,19 @@ function isAirportFilterActive(){
 function isTransferFilterActive(){
   return selectedFilters.spots.includes('Transfer');
 }
-// Bugfix (22.8., Joerg gemeldet per Screenshot): der "Auch Flughafentransfer?"-Umschalter (siehe
-// updateCityAirportVisibility weiter unten) erschien bisher IMMER, sobald genau eine Stadt gewaehlt
-// war -- auch wenn oben schon "Tagestour" oder "Halbtagestour" aktiv war. Ergab keinen Sinn: hat man
-// sich schon fuer eine konkrete Tour-Art entschieden, passt die Rueckfrage nach einem Flughafen-
-// transfer nicht mehr dazu (voellig andere Tour-Art). Fix: die Funktion liefert jetzt nur noch eine
-// Stadt zurueck, wenn NOCH KEINE Tour-Art gewaehlt wurde (man sich also noch breit umschaut).
 function getSingleCityStart(){
-  if(selectedFilters.spots.length > 0) return null;
   const cities = selectedFilters.regions.filter(r=>r!==currentAirportValue());
   return (cities.length === 1 && !selectedFilters.regions.includes(currentAirportValue())) ? cities[0] : null;
 }
+// Ersetzt den fruehereren eigenen "Auch Flughafentransfer?"-Umschalter (22.8., Joerg-Wunsch):
+// "Stadt X -> Flughafen" ist jetzt einfach Tour-Art "Transfer" + Ziel "Airport" -- ganz normale
+// Auswahl, kein Extra-Schritt mehr noetig. Alle Stellen, die vorher den Umschalter abgefragt haben,
+// pruefen jetzt stattdessen diese Kombination.
+function isCityToAirportActive(){
+  return selectedFilters.spots.includes('Transfer') && selectedFilters.transferDest.includes(currentAirportValue());
+}
 function isAirportIntentActive(){
-  return isAirportFilterActive() || selectedFilters.cityAirportToggle.length > 0;
+  return isAirportFilterActive();
 }
 function updateAirportDestVisibility(){
   const grp = document.getElementById('filter-airport-dest-group');
@@ -12354,24 +12358,9 @@ function updateTransferDestVisibility(){
     updateFilterCount();
   }
 }
-// mirrored panel: a single city picked as Start can ALSO mean "transfer me to the airport"
-function updateCityAirportVisibility(){
-  const grp = document.getElementById('filter-city-airport-group');
-  if(!grp) return;
-  const city = getSingleCityStart();
-  grp.style.display = city ? 'block' : 'none';
-  const titleEl = document.getElementById('filter-city-airport-title');
-  const titleSpan = titleEl ? titleEl.lastElementChild : null;
-  if(titleSpan){
-    const label = t('filter_city_airport_title') || 'Also need an airport transfer?';
-    titleSpan.textContent = city ? label.replace('{city}', city) : label;
-  }
-  if(!city && selectedFilters.cityAirportToggle.length){
-    selectedFilters.cityAirportToggle = [];
-    grp.querySelectorAll('.chip').forEach(c=>c.classList.remove('chip-active'));
-    updateFilterCount();
-  }
-}
+// mirrored panel: a single city picked as Start can ALSO mean "transfer me to the airport" --
+// dieser Anwendungsfall lauft jetzt komplett ueber die normale Transfer-Zielauswahl (siehe
+// isCityToAirportActive() oben), keine eigene Sichtbarkeits-Funktion mehr noetig.
 // once the traveler is specifically after an airport transfer (either direction), a
 // generic day-tour / half-day / service filter no longer applies — hide those groups
 // Bugfix (22.8., Joerg gemeldet per Screenshot): war vorher "Transfer" als Tour-Art gewaehlt und
@@ -12379,7 +12368,7 @@ function updateCityAirportVisibility(){
 // bestehen, obwohl die ganze Gruppe ausgeblendet wird -- dadurch zeigten sich "Flughafentransfer
 // wohin?" UND "Transfer wohin?" gleichzeitig mit identischer Regionsliste (verwirrende Dopplung).
 // Fix: beim Ausblenden wird die Auswahl in dieser Gruppe mit zurueckgesetzt, wie es bei den anderen
-// Kontext-Filtern (airportDest/transferDest/cityAirportToggle) schon laenger so gehandhabt wird.
+// Kontext-Filtern (airportDest/transferDest) schon laenger so gehandhabt wird.
 function updateServiceSpotsVisibility(){
   const hide = isAirportIntentActive();
   const serviceGrp = document.getElementById('filter-service-group');
@@ -12400,7 +12389,6 @@ function updateAllFilterVisibility(){
   try{ updateServiceSpotsVisibility(); }catch(e){ console.error('updateServiceSpotsVisibility error:', e); }
   try{ updateAirportDestVisibility(); }catch(e){ console.error('updateAirportDestVisibility error:', e); }
   try{ updateTransferDestVisibility(); }catch(e){ console.error('updateTransferDestVisibility error:', e); }
-  try{ updateCityAirportVisibility(); }catch(e){ console.error('updateCityAirportVisibility error:', e); }
   // Entwickler-Debug-Ausgabe entfernt (22.8., Joerg gemeldet per Screenshot) -- zeigte echten
   // Nutzern die rohen selectedFilters als gruener Monospace-Text im Filter-Modal. War schon laenger
   // im Code, offenbar aus einer frueheren Debug-Sitzung uebrig geblieben. Bewusst ersatzlos raus.
@@ -12466,13 +12454,13 @@ function closeFilters(){ document.getElementById('filter-modal-bg').classList.re
 document.getElementById('filter-modal-bg').addEventListener('click', e=>{ if(e.target.id==='filter-modal-bg') closeFilters(); });
 
 function clearFilters(){
-  selectedFilters = { regions:[], languages:[], services:[], spots:[], airportDest:[], trust:[], vtype:[], transferDest:[], cityAirportToggle:[] };
+  selectedFilters = { regions:[], languages:[], services:[], spots:[], airportDest:[], trust:[], vtype:[], transferDest:[] };
   document.querySelectorAll('#filter-modal-bg .chip').forEach(c=>c.classList.remove('chip-active'));
   updateAllFilterVisibility();
   updateFilterCount();
 }
 function updateFilterCount(){
-  const total = selectedFilters.regions.length + selectedFilters.languages.length + selectedFilters.services.length + selectedFilters.spots.length + selectedFilters.airportDest.length + selectedFilters.trust.length + selectedFilters.vtype.length + selectedFilters.transferDest.length + selectedFilters.cityAirportToggle.length;
+  const total = selectedFilters.regions.length + selectedFilters.languages.length + selectedFilters.services.length + selectedFilters.spots.length + selectedFilters.airportDest.length + selectedFilters.trust.length + selectedFilters.vtype.length + selectedFilters.transferDest.length;
   const badge = document.getElementById('filter-count');
   badge.textContent = total;
   badge.style.display = total>0 ? 'inline-flex' : 'none';
@@ -12601,8 +12589,7 @@ function runSearch(){
   const airportVal = currentAirportValue();
   const regionFilterNoAirport = selectedFilters.regions.filter(r=>r!==airportVal);
   const airportStartSelected = selectedFilters.regions.includes(airportVal);
-  const cityAirportCity = getSingleCityStart();
-  const cityAirportActive = selectedFilters.cityAirportToggle.length > 0 && !!cityAirportCity;
+  const cityAirportActive = isCityToAirportActive() && !!getSingleCityStart();
 
   function matchesHard(d){
     if(cardIsland(d) !== selectedIsland) return false;
@@ -12610,17 +12597,29 @@ function runSearch(){
     const isAirportTour = d.spots && d.spots.includes('Airport Transfer');
     const isTransferTour = d.spots && d.spots.includes('Transfer') && !isAirportTour;
     const matchesAirportStart = !airportStartSelected || isAirportTour;
-    const matchesCityAirport = !cityAirportActive || (isAirportTour && d.airportRegions && d.airportRegions[cityAirportCity]);
+    // Wenn "Transfer" + Ziel "Airport" gewaehlt sind (Stadt -> Flughafen), wird die normale
+    // Regions-Pruefung uebersprungen -- die eigentliche Pruefung passiert unten in
+    // matchesTransferDest gegen die flughafen-spezifische Regionsliste des Fahrers.
     const matchesRegion = cityAirportActive ? true : (regionFilterNoAirport.length===0
       || d.serviceRegions==='all'
       || (Array.isArray(d.serviceRegions) && d.serviceRegions.some(r=>regionFilterNoAirport.includes(r)))
       || (!d.serviceRegions && regionFilterNoAirport.includes(d.region)));
     const matchesAirportDest = selectedFilters.airportDest.length===0
       || (isAirportTour && d.airportRegions && selectedFilters.airportDest.some(r=>d.airportRegions[r]));
+    // Aenderung (22.8., Joerg-Wunsch): Airport ist jetzt eine ganz normale Zieloption in der
+    // Transfer-Liste (siehe renderFilterDestChips). Ist Airport als Ziel gewaehlt, wird -- statt der
+    // allgemeinen Tour-Regionen (serviceRegions) -- die flughafen-spezifische Regionsliste des
+    // Fahrers geprueft (airportRegions), gegen die aktuell gewaehlte(n) Startstadt/-staedte. Das
+    // ersetzt den frueheren eigenen "Auch Flughafentransfer?"-Umschalter vollstaendig.
     const matchesTransferDest = selectedFilters.transferDest.length===0
-      || (isTransferTour && (d.serviceRegions==='all' || (Array.isArray(d.serviceRegions) && d.serviceRegions.some(r=>selectedFilters.transferDest.includes(r)))));
-    const matchesSpots = selectedFilters.spots.length===0 || (d.spots && selectedFilters.spots.some(s=>d.spots.includes(s)));
-    return matchesText && matchesAirportStart && matchesCityAirport && matchesRegion && matchesAirportDest && matchesTransferDest && matchesSpots;
+      || selectedFilters.transferDest.some(destVal => destVal === airportVal
+        ? (isAirportTour && d.airportRegions && regionFilterNoAirport.some(r=>d.airportRegions[r]))
+        : (isTransferTour && (d.serviceRegions==='all' || (Array.isArray(d.serviceRegions) && d.serviceRegions.includes(destVal)))));
+    // Sonderfall Stadt->Flughafen: der passende Fahrer traegt "Airport Transfer" in d.spots, nicht
+    // woertlich "Transfer" -- die normale Tour-Art-Pruefung wuerde ihn also faelschlich ausschliessen.
+    const matchesSpots = selectedFilters.spots.length===0
+      || (cityAirportActive ? isAirportTour : (d.spots && selectedFilters.spots.some(s=>d.spots.includes(s))));
+    return matchesText && matchesAirportStart && matchesRegion && matchesAirportDest && matchesTransferDest && matchesSpots;
   }
   function matchesSoft(d){
     const matchesLanguage = selectedFilters.languages.length===0 || d.lang.some(l=>selectedFilters.languages.includes(l));
@@ -13239,7 +13238,7 @@ function openModal(d){
   document.getElementById('modal-badges-row').style.display = badges.length ? 'flex' : 'none';
   document.getElementById('modal-badges').innerHTML = badges.join('<br>');
   const _cityAirportCity = getSingleCityStart();
-  const _cityAirportActive = selectedFilters.cityAirportToggle.length > 0 && !!_cityAirportCity;
+  const _cityAirportActive = isCityToAirportActive() && !!_cityAirportCity;
   const _isAirportTour = d.spots && d.spots.includes('Airport Transfer');
   const _matrixPrice = _cityAirportActive && _isAirportTour && d.airportRegions && d.airportRegions[_cityAirportCity];
   if(_matrixPrice){
@@ -16933,7 +16932,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v312</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v313</div>
 
 </body>
 </html>
