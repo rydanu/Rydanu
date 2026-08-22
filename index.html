@@ -203,7 +203,7 @@
     background-image:linear-gradient(90deg, var(--ink) 40%, transparent 40%);
     background-size:8px 1px; opacity:0.35;
   }
-  .route-divider span{ font-family:'JetBrains Mono'; font-size:0.68rem; text-transform:uppercase; letter-spacing:0.14em; white-space:nowrap; }
+  .route-divider span{ font-family:'JetBrains Mono'; font-size:0.75rem; font-weight:800; text-transform:uppercase; letter-spacing:0.14em; white-space:nowrap; }
 
   /* ---------- views ---------- */
   .view{ display:none; }
@@ -313,7 +313,7 @@
   }
   .driver-only-card:hover{ transform:translateY(-3px); box-shadow:var(--shadow-card-hover); }
   .reset-filters-link{
-    background:none; border:none; padding:0; font-family:'JetBrains Mono'; font-size:0.72rem;
+    background:none; border:none; padding:0; font-family:'JetBrains Mono'; font-size:0.75rem; font-weight:800;
     color:var(--ink-soft); text-decoration:underline; cursor:pointer; opacity:0.8;
   }
   .reset-filters-link:hover{ opacity:1; color:var(--teal); }
@@ -1651,6 +1651,13 @@
   <div class="route-divider">
     <span id="result-count">6 drivers found</span>
     <button type="button" id="reset-filters-link" class="reset-filters-link" onclick="clearFiltersAndSearch()" style="display:none; margin-left:10px;" data-i18n="reset_filters_link">Reset filters</button>
+  </div>
+
+  <!-- Neu (22.8., Joerg-Wunsch): weiche Filter (Sprache/Fahrzeugtyp/Service/Vertrauen) werden bei
+       0 Treffern automatisch ignoriert -- dieser Hinweis erscheint dann, damit klar ist, dass die
+       Ergebnisse trotzdem existieren, nur nicht ALLE gewuenschten Zusatzkriterien erfuellen. -->
+  <div id="soft-filter-notice" style="display:none; margin:0 32px 20px; padding:14px 18px; background:#FBF0E4; border:1.5px solid #E8B98A; border-radius:12px; color:#8A4A1F; font-weight:700; font-size:0.88rem; align-items:center; gap:10px;">
+    <span style="font-size:1.15rem;">ℹ️</span><span data-i18n="soft_filter_notice">Not all filters could be matched — showing the closest results.</span>
   </div>
 
   <div id="results-sections" style="display:flex; flex-direction:column;">
@@ -4130,17 +4137,6 @@
         </div>
       </div>
 
-      <div class="filter-group">
-        <div class="filter-group-title" data-i18n="filter_vtype_title">Vehicle type</div>
-        <div class="chip-row" data-group="vtype">
-          <button type="button" class="chip" data-value="Standard Car">🚗 <span data-i18n="vt_standard">Standard Car</span></button>
-          <button type="button" class="chip" data-value="Family Car">👨‍👩‍👧 <span data-i18n="vt_family">Family Car</span></button>
-          <button type="button" class="chip" data-value="Minivan">🚐 <span data-i18n="vt_minivan">Minivan</span></button>
-          <button type="button" class="chip" data-value="Luxury Car">🚘 <span data-i18n="vt_luxury">Luxury Car</span></button>
-          <button type="button" class="chip" data-value="Large Vehicle">🚌 <span data-i18n="vt_large">More than 5 seats</span></button>
-        </div>
-      </div>
-
       <!-- Kontext-Filter: erscheinen erst nach der jeweiligen Grundauswahl (unveraendertes Verhalten,
            nur neu einsortiert direkt hinter Tour-Art/Region, wo sie inhaltlich hingehoeren). -->
       <div class="filter-group" id="filter-airport-dest-group" style="display:none;">
@@ -4169,6 +4165,22 @@
         <span id="filter-more-toggle-icon">▸</span> <span data-i18n="filter_more_toggle">More filters</span>
       </button>
       <div id="filter-more-group" style="display:none;">
+
+        <!-- Verschoben hierher (22.8., Joerg-Wunsch): Fahrzeugtyp war vorher ein hartes Muss-Kriterium
+             direkt in der Hauptansicht -- kombiniert mit Ort/Sprache/etc. fuehrte das bei der aktuell
+             noch kleinen Fahrer-Anzahl schnell zu 0 Treffern. Jetzt hier bei den "weiteren Filtern"
+             UND in runSearch() als weicher Filter behandelt: fuehrt die Kombination zu 0 Treffern,
+             wird er automatisch ignoriert und ein Hinweis eingeblendet (siehe runSearch/soft-filter-notice). -->
+        <div class="filter-group">
+          <div class="filter-group-title" data-i18n="filter_vtype_title">Vehicle type</div>
+          <div class="chip-row" data-group="vtype">
+            <button type="button" class="chip" data-value="Standard Car">🚗 <span data-i18n="vt_standard">Standard Car</span></button>
+            <button type="button" class="chip" data-value="Family Car">👨‍👩‍👧 <span data-i18n="vt_family">Family Car</span></button>
+            <button type="button" class="chip" data-value="Minivan">🚐 <span data-i18n="vt_minivan">Minivan</span></button>
+            <button type="button" class="chip" data-value="Luxury Car">🚘 <span data-i18n="vt_luxury">Luxury Car</span></button>
+            <button type="button" class="chip" data-value="Large Vehicle">🚌 <span data-i18n="vt_large">More than 5 seats</span></button>
+          </div>
+        </div>
 
         <div class="filter-group">
           <div class="filter-group-title" data-i18n="filter_language_title">Language</div>
@@ -11015,7 +11027,7 @@ const translations = {
     filters_btn: "Filters",
     search_btn: "Search",
     results_heading: "Available drivers this week", search_results_in_prefix: "Drivers in",
-    tours_heading: "Available tours this week", order_toggle_drivers: "Drivers first", order_toggle_tours: "Tours first", reset_filters_link: "Reset filters",
+    tours_heading: "Available tours this week", order_toggle_drivers: "Drivers first", order_toggle_tours: "Tours first", reset_filters_link: "Reset filters", soft_filter_notice: "Not all filters could be matched — showing the closest results.",
     plan_with_driver: "ⓘ The exact attractions and what's included you plan directly with your driver.",
     support_btn: "✉️ Message to Rydanu Support", dp_qr_dash_btn: "📱 Your Rydanu QR code",
     support_modal_title: "Message to Rydanu Support",
@@ -11354,7 +11366,7 @@ const translations = {
     filters_btn: "Filter",
     search_btn: "Suchen",
     results_heading: "Verfügbare Fahrer diese Woche", search_results_in_prefix: "Fahrer in",
-    tours_heading: "Verfügbare Touren diese Woche", order_toggle_drivers: "Fahrer zuerst", order_toggle_tours: "Touren zuerst", reset_filters_link: "Filter zurücksetzen",
+    tours_heading: "Verfügbare Touren diese Woche", order_toggle_drivers: "Fahrer zuerst", order_toggle_tours: "Touren zuerst", reset_filters_link: "Filter zurücksetzen", soft_filter_notice: "Nicht alle Filter konnten berücksichtigt werden — hier die besten Treffer.",
     plan_with_driver: "ⓘ Die genauen Attraktionen und was enthalten ist, planst du direkt mit deinem Fahrer.",
     support_btn: "✉️ Nachricht an Rydanu Support", dp_qr_dash_btn: "📱 Dein Rydanu QR-Code",
     support_modal_title: "Nachricht an Rydanu Support",
@@ -11693,7 +11705,7 @@ const translations = {
     filters_btn: "Filter",
     search_btn: "Cari",
     results_heading: "Sopir tersedia minggu ini", search_results_in_prefix: "Sopir di",
-    tours_heading: "Tur tersedia minggu ini", order_toggle_drivers: "Sopir dulu", order_toggle_tours: "Tur dulu", reset_filters_link: "Setel ulang filter",
+    tours_heading: "Tur tersedia minggu ini", order_toggle_drivers: "Sopir dulu", order_toggle_tours: "Tur dulu", reset_filters_link: "Setel ulang filter", soft_filter_notice: "Tidak semua filter dapat diterapkan — menampilkan hasil terdekat.",
     plan_with_driver: "ⓘ Atraksi yang tepat dan apa saja yang termasuk Anda rencanakan langsung dengan sopir Anda.",
     support_btn: "✉️ Pesan ke Dukungan Rydanu", dp_qr_dash_btn: "📱 Kode QR Rydanu Anda",
     support_modal_title: "Pesan ke Dukungan Rydanu",
@@ -12356,18 +12368,33 @@ function updateCityAirportVisibility(){
 }
 // once the traveler is specifically after an airport transfer (either direction), a
 // generic day-tour / half-day / service filter no longer applies — hide those groups
+// Bugfix (22.8., Joerg gemeldet per Screenshot): war vorher "Transfer" als Tour-Art gewaehlt und
+// wurde danach zusaetzlich "Airport" als Startort geklickt, blieb selectedFilters.spots=['Transfer']
+// bestehen, obwohl die ganze Gruppe ausgeblendet wird -- dadurch zeigten sich "Flughafentransfer
+// wohin?" UND "Transfer wohin?" gleichzeitig mit identischer Regionsliste (verwirrende Dopplung).
+// Fix: beim Ausblenden wird die Auswahl in dieser Gruppe mit zurueckgesetzt, wie es bei den anderen
+// Kontext-Filtern (airportDest/transferDest/cityAirportToggle) schon laenger so gehandhabt wird.
 function updateServiceSpotsVisibility(){
   const hide = isAirportIntentActive();
   const serviceGrp = document.getElementById('filter-service-group');
   const spotsGrp = document.getElementById('filter-spots-group');
   if(serviceGrp) serviceGrp.style.display = hide ? 'none' : 'block';
   if(spotsGrp) spotsGrp.style.display = hide ? 'none' : 'block';
+  if(hide && selectedFilters.spots.length){
+    selectedFilters.spots = [];
+    if(spotsGrp) spotsGrp.querySelectorAll('.chip').forEach(c=>c.classList.remove('chip-active'));
+    updateFilterCount();
+  }
 }
 function updateAllFilterVisibility(){
+  // Reihenfolge wichtig (22.8., beim Testen gefunden): updateServiceSpotsVisibility() muss VOR
+  // updateTransferDestVisibility() laufen, sonst prueft Letztere noch die alte, ungeleerte
+  // selectedFilters.spots-Auswahl und die Transfer-Zielregion-Gruppe bleibt einen Klick zu lange
+  // sichtbar (derselbe Dopplungs-Bug wie oben, nur einen Schritt zeitversetzt).
+  try{ updateServiceSpotsVisibility(); }catch(e){ console.error('updateServiceSpotsVisibility error:', e); }
   try{ updateAirportDestVisibility(); }catch(e){ console.error('updateAirportDestVisibility error:', e); }
   try{ updateTransferDestVisibility(); }catch(e){ console.error('updateTransferDestVisibility error:', e); }
   try{ updateCityAirportVisibility(); }catch(e){ console.error('updateCityAirportVisibility error:', e); }
-  try{ updateServiceSpotsVisibility(); }catch(e){ console.error('updateServiceSpotsVisibility error:', e); }
   const dbg = document.getElementById('filter-debug-readout');
   if(dbg){ try{ dbg.textContent = 'DEBUG selectedFilters:\n' + JSON.stringify(selectedFilters, null, 1); }catch(e){ dbg.textContent = 'DEBUG error: ' + e.message; } }
 }
@@ -12381,7 +12408,28 @@ document.addEventListener('click', e=>{
     if(!selectedFilters[group]) return;
     const arr = selectedFilters[group];
     const idx = arr.indexOf(val);
-    if(idx===-1){ arr.push(val); chip.classList.add('chip-active'); }
+    if(idx===-1){
+      // Bugfix (22.8., Joerg gemeldet): "Airport" ist eigentlich keine Region wie Kuta/Ubud,
+      // sondern eine Serviceart ("ich will einen Flughafentransfer") -- stand aber in derselben
+      // Auswahl-Reihe wie die Staedte. Waren beide gleichzeitig ausgewaehlt (z.B. Kuta + Airport),
+      // griff in runSearch() der falsche Vergleichspfad (allgemeine Tour-Regionen statt der
+      // Flughafen-spezifischen Regionsliste des Fahrers) -- 0 Treffer, obwohl es Fahrer gaebe.
+      // Der bereits korrekt funktionierende Weg ist: NUR eine Stadt waehlen, dann erscheint der
+      // "Auch Flughafentransfer?"-Umschalter. Fix: Airport und Staedte schliessen sich in dieser
+      // Reihe jetzt gegenseitig aus, damit man automatisch auf den richtigen Weg gefuehrt wird.
+      if(group === 'regions'){
+        const airportVal = currentAirportValue();
+        if(val === airportVal){
+          arr.length = 0;
+          document.querySelectorAll('[data-group="regions"] .chip').forEach(c=>c.classList.remove('chip-active'));
+        } else if(arr.includes(airportVal)){
+          const aIdx = arr.indexOf(airportVal);
+          if(aIdx !== -1) arr.splice(aIdx,1);
+          document.querySelectorAll('[data-group="regions"] .chip').forEach(c=>{ if(c.dataset.value===airportVal) c.classList.remove('chip-active'); });
+        }
+      }
+      arr.push(val); chip.classList.add('chip-active');
+    }
     else { arr.splice(idx,1); chip.classList.remove('chip-active'); }
     updateAllFilterVisibility();
   }catch(err){ console.error('Filter chip click error:', err); }
@@ -12399,7 +12447,7 @@ function openFilters(){
   updateAllFilterVisibility();
   // Wenn schon Filter aus dem eingeklappten Bereich aktiv sind (Sprache/Vertrauen/Service),
   // gleich aufklappen -- sonst wirkt es, als waeren die Auswahlen verschwunden.
-  const hasHiddenActive = selectedFilters.languages.length || selectedFilters.trust.length || selectedFilters.services.length;
+  const hasHiddenActive = selectedFilters.languages.length || selectedFilters.trust.length || selectedFilters.services.length || selectedFilters.vtype.length;
   const grp = document.getElementById('filter-more-group');
   const icon = document.getElementById('filter-more-toggle-icon');
   if(hasHiddenActive && grp && grp.style.display === 'none'){
@@ -12534,6 +12582,13 @@ function clearFiltersAndSearch(){
   clearFilters();
   runSearch();
 }
+// Aenderung (22.8., Joerg-Wunsch): vorher war JEDER Filter ein hartes UND-Kriterium -- bei der
+// aktuell noch kleinen Anzahl an Test-Fahrern fuehrte das staendig zu 0 Treffern, sobald man mehr
+// als 1-2 Filter gleichzeitig setzte. Jetzt zweistufig: Ort/Tour-Art (Tag/Halbtag/Transfer/Flughafen)
+// bleiben harte Muss-Kriterien -- die bestimmen ja, WAS ueberhaupt gesucht wird. Sprache/Fahrzeugtyp/
+// Service/Vertrauens-Merkmale sind "nice to have": fuehrt die volle Kombination zu 0 Treffern, werden
+// genau diese weichen Kriterien automatisch ignoriert und ein Hinweis eingeblendet, statt dem
+// Reisenden ergebnislos "0 Fahrer" zu zeigen.
 function runSearch(){
   const q = document.getElementById('search-input').value.trim().toLowerCase();
   const airportVal = currentAirportValue();
@@ -12541,38 +12596,46 @@ function runSearch(){
   const airportStartSelected = selectedFilters.regions.includes(airportVal);
   const cityAirportCity = getSingleCityStart();
   const cityAirportActive = selectedFilters.cityAirportToggle.length > 0 && !!cityAirportCity;
-  const filtered = visibleDrivers().filter(d=>{
-    // Insel-Filter zuerst: ein Bali-Suchkontext zeigt nie Lombok-Karten und umgekehrt.
-    // Alte/unmarkierte Eintraege gelten als Bali (kein Verhaltenswechsel fuer Bestandsdaten).
+
+  function matchesHard(d){
     if(cardIsland(d) !== selectedIsland) return false;
     const matchesText = !q || d.name.toLowerCase().includes(q) || d.tour.toLowerCase().includes(q) || d.region.toLowerCase().includes(q);
     const isAirportTour = d.spots && d.spots.includes('Airport Transfer');
     const isTransferTour = d.spots && d.spots.includes('Transfer') && !isAirportTour;
-    // "Airport" as starting point: matches airport-transfer tours
     const matchesAirportStart = !airportStartSelected || isAirportTour;
-    // a lone city picked as Start, with "yes — to the airport" ticked: same matrix price,
-    // just the reverse direction — only match drivers who serve that city for airport transfers
     const matchesCityAirport = !cityAirportActive || (isAirportTour && d.airportRegions && d.airportRegions[cityAirportCity]);
     const matchesRegion = cityAirportActive ? true : (regionFilterNoAirport.length===0
       || d.serviceRegions==='all'
       || (Array.isArray(d.serviceRegions) && d.serviceRegions.some(r=>regionFilterNoAirport.includes(r)))
       || (!d.serviceRegions && regionFilterNoAirport.includes(d.region)));
-    // if the traveler picked destination regions, only show airport tours serving at least one of them
     const matchesAirportDest = selectedFilters.airportDest.length===0
       || (isAirportTour && d.airportRegions && selectedFilters.airportDest.some(r=>d.airportRegions[r]));
-    // same idea for plain Transfer — filter by which region the transfer covers
     const matchesTransferDest = selectedFilters.transferDest.length===0
       || (isTransferTour && (d.serviceRegions==='all' || (Array.isArray(d.serviceRegions) && d.serviceRegions.some(r=>selectedFilters.transferDest.includes(r)))));
+    const matchesSpots = selectedFilters.spots.length===0 || (d.spots && selectedFilters.spots.some(s=>d.spots.includes(s)));
+    return matchesText && matchesAirportStart && matchesCityAirport && matchesRegion && matchesAirportDest && matchesTransferDest && matchesSpots;
+  }
+  function matchesSoft(d){
     const matchesLanguage = selectedFilters.languages.length===0 || d.lang.some(l=>selectedFilters.languages.includes(l));
     const matchesService = selectedFilters.services.length===0 || selectedFilters.services.some(s=>{
       if(s==='PhotoDrone') return d.services && (d.services.includes('Photo') || d.services.includes('Drone'));
       return d.services && d.services.includes(s);
     });
-    const matchesSpots = selectedFilters.spots.length===0 || (d.spots && selectedFilters.spots.some(s=>d.spots.includes(s)));
     const matchesTrust = selectedFilters.trust.length===0 || selectedFilters.trust.every(key=>d[key]);
     const matchesVtype = selectedFilters.vtype.length===0 || selectedFilters.vtype.includes(d.vehicleType);
-    return matchesText && matchesAirportStart && matchesCityAirport && matchesRegion && matchesAirportDest && matchesTransferDest && matchesLanguage && matchesService && matchesSpots && matchesTrust && matchesVtype;
-  });
+    return matchesLanguage && matchesService && matchesTrust && matchesVtype;
+  }
+
+  const hardMatches = visibleDrivers().filter(matchesHard);
+  let filtered = hardMatches.filter(matchesSoft);
+  const hasSoftFilters = selectedFilters.languages.length>0 || selectedFilters.services.length>0 || selectedFilters.trust.length>0 || selectedFilters.vtype.length>0;
+  let softFiltersDropped = false;
+  if(filtered.length === 0 && hardMatches.length > 0 && hasSoftFilters){
+    filtered = hardMatches;
+    softFiltersDropped = true;
+  }
+  const noticeEl = document.getElementById('soft-filter-notice');
+  if(noticeEl) noticeEl.style.display = softFiltersDropped ? 'flex' : 'none';
   renderDriverGrid(filtered);
   document.getElementById('results-heading').textContent = q ? `Results for "${document.getElementById('search-input').value}"` : (regionFilterNoAirport.length>0 || airportStartSelected ? `${t('search_results_in_prefix')} ${[...(airportStartSelected?['✈️']:[]), ...regionFilterNoAirport].join(', ')}` : t('results_heading'));
 }
@@ -16863,7 +16926,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v310</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v311</div>
 
 </body>
 </html>
