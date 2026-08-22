@@ -2022,7 +2022,7 @@
   </div>
 
   <div class="driver-pending-banner" id="driver-pending-banner" style="display:none;">
-    ⏳ Dein Konto wartet noch auf Freischaltung durch das Rydanu-Team. Du kannst dich schon umsehen, aber noch nicht buchen lassen.
+    ⏳ <span data-i18n="driver_pending_banner_text">Your account is still awaiting approval by the Rydanu team. You can look around already, but you can't be booked yet.</span>
   </div>
   <div class="new-booking-banner" id="new-booking-banner" style="display:none;" onclick="goToNewBookings()">
     🔔 <span id="new-booking-banner-text"></span>
@@ -3046,33 +3046,33 @@
   <div class="modal">
     <div class="modal-header">
       <button class="modal-close" onclick="closeForgotPassword()">✕</button>
-      <span class="eyebrow">Fahrer-Bereich</span>
-      <h2>Passwort vergessen</h2>
+      <span class="eyebrow" data-i18n="fp_eyebrow">Driver area</span>
+      <h2 data-i18n="fp_title">Forgot password</h2>
     </div>
     <div class="modal-body">
-      <p class="note" style="margin-top:0;">Hast du dich mit E-Mail oder mit Telefonnummer registriert?</p>
+      <p class="note" style="margin-top:0;" data-i18n="fp_intro">Did you register with an email address or a phone number?</p>
       <div style="display:flex; gap:8px; margin-bottom:16px;">
-        <button type="button" class="period-btn active" id="fp-mode-email-btn" onclick="setForgotPasswordMode('email')" style="flex:1;">E-Mail</button>
-        <button type="button" class="period-btn" id="fp-mode-phone-btn" onclick="setForgotPasswordMode('phone')" style="flex:1;">Telefonnummer</button>
+        <button type="button" class="period-btn active" id="fp-mode-email-btn" onclick="setForgotPasswordMode('email')" style="flex:1;" data-i18n="fp_mode_email_btn">Email</button>
+        <button type="button" class="period-btn" id="fp-mode-phone-btn" onclick="setForgotPasswordMode('phone')" style="flex:1;" data-i18n="fp_mode_phone_btn">Phone number</button>
       </div>
 
       <div id="fp-email-block">
-        <p class="note" style="margin-top:0;">Gib deine E-Mail-Adresse ein. Wir schicken dir einen Link, mit dem du ein neues Passwort setzen kannst.</p>
+        <p class="note" style="margin-top:0;" data-i18n="fp_email_intro">Enter your email address. We'll send you a link to set a new password.</p>
         <div class="form-field">
-          <label>E-Mail</label>
-          <input type="email" id="forgot-password-email" placeholder="deine@email.com">
+          <label data-i18n="fp_email_label">Email</label>
+          <input type="email" id="forgot-password-email" placeholder="your@email.com" data-i18n-placeholder="fp_email_placeholder">
         </div>
         <p class="form-error" id="forgot-password-status"></p>
-        <button class="book-btn" onclick="handleForgotPassword()">Link zum Zurücksetzen senden</button>
+        <button class="book-btn" onclick="handleForgotPassword()" data-i18n="fp_send_reset_btn">Send reset link</button>
       </div>
 
       <div id="fp-phone-block" style="display:none;">
-        <p class="note" style="margin-top:0;">Für Konten mit Telefonnummer läuft das Zurücksetzen aktuell noch über unseren Support — keine Sorge, das geht schnell.</p>
+        <p class="note" style="margin-top:0;" data-i18n="fp_phone_intro">For accounts with a phone number, resetting currently still goes through our support — don't worry, it's quick.</p>
         <div class="form-field">
-          <label>Deine Telefonnummer (für die Zuordnung)</label>
-          <input type="text" id="forgot-password-phone" placeholder="z.B. 081234567890">
+          <label data-i18n="fp_phone_label">Your phone number (for identification)</label>
+          <input type="text" id="forgot-password-phone" placeholder="e.g. 081234567890">
         </div>
-        <a href="#" id="fp-whatsapp-link" target="_blank" class="book-btn" style="display:block; text-align:center; text-decoration:none;" onclick="return openForgotPasswordWhatsapp();">💬 Support per WhatsApp kontaktieren</a>
+        <a href="#" id="fp-whatsapp-link" target="_blank" class="book-btn" style="display:block; text-align:center; text-decoration:none;" onclick="return openForgotPasswordWhatsapp();" data-i18n="fp_whatsapp_btn">💬 Contact support via WhatsApp</a>
       </div>
     </div>
   </div>
@@ -11285,6 +11285,8 @@ const translations = {
     filter_spots_title: "Available tours",
     nl_regions_title: "Pickup regions you serve — travelers filtering by these starting points will see this tour",
     reg_kuta: "Kuta & surroundings", reg_uluwatu: "Uluwatu & surroundings", reg_lovina: "Lovina & surroundings", reg_sidemen: "Sidemen & surroundings", reg_ubud: "Ubud & surroundings", reg_amed: "Amed & surroundings",
+    driver_pending_banner_text: "Your account is still awaiting approval by the Rydanu team. You can look around already, but you can't be booked yet.",
+    fp_eyebrow: "Driver area", fp_title: "Forgot password", fp_intro: "Did you register with an email address or a phone number?", fp_mode_email_btn: "Email", fp_mode_phone_btn: "Phone number", fp_email_intro: "Enter your email address. We'll send you a link to set a new password.", fp_email_label: "Email", fp_email_placeholder: "your@email.com", fp_send_reset_btn: "Send reset link", fp_phone_intro: "For accounts with a phone number, resetting currently still goes through our support — don't worry, it's quick.", fp_phone_label: "Your phone number (for identification)", fp_whatsapp_btn: "💬 Contact support via WhatsApp",
     reg_lombok_kuta: "Kuta Lombok (South)", reg_lombok_senggigi: "Senggigi (West)", reg_lombok_gili: "Gili Islands (North)", reg_lombok_sembalun: "Sembalun (East)",
     nl_airport_regions_title: "Airport destination regions — set a price per region (leave empty if not offered)",
     nl_transfer_regions_title: "Transfer destinations — set a price per destination (leave empty if not offered)",
@@ -11624,6 +11626,8 @@ const translations = {
     filter_spots_title: "Verfügbare Touren",
     nl_regions_title: "Abholregionen, die du bedienst — Reisende mit diesem Startpunkt-Filter sehen diese Tour",
     reg_kuta: "Kuta & Umgebung", reg_uluwatu: "Uluwatu & Umgebung", reg_lovina: "Lovina & Umgebung", reg_sidemen: "Sidemen & Umgebung", reg_ubud: "Ubud & Umgebung", reg_amed: "Amed & Umgebung",
+    driver_pending_banner_text: "Dein Konto wartet noch auf Freischaltung durch das Rydanu-Team. Du kannst dich schon umsehen, aber noch nicht buchen lassen.",
+    fp_eyebrow: "Fahrer-Bereich", fp_title: "Passwort vergessen", fp_intro: "Hast du dich mit E-Mail oder mit Telefonnummer registriert?", fp_mode_email_btn: "E-Mail", fp_mode_phone_btn: "Telefonnummer", fp_email_intro: "Gib deine E-Mail-Adresse ein. Wir schicken dir einen Link, mit dem du ein neues Passwort setzen kannst.", fp_email_label: "E-Mail", fp_email_placeholder: "deine@email.com", fp_send_reset_btn: "Link zum Zurücksetzen senden", fp_phone_intro: "Für Konten mit Telefonnummer läuft das Zurücksetzen aktuell noch über unseren Support — keine Sorge, das geht schnell.", fp_phone_label: "Deine Telefonnummer (für die Zuordnung)", fp_whatsapp_btn: "💬 Support per WhatsApp kontaktieren",
     reg_lombok_kuta: "Kuta Lombok (Süd)", reg_lombok_senggigi: "Senggigi (West)", reg_lombok_gili: "Gili-Inseln (Nord)", reg_lombok_sembalun: "Sembalun (Ost)",
     nl_airport_regions_title: "Flughafen-Zielregionen — Preis pro Region festlegen (leer lassen, wenn nicht angeboten)",
     nl_transfer_regions_title: "Transfer-Ziele — Preis pro Ziel festlegen (leer lassen, wenn nicht angeboten)",
@@ -11963,6 +11967,8 @@ const translations = {
     filter_spots_title: "Tur tersedia",
     nl_regions_title: "Wilayah penjemputan yang Anda layani — wisatawan yang memfilter titik awal ini akan melihat tur ini",
     reg_kuta: "Kuta & sekitarnya", reg_uluwatu: "Uluwatu & sekitarnya", reg_lovina: "Lovina & sekitarnya", reg_sidemen: "Sidemen & sekitarnya", reg_ubud: "Ubud & sekitarnya", reg_amed: "Amed & sekitarnya",
+    driver_pending_banner_text: "Akun Anda masih menunggu persetujuan dari tim Rydanu. Anda sudah bisa melihat-lihat, tapi belum bisa dipesan.",
+    fp_eyebrow: "Area sopir", fp_title: "Lupa kata sandi", fp_intro: "Anda mendaftar dengan alamat email atau nomor telepon?", fp_mode_email_btn: "Email", fp_mode_phone_btn: "Nomor telepon", fp_email_intro: "Masukkan alamat email Anda. Kami akan mengirimkan tautan untuk membuat kata sandi baru.", fp_email_label: "Email", fp_email_placeholder: "email@anda.com", fp_send_reset_btn: "Kirim tautan reset", fp_phone_intro: "Untuk akun dengan nomor telepon, reset saat ini masih melalui dukungan kami — jangan khawatir, prosesnya cepat.", fp_phone_label: "Nomor telepon Anda (untuk identifikasi)", fp_whatsapp_btn: "💬 Hubungi dukungan via WhatsApp",
     reg_lombok_kuta: "Kuta Lombok (Selatan)", reg_lombok_senggigi: "Senggigi (Barat)", reg_lombok_gili: "Gili (Utara)", reg_lombok_sembalun: "Sembalun (Timur)",
     nl_airport_regions_title: "Wilayah tujuan bandara — atur harga per wilayah (kosongkan jika tidak ditawarkan)",
     nl_transfer_regions_title: "Tujuan transfer — atur harga per tujuan (kosongkan jika tidak ditawarkan)",
@@ -12078,11 +12084,32 @@ function setLanguage(lang){
     const key = el.dataset.i18nPlaceholder;
     if(dict[key]) el.placeholder = dict[key];
   });
+  // Bugfix (22.8., Joerg gemeldet per Screenshot): die Filter-Chips fuer Startort/Flughafen-Ziel/
+  // Transfer-Ziel werden aus REGION_CONFIG per innerHTML gebaut (nicht ueber data-i18n), darum hat
+  // sie der obige Refresh-Durchlauf bisher komplett uebersehen -- sie blieben beim Sprachwechsel in
+  // der zuerst geladenen Sprache stehen (z.B. "Kuta & surroundings" trotz aktivem Deutsch). Jetzt
+  // werden sie explizit neu gerendert, und die vorher ausgewaehlten Chips (chip-active) danach wieder
+  // korrekt markiert, damit eine laufende Auswahl beim Sprachwechsel nicht verloren geht.
+  renderFilterRegionChips();
+  renderFilterDestChips();
+  reapplyChipActiveStates();
   applyLombokHeaderOverrides();
   if(document.getElementById('dash-greeting')) renderProfileChip();
   const searchInputEl = document.getElementById('search-input');
   if(searchInputEl) updateLombokSoftSuggest(searchInputEl.value.trim().toLowerCase());
   saveState();
+}
+// Nach jedem Neu-Rendern von Filter-Chips (Sprachwechsel, Insel-Wechsel) die vorher getroffene
+// Auswahl (selectedFilters) wieder als chip-active markieren -- sonst wirkt es beim Sprachwechsel so,
+// als waere die Auswahl verloren gegangen, obwohl selectedFilters selbst unveraendert bleibt.
+function reapplyChipActiveStates(){
+  document.querySelectorAll('[data-group]').forEach(row=>{
+    const group = row.dataset.group;
+    if(!selectedFilters[group]) return;
+    row.querySelectorAll('.chip').forEach(c=>{
+      c.classList.toggle('chip-active', selectedFilters[group].includes(c.dataset.value));
+    });
+  });
 }
 
 let lastGridList = [];
@@ -16932,7 +16959,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v313</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v314</div>
 
 </body>
 </html>
