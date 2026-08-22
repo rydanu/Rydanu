@@ -4216,7 +4216,6 @@
 
       <button class="book-btn" onclick="applyFilters()" data-i18n="apply_filters_btn">Apply filters</button>
       <button class="link-btn" onclick="clearFilters()" data-i18n="clear_all_btn">Clear all</button>
-      <div id="filter-debug-readout" style="margin-top:14px; padding:10px; background:#222; color:#0f0; font-family:monospace; font-size:0.62rem; border-radius:6px; white-space:pre-wrap; word-break:break-all;"></div>
     </div>
   </div>
 </div>
@@ -12317,7 +12316,14 @@ function isAirportFilterActive(){
 function isTransferFilterActive(){
   return selectedFilters.spots.includes('Transfer');
 }
+// Bugfix (22.8., Joerg gemeldet per Screenshot): der "Auch Flughafentransfer?"-Umschalter (siehe
+// updateCityAirportVisibility weiter unten) erschien bisher IMMER, sobald genau eine Stadt gewaehlt
+// war -- auch wenn oben schon "Tagestour" oder "Halbtagestour" aktiv war. Ergab keinen Sinn: hat man
+// sich schon fuer eine konkrete Tour-Art entschieden, passt die Rueckfrage nach einem Flughafen-
+// transfer nicht mehr dazu (voellig andere Tour-Art). Fix: die Funktion liefert jetzt nur noch eine
+// Stadt zurueck, wenn NOCH KEINE Tour-Art gewaehlt wurde (man sich also noch breit umschaut).
 function getSingleCityStart(){
+  if(selectedFilters.spots.length > 0) return null;
   const cities = selectedFilters.regions.filter(r=>r!==currentAirportValue());
   return (cities.length === 1 && !selectedFilters.regions.includes(currentAirportValue())) ? cities[0] : null;
 }
@@ -12395,8 +12401,9 @@ function updateAllFilterVisibility(){
   try{ updateAirportDestVisibility(); }catch(e){ console.error('updateAirportDestVisibility error:', e); }
   try{ updateTransferDestVisibility(); }catch(e){ console.error('updateTransferDestVisibility error:', e); }
   try{ updateCityAirportVisibility(); }catch(e){ console.error('updateCityAirportVisibility error:', e); }
-  const dbg = document.getElementById('filter-debug-readout');
-  if(dbg){ try{ dbg.textContent = 'DEBUG selectedFilters:\n' + JSON.stringify(selectedFilters, null, 1); }catch(e){ dbg.textContent = 'DEBUG error: ' + e.message; } }
+  // Entwickler-Debug-Ausgabe entfernt (22.8., Joerg gemeldet per Screenshot) -- zeigte echten
+  // Nutzern die rohen selectedFilters als gruener Monospace-Text im Filter-Modal. War schon laenger
+  // im Code, offenbar aus einer frueheren Debug-Sitzung uebrig geblieben. Bewusst ersatzlos raus.
 }
 
 document.addEventListener('click', e=>{
@@ -16926,7 +16933,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v311</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v312</div>
 
 </body>
 </html>
