@@ -1940,20 +1940,20 @@
 <div class="view" id="view-driver">
   <div class="driver-auth-gate" id="driver-auth-gate">
     <div class="auth-box">
-      <h2 style="font-family:'Public Sans', sans-serif; font-weight:700; margin-top:0;">🚗 Fahrer-Bereich</h2>
+      <h2 style="font-family:'Public Sans', sans-serif; font-weight:700; margin-top:0;" data-i18n="auth_login_title">🚗 Driver area</h2>
 
       <form id="auth-login-form" onsubmit="return false;">
-        <p class="note" style="margin-top:0;">Anmeldung mit Telefonnummer<br>(0062&nbsp;/&nbsp;+62) oder E-Mail und Passwort.</p>
-        <input type="text" id="auth-login-email" name="username" autocomplete="username" placeholder="Telefonnummer oder E-Mail" class="auth-input">
-        <input type="password" id="auth-login-password" name="password" autocomplete="current-password" placeholder="Passwort" class="auth-input">
-        <button type="button" class="btn-primary auth-submit-btn" onclick="handleDriverLogin()">Anmelden</button>
-        <p class="note" style="text-align:center;"><a href="#" onclick="openForgotPassword(); return false;">Passwort vergessen?</a></p>
-        <p class="note" style="text-align:center; margin-top:26px;">Noch kein Konto? <a href="#" onclick="toggleAuthForm('signup'); return false;">Jetzt registrieren</a></p>
+        <p class="note" style="margin-top:0;" data-i18n-html="auth_login_note">Log in with phone number<br>(0062&nbsp;/&nbsp;+62) or email and password.</p>
+        <input type="text" id="auth-login-email" name="username" autocomplete="username" placeholder="Phone number or email" class="auth-input" data-i18n-placeholder="auth_login_id_placeholder">
+        <input type="password" id="auth-login-password" name="password" autocomplete="current-password" placeholder="Password" class="auth-input" data-i18n-placeholder="auth_password_placeholder">
+        <button type="button" class="btn-primary auth-submit-btn" onclick="handleDriverLogin()" data-i18n="auth_login_btn">Log in</button>
+        <p class="note" style="text-align:center;"><a href="#" onclick="openForgotPassword(); return false;" data-i18n="auth_forgot_link">Forgot password?</a></p>
+        <p class="note" style="text-align:center; margin-top:26px;"><span data-i18n="auth_no_account_prefix">No account yet? </span><a href="#" onclick="toggleAuthForm('signup'); return false;" data-i18n="auth_register_link">Register now</a></p>
       </form>
 
       <div id="auth-signup-form" style="display:none;">
-        <p class="note" style="margin-top:0;">Neues Fahrerkonto anlegen.</p>
-        <input type="text" id="auth-signup-name" placeholder="Dein Name *" class="auth-input">
+        <p class="note" style="margin-top:0;" data-i18n="auth_signup_note">Create a new driver account.</p>
+        <input type="text" id="auth-signup-name" placeholder="Your name *" class="auth-input" data-i18n-placeholder="auth_signup_name_placeholder">
         <div style="display:flex; gap:8px;">
           <select id="auth-signup-country" class="auth-input" style="flex:0 0 112px;">
             <option value="62" selected>🇮🇩 +62</option>
@@ -1967,10 +1967,10 @@
             <option value="81">🇯🇵 +81</option>
             <option value="86">🇨🇳 +86</option>
           </select>
-          <input type="text" id="auth-signup-phone" inputmode="tel" placeholder="Telefon / WhatsApp *" class="auth-input" style="flex:1;">
+          <input type="text" id="auth-signup-phone" inputmode="tel" placeholder="Phone / WhatsApp *" class="auth-input" style="flex:1;" data-i18n-placeholder="auth_signup_phone_placeholder">
         </div>
-        <input type="password" id="auth-signup-password" placeholder="Passwort (mind. 6 Zeichen) *" class="auth-input">
-        <input type="email" id="auth-signup-email" placeholder="E-Mail (optional)" class="auth-input">
+        <input type="password" id="auth-signup-password" placeholder="Password (min. 6 characters) *" class="auth-input" data-i18n-placeholder="auth_signup_password_placeholder">
+        <input type="email" id="auth-signup-email" placeholder="Email (optional)" class="auth-input" data-i18n-placeholder="auth_signup_email_placeholder">
         <div class="form-field" style="margin-top:8px;">
           <label data-i18n="rd_homeregion_label">Region</label>
           <select id="auth-signup-region" class="auth-input">
@@ -1988,49 +1988,49 @@
             <option value="Large Vehicle" data-i18n="vt_large">More than 5 seats</option>
           </select>
         </div>
-        <input type="text" id="auth-signup-car" placeholder="Modell — z.B. Toyota Avanza" class="auth-input">
-        <input type="text" id="auth-signup-seats" inputmode="numeric" placeholder="Sitzplätze" class="auth-input">
-        <input type="text" id="auth-signup-plate" placeholder="Kennzeichen *" class="auth-input">
-        <input type="text" id="auth-signup-color" placeholder="Fahrzeugfarbe *" class="auth-input">
-        <input type="text" id="auth-signup-referral" placeholder="Empfehlungs-Code (optional) — z.B. RY-104" class="auth-input">
+        <input type="text" id="auth-signup-car" placeholder="Model — e.g. Toyota Avanza" class="auth-input" data-i18n-placeholder="auth_signup_car_placeholder">
+        <input type="text" id="auth-signup-seats" inputmode="numeric" placeholder="Seats" class="auth-input" data-i18n-placeholder="auth_signup_seats_placeholder">
+        <input type="text" id="auth-signup-plate" placeholder="License plate *" class="auth-input" data-i18n-placeholder="auth_signup_plate_placeholder">
+        <input type="text" id="auth-signup-color" placeholder="Vehicle color *" class="auth-input" data-i18n-placeholder="auth_signup_color_placeholder">
+        <input type="text" id="auth-signup-referral" placeholder="Referral code (optional) — e.g. RY-104" class="auth-input" data-i18n-placeholder="auth_signup_referral_placeholder">
 
         <div class="doc-upload-section">
-          <div class="filter-group-title">Dokumente hochladen — alle 4 sind Pflicht</div>
+          <div class="filter-group-title" data-i18n="auth_docs_title">Upload documents — all 4 are required</div>
           <div class="doc-upload-row">
             <label class="doc-upload-item">
               <input type="file" id="auth-signup-doc-license" accept="image/*,.pdf" onchange="updateSignupDocStatus()">
               <span class="doc-icon">🪪</span>
-              <span>Führerschein *</span>
+              <span data-i18n="auth_doc_license">Driver's license *</span>
               <span class="doc-status" id="auth-signup-doc-license-status">—</span>
             </label>
             <label class="doc-upload-item">
               <input type="file" id="auth-signup-doc-insurance" accept="image/*,.pdf" onchange="updateSignupDocStatus()">
               <span class="doc-icon">🛡️</span>
-              <span>Versicherung *</span>
+              <span data-i18n="auth_doc_insurance">Insurance *</span>
               <span class="doc-status" id="auth-signup-doc-insurance-status">—</span>
             </label>
             <label class="doc-upload-item">
               <input type="file" id="auth-signup-doc-papers" accept="image/*,.pdf" onchange="updateSignupDocStatus()">
               <span class="doc-icon">📄</span>
-              <span>Fahrzeugpapiere *</span>
+              <span data-i18n="auth_doc_papers">Vehicle papers *</span>
               <span class="doc-status" id="auth-signup-doc-papers-status">—</span>
             </label>
             <label class="doc-upload-item">
               <input type="file" id="auth-signup-doc-selfie" accept="image/*" onchange="updateSignupDocStatus()">
               <span class="doc-icon">🤳</span>
-              <span>Selfie *</span>
+              <span data-i18n="auth_doc_selfie">Selfie *</span>
               <span class="doc-status" id="auth-signup-doc-selfie-status">—</span>
             </label>
           </div>
-          <p class="doc-count-hint" id="auth-signup-doc-count-hint">0 / 4 hochgeladen</p>
+          <p class="doc-count-hint" id="auth-signup-doc-count-hint">0 / 4 uploaded</p>
         </div>
 
-        <button type="button" class="btn-primary auth-submit-btn" onclick="handleDriverSignup()">Registrieren</button>
-        <p class="note" style="text-align:center;">Schon ein Konto? <a href="#" onclick="toggleAuthForm('login'); return false;">Anmelden</a></p>
+        <button type="button" class="btn-primary auth-submit-btn" onclick="handleDriverSignup()" data-i18n="auth_signup_btn">Register</button>
+        <p class="note" style="text-align:center;"><span data-i18n="auth_have_account_prefix">Already have an account? </span><a href="#" onclick="toggleAuthForm('login'); return false;" data-i18n="auth_login_btn">Log in</a></p>
       </div>
 
       <p id="auth-error" style="color:#C0392B; font-weight:600; min-height:1.2em;"></p>
-      <p id="auth-loading" style="display:none;">⏳ Einen Moment...</p>
+      <p id="auth-loading" style="display:none;" data-i18n="auth_loading_text">⏳ One moment...</p>
     </div>
   </div>
 
@@ -3095,20 +3095,20 @@
 <div class="modal-bg" id="new-password-modal-bg">
   <div class="modal">
     <div class="modal-header">
-      <span class="eyebrow">Fahrer-Bereich</span>
-      <h2>Neues Passwort setzen</h2>
+      <span class="eyebrow" data-i18n="fp_eyebrow">Driver area</span>
+      <h2 data-i18n="np_title">Set new password</h2>
     </div>
     <div class="modal-body">
       <div class="form-field">
-        <label>Neues Passwort (mind. 6 Zeichen)</label>
-        <input type="password" id="new-password-input" placeholder="Neues Passwort">
+        <label data-i18n="np_label_new">New password (min. 6 characters)</label>
+        <input type="password" id="new-password-input" placeholder="New password" data-i18n-placeholder="np_placeholder_new">
       </div>
       <div class="form-field">
-        <label>Neues Passwort wiederholen</label>
-        <input type="password" id="new-password-confirm" placeholder="Passwort wiederholen">
+        <label data-i18n="np_label_confirm">Repeat new password</label>
+        <input type="password" id="new-password-confirm" placeholder="Repeat password" data-i18n-placeholder="np_placeholder_confirm">
       </div>
       <p class="form-error" id="new-password-status"></p>
-      <button class="book-btn" onclick="handleSetNewPassword()">Passwort speichern</button>
+      <button class="book-btn" onclick="handleSetNewPassword()" data-i18n="np_save_btn">Save password</button>
     </div>
   </div>
 </div>
@@ -11300,6 +11300,10 @@ const translations = {
     reg_kuta: "Kuta & surroundings", reg_uluwatu: "Uluwatu & surroundings", reg_lovina: "Lovina & surroundings", reg_sidemen: "Sidemen & surroundings", reg_ubud: "Ubud & surroundings", reg_amed: "Amed & surroundings",
     driver_pending_banner_text: "Your account is still awaiting approval by the Rydanu team. You can look around already, but you can't be booked yet.",
     fp_eyebrow: "Driver area", fp_title: "Forgot password", fp_intro: "Did you register with an email address or a phone number?", fp_mode_email_btn: "Email", fp_mode_phone_btn: "Phone number", fp_email_intro: "Enter your email address. We'll send you a link to set a new password.", fp_email_label: "Email", fp_email_placeholder: "your@email.com", fp_send_reset_btn: "Send reset link", fp_phone_intro: "For accounts with a phone number, resetting currently still goes through our support — don't worry, it's quick.", fp_phone_label: "Your phone number (for identification)", fp_whatsapp_btn: "💬 Contact support via WhatsApp", result_count_singular: "driver found", result_count_plural: "drivers found",
+    auth_err_missing_fields: "Please enter phone/email and password.", auth_err_invalid_phone: "Please enter a valid phone number.", auth_err_generic: "Something went wrong. Please try again.", auth_err_invalid_credentials: "Phone/email or password is incorrect.", auth_err_already_registered: "An account already exists for this phone number — please log in.", auth_err_password_too_short: "Password must be at least 6 characters.",
+    fp_err_no_phone: "Please enter your phone number first.", fp_err_no_email: "Please enter your email address.", generic_please_wait: "One moment...", fp_err_prefix: "Error: ", fp_email_sent_success: "Email sent ✓ — please open the link in the email (check your spam folder too).",
+    np_err_mismatch: "The two passwords don't match.", np_success_alert: "New password saved ✓ You're now logged in.", np_title: "Set new password", np_label_new: "New password (min. 6 characters)", np_placeholder_new: "New password", np_label_confirm: "Repeat new password", np_placeholder_confirm: "Repeat password", np_save_btn: "Save password",
+    auth_login_title: "🚗 Driver area", auth_login_note: "Log in with phone number<br>(0062&nbsp;/&nbsp;+62) or email and password.", auth_login_id_placeholder: "Phone number or email", auth_password_placeholder: "Password", auth_login_btn: "Log in", auth_forgot_link: "Forgot password?", auth_no_account_prefix: "No account yet? ", auth_register_link: "Register now", auth_signup_note: "Create a new driver account.", auth_signup_name_placeholder: "Your name *", auth_signup_phone_placeholder: "Phone / WhatsApp *", auth_signup_password_placeholder: "Password (min. 6 characters) *", auth_signup_email_placeholder: "Email (optional)", auth_signup_car_placeholder: "Model — e.g. Toyota Avanza", auth_signup_seats_placeholder: "Seats", auth_signup_plate_placeholder: "License plate *", auth_signup_color_placeholder: "Vehicle color *", auth_signup_referral_placeholder: "Referral code (optional) — e.g. RY-104", auth_docs_title: "Upload documents — all 4 are required", auth_doc_license: "Driver's license *", auth_doc_insurance: "Insurance *", auth_doc_papers: "Vehicle papers *", auth_doc_selfie: "Selfie *", auth_docs_uploaded_suffix: " / 4 uploaded", auth_docs_all_needed_suffix: " — all 4 needed", auth_signup_btn: "Register", auth_have_account_prefix: "Already have an account? ", auth_loading_text: "⏳ One moment...",
     reg_lombok_kuta: "Kuta Lombok (South)", reg_lombok_senggigi: "Senggigi (West)", reg_lombok_gili: "Gili Islands (North)", reg_lombok_sembalun: "Sembalun (East)",
     nl_airport_regions_title: "Airport destination regions — set a price per region (leave empty if not offered)",
     nl_transfer_regions_title: "Transfer destinations — set a price per destination (leave empty if not offered)",
@@ -11641,6 +11645,10 @@ const translations = {
     reg_kuta: "Kuta & Umgebung", reg_uluwatu: "Uluwatu & Umgebung", reg_lovina: "Lovina & Umgebung", reg_sidemen: "Sidemen & Umgebung", reg_ubud: "Ubud & Umgebung", reg_amed: "Amed & Umgebung",
     driver_pending_banner_text: "Dein Konto wartet noch auf Freischaltung durch das Rydanu-Team. Du kannst dich schon umsehen, aber noch nicht buchen lassen.",
     fp_eyebrow: "Fahrer-Bereich", fp_title: "Passwort vergessen", fp_intro: "Hast du dich mit E-Mail oder mit Telefonnummer registriert?", fp_mode_email_btn: "E-Mail", fp_mode_phone_btn: "Telefonnummer", fp_email_intro: "Gib deine E-Mail-Adresse ein. Wir schicken dir einen Link, mit dem du ein neues Passwort setzen kannst.", fp_email_label: "E-Mail", fp_email_placeholder: "deine@email.com", fp_send_reset_btn: "Link zum Zurücksetzen senden", fp_phone_intro: "Für Konten mit Telefonnummer läuft das Zurücksetzen aktuell noch über unseren Support — keine Sorge, das geht schnell.", fp_phone_label: "Deine Telefonnummer (für die Zuordnung)", fp_whatsapp_btn: "💬 Support per WhatsApp kontaktieren", result_count_singular: "Fahrer gefunden", result_count_plural: "Fahrer gefunden",
+    auth_err_missing_fields: "Bitte Telefonnummer/E-Mail und Passwort eingeben.", auth_err_invalid_phone: "Bitte eine gültige Telefonnummer eingeben.", auth_err_generic: "Etwas ist schiefgelaufen. Bitte nochmal versuchen.", auth_err_invalid_credentials: "Telefonnummer/E-Mail oder Passwort ist falsch.", auth_err_already_registered: "Für diese Telefonnummer existiert schon ein Konto — bitte anmelden.", auth_err_password_too_short: "Das Passwort muss mindestens 6 Zeichen haben.",
+    fp_err_no_phone: "Bitte zuerst deine Telefonnummer eingeben.", fp_err_no_email: "Bitte E-Mail-Adresse eingeben.", generic_please_wait: "Einen Moment...", fp_err_prefix: "Fehler: ", fp_email_sent_success: "E-Mail verschickt ✓ — bitte den Link in der Mail öffnen (auch im Spam-Ordner nachschauen).",
+    np_err_mismatch: "Die beiden Passwörter stimmen nicht überein.", np_success_alert: "Neues Passwort gespeichert ✓ Du bist jetzt eingeloggt.", np_title: "Neues Passwort setzen", np_label_new: "Neues Passwort (mind. 6 Zeichen)", np_placeholder_new: "Neues Passwort", np_label_confirm: "Neues Passwort wiederholen", np_placeholder_confirm: "Passwort wiederholen", np_save_btn: "Passwort speichern",
+    auth_login_title: "🚗 Fahrer-Bereich", auth_login_note: "Anmeldung mit Telefonnummer<br>(0062&nbsp;/&nbsp;+62) oder E-Mail und Passwort.", auth_login_id_placeholder: "Telefonnummer oder E-Mail", auth_password_placeholder: "Passwort", auth_login_btn: "Anmelden", auth_forgot_link: "Passwort vergessen?", auth_no_account_prefix: "Noch kein Konto? ", auth_register_link: "Jetzt registrieren", auth_signup_note: "Neues Fahrerkonto anlegen.", auth_signup_name_placeholder: "Dein Name *", auth_signup_phone_placeholder: "Telefon / WhatsApp *", auth_signup_password_placeholder: "Passwort (mind. 6 Zeichen) *", auth_signup_email_placeholder: "E-Mail (optional)", auth_signup_car_placeholder: "Modell — z.B. Toyota Avanza", auth_signup_seats_placeholder: "Sitzplätze", auth_signup_plate_placeholder: "Kennzeichen *", auth_signup_color_placeholder: "Fahrzeugfarbe *", auth_signup_referral_placeholder: "Empfehlungs-Code (optional) — z.B. RY-104", auth_docs_title: "Dokumente hochladen — alle 4 sind Pflicht", auth_doc_license: "Führerschein *", auth_doc_insurance: "Versicherung *", auth_doc_papers: "Fahrzeugpapiere *", auth_doc_selfie: "Selfie *", auth_docs_uploaded_suffix: " / 4 hochgeladen", auth_docs_all_needed_suffix: " — alle 4 nötig", auth_signup_btn: "Registrieren", auth_have_account_prefix: "Schon ein Konto? ", auth_loading_text: "⏳ Einen Moment...",
     reg_lombok_kuta: "Kuta Lombok (Süd)", reg_lombok_senggigi: "Senggigi (West)", reg_lombok_gili: "Gili-Inseln (Nord)", reg_lombok_sembalun: "Sembalun (Ost)",
     nl_airport_regions_title: "Flughafen-Zielregionen — Preis pro Region festlegen (leer lassen, wenn nicht angeboten)",
     nl_transfer_regions_title: "Transfer-Ziele — Preis pro Ziel festlegen (leer lassen, wenn nicht angeboten)",
@@ -11982,6 +11990,10 @@ const translations = {
     reg_kuta: "Kuta & sekitarnya", reg_uluwatu: "Uluwatu & sekitarnya", reg_lovina: "Lovina & sekitarnya", reg_sidemen: "Sidemen & sekitarnya", reg_ubud: "Ubud & sekitarnya", reg_amed: "Amed & sekitarnya",
     driver_pending_banner_text: "Akun Anda masih menunggu persetujuan dari tim Rydanu. Anda sudah bisa melihat-lihat, tapi belum bisa dipesan.",
     fp_eyebrow: "Area sopir", fp_title: "Lupa kata sandi", fp_intro: "Anda mendaftar dengan alamat email atau nomor telepon?", fp_mode_email_btn: "Email", fp_mode_phone_btn: "Nomor telepon", fp_email_intro: "Masukkan alamat email Anda. Kami akan mengirimkan tautan untuk membuat kata sandi baru.", fp_email_label: "Email", fp_email_placeholder: "email@anda.com", fp_send_reset_btn: "Kirim tautan reset", fp_phone_intro: "Untuk akun dengan nomor telepon, reset saat ini masih melalui dukungan kami — jangan khawatir, prosesnya cepat.", fp_phone_label: "Nomor telepon Anda (untuk identifikasi)", fp_whatsapp_btn: "💬 Hubungi dukungan via WhatsApp", result_count_singular: "sopir ditemukan", result_count_plural: "sopir ditemukan",
+    auth_err_missing_fields: "Silakan masukkan nomor telepon/email dan kata sandi.", auth_err_invalid_phone: "Silakan masukkan nomor telepon yang valid.", auth_err_generic: "Terjadi kesalahan. Silakan coba lagi.", auth_err_invalid_credentials: "Nomor telepon/email atau kata sandi salah.", auth_err_already_registered: "Akun untuk nomor telepon ini sudah ada — silakan masuk.", auth_err_password_too_short: "Kata sandi harus minimal 6 karakter.",
+    fp_err_no_phone: "Silakan masukkan nomor telepon Anda terlebih dahulu.", fp_err_no_email: "Silakan masukkan alamat email.", generic_please_wait: "Sebentar...", fp_err_prefix: "Kesalahan: ", fp_email_sent_success: "Email terkirim ✓ — silakan buka tautan di email (periksa juga folder spam).",
+    np_err_mismatch: "Kedua kata sandi tidak cocok.", np_success_alert: "Kata sandi baru tersimpan ✓ Anda sekarang sudah masuk.", np_title: "Buat kata sandi baru", np_label_new: "Kata sandi baru (min. 6 karakter)", np_placeholder_new: "Kata sandi baru", np_label_confirm: "Ulangi kata sandi baru", np_placeholder_confirm: "Ulangi kata sandi", np_save_btn: "Simpan kata sandi",
+    auth_login_title: "🚗 Area sopir", auth_login_note: "Masuk dengan nomor telepon<br>(0062&nbsp;/&nbsp;+62) atau email dan kata sandi.", auth_login_id_placeholder: "Nomor telepon atau email", auth_password_placeholder: "Kata sandi", auth_login_btn: "Masuk", auth_forgot_link: "Lupa kata sandi?", auth_no_account_prefix: "Belum punya akun? ", auth_register_link: "Daftar sekarang", auth_signup_note: "Buat akun sopir baru.", auth_signup_name_placeholder: "Nama Anda *", auth_signup_phone_placeholder: "Telepon / WhatsApp *", auth_signup_password_placeholder: "Kata sandi (min. 6 karakter) *", auth_signup_email_placeholder: "Email (opsional)", auth_signup_car_placeholder: "Model — mis. Toyota Avanza", auth_signup_seats_placeholder: "Jumlah kursi", auth_signup_plate_placeholder: "Plat nomor *", auth_signup_color_placeholder: "Warna kendaraan *", auth_signup_referral_placeholder: "Kode referral (opsional) — mis. RY-104", auth_docs_title: "Unggah dokumen — keempatnya wajib", auth_doc_license: "SIM *", auth_doc_insurance: "Asuransi *", auth_doc_papers: "STNK/BPKB *", auth_doc_selfie: "Selfie *", auth_docs_uploaded_suffix: " / 4 diunggah", auth_docs_all_needed_suffix: " — keempatnya diperlukan", auth_signup_btn: "Daftar", auth_have_account_prefix: "Sudah punya akun? ", auth_loading_text: "⏳ Sebentar...",
     reg_lombok_kuta: "Kuta Lombok (Selatan)", reg_lombok_senggigi: "Senggigi (Barat)", reg_lombok_gili: "Gili (Utara)", reg_lombok_sembalun: "Sembalun (Timur)",
     nl_airport_regions_title: "Wilayah tujuan bandara — atur harga per wilayah (kosongkan jika tidak ditawarkan)",
     nl_transfer_regions_title: "Tujuan transfer — atur harga per tujuan (kosongkan jika tidak ditawarkan)",
@@ -12113,6 +12125,10 @@ function setLanguage(lang){
   // lastGridList merkt sich die zuletzt angezeigte Liste, damit hier keine neue Suche noetig ist,
   // nur ein Neuzeichnen mit der jetzt aktuellen Sprache.
   if(document.getElementById('driver-grid') && lastGridList.length) renderDriverGrid(lastGridList);
+  // Gleiches Grundproblem wie oben: der Dokumenten-Upload-Zaehler im Registrierungsformular wird nur
+  // bei einer Datei-Auswahl neu geschrieben, nicht beim Sprachwechsel -- kurz nachziehen, falls das
+  // Formular gerade offen ist.
+  if(document.getElementById('auth-signup-doc-count-hint')) updateSignupDocStatus();
   applyLombokHeaderOverrides();
   if(document.getElementById('dash-greeting')) renderProfileChip();
   const searchInputEl = document.getElementById('search-input');
@@ -14640,7 +14656,7 @@ function updateSignupDocStatus(){
   });
   const hint = document.getElementById('auth-signup-doc-count-hint');
   if(hint){
-    hint.textContent = count + ' / 4 hochgeladen' + (count===4 ? '' : ' — alle 4 nötig');
+    hint.textContent = count + t('auth_docs_uploaded_suffix') + (count===4 ? '' : t('auth_docs_all_needed_suffix'));
     hint.classList.toggle('enough', count===4);
   }
   return count;
@@ -14669,15 +14685,19 @@ function setAuthLoading(isLoading){
 
 function showAuthError(err){
   const el = document.getElementById('auth-error');
-  const msg = (err && err.message) ? translateAuthError(err.message) : 'Etwas ist schiefgelaufen. Bitte nochmal versuchen.';
+  const msg = (err && err.message) ? translateAuthError(err.message) : t('auth_err_generic');
   el.textContent = msg;
 }
 
+// Bugfix (22.8., beim Uebersetzungs-Sweep fuers Fahrer-Dashboard gefunden): der komplette
+// Login-/Passwort-Bereich war zu 100% fest auf Deutsch verdrahtet -- ein englisch- oder
+// indonesisch-sprachiger Fahrer haette bei jedem Login-Fehler oder beim Passwort-Zuruecksetzen
+// nur deutschen Text gesehen, egal welche Sprache eingestellt war. Jetzt komplett ueber t().
 function translateAuthError(msg){
-  if(/Invalid login credentials/i.test(msg)) return 'Telefonnummer/E-Mail oder Passwort ist falsch.';
-  if(/User already registered/i.test(msg)) return 'Für diese Telefonnummer existiert schon ein Konto — bitte anmelden.';
-  if(/Password should be at least/i.test(msg)) return 'Das Passwort muss mindestens 6 Zeichen haben.';
-  if(/Unable to validate email/i.test(msg)) return 'Bitte eine gültige Telefonnummer eingeben.';
+  if(/Invalid login credentials/i.test(msg)) return t('auth_err_invalid_credentials');
+  if(/User already registered/i.test(msg)) return t('auth_err_already_registered');
+  if(/Password should be at least/i.test(msg)) return t('auth_err_password_too_short');
+  if(/Unable to validate email/i.test(msg)) return t('auth_err_invalid_phone');
   return msg;
 }
 
@@ -14819,7 +14839,7 @@ async function handleDriverLogin(){
   const raw = document.getElementById('auth-login-email').value.trim();
   const password = document.getElementById('auth-login-password').value;
   document.getElementById('auth-error').textContent = '';
-  if(!raw || !password){ showAuthError({message:'Bitte Telefonnummer/E-Mail und Passwort eingeben.'}); return; }
+  if(!raw || !password){ document.getElementById('auth-error').textContent = t('auth_err_missing_fields'); return; }
   // Enthaelt die Eingabe ein @, ist es eine (bei aelteren Konten noch echte) E-Mail-Adresse --
   // sonst wird sie als Telefonnummer behandelt und in dieselbe Pseudo-Adresse umgerechnet, die
   // bei der Registrierung erzeugt wurde (Standard-Landesvorwahl +62, falls keine andere angegeben).
@@ -14830,7 +14850,7 @@ async function handleDriverLogin(){
     email = raw;
   } else {
     const phone = normalizePhoneE164(raw, '62');
-    if(!isValidE164(phone)){ showAuthError({message:'Bitte eine gültige Telefonnummer eingeben.'}); return; }
+    if(!isValidE164(phone)){ document.getElementById('auth-error').textContent = t('auth_err_invalid_phone'); return; }
     email = LEGACY_PHONE_LOGIN_MAP[phone] || phoneToAuthEmail(phone);
   }
   setAuthLoading(true);
@@ -14854,7 +14874,7 @@ function setForgotPasswordMode(mode){
 }
 function openForgotPasswordWhatsapp(){
   const phone = document.getElementById('forgot-password-phone').value.trim();
-  if(!phone){ alert('Bitte zuerst deine Telefonnummer eingeben.'); return false; }
+  if(!phone){ alert(t('fp_err_no_phone')); return false; }
   const text = `Hallo Rydanu-Support, ich habe mein Passwort vergessen. Meine registrierte Telefonnummer ist: ${phone}`;
   window.open('https://wa.me/' + SUPPORT_WHATSAPP_NUMBER + '?text=' + encodeURIComponent(text), '_blank');
   return false;
@@ -14876,15 +14896,15 @@ document.getElementById('forgot-password-modal-bg').addEventListener('click', e=
 async function handleForgotPassword(){
   const email = document.getElementById('forgot-password-email').value.trim();
   const statusEl = document.getElementById('forgot-password-status');
-  if(!email){ statusEl.style.color='var(--danger)'; statusEl.textContent = 'Bitte E-Mail-Adresse eingeben.'; return; }
+  if(!email){ statusEl.style.color='var(--danger)'; statusEl.textContent = t('fp_err_no_email'); return; }
   statusEl.style.color = 'var(--ink-soft)';
-  statusEl.textContent = 'Einen Moment...';
+  statusEl.textContent = t('generic_please_wait');
   const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
     redirectTo: location.origin + location.pathname
   });
-  if(error){ statusEl.style.color='var(--danger)'; statusEl.textContent = 'Fehler: ' + error.message; return; }
+  if(error){ statusEl.style.color='var(--danger)'; statusEl.textContent = t('fp_err_prefix') + error.message; return; }
   statusEl.style.color = 'var(--teal)';
-  statusEl.textContent = 'E-Mail verschickt ✓ — bitte den Link in der Mail öffnen (auch im Spam-Ordner nachschauen).';
+  statusEl.textContent = t('fp_email_sent_success');
 }
 // Wird automatisch aufgerufen, wenn jemand ueber den Link aus der Reset-Mail zurueckkommt
 supabaseClient.auth.onAuthStateChange((event, session) => {
@@ -14899,14 +14919,14 @@ async function handleSetNewPassword(){
   const pw1 = document.getElementById('new-password-input').value;
   const pw2 = document.getElementById('new-password-confirm').value;
   const statusEl = document.getElementById('new-password-status');
-  if(!pw1 || pw1.length < 6){ statusEl.style.color='var(--danger)'; statusEl.textContent = 'Das Passwort muss mindestens 6 Zeichen haben.'; return; }
-  if(pw1 !== pw2){ statusEl.style.color='var(--danger)'; statusEl.textContent = 'Die beiden Passwörter stimmen nicht überein.'; return; }
+  if(!pw1 || pw1.length < 6){ statusEl.style.color='var(--danger)'; statusEl.textContent = t('auth_err_password_too_short'); return; }
+  if(pw1 !== pw2){ statusEl.style.color='var(--danger)'; statusEl.textContent = t('np_err_mismatch'); return; }
   statusEl.style.color = 'var(--ink-soft)';
-  statusEl.textContent = 'Einen Moment...';
+  statusEl.textContent = t('generic_please_wait');
   const { error } = await supabaseClient.auth.updateUser({ password: pw1 });
-  if(error){ statusEl.style.color='var(--danger)'; statusEl.textContent = 'Fehler: ' + error.message; return; }
+  if(error){ statusEl.style.color='var(--danger)'; statusEl.textContent = t('fp_err_prefix') + error.message; return; }
   document.getElementById('new-password-modal-bg').classList.remove('active');
-  alert('Neues Passwort gespeichert ✓ Du bist jetzt eingeloggt.');
+  alert(t('np_success_alert'));
   await checkDriverAuthState();
   switchViewProgrammatic('driver');
 }
@@ -16982,7 +17002,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v316</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v317</div>
 
 </body>
 </html>
