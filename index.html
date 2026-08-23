@@ -9679,7 +9679,9 @@ function toggleVillaApplyQr(){
 function shareVillaApplyLinkWhatsapp(){
   const link = document.getElementById('villa-apply-link').textContent;
   if(!link) return;
-  const text = `Hallo! Wir würden uns freuen, Sie als Rydanu Villa-Partner zu begrüßen — Ihre Gäste können dann ganz einfach Transfers über Ihren eigenen Link buchen. Kurze Anmeldung hier:\n${link}`;
+  // Bewusst fest auf Englisch (24.8., Joerg-Wunsch): Villa-Partner sind international, Ansprache
+  // per WhatsApp soll unabhaengig von der eigenen App-Sprache immer auf Englisch rausgehen.
+  const text = `Hello! We'd love to welcome you as a Rydanu Villa Partner — your guests will then be able to book transfers easily through your own personal link. Quick sign-up here:\n${link}`;
   window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
 }
 function renderVillaManageOptions(list){
@@ -10540,7 +10542,7 @@ function openBookingDetail(source, idx){
   // gleiche Regel wie bei bd-row-phone (also erst ab bestaetigter Buchung).
   const phoneActionsRow = document.getElementById('bd-row-phone-actions');
   if(b.phone){
-    document.getElementById('bd-phone-wa-btn').href = waCallLink(b.phone);
+    document.getElementById('bd-phone-wa-btn').href = waCallLinkWithText(b.phone, buildDriverBookingWaText(b));
     phoneActionsRow.style.display = 'flex';
   } else {
     phoneActionsRow.style.display = 'none';
@@ -12851,6 +12853,27 @@ function formatIDR(num){ return 'IDR ' + Math.round(num).toLocaleString('en-US')
 // die Nummer urspruenglich eingetippt/gespeichert wurde.
 function telLink(phone){ return 'tel:' + String(phone||'').replace(/[^\d+]/g,''); }
 function waCallLink(phone){ return 'https://wa.me/' + String(phone||'').replace(/[^\d]/g,''); }
+// Vorausgefuellter WhatsApp-Text, wenn der FAHRER den KUNDEN zu einer Buchung kontaktiert (24.8.,
+// Joerg-Wunsch: "Per WhatsApp kontaktieren" oeffnete bisher einen komplett leeren Chat). Nutzt exakt
+// das gleiche de/en/id-Textmuster wie shareReferralLinkWhatsapp() weiter oben. Sprache = aktuelle
+// App-Sprache des Fahrers (currentLang) -- kein Feld fuer die Kundensprache vorhanden, das ist der
+// sinnvollste verfuegbare Standard.
+function buildDriverBookingWaText(b){
+  const driverName = realDriverProfile ? (realDriverProfile.name || '') : ((driverProfiles[currentDriverId] && driverProfiles[currentDriverId].name) || '');
+  const whenPart = [b.when, b.pickupTime].filter(Boolean).join(', ');
+  const pickupSentence = b.pickup ? {
+    de: ` Abholung: ${b.pickup}.`,
+    en: ` Pickup: ${b.pickup}.`,
+    id: ` Penjemputan: ${b.pickup}.`
+  } : { de:'', en:'', id:'' };
+  const texts = {
+    de: `Hallo ${b.who}! Hier ist ${driverName}, dein Fahrer für "${b.tour}" am ${whenPart}.${pickupSentence.de} Melde dich gern, falls du vorher noch Fragen hast!`,
+    en: `Hi ${b.who}! This is ${driverName}, your driver for "${b.tour}" on ${whenPart}.${pickupSentence.en} Feel free to message me if you have any questions before then!`,
+    id: `Hai ${b.who}! Ini ${driverName}, sopir Anda untuk "${b.tour}" pada ${whenPart}.${pickupSentence.id} Jangan ragu menghubungi saya jika ada pertanyaan sebelum itu!`
+  };
+  return texts[currentLang] || texts.en;
+}
+function waCallLinkWithText(phone, text){ return waCallLink(phone) + '?text=' + encodeURIComponent(text); }
 // Zeit-Textfelder (22.8., dritter Anlauf): input[type=time] liess sich auf iOS trotz mehrerer CSS-
 // Versuche nicht zuverlaessig an die anderen Felder angleichen (blieb eine graue "Pille"). Jetzt
 // ganz normale Textfelder mit automatischer HH:MM-Formatierung beim Tippen, damit die Eingabe
@@ -17124,7 +17147,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v322</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v323</div>
 
 </body>
 </html>
