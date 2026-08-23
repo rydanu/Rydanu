@@ -6535,10 +6535,6 @@ let pickupSearchToken = 0;
 // den finalen Details-Aufruf zu EINER Google-Sitzung zusammen (guenstiger als Einzelanfragen).
 // Wird nach jeder Auswahl/jedem Feld-Reset neu erzeugt.
 let placesSessionTokens = {};
-// TEMPORAER (23. August, Diagnose "Villa Feliz" nicht gefunden) -- speichert den echten Fehlertext
-// vom letzten fehlgeschlagenen Google-Aufruf, damit er sichtbar im "No matches"-Kasten auftaucht,
-// statt nur in der Browser-Konsole zu verschwinden. Nach Diagnose wieder rausnehmen.
-let lastPlacesApiError = null;
 function getPlacesSessionToken(inputId){
   if(!placesSessionTokens[inputId]) placesSessionTokens[inputId] = crypto.randomUUID();
   return placesSessionTokens[inputId];
@@ -6570,13 +6566,12 @@ function runPickupSearch(inputId, boxId, confirmedId){
 // Rueckgabeform bleibt wie vorher: {name, area} -- zusaetzlich (nur bei Cache-Treffern oder nach
 // Auswahl) lat/lng/placeId, falls schon bekannt.
 async function searchPlacesBali(query, inputId){
-  lastPlacesApiError = null;
   let cacheHits = [];
   try{
     const { data, error } = await supabaseClient.rpc('search_place_cache', { p_query: query, p_limit: 6 });
     if(!error && data) cacheHits = data.map(d => ({ name: d.name, area: d.area || '', lat: d.lat, lng: d.lng, placeId: d.google_place_id, cacheId: d.id, fromCache: true }));
-    if(error){ console.error('Cache-Ortssuche fehlgeschlagen:', error); lastPlacesApiError = 'Cache: ' + (error.message||JSON.stringify(error)); }
-  }catch(e){ console.error('Cache-Ortssuche fehlgeschlagen:', e); lastPlacesApiError = 'Cache: ' + (e.message||String(e)); }
+    if(error) console.error('Cache-Ortssuche fehlgeschlagen:', error);
+  }catch(e){ console.error('Cache-Ortssuche fehlgeschlagen:', e); }
 
   if(cacheHits.length >= 4) return cacheHits; // genug echte Treffer aus dem eigenen Cache -- Google gar nicht noetig
 
@@ -6602,15 +6597,11 @@ async function searchPlacesBali(query, inputId){
           const secondary = pp.structuredFormat?.secondaryText?.text || '';
           return { name: main, area: secondary, placeId: pp.placeId, fromCache: false };
         });
-      if(googleHits.length === 0 && cacheHits.length === 0) lastPlacesApiError = null; // echtes "keine Treffer", kein Fehler
     } else {
-      const bodyText = await res.text();
-      console.error('Google Places Autocomplete fehlgeschlagen:', res.status, bodyText);
-      lastPlacesApiError = 'Google HTTP ' + res.status + ': ' + bodyText.slice(0,200);
+      console.error('Google Places Autocomplete fehlgeschlagen:', res.status, await res.text());
     }
   }catch(e){
     console.error('Google Places Autocomplete fehlgeschlagen:', e);
-    lastPlacesApiError = 'Google Netzwerk/CORS: ' + (e.message||String(e));
   }
 
   return cacheHits.concat(googleHits.filter(g => !cacheHits.some(c => c.placeId === g.placeId)));
@@ -6620,8 +6611,7 @@ function renderPickupBox(inputId, boxId, confirmedId, matches, showEmptyHint){
   const box = document.getElementById(boxId);
   if(matches.length===0){
     if(showEmptyHint){
-      const debugLine = lastPlacesApiError ? `<div style="color:#c0392b;font-size:0.75rem;margin-top:4px;">Debug: ${escapeHtml(lastPlacesApiError)}</div>` : '';
-      box.innerHTML = `<div class="suggestion-item" style="cursor:default;color:var(--ink-soft);">No matches — you can still type a custom address${debugLine}</div>`;
+      box.innerHTML = `<div class="suggestion-item" style="cursor:default;color:var(--ink-soft);">No matches — you can still type a custom address</div>`;
       box.classList.add('open');
     }
     return;
@@ -17134,7 +17124,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v320</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v321</div>
 
 </body>
 </html>
