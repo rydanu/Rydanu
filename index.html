@@ -12854,24 +12854,16 @@ function formatIDR(num){ return 'IDR ' + Math.round(num).toLocaleString('en-US')
 function telLink(phone){ return 'tel:' + String(phone||'').replace(/[^\d+]/g,''); }
 function waCallLink(phone){ return 'https://wa.me/' + String(phone||'').replace(/[^\d]/g,''); }
 // Vorausgefuellter WhatsApp-Text, wenn der FAHRER den KUNDEN zu einer Buchung kontaktiert (24.8.,
-// Joerg-Wunsch: "Per WhatsApp kontaktieren" oeffnete bisher einen komplett leeren Chat). Nutzt exakt
-// das gleiche de/en/id-Textmuster wie shareReferralLinkWhatsapp() weiter oben. Sprache = aktuelle
-// App-Sprache des Fahrers (currentLang) -- kein Feld fuer die Kundensprache vorhanden, das ist der
-// sinnvollste verfuegbare Standard.
+// Joerg-Wunsch: "Per WhatsApp kontaktieren" oeffnete bisher einen komplett leeren Chat).
+// Korrektur (24.8., gleicher Tag): erster Versuch folgte der App-Sprache des Fahrers (currentLang) --
+// Joerg wollte das aber bewusst NICHT, genau wie beim Villa-Partner-Text: Kunden sind ueberwiegend
+// internationale Touristen, darum jetzt fest auf Englisch, unabhaengig davon welche Sprache der
+// Fahrer gerade in seiner eigenen App eingestellt hat.
 function buildDriverBookingWaText(b){
   const driverName = realDriverProfile ? (realDriverProfile.name || '') : ((driverProfiles[currentDriverId] && driverProfiles[currentDriverId].name) || '');
   const whenPart = [b.when, b.pickupTime].filter(Boolean).join(', ');
-  const pickupSentence = b.pickup ? {
-    de: ` Abholung: ${b.pickup}.`,
-    en: ` Pickup: ${b.pickup}.`,
-    id: ` Penjemputan: ${b.pickup}.`
-  } : { de:'', en:'', id:'' };
-  const texts = {
-    de: `Hallo ${b.who}! Hier ist ${driverName}, dein Fahrer für "${b.tour}" am ${whenPart}.${pickupSentence.de} Melde dich gern, falls du vorher noch Fragen hast!`,
-    en: `Hi ${b.who}! This is ${driverName}, your driver for "${b.tour}" on ${whenPart}.${pickupSentence.en} Feel free to message me if you have any questions before then!`,
-    id: `Hai ${b.who}! Ini ${driverName}, sopir Anda untuk "${b.tour}" pada ${whenPart}.${pickupSentence.id} Jangan ragu menghubungi saya jika ada pertanyaan sebelum itu!`
-  };
-  return texts[currentLang] || texts.en;
+  const pickupSentence = b.pickup ? ` Pickup: ${b.pickup}.` : '';
+  return `Hi ${b.who}! This is ${driverName}, your driver for "${b.tour}" on ${whenPart}.${pickupSentence} Feel free to message me if you have any questions before then!`;
 }
 function waCallLinkWithText(phone, text){ return waCallLink(phone) + '?text=' + encodeURIComponent(text); }
 // Zeit-Textfelder (22.8., dritter Anlauf): input[type=time] liess sich auf iOS trotz mehrerer CSS-
@@ -17147,7 +17139,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v323</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v324</div>
 
 </body>
 </html>
