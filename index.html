@@ -6510,14 +6510,37 @@ const baliPlaces = [
 function filterPickup(){ runPickupSearch('f-pickup','pickup-suggestions','pickup-confirmed'); }
 function filterTrPickup(){ runPickupSearch('tr-pickup','tr-pickup-suggestions','tr-pickup-confirmed'); }
 
-// Punkt 2 (5. August): Abholort-Suche zeigt jetzt zusaetzlich zu unserer kuratierten Liste
-// bekannter Hotels auch echte Adressen -- ueber OpenStreetMap/Nominatim, komplett kostenlos,
-// ohne API-Key und ohne Kreditkarte/Google-Konto. Etwas weniger praezise als Google Places,
-// aber fuer Bali/Lombok gut nutzbar. Debounce (450ms) + Token-Check verhindert veraltete
-// Antworten, wenn schnell weitergetippt wird, und haelt uns innerhalb der fairen Nutzung von
-// Nominatim (max. 1 Anfrage/Sekunde).
+// ============================================================
+// Ortssuche -- Google Places API (New), Cache-first (23. August)
+// ============================================================
+// Vorher: Nominatim/OpenStreetMap (kostenlos, aber ungenauer, kein Google-Kartenmaterial).
+// Jetzt: Google Places API (New), aber so gebaut, dass so gut wie NIE eine echte Google-Anfrage
+// noetig ist, damit wir weit unter dem kostenlosen Kontingent (10.000 Anfragen/Monat) bleiben:
+//
+//   1) Beim Tippen wird ZUERST unser eigener Supabase-Cache durchsucht (place_cache-Tabelle) --
+//      komplett kostenlos, keine Google-Anfrage.
+//   2) Nur wenn der Cache zu wenige Treffer liefert, wird zusaetzlich Google "Autocomplete (New)"
+//      gefragt (liefert nur Namensvorschlaege, noch OHNE Koordinaten -- dieser Teil ist bei Google
+//      quasi kostenlos, solange danach ein Details-Aufruf folgt).
+//   3) Koordinaten werden NUR geholt, wenn der Kunde einen Google-Vorschlag WIRKLICH anklickt
+//      (ein "Place Details"-Aufruf, "Essentials"-Datenstufe, 10.000/Monat kostenlos) -- dieser
+//      Treffer wird danach im Cache gespeichert, damit der naechste Kunde mit derselben Suche
+//      gar keine Google-Anfrage mehr braucht.
+//
+// Fuer den Kunden macht das keinen Unterschied -- die Vorschlagsliste erscheint weiterhin sofort,
+// nur die Koordinaten kommen minimal spaeter (erst beim Klick), was er ohnehin nicht sieht.
 let pickupSearchDebounce = null;
 let pickupSearchToken = 0;
+// Ein Google-Autocomplete-"Session-Token" pro Sucheingabe -- fasst alle Tastenanschlaege +
+// den finalen Details-Aufruf zu EINER Google-Sitzung zusammen (guenstiger als Einzelanfragen).
+// Wird nach jeder Auswahl/jedem Feld-Reset neu erzeugt.
+let placesSessionTokens = {};
+function getPlacesSessionToken(inputId){
+  if(!placesSessionTokens[inputId]) placesSessionTokens[inputId] = crypto.randomUUID();
+  return placesSessionTokens[inputId];
+}
+function resetPlacesSessionToken(inputId){ placesSessionTokens[inputId] = crypto.randomUUID(); }
+
 function runPickupSearch(inputId, boxId, confirmedId){
   const box = document.getElementById(boxId);
   const input = document.getElementById(inputId);
@@ -6531,28 +6554,56 @@ function runPickupSearch(inputId, boxId, confirmedId){
   if(q.length < 3) return;
   const myToken = ++pickupSearchToken;
   pickupSearchDebounce = setTimeout(async ()=>{
-    const live = await searchNominatimBali(q);
+    const live = await searchPlacesBali(q, inputId);
     if(myToken !== pickupSearchToken) return; // inzwischen weitergetippt -- veraltete Antwort verwerfen
     if(input.value.trim() !== q) return;
     const combined = curated.concat(live.filter(l => !curated.some(c => c.name.toLowerCase()===l.name.toLowerCase())));
     renderPickupBox(inputId, boxId, confirmedId, combined.slice(0,6), true);
   }, 450);
 }
-async function searchNominatimBali(query){
+
+// Schritt 1+2: Cache zuerst, Google-Autocomplete nur bei zu wenig Cache-Treffern.
+// Rueckgabeform bleibt wie vorher: {name, area} -- zusaetzlich (nur bei Cache-Treffern oder nach
+// Auswahl) lat/lng/placeId, falls schon bekannt.
+async function searchPlacesBali(query, inputId){
+  let cacheHits = [];
   try{
-    const url = 'https://nominatim.openstreetmap.org/search?format=json&countrycodes=id&viewbox=114.3,-8.0,115.9,-9.2&bounded=0&addressdetails=1&limit=5&q=' + encodeURIComponent(query);
-    const res = await fetch(url);
-    if(!res.ok) return [];
-    const data = await res.json();
-    return data.map(d=>{
-      const addr = d.address || {};
-      const areaPart = addr.village || addr.suburb || addr.town || addr.city_district || addr.city || addr.county || '';
-      const parts = (d.display_name||'').split(',').map(s=>s.trim());
-      const namePart = parts[0] || query;
-      return { name: namePart, area: areaPart || (parts[1]||'') };
+    const { data, error } = await supabaseClient.rpc('search_place_cache', { p_query: query, p_limit: 6 });
+    if(!error && data) cacheHits = data.map(d => ({ name: d.name, area: d.area || '', lat: d.lat, lng: d.lng, placeId: d.google_place_id, cacheId: d.id, fromCache: true }));
+  }catch(e){ console.error('Cache-Ortssuche fehlgeschlagen:', e); }
+
+  if(cacheHits.length >= 4) return cacheHits; // genug echte Treffer aus dem eigenen Cache -- Google gar nicht noetig
+
+  let googleHits = [];
+  try{
+    const res = await fetch('https://places.googleapis.com/v1/places:autocomplete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Goog-Api-Key': GOOGLE_PLACES_API_KEY },
+      body: JSON.stringify({
+        input: query,
+        sessionToken: getPlacesSessionToken(inputId),
+        includedRegionCodes: ['id'],
+        locationBias: { rectangle: { low: { latitude: -9.2, longitude: 114.3 }, high: { latitude: -8.0, longitude: 116.0 } } }
+      })
     });
-  }catch(e){ console.error('Adress-Suche (OpenStreetMap) fehlgeschlagen:', e); return []; }
+    if(res.ok){
+      const data = await res.json();
+      googleHits = (data.suggestions || [])
+        .filter(s => s.placePrediction)
+        .map(s => {
+          const pp = s.placePrediction;
+          const main = pp.structuredFormat?.mainText?.text || pp.text?.text || query;
+          const secondary = pp.structuredFormat?.secondaryText?.text || '';
+          return { name: main, area: secondary, placeId: pp.placeId, fromCache: false };
+        });
+    } else {
+      console.error('Google Places Autocomplete fehlgeschlagen:', res.status, await res.text());
+    }
+  }catch(e){ console.error('Google Places Autocomplete fehlgeschlagen:', e); }
+
+  return cacheHits.concat(googleHits.filter(g => !cacheHits.some(c => c.placeId === g.placeId)));
 }
+
 function renderPickupBox(inputId, boxId, confirmedId, matches, showEmptyHint){
   const box = document.getElementById(boxId);
   if(matches.length===0){
@@ -6562,19 +6613,54 @@ function renderPickupBox(inputId, boxId, confirmedId, matches, showEmptyHint){
     }
     return;
   }
-  box.innerHTML = matches.map(p => `
-    <div class="suggestion-item" onclick="selectPickupGeneric('${inputId}','${boxId}','${confirmedId}','${p.name.replace(/'/g,"\\'")}','${(p.area||'').replace(/'/g,"\\'")}')">
+  box.dataset.results = JSON.stringify(matches);
+  box.innerHTML = matches.map((p,i) => `
+    <div class="suggestion-item" onclick="selectPickupGeneric('${inputId}','${boxId}','${confirmedId}',${i})">
       <svg width="14" height="14" viewBox="0 0 24 24"><path fill="var(--teal)" d="M12 2C7.6 2 4 5.6 4 10c0 6 8 12 8 12s8-6 8-12c0-4.4-3.6-8-8-8zm0 11a3 3 0 110-6 3 3 0 010 6z"/></svg>
-      <div><div class="s-name">${p.name}</div><div class="s-area">${p.area ? p.area + ', ' : ''}Bali</div></div>
+      <div><div class="s-name">${escapeHtml(p.name)}</div><div class="s-area">${p.area ? escapeHtml(p.area) + ', ' : ''}Bali</div></div>
     </div>
   `).join('');
   box.classList.add('open');
 }
-function selectPickupGeneric(inputId, boxId, confirmedId, name, area){
-  document.getElementById(inputId).value = area ? (name + ', ' + area) : name;
-  document.getElementById(boxId).classList.remove('open');
+
+// Schritt 3: Kunde klickt einen Vorschlag an.
+// - Kuratierte Liste / Cache-Treffer: keine Google-Anfrage noetig, im Cache-Fall nur Nutzung hochzaehlen.
+// - Google-Autocomplete-Treffer (noch ohne Koordinaten): jetzt EINMALIG Place Details holen
+//   (nur Name+Koordinaten, "Essentials"-Datenstufe), danach im Cache speichern.
+async function selectPickupGeneric(inputId, boxId, confirmedId, idx){
+  const box = document.getElementById(boxId);
+  const results = JSON.parse(box.dataset.results || '[]');
+  const p = results[idx];
+  if(!p){ box.classList.remove('open'); return; }
+  document.getElementById(inputId).value = p.area ? (p.name + ', ' + p.area) : p.name;
+  box.classList.remove('open');
   const confirmedEl = document.getElementById(confirmedId);
-  if(confirmedEl) confirmedEl.textContent = '✓ Matched to ' + (area || name) + ' on the map';
+  if(confirmedEl) confirmedEl.textContent = '✓ Matched to ' + (p.area || p.name) + ' on the map';
+
+  if(p.fromCache && p.cacheId){
+    supabaseClient.rpc('touch_place_cache_usage', { p_id: p.cacheId }).then(()=>{}).catch(()=>{});
+    resetPlacesSessionToken(inputId);
+    return;
+  }
+  if(!p.fromCache && p.placeId){
+    // Google-Vorschlag ohne bisherige Koordinaten -- jetzt Details holen (Essentials, 1 Aufruf,
+    // schliesst die Autocomplete-Session guenstig ab) und im Cache fuer alle kuenftigen Suchen speichern.
+    try{
+      const res = await fetch(`https://places.googleapis.com/v1/places/${p.placeId}?fields=id,displayName,location&key=${GOOGLE_PLACES_API_KEY}&sessionToken=${getPlacesSessionToken(inputId)}`);
+      if(res.ok){
+        const details = await res.json();
+        const lat = details.location?.latitude, lng = details.location?.longitude;
+        if(lat != null && lng != null){
+          supabaseClient.rpc('upsert_place_cache', {
+            p_name: p.name, p_area: p.area || '', p_lat: lat, p_lng: lng, p_google_place_id: p.placeId
+          }).then(()=>{}).catch(e=>console.error('Cache-Speicherung fehlgeschlagen:', e));
+        }
+      } else {
+        console.error('Google Place Details fehlgeschlagen:', res.status, await res.text());
+      }
+    }catch(e){ console.error('Google Place Details fehlgeschlagen:', e); }
+    resetPlacesSessionToken(inputId);
+  }
 }
 document.addEventListener('click', e=>{
   if(!e.target.closest('.autocomplete-wrap')){
@@ -13988,6 +14074,12 @@ const SUPABASE_URL = 'https://xpmrefoscyroihoglmum.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_UB_OEdt_7dKMm7gKz_w3Sw_GeafRGHu';
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 
+// Google Places API (New) -- Ersatz fuer Nominatim/OpenStreetMap (23. August, siehe searchPlacesBali()
+// weiter unten). Der Key ist bewusst im Frontend sichtbar, das ist bei dieser API normal/vorgesehen --
+// er ist bei Google auf die Domains rydanu.com/getrydanu.com (HTTP-Referrer) und auf "Places API (New)"
+// eingeschraenkt, kann also selbst wenn ihn jemand abliest nirgendwo anders missbraucht werden.
+const GOOGLE_PLACES_API_KEY = 'AIzaSyACr3tIZO1chp1rpC6jfVHd92mHdEqqZB0';
+
 let realDriverProfile = null; // vom Server geladenes echtes Fahrerprofil (ersetzt die Demo-Daten fuer Baustein 1)
 
 // ============================================
@@ -14126,7 +14218,7 @@ function vrRunAddressSearch(inputId, boxId, confirmedId){
   if(q.length < 3) return;
   const myToken = ++vrPickupSearchToken;
   vrPickupSearchDebounce = setTimeout(async ()=>{
-    const live = await searchNominatimBali(q);
+    const live = await searchPlacesBali(q, inputId);
     if(myToken !== vrPickupSearchToken) return;
     if(input.value.trim() !== q) return;
     if(live.length === 0){ box.classList.remove('open'); return; }
@@ -14140,7 +14232,7 @@ function vrRunAddressSearch(inputId, boxId, confirmedId){
     box.classList.add('open');
   }, 450);
 }
-function vrSelectAddress(inputId, boxId, confirmedId, idx){
+async function vrSelectAddress(inputId, boxId, confirmedId, idx){
   const box = document.getElementById(boxId);
   const results = JSON.parse(box.dataset.results || '[]');
   const p = results[idx];
@@ -14152,6 +14244,30 @@ function vrSelectAddress(inputId, boxId, confirmedId, idx){
   if(inputId === 'vr-pickup'){
     vrPickupRegion = region;
     if(confirmedEl) confirmedEl.textContent = region ? t('vr_matched_to').replace('{area}', region) : '';
+  }
+  // Gleicher Cache-Mechanismus wie bei der normalen Buchungs-Adresssuche (siehe searchPlacesBali()):
+  // Cache-Treffer nur Nutzung hochzaehlen, echte Google-Treffer per Details-Aufruf abschliessen + cachen.
+  if(p.fromCache && p.cacheId){
+    supabaseClient.rpc('touch_place_cache_usage', { p_id: p.cacheId }).then(()=>{}).catch(()=>{});
+    resetPlacesSessionToken(inputId);
+    return;
+  }
+  if(!p.fromCache && p.placeId){
+    try{
+      const res = await fetch(`https://places.googleapis.com/v1/places/${p.placeId}?fields=id,displayName,location&key=${GOOGLE_PLACES_API_KEY}&sessionToken=${getPlacesSessionToken(inputId)}`);
+      if(res.ok){
+        const details = await res.json();
+        const lat = details.location?.latitude, lng = details.location?.longitude;
+        if(lat != null && lng != null){
+          supabaseClient.rpc('upsert_place_cache', {
+            p_name: p.name, p_area: p.area || '', p_lat: lat, p_lng: lng, p_google_place_id: p.placeId
+          }).then(()=>{}).catch(e=>console.error('Cache-Speicherung fehlgeschlagen:', e));
+        }
+      } else {
+        console.error('Google Place Details fehlgeschlagen:', res.status, await res.text());
+      }
+    }catch(e){ console.error('Google Place Details fehlgeschlagen:', e); }
+    resetPlacesSessionToken(inputId);
   }
 }
 document.addEventListener('click', e=>{
@@ -17005,7 +17121,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v318</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v319</div>
 
 </body>
 </html>

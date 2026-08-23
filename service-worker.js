@@ -1,5 +1,5 @@
 // Rydanu — simple offline-friendly cache-first service worker
-const CACHE_NAME = 'rydanu-cache-v318';
+const CACHE_NAME = 'rydanu-cache-v319';
 const CORE_ASSETS = [
   './',
   './manifest.json'
@@ -45,6 +45,15 @@ self.addEventListener('fetch', (event) => {
   // (App selbst, Schriften, cdnjs, Bilder) bleiben weiterhin cache-first fuer Geschwindigkeit/Offline.
   const reqUrl = new URL(event.request.url);
   if (reqUrl.hostname.endsWith('.supabase.co')) {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+
+  // Gleicher Grund wie bei Supabase oben (23. August, direkt beim Bau der Google-Places-Anbindung
+  // mitgefixt, bevor es ueberhaupt zum Problem wird): Ortssuch-Anfragen (Autocomplete + Place
+  // Details) sind live und aendern sich pro Tastendruck -- die duerfen niemals aus dem Cache
+  // beantwortet werden, sonst sieht der Kunde veraltete/falsche Vorschlaege.
+  if (reqUrl.hostname === 'places.googleapis.com') {
     event.respondWith(fetch(event.request));
     return;
   }
