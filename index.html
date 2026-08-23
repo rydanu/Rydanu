@@ -107,10 +107,17 @@
     --teal-soft:#DCF2E1;
     --lime:#8ED928;
     --line: rgba(11,61,34,0.14);
-    --radius: 3px;
-    --radius-card: 12px;
-    --shadow-card: 0 1px 3px rgba(11,61,34,0.06), 0 1px 2px rgba(11,61,34,0.04);
-    --shadow-card-hover: 0 8px 20px rgba(11,61,34,0.10);
+    /* Optische Auffrischung (22.8., Joerg-Wunsch: "moderner, Apple-Style, Farben gleich lassen").
+       Vorher: --radius war definiert aber ungenutzt (0 Verwendungen im ganzen Code), --radius-card
+       war 12px -- viele Buttons/Felder hatten daneben eigene, kleinere Werte (3-6px) fest verdrahtet.
+       Jetzt: ein durchgaengigeres, grosszuegigeres Rundungs-System (Buttons/Felder 10px statt 3-6px,
+       Karten 16px statt 12px) plus weichere, mehrschichtige Schatten. Reine Form-Aenderung, keine
+       Farbe angefasst. */
+    --radius: 10px;
+    --radius-card: 16px;
+    --shadow-card: 0 1px 2px rgba(11,61,34,0.05), 0 4px 14px rgba(11,61,34,0.07);
+    --shadow-card-hover: 0 2px 6px rgba(11,61,34,0.07), 0 14px 32px rgba(11,61,34,0.12);
+    --shadow-btn: 0 1px 2px rgba(11,61,34,0.06), 0 3px 10px rgba(11,61,34,0.08);
   }
   html{ color-scheme: light; background:#F7FAF4; }
   *{box-sizing:border-box; margin:0; padding:0;}
@@ -245,7 +252,7 @@
   .hero p.sub{ font-size:1.05rem; color:var(--ink-soft); max-width:520px; line-height:1.5; margin-bottom:32px; }
 
   .searchbar{
-    display:flex; gap:0; background:var(--ink); border-radius:6px; padding:6px; max-width:100%;
+    display:flex; gap:0; background:var(--ink); border-radius:14px; padding:6px; max-width:100%;
   }
   .searchbar input, .searchbar select{
     background:transparent; border:none; color:var(--paper); font-family:'Public Sans'; font-size:0.9rem;
@@ -268,7 +275,7 @@
   .filter-toggle-btn{
     flex:1; background:transparent; border:none; border-left:1px solid rgba(242,236,216,0.15);
     color:var(--paper-dim); font-family:'Public Sans'; font-size:0.98rem; font-weight:700; padding:15px 14px; cursor:pointer;
-    display:flex; align-items:center; justify-content:center; gap:6px; white-space:nowrap;
+    display:flex; align-items:center; justify-content:center; gap:6px; white-space:nowrap; border-radius:var(--radius);
   }
   .filter-count{
     background:var(--gold); color:var(--ink); font-family:'JetBrains Mono'; font-size:0.68rem;
@@ -277,7 +284,7 @@
   .searchbar input::placeholder{ color:rgba(255,255,255,0.85); }
   .searchbar button{
     background:var(--gold); border:none; color:var(--ink); font-weight:700; font-size:0.9rem;
-    padding:13px 24px; border-radius:4px; cursor:pointer; font-family:'Public Sans';
+    padding:13px 24px; border-radius:var(--radius); cursor:pointer; font-family:'Public Sans';
   }
 
   .section-label{
@@ -391,7 +398,7 @@
     fuer den Fahrer wie ein sofortiges Zuklappen des Kalenders aus, statt der gewuenschten Tagesansicht. */
   .modal{
     background:var(--paper); max-width:560px; width:100%; border-radius:var(--radius-card); overflow:hidden;
-    border:1px solid var(--line); box-shadow:0 20px 50px rgba(11,61,34,0.22);
+    border:1px solid var(--line); box-shadow:0 2px 8px rgba(11,61,34,0.10), 0 24px 60px rgba(11,61,34,0.20);
   }
   .modal-header{ background:var(--ink); color:var(--paper); padding:28px 28px 22px; position:relative; }
   .modal-close{
@@ -413,16 +420,22 @@
   #modal-airport-region-select{ font-family:'Public Sans'; font-size:0.85rem; font-weight:600; padding:5px 8px; border-radius:4px; border:1px solid var(--line); background:var(--paper); color:var(--ink); }
   .book-btn{
     width:100%; margin-top:20px; background:var(--gold); border:none; color:var(--ink);
-    font-weight:700; padding:14px; border-radius:5px; cursor:pointer; font-family:'Public Sans'; font-size:0.95rem;
+    font-weight:700; padding:14px; border-radius:var(--radius); cursor:pointer; font-family:'Public Sans'; font-size:0.95rem;
+    box-shadow:var(--shadow-btn); transition:transform .15s ease, box-shadow .15s ease;
   }
+  .book-btn:active{ transform:scale(0.98); }
   .modal-body .note{ font-size:0.78rem; color:var(--ink-soft); margin-top:12px; text-align:center; }
 
   .form-field{ margin-bottom:14px; }
   .form-field label{ display:block; font-size:0.78rem; font-weight:600; margin-bottom:6px; color:var(--ink-soft); }
   .form-field label .optional{ font-weight:400; color:var(--ink-soft); opacity:0.7; }
   .form-field input, .form-field select, .form-field textarea{
-    width:100%; padding:13px 12px; border:1px solid var(--line); border-radius:5px;
+    width:100%; padding:13px 12px; border:1px solid var(--line); border-radius:var(--radius);
     font-family:'Public Sans'; font-size:0.95rem; line-height:1.4; background:#fff; color:var(--ink); outline:none;
+    transition:border-color .15s ease, box-shadow .15s ease;
+  }
+  .form-field input:focus, .form-field select:focus, .form-field textarea:focus{
+    border-color:var(--teal); box-shadow:0 0 0 3px rgba(12,138,62,0.12);
   }
   /* Bugfix (22.8.): input[type=date] und select auf exakt gleiche Hoehe zwingen. iOS Safari kann bei
      input[type=date] trotz gesetzter Hoehe eine eigene, groessere Eigenhoehe fuers native
@@ -830,7 +843,7 @@
   }
 
   .stat-row{ display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:32px; }
-  .stat-card{ background:#fff; border:1px solid var(--line); border-radius:10px; padding:18px; box-shadow:var(--shadow-card); }
+  .stat-card{ background:#fff; border:1px solid var(--line); border-radius:var(--radius-card); padding:18px; box-shadow:var(--shadow-card); }
   .admin-tile-grid{ display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:8px; }
   .admin-tile{
     border:1px solid var(--line); border-radius:var(--radius-card); padding:18px 16px; cursor:pointer;
@@ -16969,7 +16982,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v315</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v316</div>
 
 </body>
 </html>
