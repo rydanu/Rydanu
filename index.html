@@ -1490,6 +1490,18 @@
   </div>
 </div>
 
+<!-- Dokument-Nachreichung per WhatsApp-Link (24.8., Joerg-Wunsch): ein Fahrer, dem der Admin
+     ein Dokument erneut anfordert, checkt oft nicht von sich aus wieder die App/sein Postfach.
+     Dieser Link (rydanu.com/?docupload=TOKEN) kommt per WhatsApp und laesst ihn ohne Login direkt
+     das fehlende Dokument nachreichen. Bewusst AUSSERHALB der Baustellen-Tuer, wie die anderen
+     oeffentlichen Formulare oben. -->
+<div id="doc-upload-page" class="offer-confirm-page" style="display:none;">
+  <div class="offer-confirm-card">
+    <div class="lock-logo"><img id="doc-upload-logo" alt="Rydanu"></div>
+    <div id="doc-upload-body"><p class="note">Lädt…</p></div>
+  </div>
+</div>
+
 <div id="site-content" style="display:none;">
 
 <!-- Lombok-Eyecatcher-Band (Bauplan Kap. 2.3): schmales Band, eigene Akzentfarbe (Sand/Terracotta),
@@ -4395,6 +4407,7 @@ document.getElementById('offer-confirm-logo').src = RYVIO_LOGO_WORDMARK;
 document.getElementById('villa-request-logo').src = RYVIO_LOGO_WORDMARK;
 document.getElementById('page-msg-public-logo').src = RYVIO_LOGO_WORDMARK;
 document.getElementById('villa-apply-logo').src = RYVIO_LOGO_WORDMARK;
+document.getElementById('doc-upload-logo').src = RYVIO_LOGO_WORDMARK;
 
 // ============================================================
 // ZENTRALE REGIONEN-KONFIGURATION (Bali & Lombok)
@@ -15380,6 +15393,76 @@ async function sendPageMessagePublicReply(token){
   const { data } = await supabaseClient.rpc('get_page_message_thread', { p_token: token });
   if(data) renderPageMessagePublicView(token, data);
 }
+// Dokument-Nachreichung per WhatsApp-Link (24.8.): oeffentliche Seite ohne Login, erreichbar
+// ueber ?docupload=TOKEN. Zeigt genau die Dokumente, die der Admin gerade angefordert hat, und
+// laedt sie direkt an die Edge Function upload-driver-doc hoch (Service-Role-Upload serverseitig,
+// da ein anonymer Besucher hier keine eigene Storage-Berechtigung per RLS haben kann/soll).
+async function initDocUploadPage(token){
+  const page = document.getElementById('doc-upload-page');
+  const body = document.getElementById('doc-upload-body');
+  page.style.display = 'flex';
+  const { data, error } = await supabaseClient.rpc('get_driver_doc_upload_context', { p_token: token });
+  const row = data && data[0];
+  if(error || !row){
+    body.innerHTML = '<p class="note">Dieser Link ist ungültig. Bitte wende dich an Rydanu.</p>';
+    return;
+  }
+  renderDocUploadPage(token, row);
+}
+function renderDocUploadPage(token, row){
+  const body = document.getElementById('doc-upload-body');
+  const requested = row.docs_requested || [];
+  if(requested.length === 0){
+    body.innerHTML = `<h2>Alles da, danke! ✓</h2><p class="note">Wir haben aktuell keine offenen Dokumente von dir angefordert.</p>`;
+    return;
+  }
+  const fields = DRIVER_DOC_FIELDS.filter(f => requested.includes(f.key));
+  body.innerHTML = `
+    <h2>Hi ${escapeHtml(row.driver_name||'')} 👋</h2>
+    <p class="note">Bitte lade die fehlenden Dokumente hoch — reicht ein Foto oder Scan, Hauptsache gut lesbar.</p>
+    <div class="doc-reupload-section">
+      ${fields.map(f => `
+        <div class="doc-reupload-row" id="doc-upload-page-row-${f.key}">
+          <label style="flex:1; display:flex; align-items:center; gap:8px; cursor:pointer; margin:0;">
+            <span>${f.icon} ${f.label}</span>
+            <input type="file" accept="image/*,.pdf" style="display:none;" onchange="handleDocUploadPageFile('${token}','${f.key}', this)">
+            <span class="link-btn">Datei wählen</span>
+          </label>
+          <span class="doc-reupload-status" id="doc-upload-page-status-${f.key}"></span>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+async function handleDocUploadPageFile(token, key, inputEl){
+  const file = inputEl.files[0];
+  if(!file) return;
+  const statusEl = document.getElementById('doc-upload-page-status-'+key);
+  if(statusEl) statusEl.textContent = '⏳ Wird hochgeladen...';
+  try{
+    const { body: fileBody, ext } = await compressDocumentImageIfNeeded(file);
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/upload-driver-doc?token=${encodeURIComponent(token)}&docKey=${encodeURIComponent(key)}&ext=${encodeURIComponent(ext)}`, {
+      method: 'POST',
+      body: fileBody
+    });
+    const result = await res.json().catch(()=>({}));
+    if(!res.ok || !result.success){
+      if(statusEl) statusEl.textContent = '❌ Fehler beim Hochladen';
+      return;
+    }
+    if(statusEl) statusEl.textContent = '✓ Hochgeladen';
+    const row = document.getElementById('doc-upload-page-row-'+key);
+    if(row){ const lbl = row.querySelector('label'); if(lbl) lbl.style.pointerEvents = 'none'; row.style.opacity = '0.6'; }
+    if((result.remaining||[]).length === 0){
+      setTimeout(()=>{
+        document.getElementById('doc-upload-body').innerHTML = '<h2>Danke! ✓</h2><p class="note">Alle angeforderten Dokumente wurden hochgeladen.</p>';
+      }, 900);
+    }
+  }catch(ex){
+    console.error('Upload fehlgeschlagen:', ex);
+    if(statusEl) statusEl.textContent = '❌ Fehler beim Hochladen';
+  }
+}
 async function initOfferConfirmPage(token){
   const page = document.getElementById('offer-confirm-page');
   const body = document.getElementById('offer-confirm-body');
@@ -15458,6 +15541,7 @@ async function confirmCustomOfferPublic(token){
 // Baustein F: derselbe Gedanke gilt fuer den "Rate Rydanu"-Link aus der Bewertungs-Erinnerungsmail.
 const _offerToken = new URLSearchParams(location.search).get('offer');
 const _pageMsgToken = new URLSearchParams(location.search).get('msg');
+const _docUploadToken = new URLSearchParams(location.search).get('docupload');
 const _wantsRatingsPage = new URLSearchParams(location.search).get('ratings') === '1';
 const _prBookingFromLink = new URLSearchParams(location.search).get('prBooking');
 // Villa Partner Phase 1: Slug entweder aus schoenem Pfad rydanu.com/v/<slug> (Vercel-Rewrite liefert
@@ -15482,6 +15566,9 @@ if(_villaSlug){
 } else if(_pageMsgToken){
   document.getElementById('site-lock-gate').style.display = 'none';
   initPageMessagePublicView(_pageMsgToken);
+} else if(_docUploadToken){
+  document.getElementById('site-lock-gate').style.display = 'none';
+  initDocUploadPage(_docUploadToken);
 } else if(_wantsRatingsPage){
   // Bugfix: die Bewertungsseite liegt (anders als die Angebots-Bestaetigungsseite) INNERHALB von
   // #site-content -- das musste hier zusaetzlich sichtbar gemacht werden, sonst blieb alles leer/weiss,
@@ -16303,7 +16390,7 @@ async function populateAdminDocumentsSelect(){
   const { data, error } = await supabaseClient.from('drivers').select('id, name, lw_number, status').order('status').order('name');
   if(error){ console.error('Fahrerliste für Dokumente konnte nicht geladen werden:', error); return; }
   sel.innerHTML = (data||[]).map(d => {
-    const statusLabel = d.status==='pending' ? '⏳ Pending' : (d.status==='approved' ? '✓ Approved' : '✕ Rejected');
+    const statusLabel = d.status==='pending' ? '⏳ Ausstehend' : (d.status==='approved' ? '✓ Freigeschaltet' : '✕ Abgelehnt');
     return `<option value="${d.id}">${escapeHtml(d.name)} (${d.lw_number||'—'}) — ${statusLabel}</option>`;
   }).join('');
   if(current && sel.querySelector(`option[value="${current}"]`)) sel.value = current;
@@ -16316,7 +16403,7 @@ async function renderAdminDocuments(){
   const driverId = sel ? sel.value : '';
   if(!driverId){ el.innerHTML = `<div class="empty-state">Kein Fahrer vorhanden.</div>`; return; }
   el.innerHTML = '<p class="note" style="padding:14px 20px;">⏳ Lade Dokumente...</p>';
-  const { data: driver, error } = await supabaseClient.from('drivers').select('name, documents, docs_requested, docs_resubmitted').eq('id', driverId).single();
+  const { data: driver, error } = await supabaseClient.from('drivers').select('name, phone, documents, docs_requested, docs_resubmitted').eq('id', driverId).single();
   if(error){ el.innerHTML = '<p class="note" style="padding:14px 20px;">Dokumente konnten nicht geladen werden.</p>'; return; }
   const docs = driver.documents || {};
   const requested = driver.docs_requested || [];
@@ -16342,12 +16429,19 @@ async function renderAdminDocuments(){
     const reupCol = alreadyRequested
       ? `<span class="note" style="margin-left:10px; color:var(--teal); font-weight:600;">⏳ Bereits angefordert</span>`
       : `<button type="button" class="link-btn" style="margin-left:10px;" onclick="requestDocReupload('${driverId}','${f.key}','${escapeHtml(f.label)}')">🔁 Erneut anfordern</button>`;
+    // 24.8. (Joerg-Wunsch): zusaetzlich per WhatsApp anfordern, mit direktem Upload-Link ohne
+    // Login -- der Fahrer haengt sonst leicht in seinem ungelesenen Postfach fest, weil er mitten
+    // in der Registrierung nicht von sich aus zurueck in die App schaut. Nur sichtbar, wenn eine
+    // Telefonnummer hinterlegt ist.
+    const waCol = driver.phone
+      ? `<button type="button" class="link-btn" style="margin-left:10px;" onclick="requestDocReuploadWhatsApp('${driverId}','${f.key}','${escapeHtml(f.label)}','${escapeHtml(driver.phone)}')">📱 Per WhatsApp anfordern</button>`
+      : '';
     if(!path){
-      return `<div class="booking-row"><div><div class="who">${f.icon} ${f.label}${freshBadge}</div></div><span class="note">Nicht hochgeladen</span>${reupCol}</div>`;
+      return `<div class="booking-row"><div><div class="who">${f.icon} ${f.label}${freshBadge}</div></div><span class="note">Nicht hochgeladen</span>${reupCol}${waCol}</div>`;
     }
     const { data: signed, error: signErr } = await supabaseClient.storage.from('driver-documents').createSignedUrl(path, 86400);
     if(signErr || !signed){
-      return `<div class="booking-row"><div><div class="who">${f.icon} ${f.label}${freshBadge}</div></div><span class="note">Link konnte nicht erzeugt werden</span>${reupCol}</div>`;
+      return `<div class="booking-row"><div><div class="who">${f.icon} ${f.label}${freshBadge}</div></div><span class="note">Link konnte nicht erzeugt werden</span>${reupCol}${waCol}</div>`;
     }
     const ext = (path.split('.').pop() || 'dat').toLowerCase();
     const filename = `${driverNameSafe}_${f.key}.${ext}`;
@@ -16355,7 +16449,7 @@ async function renderAdminDocuments(){
       <div style="display:flex; align-items:center;">
         <a href="${signed.signedUrl}" target="_blank" rel="noopener">Ansehen ↗</a>
         <button type="button" class="link-btn" style="margin-left:10px;" onclick="downloadDriverDocument('${signed.signedUrl}', '${filename}')">⬇️ Herunterladen</button>
-        ${reupCol}
+        ${reupCol}${waCol}
       </div>
     </div>`;
   }));
@@ -16397,6 +16491,32 @@ async function requestDocReupload(driverId, docKey, docLabel){
   if(msgErr){ console.error('Nachricht konnte nicht gesendet werden:', msgErr); alert('Fehler: Nachricht konnte nicht gesendet werden. ' + describeAdminActionError(msgErr)); return; }
   await renderAdminDocuments();
   alert('Nachricht mit Upload-Funktion wurde an den Fahrer geschickt ✓');
+}
+// Dokument per WhatsApp anfordern (24.8., Joerg-Wunsch): macht dasselbe wie requestDocReupload
+// (docs_requested setzen + Postfach-Nachricht), oeffnet zusaetzlich WhatsApp mit einem
+// Login-freien Upload-Link (Magic-Link-Token aus driver_doc_upload_links, ein Token pro Fahrer,
+// wird beim ersten Mal erzeugt und danach wiederverwendet -- bleibt also auch fuer kuenftige
+// Anforderungen gueltig).
+async function requestDocReuploadWhatsApp(driverId, docKey, docLabel, driverPhone){
+  if(!confirm(`"${docLabel}" per WhatsApp anfordern? Öffnet WhatsApp mit einer fertigen Nachricht inkl. Upload-Link (kein Login für den Fahrer nötig).`)) return;
+  const { data: driverRow, error: fetchErr } = await supabaseClient.from('drivers').select('docs_requested').eq('id', driverId).single();
+  if(fetchErr){ console.error('Fahrer konnte nicht geladen werden:', fetchErr); alert('Fehler beim Laden des Fahrers.'); return; }
+  const current = driverRow.docs_requested || [];
+  if(!current.includes(docKey)){
+    const updated = [...current, docKey];
+    const { error: updErr } = await supabaseClient.from('drivers').update({ docs_requested: updated }).eq('id', driverId);
+    if(updErr){ console.error('docs_requested konnte nicht gesetzt werden:', updErr); alert('Fehler: ' + describeAdminActionError(updErr)); return; }
+    const subject = `Bitte erneut hochladen: ${docLabel}`;
+    const body = `Bitte lade dein Dokument "${docLabel}" noch einmal hoch — das aktuell hinterlegte Dokument konnte nicht akzeptiert werden (z.B. unleserlich oder falsches Dokument). Öffne diese Nachricht in deinem Posteingang, dort kannst du die Datei direkt hochladen.`;
+    const { error: msgErr } = await supabaseClient.from('driver_messages').insert({ driver_id: driverId, type:'doc_request', subject, body });
+    if(msgErr){ console.error('Nachricht konnte nicht gesendet werden:', msgErr); }
+  }
+  const { data: token, error: tokenErr } = await supabaseClient.rpc('get_or_create_doc_upload_link', { p_driver_id: driverId });
+  if(tokenErr || !token){ console.error('Upload-Link konnte nicht erzeugt werden:', tokenErr); alert('Fehler: Upload-Link konnte nicht erzeugt werden.'); return; }
+  const link = location.origin + location.pathname + '?docupload=' + token;
+  const text = `Hi! Bitte lade dein Dokument "${docLabel}" noch einmal bei Rydanu hoch — direkt hier, kein Login nötig: ${link}`;
+  window.open(waCallLink(driverPhone) + '?text=' + encodeURIComponent(text), '_blank');
+  await renderAdminDocuments();
 }
 // ---- echter Admin-Bereich (Baustein 9a): ausstehende Fahrer freischalten/ablehnen ----
 // Nachbesserung (3. August): Root-Cause-Fix — viele Admin-Funktionen prüften bisher
@@ -17944,7 +18064,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v330</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v331</div>
 
 </body>
 </html>
