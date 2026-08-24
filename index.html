@@ -1992,6 +1992,8 @@
         <input type="text" id="auth-signup-seats" inputmode="numeric" placeholder="Seats" class="auth-input" data-i18n-placeholder="auth_signup_seats_placeholder">
         <input type="text" id="auth-signup-plate" placeholder="License plate *" class="auth-input" data-i18n-placeholder="auth_signup_plate_placeholder">
         <input type="text" id="auth-signup-color" placeholder="Vehicle color *" class="auth-input" data-i18n-placeholder="auth_signup_color_placeholder">
+        <input type="text" id="auth-signup-address" placeholder="Full address (for invoices) *" class="auth-input" data-i18n-placeholder="auth_signup_address_placeholder">
+        <input type="text" id="auth-signup-taxnumber" placeholder="Tax number (optional)" class="auth-input" data-i18n-placeholder="auth_signup_taxnumber_placeholder">
         <input type="text" id="auth-signup-referral" placeholder="Referral code (optional) — e.g. RY-104" class="auth-input" data-i18n-placeholder="auth_signup_referral_placeholder">
 
         <div class="doc-upload-section">
@@ -2715,6 +2717,7 @@
           <label>MwSt-Satz in % (0 = keine)</label>
           <input type="number" id="inv-form-vat-rate" min="0" step="0.1" value="0" oninput="recalcInvoiceTotals()">
         </div>
+        <label class="nl-service-check" style="margin-bottom:14px;"><input type="checkbox" id="inv-form-vat-exempt" onchange="onVatExemptToggle()"> <span>MwSt-befreit (unabhängig vom eingetragenen Satz — Rechnung weist dann 0% MwSt aus)</span></label>
 
         <label style="font-weight:600; display:block; margin:14px 0 6px;">Positionen</label>
         <div id="inv-form-items"></div>
@@ -2797,6 +2800,14 @@
         </div>
       </div>
       <div class="form-field">
+        <label>Adresse (Pflicht für Rechnungen)</label>
+        <input type="text" id="villa-new-address" placeholder="z.B. Jl. Sunset Road No. 5, Seminyak, Bali">
+      </div>
+      <div class="form-field">
+        <label>Steuernummer (optional)</label>
+        <input type="text" id="villa-new-taxnumber">
+      </div>
+      <div class="form-field">
         <label>Provisionssatz der Villa (5–20%, vom Fahrpreis)</label>
         <input type="number" id="villa-new-commission" min="5" max="20" step="0.5" value="10" placeholder="z.B. 10">
       </div>
@@ -2848,6 +2859,14 @@
         <div class="form-field">
           <label>Provisionssatz der Villa (5–20%)</label>
           <input type="number" id="villa-edit-commission" min="5" max="20" step="0.5">
+        </div>
+        <div class="form-field">
+          <label>Adresse (Pflicht für Rechnungen)</label>
+          <input type="text" id="villa-edit-address" placeholder="z.B. Jl. Sunset Road No. 5, Seminyak, Bali">
+        </div>
+        <div class="form-field">
+          <label>Steuernummer (optional)</label>
+          <input type="text" id="villa-edit-taxnumber">
         </div>
         <button type="button" class="period-btn" onclick="saveVillaEdits()" style="background:var(--gold); border-color:var(--gold); color:var(--ink); font-weight:700;">Änderungen speichern</button>
         <button type="button" class="link-btn" id="villa-edit-toggle-active-btn" onclick="toggleVillaActiveFromEditForm()" style="margin-top:8px;"></button>
@@ -3240,6 +3259,14 @@
       <div class="form-field">
         <label data-i18n-html="lbl_whatsapp">WhatsApp number <span class="optional">(for booking confirmation)</span></label>
         <input type="tel" id="ep-phone" placeholder="+62 812 3456 7890">
+      </div>
+      <div class="form-field">
+        <label data-i18n="ep_address_label">Full address (required for invoices)</label>
+        <input type="text" id="ep-address" placeholder="e.g. Jl. Raya Ubud No. 12, Gianyar, Bali">
+      </div>
+      <div class="form-field">
+        <label data-i18n="ep_taxnumber_label">Tax number (optional)</label>
+        <input type="text" id="ep-taxnumber">
       </div>
       <div class="form-field" id="ep-push-field" style="display:none; background:var(--teal-soft); border:1px solid var(--teal); border-radius:10px; padding:12px 14px;">
         <label class="nl-service-check" style="margin-bottom:0;"><input type="checkbox" id="ep-push-toggle"> <span data-i18n-html="ep_push_toggle_label">Push notifications for new requests (e.g. <span style="white-space:nowrap;">Villa Partner bookings</span>)</span></label>
@@ -9644,17 +9671,20 @@ async function createVillaPartner(){
   const contactPhone = document.getElementById('villa-new-contact-phone').value.trim() || null;
   const contactEmail = document.getElementById('villa-new-contact-email').value.trim() || null;
   const region = document.getElementById('villa-new-region').value;
+  const address = document.getElementById('villa-new-address').value.trim();
+  const taxNumber = document.getElementById('villa-new-taxnumber').value.trim() || null;
   const commission = Number(document.getElementById('villa-new-commission').value);
   const statusEl = document.getElementById('villa-new-status');
   statusEl.style.color = 'var(--danger)';
   if(!name || !slug){ statusEl.textContent = 'Bitte Name und Link-Kennung ausfüllen.'; return; }
   if(!/^[a-z0-9-]+$/.test(slug)){ statusEl.textContent = 'Link-Kennung darf nur Kleinbuchstaben, Ziffern und Bindestriche enthalten.'; return; }
+  if(!address){ statusEl.textContent = 'Bitte die Adresse angeben (Pflichtangabe für Rechnungen).'; return; }
   if(!commission || commission < 5 || commission > 20){ statusEl.textContent = 'Provisionssatz muss zwischen 5 und 20% liegen.'; return; }
   statusEl.textContent = 'Speichere…';
   statusEl.style.color = '';
   const { data: newVilla, error } = await supabaseClient.from('villa_partners').insert({
     name, slug, contact_name: contactName, contact_phone: contactPhone, contact_email: contactEmail,
-    region, commission_percent: commission
+    region, commission_percent: commission, address, tax_number: taxNumber
   }).select('id').single();
   if(error){
     console.error('Villa konnte nicht angelegt werden:', error);
@@ -9749,6 +9779,8 @@ function acceptVillaApplication(applicationId){
   document.getElementById('villa-new-contact-phone').value = a.contact_phone || '';
   document.getElementById('villa-new-contact-email').value = a.contact_email || '';
   document.getElementById('villa-new-region').value = a.region;
+  document.getElementById('villa-new-address').value = a.address || '';
+  document.getElementById('villa-new-taxnumber').value = a.tax_number || '';
   suggestVillaSlug();
   document.getElementById('villa-new-status').style.color = 'var(--teal)';
   document.getElementById('villa-new-status').textContent = 'Bewerbung übernommen — bitte Provisionssatz prüfen und unten auf "Villa anlegen" klicken.';
@@ -9817,6 +9849,8 @@ async function loadVillaIntoManageForm(){
   document.getElementById('villa-edit-contact-phone').value = v.contact_phone || '';
   document.getElementById('villa-edit-contact-email').value = v.contact_email || '';
   document.getElementById('villa-edit-commission').value = v.commission_percent;
+  document.getElementById('villa-edit-address').value = v.address || '';
+  document.getElementById('villa-edit-taxnumber').value = v.tax_number || '';
   document.getElementById('villa-edit-status').textContent = '';
   const activeBtn = document.getElementById('villa-edit-toggle-active-btn');
   activeBtn.textContent = v.active ? '🚫 Villa deaktivieren' : '✓ Villa aktivieren';
@@ -9867,16 +9901,20 @@ async function saveVillaEdits(){
   if(!currentManagedVillaId) return;
   const name = document.getElementById('villa-edit-name').value.trim();
   const commission = Number(document.getElementById('villa-edit-commission').value);
+  const address = document.getElementById('villa-edit-address').value.trim();
+  const taxNumber = document.getElementById('villa-edit-taxnumber').value.trim();
   const statusEl = document.getElementById('villa-edit-status');
   if(!name){ statusEl.style.color = 'var(--danger)'; statusEl.textContent = 'Name darf nicht leer sein.'; return; }
   if(!commission || commission < 5 || commission > 20){ statusEl.style.color = 'var(--danger)'; statusEl.textContent = 'Provisionssatz muss zwischen 5 und 20% liegen.'; return; }
+  if(!address){ statusEl.style.color = 'var(--danger)'; statusEl.textContent = 'Bitte die Adresse angeben (Pflichtangabe für Rechnungen).'; return; }
   const { error } = await supabaseClient.from('villa_partners').update({
     name,
     contact_name: document.getElementById('villa-edit-contact-name').value.trim() || null,
     region: document.getElementById('villa-edit-region').value,
     contact_phone: document.getElementById('villa-edit-contact-phone').value.trim() || null,
     contact_email: document.getElementById('villa-edit-contact-email').value.trim() || null,
-    commission_percent: commission
+    commission_percent: commission,
+    address, tax_number: taxNumber || null
   }).eq('id', currentManagedVillaId);
   if(error){ console.error('Villa konnte nicht aktualisiert werden:', error); statusEl.style.color = 'var(--danger)'; statusEl.textContent = 'Fehler beim Speichern.'; return; }
   statusEl.style.color = 'var(--teal)';
@@ -11071,6 +11109,8 @@ function openEditProfileReal(){
   document.getElementById('ep-paylink').value = pay.link || '';
   document.getElementById('ep-qris').checked = pay.qris !== false;
   document.getElementById('ep-phone').value = d.phone || '';
+  document.getElementById('ep-address').value = d.address || '';
+  document.getElementById('ep-taxnumber').value = d.tax_number || '';
   document.getElementById('ep-error').textContent = '';
   const pushAvailable = ('serviceWorker' in navigator && 'PushManager' in window);
   document.getElementById('ep-push-field').style.display = pushAvailable ? 'block' : 'none';
@@ -11147,6 +11187,11 @@ async function saveEditProfileReal(){
     document.getElementById('ep-error').textContent = t('ep_err_name');
     return;
   }
+  const address = document.getElementById('ep-address').value.trim();
+  if(!address){
+    document.getElementById('ep-error').textContent = t('ep_err_address');
+    return;
+  }
   if(epSelectedServiceRegions.length === 0){
     document.getElementById('ep-error').textContent = t('rd_serviceregions_err');
     return;
@@ -11178,9 +11223,10 @@ async function saveEditProfileReal(){
     link: document.getElementById('ep-paylink').value.trim()
   };
   const phone = document.getElementById('ep-phone').value.trim();
+  const taxNumber = document.getElementById('ep-taxnumber').value.trim();
   const villa_exclusive_opt_in = document.getElementById('ep-villa-optin-toggle').checked;
 
-  const updatePayload = { name, region: island, home_area, languages, services, vehicle, payment, phone, villa_exclusive_opt_in };
+  const updatePayload = { name, region: island, home_area, languages, services, vehicle, payment, phone, villa_exclusive_opt_in, address, tax_number: taxNumber || null };
   if(island === 'lombok'){ updatePayload.service_regions_lombok = currentRegions; }
   else { updatePayload.service_regions = currentRegions; }
 
@@ -11263,7 +11309,7 @@ const translations = {
     lbl_rating: "Rating", lbl_price: "Price", lbl_not_included: "Not included", lbl_driver: "Driver",
     lbl_date: "Date", lbl_time: "Time", lbl_guests: "Guests", lbl_notes_for_driver: "Notes for the driver", btn_whatsapp_contact: "Contact via WhatsApp", join_rydanu_eyebrow: "Join Rydanu", register_driver_modal_title: "Register as new driver", pm_conv_not_found_title: "Conversation not found", pm_conv_not_found_body: "This link may be invalid, or the conversation may have been removed. Please contact your driver directly.", pm_conv_with_prefix: "Your conversation with", pm_your_reply_label: "Your reply", pm_reply_placeholder: "Write your reply...", pm_send_reply_btn: "Send reply", pm_write_message_first: "Please write a message first.", oc_offer_not_found_title: "Offer not found", oc_offer_not_found_body: "This link may be invalid, or the offer may have been withdrawn. Please contact your driver directly.", oc_already_confirmed_title: "Already confirmed", oc_already_confirmed_body: "You already confirmed this booking — see you soon!", oc_no_longer_available_title: "This offer is no longer available", oc_no_longer_available_body: "Please contact your driver directly for an updated offer.", oc_offer_from_prefix: "Your tour offer from", oc_confirm_btn: "Confirm this booking", oc_confirm_payment_note: "By confirming, you agree to arrange payment directly with your driver, as usual on Rydanu.", oc_decline_btn: "Decline this offer", oc_decline_confirm: "Decline this offer? This offer will be closed and cannot be un-declined — if you still want a transfer, you will need to submit a new request.", oc_declined_title: "Offer declined", oc_declined_body: "Your driver has been informed. This offer is now closed and can't be confirmed later — if you'd still like a transfer or tour, please submit a new request and a driver will get back to you with a fresh offer.", oc_confirm_err: "Something went wrong confirming this booking. Please try again, or contact your driver directly.", lbl_total: "Total tour price", lbl_pickup: "Pickup", lbl_tour_singular: "tour", lbl_tour_plural: "tours", lbl_rating_new: "New",
     lbl_total_price_due: "Total — pay driver directly", lbl_ryvio_fee: "Rydanu fee (10%)", lbl_your_car: "Your driver's car",
-    lbl_fullname: "Full name", lbl_whatsapp: 'WhatsApp number <span class="optional">(for booking confirmation)</span>', ep_eyebrow: "Your profile", ep_title: "Edit profile",
+    lbl_fullname: "Full name", lbl_whatsapp: 'WhatsApp number <span class="optional">(for booking confirmation)</span>', ep_eyebrow: "Your profile", ep_title: "Edit profile", ep_address_label: "Full address (required for invoices)", ep_taxnumber_label: "Tax number (optional)",
     lbl_pickup_loc: "Pickup location", lbl_pickup_dropoff_loc: "Pickup / drop-off location", lbl_airport_destination: "Destination region", lbl_transfer_destination: "Destination", lbl_pickup_region: "Your pickup region",
     lbl_balance: "Balance — pay driver in cash on the day",
     pay_direct_hint: "💵 You pay your driver directly in cash when you meet. No payment is due now, and Rydanu never handles your money.",
@@ -11284,6 +11330,7 @@ const translations = {
     reg_terms_body: "<strong>1. Bookings only through Rydanu.</strong> If a traveler found you via Rydanu, the tour must be booked and paid through Rydanu. Arranging payment privately to bypass the platform is not allowed and can lead to account suspension.<br><br><strong>2. Fees.</strong> A small platform fee applies to every booking you accept, based on the tour price, and is charged to your balance immediately when you accept — see \"Fees & billing\" in your dashboard.<br><br><strong>3. Cancellations.</strong> If a guest doesn't show up, the platform fee already charged for that booking is not refunded. If you cancel a confirmed tour yourself, a fixed cancellation fee of IDR 30,000 applies.<br><br><strong>4. Keep your profile accurate.</strong> Vehicle, documents, service regions and prices must reflect reality. Update your listing whenever your vehicle or availability changes.<br><br><strong>5. Conduct.</strong> Be respectful, punctual and safe. Repeated cancellations, poor reviews or safety issues can lead to suspension or removal from Rydanu.<br><br><strong>6. Payments.</strong> Rydanu never handles tour payments — guests pay you directly, in cash or via the payment details you provide (QRIS / payment link). Rydanu is not liable for errors in the details you submit.",
     reg_terms_checkbox_label: "I have read and accept Rydanu's terms & conditions for drivers.", reg_terms_submit_btn: "Accept & submit registration",
     ep_err_name: "Name cannot be empty.",
+    ep_err_address: "Please enter your full address (required for invoices).",
     map_note_dropoff_booking: "Marker shows the general drop-off area — your driver will confirm the exact address after booking.", map_note_dropoff_general: "Marker shows the general drop-off area.",
     form_err_name_email: "Please enter your name and email to continue.", form_err_pickup: "Please enter your pickup location (hotel or address) before continuing — your driver needs it to plan the tour.", form_err_required_all: "Please fill in all fields (WhatsApp number, date and pickup location) — only luggage and notes are optional.",
     eyebrow_profile: "Driver profile", eyebrow_trip: "Trip details", eyebrow_payment: "Payment", eyebrow_confirm: "All set",
@@ -11498,8 +11545,8 @@ const translations = {
     auth_err_missing_fields: "Please enter phone/email and password.", auth_err_invalid_phone: "Please enter a valid phone number.", auth_err_generic: "Something went wrong. Please try again.", auth_err_invalid_credentials: "Phone/email or password is incorrect.", auth_err_already_registered: "An account already exists for this phone number — please log in.", auth_err_password_too_short: "Password must be at least 6 characters.",
     fp_err_no_phone: "Please enter your phone number first.", fp_err_no_email: "Please enter your email address.", generic_please_wait: "One moment...", fp_err_prefix: "Error: ", fp_email_sent_success: "Email sent ✓ — please open the link in the email (check your spam folder too).",
     np_err_mismatch: "The two passwords don't match.", np_success_alert: "New password saved ✓ You're now logged in.", np_title: "Set new password", np_label_new: "New password (min. 6 characters)", np_placeholder_new: "New password", np_label_confirm: "Repeat new password", np_placeholder_confirm: "Repeat password", np_save_btn: "Save password",
-    auth_login_title: "🚗 Driver area", auth_login_note: "Log in with phone number<br>(0062&nbsp;/&nbsp;+62) or email and password.", auth_login_id_placeholder: "Phone number or email", auth_password_placeholder: "Password", auth_login_btn: "Log in", auth_forgot_link: "Forgot password?", auth_no_account_prefix: "No account yet? ", auth_register_link: "Register now", auth_signup_note: "Create a new driver account.", auth_signup_name_placeholder: "Your name *", auth_signup_phone_placeholder: "Phone / WhatsApp *", auth_signup_password_placeholder: "Password (min. 6 characters) *", auth_signup_email_placeholder: "Email (optional)", auth_signup_car_placeholder: "Model — e.g. Toyota Avanza", auth_signup_seats_placeholder: "Seats", auth_signup_plate_placeholder: "License plate *", auth_signup_color_placeholder: "Vehicle color *", auth_signup_referral_placeholder: "Referral code (optional) — e.g. RY-104", auth_docs_title: "Upload documents — all 4 are required", auth_doc_license: "Driver's license *", auth_doc_insurance: "Insurance *", auth_doc_papers: "Vehicle papers *", auth_doc_selfie: "Selfie *", auth_docs_uploaded_suffix: " / 4 uploaded", auth_docs_all_needed_suffix: " — all 4 needed", auth_signup_btn: "Register", auth_have_account_prefix: "Already have an account? ", auth_loading_text: "⏳ One moment...",
-    va_title: "Become a Rydanu Villa Partner", va_intro: "Your guests can then request a driver for transfers directly via a personal link — free for you, you earn a commission per successful booking. We'll get in touch shortly after you sign up.", va_name_label: "Villa / hotel name", va_name_placeholder: "e.g. Sunset Bali Villas", va_contact_label: "Contact person", va_contact_placeholder: "e.g. Made", va_region_label: "Region", va_phone_label: "WhatsApp / phone", va_phone_placeholder: "e.g. +62812...", va_email_label: "Email", va_email_placeholder: "e.g. manager@villa.com", va_message_label: "Message", va_message_optional: "(optional)", va_submit_btn: "Send request", va_err_missing_fields: "Please fill in name, WhatsApp number, and email.", va_err_generic: "Something went wrong — please try again.", va_success_title: "✓ Thank you!", va_success_body: "Your application has reached us — we'll be in touch shortly.",
+    auth_login_title: "🚗 Driver area", auth_login_note: "Log in with phone number<br>(0062&nbsp;/&nbsp;+62) or email and password.", auth_login_id_placeholder: "Phone number or email", auth_password_placeholder: "Password", auth_login_btn: "Log in", auth_forgot_link: "Forgot password?", auth_no_account_prefix: "No account yet? ", auth_register_link: "Register now", auth_signup_note: "Create a new driver account.", auth_signup_name_placeholder: "Your name *", auth_signup_phone_placeholder: "Phone / WhatsApp *", auth_signup_password_placeholder: "Password (min. 6 characters) *", auth_signup_email_placeholder: "Email (optional)", auth_signup_car_placeholder: "Model — e.g. Toyota Avanza", auth_signup_seats_placeholder: "Seats", auth_signup_plate_placeholder: "License plate *", auth_signup_color_placeholder: "Vehicle color *", auth_signup_address_placeholder: "Full address (for invoices) *", auth_signup_taxnumber_placeholder: "Tax number (optional)", auth_signup_referral_placeholder: "Referral code (optional) — e.g. RY-104", auth_docs_title: "Upload documents — all 4 are required", auth_doc_license: "Driver's license *", auth_doc_insurance: "Insurance *", auth_doc_papers: "Vehicle papers *", auth_doc_selfie: "Selfie *", auth_docs_uploaded_suffix: " / 4 uploaded", auth_docs_all_needed_suffix: " — all 4 needed", auth_signup_btn: "Register", auth_have_account_prefix: "Already have an account? ", auth_loading_text: "⏳ One moment...",
+    va_title: "Become a Rydanu Villa Partner", va_intro: "Your guests can then request a driver for transfers directly via a personal link — free for you, you earn a commission per successful booking. We'll get in touch shortly after you sign up.", va_name_label: "Villa / hotel name", va_name_placeholder: "e.g. Sunset Bali Villas", va_contact_label: "Contact person", va_contact_placeholder: "e.g. Made", va_region_label: "Region", va_phone_label: "WhatsApp / phone", va_phone_placeholder: "e.g. +62812...", va_email_label: "Email", va_email_placeholder: "e.g. manager@villa.com", va_address_label: "Address", va_address_placeholder: "e.g. Jl. Sunset Road No. 5, Seminyak, Bali", va_taxnumber_label: "Tax number", va_message_label: "Message", va_message_optional: "(optional)", va_submit_btn: "Send request", va_err_missing_fields: "Please fill in name, WhatsApp number, email, and address.", va_err_generic: "Something went wrong — please try again.", va_success_title: "✓ Thank you!", va_success_body: "Your application has reached us — we'll be in touch shortly.",
     reg_lombok_kuta: "Kuta Lombok (South)", reg_lombok_senggigi: "Senggigi (West)", reg_lombok_gili: "Gili Islands (North)", reg_lombok_sembalun: "Sembalun (East)",
     nl_airport_regions_title: "Airport destination regions — set a price per region (leave empty if not offered)",
     nl_transfer_regions_title: "Transfer destinations — set a price per destination (leave empty if not offered)",
@@ -11609,7 +11656,7 @@ const translations = {
     lbl_rating: "Bewertung", lbl_price: "Preis", lbl_not_included: "Nicht enthalten", lbl_driver: "Fahrer",
     lbl_date: "Datum", lbl_time: "Uhrzeit", lbl_guests: "Gäste", lbl_notes_for_driver: "Notizen für den Fahrer", btn_whatsapp_contact: "Per WhatsApp kontaktieren", join_rydanu_eyebrow: "Rydanu beitreten", register_driver_modal_title: "Als neuer Fahrer registrieren", pm_conv_not_found_title: "Unterhaltung nicht gefunden", pm_conv_not_found_body: "Dieser Link ist evtl. ungültig, oder die Unterhaltung wurde entfernt. Bitte kontaktiere deinen Fahrer direkt.", pm_conv_with_prefix: "Deine Unterhaltung mit", pm_your_reply_label: "Deine Antwort", pm_reply_placeholder: "Antwort schreiben...", pm_send_reply_btn: "Antwort senden", pm_write_message_first: "Bitte zuerst eine Nachricht schreiben.", oc_offer_not_found_title: "Angebot nicht gefunden", oc_offer_not_found_body: "Dieser Link ist evtl. ungültig, oder das Angebot wurde zurückgezogen. Bitte kontaktiere deinen Fahrer direkt.", oc_already_confirmed_title: "Bereits bestätigt", oc_already_confirmed_body: "Du hast diese Buchung bereits bestätigt — bis bald!", oc_no_longer_available_title: "Dieses Angebot ist nicht mehr verfügbar", oc_no_longer_available_body: "Bitte kontaktiere deinen Fahrer direkt für ein aktuelles Angebot.", oc_offer_from_prefix: "Dein Tour-Angebot von", oc_confirm_btn: "Diese Buchung bestätigen", oc_confirm_payment_note: "Mit der Bestätigung erklärst du dich einverstanden, die Zahlung wie gewohnt bei Rydanu direkt mit deinem Fahrer zu klären.", oc_decline_btn: "Angebot ablehnen", oc_decline_confirm: "Dieses Angebot ablehnen? Es wird geschlossen und kann danach nicht mehr bestätigt werden — falls du weiterhin einen Transfer möchtest, musst du eine neue Anfrage stellen.", oc_declined_title: "Angebot abgelehnt", oc_declined_body: "Dein Fahrer wurde informiert. Dieses Angebot ist jetzt geschlossen und kann später nicht mehr bestätigt werden — falls du weiterhin einen Transfer oder eine Tour möchtest, stelle bitte eine neue Anfrage, ein Fahrer meldet sich dann mit einem neuen Angebot.", oc_confirm_err: "Bei der Bestätigung ist etwas schiefgelaufen. Bitte nochmal versuchen oder deinen Fahrer direkt kontaktieren.", lbl_total: "Gesamtpreis der Tour", lbl_pickup: "Abholung", lbl_tour_singular: "Tour", lbl_tour_plural: "Touren", lbl_rating_new: "Neu",
     lbl_total_price_due: "Gesamtbetrag — direkt an den Fahrer", lbl_ryvio_fee: "Rydanu-Gebühr (10%)", lbl_your_car: "Das Auto deines Fahrers",
-    lbl_fullname: "Vollständiger Name", lbl_whatsapp: 'WhatsApp-Nummer <span class="optional">(für die Buchungsbestätigung)</span>', ep_eyebrow: "Dein Profil", ep_title: "Profil bearbeiten",
+    lbl_fullname: "Vollständiger Name", lbl_whatsapp: 'WhatsApp-Nummer <span class="optional">(für die Buchungsbestätigung)</span>', ep_eyebrow: "Dein Profil", ep_title: "Profil bearbeiten", ep_address_label: "Vollständige Adresse (Pflichtangabe für Rechnungen)", ep_taxnumber_label: "Steuernummer (optional)",
     lbl_pickup_loc: "Abholort", lbl_pickup_dropoff_loc: "Abhol-/Zielort", lbl_airport_destination: "Zielregion", lbl_transfer_destination: "Ziel", lbl_pickup_region: "Deine Abholregion",
     lbl_balance: "Restbetrag — bar an den Fahrer am Tourtag",
     pay_direct_hint: "💵 Du bezahlst deinen Fahrer direkt in bar, wenn ihr euch trefft. Jetzt ist nichts fällig, Rydanu verwaltet niemals dein Geld.",
@@ -11630,6 +11677,7 @@ const translations = {
     reg_terms_body: "<strong>1. Buchungen nur über Rydanu.</strong> Wenn ein Reisender dich über Rydanu gefunden hat, muss die Tour über Rydanu gebucht und bezahlt werden. Eine private Zahlung am System vorbei ist nicht erlaubt und kann zur Sperrung deines Kontos führen.<br><br><strong>2. Gebühren.</strong> Für jede Buchung, die du annimmst, fällt eine kleine, preisbasierte Plattformgebühr an — sie wird deinem Guthaben sofort bei Annahme belastet. Details unter \"Gebühren & Abrechnung\" im Dashboard.<br><br><strong>3. Stornierungen.</strong> Erscheint ein Gast nicht, wird die für diese Buchung bereits belastete Plattformgebühr nicht erstattet. Sagst du selbst eine bestätigte Tour ab, fällt eine feste Stornogebühr von IDR 30.000 an.<br><br><strong>4. Profil aktuell halten.</strong> Fahrzeug, Dokumente, Abholregionen und Preise müssen der Realität entsprechen. Aktualisiere dein Angebot, sobald sich Fahrzeug oder Verfügbarkeit ändern.<br><br><strong>5. Verhalten.</strong> Sei respektvoll, pünktlich und sicherheitsbewusst. Wiederholte Stornierungen, schlechte Bewertungen oder Sicherheitsprobleme können zur Sperrung oder zum Ausschluss von Rydanu führen.<br><br><strong>6. Zahlungen.</strong> Rydanu wickelt niemals Tour-Zahlungen ab — Gäste zahlen dich direkt, bar oder über die von dir angegebenen Zahlungsdaten (QRIS / Zahlungslink). Rydanu haftet nicht für Fehler in den von dir übermittelten Angaben.",
     reg_terms_checkbox_label: "Ich habe die Rydanu-Nutzungsbedingungen für Fahrer gelesen und akzeptiere sie.", reg_terms_submit_btn: "Akzeptieren & Registrierung absenden",
     ep_err_name: "Der Name darf nicht leer sein.",
+    ep_err_address: "Bitte deine vollständige Adresse angeben (Pflichtangabe für Rechnungen).",
     map_note_dropoff_booking: "Der Marker zeigt den ungefähren Abholbereich — dein Fahrer bestätigt die genaue Adresse nach der Buchung.", map_note_dropoff_general: "Der Marker zeigt den ungefähren Abholbereich.",
     form_err_name_email: "Bitte gib deinen Namen und deine E-Mail-Adresse ein, um fortzufahren.", form_err_pickup: "Bitte gib deinen Abholort ein (Hotel oder Adresse), bevor du fortfährst — dein Fahrer braucht diese Angabe zur Planung der Tour.", form_err_required_all: "Bitte fülle alle Felder aus (WhatsApp-Nummer, Datum und Abholort) — nur Gepäck und Notizen sind optional.",
     eyebrow_profile: "Fahrerprofil", eyebrow_trip: "Reisedetails", eyebrow_payment: "Zahlung", eyebrow_confirm: "Fertig",
@@ -11844,8 +11892,8 @@ const translations = {
     auth_err_missing_fields: "Bitte Telefonnummer/E-Mail und Passwort eingeben.", auth_err_invalid_phone: "Bitte eine gültige Telefonnummer eingeben.", auth_err_generic: "Etwas ist schiefgelaufen. Bitte nochmal versuchen.", auth_err_invalid_credentials: "Telefonnummer/E-Mail oder Passwort ist falsch.", auth_err_already_registered: "Für diese Telefonnummer existiert schon ein Konto — bitte anmelden.", auth_err_password_too_short: "Das Passwort muss mindestens 6 Zeichen haben.",
     fp_err_no_phone: "Bitte zuerst deine Telefonnummer eingeben.", fp_err_no_email: "Bitte E-Mail-Adresse eingeben.", generic_please_wait: "Einen Moment...", fp_err_prefix: "Fehler: ", fp_email_sent_success: "E-Mail verschickt ✓ — bitte den Link in der Mail öffnen (auch im Spam-Ordner nachschauen).",
     np_err_mismatch: "Die beiden Passwörter stimmen nicht überein.", np_success_alert: "Neues Passwort gespeichert ✓ Du bist jetzt eingeloggt.", np_title: "Neues Passwort setzen", np_label_new: "Neues Passwort (mind. 6 Zeichen)", np_placeholder_new: "Neues Passwort", np_label_confirm: "Neues Passwort wiederholen", np_placeholder_confirm: "Passwort wiederholen", np_save_btn: "Passwort speichern",
-    auth_login_title: "🚗 Fahrer-Bereich", auth_login_note: "Anmeldung mit Telefonnummer<br>(0062&nbsp;/&nbsp;+62) oder E-Mail und Passwort.", auth_login_id_placeholder: "Telefonnummer oder E-Mail", auth_password_placeholder: "Passwort", auth_login_btn: "Anmelden", auth_forgot_link: "Passwort vergessen?", auth_no_account_prefix: "Noch kein Konto? ", auth_register_link: "Jetzt registrieren", auth_signup_note: "Neues Fahrerkonto anlegen.", auth_signup_name_placeholder: "Dein Name *", auth_signup_phone_placeholder: "Telefon / WhatsApp *", auth_signup_password_placeholder: "Passwort (mind. 6 Zeichen) *", auth_signup_email_placeholder: "E-Mail (optional)", auth_signup_car_placeholder: "Modell — z.B. Toyota Avanza", auth_signup_seats_placeholder: "Sitzplätze", auth_signup_plate_placeholder: "Kennzeichen *", auth_signup_color_placeholder: "Fahrzeugfarbe *", auth_signup_referral_placeholder: "Empfehlungs-Code (optional) — z.B. RY-104", auth_docs_title: "Dokumente hochladen — alle 4 sind Pflicht", auth_doc_license: "Führerschein *", auth_doc_insurance: "Versicherung *", auth_doc_papers: "Fahrzeugpapiere *", auth_doc_selfie: "Selfie *", auth_docs_uploaded_suffix: " / 4 hochgeladen", auth_docs_all_needed_suffix: " — alle 4 nötig", auth_signup_btn: "Registrieren", auth_have_account_prefix: "Schon ein Konto? ", auth_loading_text: "⏳ Einen Moment...",
-    va_title: "Rydanu Villa-Partner werden", va_intro: "Ihre Gäste können dann über einen persönlichen Link direkt einen Fahrer für Transfers anfragen — kostenlos für Sie, Sie erhalten eine Provision pro erfolgreicher Buchung. Wir melden uns nach Ihrer Anmeldung kurz bei Ihnen.", va_name_label: "Name der Villa / des Hotels", va_name_placeholder: "z.B. Sunset Bali Villas", va_contact_label: "Ansprechpartner", va_contact_placeholder: "z.B. Made", va_region_label: "Region", va_phone_label: "WhatsApp / Telefon", va_phone_placeholder: "z.B. +62812...", va_email_label: "E-Mail", va_email_placeholder: "z.B. manager@villa.com", va_message_label: "Nachricht", va_message_optional: "(optional)", va_submit_btn: "Anfrage senden", va_err_missing_fields: "Bitte Name, WhatsApp-Nummer und E-Mail ausfüllen.", va_err_generic: "Etwas ist schiefgelaufen — bitte nochmal versuchen.", va_success_title: "✓ Danke!", va_success_body: "Ihre Anmeldung ist bei uns eingegangen — wir melden uns in Kürze bei Ihnen.",
+    auth_login_title: "🚗 Fahrer-Bereich", auth_login_note: "Anmeldung mit Telefonnummer<br>(0062&nbsp;/&nbsp;+62) oder E-Mail und Passwort.", auth_login_id_placeholder: "Telefonnummer oder E-Mail", auth_password_placeholder: "Passwort", auth_login_btn: "Anmelden", auth_forgot_link: "Passwort vergessen?", auth_no_account_prefix: "Noch kein Konto? ", auth_register_link: "Jetzt registrieren", auth_signup_note: "Neues Fahrerkonto anlegen.", auth_signup_name_placeholder: "Dein Name *", auth_signup_phone_placeholder: "Telefon / WhatsApp *", auth_signup_password_placeholder: "Passwort (mind. 6 Zeichen) *", auth_signup_email_placeholder: "E-Mail (optional)", auth_signup_car_placeholder: "Modell — z.B. Toyota Avanza", auth_signup_seats_placeholder: "Sitzplätze", auth_signup_plate_placeholder: "Kennzeichen *", auth_signup_color_placeholder: "Fahrzeugfarbe *", auth_signup_address_placeholder: "Vollständige Adresse (für Rechnungen) *", auth_signup_taxnumber_placeholder: "Steuernummer (optional)", auth_signup_referral_placeholder: "Empfehlungs-Code (optional) — z.B. RY-104", auth_docs_title: "Dokumente hochladen — alle 4 sind Pflicht", auth_doc_license: "Führerschein *", auth_doc_insurance: "Versicherung *", auth_doc_papers: "Fahrzeugpapiere *", auth_doc_selfie: "Selfie *", auth_docs_uploaded_suffix: " / 4 hochgeladen", auth_docs_all_needed_suffix: " — alle 4 nötig", auth_signup_btn: "Registrieren", auth_have_account_prefix: "Schon ein Konto? ", auth_loading_text: "⏳ Einen Moment...",
+    va_title: "Rydanu Villa-Partner werden", va_intro: "Ihre Gäste können dann über einen persönlichen Link direkt einen Fahrer für Transfers anfragen — kostenlos für Sie, Sie erhalten eine Provision pro erfolgreicher Buchung. Wir melden uns nach Ihrer Anmeldung kurz bei Ihnen.", va_name_label: "Name der Villa / des Hotels", va_name_placeholder: "z.B. Sunset Bali Villas", va_contact_label: "Ansprechpartner", va_contact_placeholder: "z.B. Made", va_region_label: "Region", va_phone_label: "WhatsApp / Telefon", va_phone_placeholder: "z.B. +62812...", va_email_label: "E-Mail", va_email_placeholder: "z.B. manager@villa.com", va_address_label: "Adresse", va_address_placeholder: "z.B. Jl. Sunset Road No. 5, Seminyak, Bali", va_taxnumber_label: "Steuernummer", va_message_label: "Nachricht", va_message_optional: "(optional)", va_submit_btn: "Anfrage senden", va_err_missing_fields: "Bitte Name, WhatsApp-Nummer, E-Mail und Adresse ausfüllen.", va_err_generic: "Etwas ist schiefgelaufen — bitte nochmal versuchen.", va_success_title: "✓ Danke!", va_success_body: "Ihre Anmeldung ist bei uns eingegangen — wir melden uns in Kürze bei Ihnen.",
     reg_lombok_kuta: "Kuta Lombok (Süd)", reg_lombok_senggigi: "Senggigi (West)", reg_lombok_gili: "Gili-Inseln (Nord)", reg_lombok_sembalun: "Sembalun (Ost)",
     nl_airport_regions_title: "Flughafen-Zielregionen — Preis pro Region festlegen (leer lassen, wenn nicht angeboten)",
     nl_transfer_regions_title: "Transfer-Ziele — Preis pro Ziel festlegen (leer lassen, wenn nicht angeboten)",
@@ -11955,7 +12003,7 @@ const translations = {
     lbl_rating: "Rating", lbl_price: "Harga", lbl_not_included: "Tidak termasuk", lbl_driver: "Sopir",
     lbl_date: "Tanggal", lbl_time: "Waktu", lbl_guests: "Tamu", lbl_notes_for_driver: "Catatan untuk sopir", btn_whatsapp_contact: "Hubungi via WhatsApp", join_rydanu_eyebrow: "Bergabung dengan Rydanu", register_driver_modal_title: "Daftar sebagai sopir baru", pm_conv_not_found_title: "Percakapan tidak ditemukan", pm_conv_not_found_body: "Tautan ini mungkin tidak valid, atau percakapan telah dihapus. Silakan hubungi sopir Anda langsung.", pm_conv_with_prefix: "Percakapan Anda dengan", pm_your_reply_label: "Balasan Anda", pm_reply_placeholder: "Tulis balasan Anda...", pm_send_reply_btn: "Kirim balasan", pm_write_message_first: "Silakan tulis pesan terlebih dahulu.", oc_offer_not_found_title: "Penawaran tidak ditemukan", oc_offer_not_found_body: "Tautan ini mungkin tidak valid, atau penawaran telah ditarik. Silakan hubungi sopir Anda langsung.", oc_already_confirmed_title: "Sudah dikonfirmasi", oc_already_confirmed_body: "Anda sudah mengonfirmasi pemesanan ini — sampai jumpa!", oc_no_longer_available_title: "Penawaran ini sudah tidak tersedia", oc_no_longer_available_body: "Silakan hubungi sopir Anda langsung untuk penawaran terbaru.", oc_offer_from_prefix: "Penawaran tur Anda dari", oc_confirm_btn: "Konfirmasi pemesanan ini", oc_confirm_payment_note: "Dengan mengonfirmasi, Anda setuju untuk mengatur pembayaran langsung dengan sopir Anda, seperti biasa di Rydanu.", oc_decline_btn: "Tolak penawaran ini", oc_decline_confirm: "Tolak penawaran ini? Penawaran ini akan ditutup dan tidak dapat dibatalkan penolakannya — jika Anda masih ingin transfer, Anda perlu mengajukan permintaan baru.", oc_declined_title: "Penawaran ditolak", oc_declined_body: "Sopir Anda telah diberi tahu. Penawaran ini sekarang ditutup dan tidak dapat dikonfirmasi lagi — jika Anda masih ingin transfer atau tur, silakan ajukan permintaan baru dan sopir akan menghubungi Anda dengan penawaran baru.", oc_confirm_err: "Terjadi kesalahan saat mengonfirmasi pemesanan ini. Silakan coba lagi, atau hubungi sopir Anda langsung.", lbl_total: "Total harga tur", lbl_pickup: "Penjemputan", lbl_tour_singular: "tur", lbl_tour_plural: "tur", lbl_rating_new: "Baru",
     lbl_total_price_due: "Total — bayar langsung ke sopir", lbl_ryvio_fee: "Biaya Rydanu (10%)", lbl_your_car: "Mobil sopir Anda",
-    lbl_fullname: "Nama lengkap", lbl_whatsapp: 'Nomor WhatsApp <span class="optional">(untuk konfirmasi pemesanan)</span>', ep_eyebrow: "Profil Anda", ep_title: "Edit profil",
+    lbl_fullname: "Nama lengkap", lbl_whatsapp: 'Nomor WhatsApp <span class="optional">(untuk konfirmasi pemesanan)</span>', ep_eyebrow: "Profil Anda", ep_title: "Edit profil", ep_address_label: "Alamat lengkap (wajib untuk faktur)", ep_taxnumber_label: "NPWP (opsional)",
     lbl_pickup_loc: "Lokasi penjemputan", lbl_pickup_dropoff_loc: "Lokasi jemput/antar", lbl_airport_destination: "Wilayah tujuan", lbl_transfer_destination: "Tujuan", lbl_pickup_region: "Wilayah penjemputan Anda",
     lbl_balance: "Sisa — bayar tunai ke sopir pada hari tur",
     pay_direct_hint: "💵 Anda membayar sopir langsung secara tunai saat bertemu. Belum ada yang perlu dibayar sekarang, Rydanu tidak pernah menangani uang Anda.",
@@ -11976,6 +12024,7 @@ const translations = {
     reg_terms_body: "<strong>1. Pemesanan hanya melalui Rydanu.</strong> Jika wisatawan menemukan Anda melalui Rydanu, tur harus dipesan dan dibayar melalui Rydanu. Mengatur pembayaran secara pribadi untuk melewati platform tidak diizinkan dan dapat menyebabkan penangguhan akun.<br><br><strong>2. Biaya.</strong> Biaya platform kecil berlaku untuk setiap pemesanan yang Anda terima, berdasarkan harga tur, dan dibebankan ke saldo Anda segera setelah diterima — lihat \"Biaya & penagihan\" di dashboard Anda.<br><br><strong>3. Pembatalan.</strong> Jika tamu tidak datang, biaya platform yang sudah dibebankan untuk pemesanan tersebut tidak dikembalikan. Jika Anda membatalkan tur yang dikonfirmasi sendiri, biaya pembatalan tetap sebesar IDR 30.000 berlaku.<br><br><strong>4. Jaga profil tetap akurat.</strong> Kendaraan, dokumen, wilayah layanan dan harga harus mencerminkan kenyataan. Perbarui listing Anda setiap kali kendaraan atau ketersediaan berubah.<br><br><strong>5. Etika.</strong> Bersikaplah hormat, tepat waktu dan aman. Pembatalan berulang, ulasan buruk atau masalah keamanan dapat menyebabkan penangguhan atau penghapusan dari Rydanu.<br><br><strong>6. Pembayaran.</strong> Rydanu tidak pernah menangani pembayaran tur — tamu membayar Anda langsung, tunai atau melalui detail pembayaran yang Anda berikan (QRIS / tautan pembayaran). Rydanu tidak bertanggung jawab atas kesalahan dalam detail yang Anda kirimkan.",
     reg_terms_checkbox_label: "Saya telah membaca dan menerima syarat & ketentuan Rydanu untuk sopir.", reg_terms_submit_btn: "Terima & kirim pendaftaran",
     ep_err_name: "Nama tidak boleh kosong.",
+    ep_err_address: "Silakan masukkan alamat lengkap Anda (wajib untuk faktur).",
     map_note_dropoff_booking: "Penanda menunjukkan area penjemputan umum — sopir Anda akan mengonfirmasi alamat pastinya setelah pemesanan.", map_note_dropoff_general: "Penanda menunjukkan area penjemputan umum.",
     form_err_name_email: "Mohon masukkan nama dan email Anda untuk melanjutkan.", form_err_pickup: "Mohon masukkan lokasi penjemputan Anda (hotel atau alamat) sebelum melanjutkan — sopir Anda memerlukannya untuk merencanakan tur.", form_err_required_all: "Mohon isi semua kolom (nomor WhatsApp, tanggal, dan lokasi penjemputan) — hanya bagasi dan catatan yang opsional.",
     eyebrow_profile: "Profil sopir", eyebrow_trip: "Detail perjalanan", eyebrow_payment: "Pembayaran", eyebrow_confirm: "Selesai",
@@ -12190,8 +12239,8 @@ const translations = {
     auth_err_missing_fields: "Silakan masukkan nomor telepon/email dan kata sandi.", auth_err_invalid_phone: "Silakan masukkan nomor telepon yang valid.", auth_err_generic: "Terjadi kesalahan. Silakan coba lagi.", auth_err_invalid_credentials: "Nomor telepon/email atau kata sandi salah.", auth_err_already_registered: "Akun untuk nomor telepon ini sudah ada — silakan masuk.", auth_err_password_too_short: "Kata sandi harus minimal 6 karakter.",
     fp_err_no_phone: "Silakan masukkan nomor telepon Anda terlebih dahulu.", fp_err_no_email: "Silakan masukkan alamat email.", generic_please_wait: "Sebentar...", fp_err_prefix: "Kesalahan: ", fp_email_sent_success: "Email terkirim ✓ — silakan buka tautan di email (periksa juga folder spam).",
     np_err_mismatch: "Kedua kata sandi tidak cocok.", np_success_alert: "Kata sandi baru tersimpan ✓ Anda sekarang sudah masuk.", np_title: "Buat kata sandi baru", np_label_new: "Kata sandi baru (min. 6 karakter)", np_placeholder_new: "Kata sandi baru", np_label_confirm: "Ulangi kata sandi baru", np_placeholder_confirm: "Ulangi kata sandi", np_save_btn: "Simpan kata sandi",
-    auth_login_title: "🚗 Area sopir", auth_login_note: "Masuk dengan nomor telepon<br>(0062&nbsp;/&nbsp;+62) atau email dan kata sandi.", auth_login_id_placeholder: "Nomor telepon atau email", auth_password_placeholder: "Kata sandi", auth_login_btn: "Masuk", auth_forgot_link: "Lupa kata sandi?", auth_no_account_prefix: "Belum punya akun? ", auth_register_link: "Daftar sekarang", auth_signup_note: "Buat akun sopir baru.", auth_signup_name_placeholder: "Nama Anda *", auth_signup_phone_placeholder: "Telepon / WhatsApp *", auth_signup_password_placeholder: "Kata sandi (min. 6 karakter) *", auth_signup_email_placeholder: "Email (opsional)", auth_signup_car_placeholder: "Model — mis. Toyota Avanza", auth_signup_seats_placeholder: "Jumlah kursi", auth_signup_plate_placeholder: "Plat nomor *", auth_signup_color_placeholder: "Warna kendaraan *", auth_signup_referral_placeholder: "Kode referral (opsional) — mis. RY-104", auth_docs_title: "Unggah dokumen — keempatnya wajib", auth_doc_license: "SIM *", auth_doc_insurance: "Asuransi *", auth_doc_papers: "STNK/BPKB *", auth_doc_selfie: "Selfie *", auth_docs_uploaded_suffix: " / 4 diunggah", auth_docs_all_needed_suffix: " — keempatnya diperlukan", auth_signup_btn: "Daftar", auth_have_account_prefix: "Sudah punya akun? ", auth_loading_text: "⏳ Sebentar...",
-    va_title: "Menjadi Mitra Villa Rydanu", va_intro: "Tamu Anda kemudian dapat langsung meminta sopir untuk transfer melalui tautan pribadi — gratis untuk Anda, Anda mendapatkan komisi per pemesanan yang berhasil. Kami akan menghubungi Anda segera setelah pendaftaran.", va_name_label: "Nama villa / hotel", va_name_placeholder: "mis. Sunset Bali Villas", va_contact_label: "Kontak person", va_contact_placeholder: "mis. Made", va_region_label: "Wilayah", va_phone_label: "WhatsApp / telepon", va_phone_placeholder: "mis. +62812...", va_email_label: "Email", va_email_placeholder: "mis. manager@villa.com", va_message_label: "Pesan", va_message_optional: "(opsional)", va_submit_btn: "Kirim permintaan", va_err_missing_fields: "Silakan isi nama, nomor WhatsApp, dan email.", va_err_generic: "Terjadi kesalahan — silakan coba lagi.", va_success_title: "✓ Terima kasih!", va_success_body: "Pendaftaran Anda telah kami terima — kami akan segera menghubungi Anda.",
+    auth_login_title: "🚗 Area sopir", auth_login_note: "Masuk dengan nomor telepon<br>(0062&nbsp;/&nbsp;+62) atau email dan kata sandi.", auth_login_id_placeholder: "Nomor telepon atau email", auth_password_placeholder: "Kata sandi", auth_login_btn: "Masuk", auth_forgot_link: "Lupa kata sandi?", auth_no_account_prefix: "Belum punya akun? ", auth_register_link: "Daftar sekarang", auth_signup_note: "Buat akun sopir baru.", auth_signup_name_placeholder: "Nama Anda *", auth_signup_phone_placeholder: "Telepon / WhatsApp *", auth_signup_password_placeholder: "Kata sandi (min. 6 karakter) *", auth_signup_email_placeholder: "Email (opsional)", auth_signup_car_placeholder: "Model — mis. Toyota Avanza", auth_signup_seats_placeholder: "Jumlah kursi", auth_signup_plate_placeholder: "Plat nomor *", auth_signup_color_placeholder: "Warna kendaraan *", auth_signup_address_placeholder: "Alamat lengkap (untuk faktur) *", auth_signup_taxnumber_placeholder: "NPWP (opsional)", auth_signup_referral_placeholder: "Kode referral (opsional) — mis. RY-104", auth_docs_title: "Unggah dokumen — keempatnya wajib", auth_doc_license: "SIM *", auth_doc_insurance: "Asuransi *", auth_doc_papers: "STNK/BPKB *", auth_doc_selfie: "Selfie *", auth_docs_uploaded_suffix: " / 4 diunggah", auth_docs_all_needed_suffix: " — keempatnya diperlukan", auth_signup_btn: "Daftar", auth_have_account_prefix: "Sudah punya akun? ", auth_loading_text: "⏳ Sebentar...",
+    va_title: "Menjadi Mitra Villa Rydanu", va_intro: "Tamu Anda kemudian dapat langsung meminta sopir untuk transfer melalui tautan pribadi — gratis untuk Anda, Anda mendapatkan komisi per pemesanan yang berhasil. Kami akan menghubungi Anda segera setelah pendaftaran.", va_name_label: "Nama villa / hotel", va_name_placeholder: "mis. Sunset Bali Villas", va_contact_label: "Kontak person", va_contact_placeholder: "mis. Made", va_region_label: "Wilayah", va_phone_label: "WhatsApp / telepon", va_phone_placeholder: "mis. +62812...", va_email_label: "Email", va_email_placeholder: "mis. manager@villa.com", va_address_label: "Alamat", va_address_placeholder: "mis. Jl. Sunset Road No. 5, Seminyak, Bali", va_taxnumber_label: "NPWP", va_message_label: "Pesan", va_message_optional: "(opsional)", va_submit_btn: "Kirim permintaan", va_err_missing_fields: "Silakan isi nama, nomor WhatsApp, email, dan alamat.", va_err_generic: "Terjadi kesalahan — silakan coba lagi.", va_success_title: "✓ Terima kasih!", va_success_body: "Pendaftaran Anda telah kami terima — kami akan segera menghubungi Anda.",
     reg_lombok_kuta: "Kuta Lombok (Selatan)", reg_lombok_senggigi: "Senggigi (Barat)", reg_lombok_gili: "Gili (Utara)", reg_lombok_sembalun: "Sembalun (Timur)",
     nl_airport_regions_title: "Wilayah tujuan bandara — atur harga per wilayah (kosongkan jika tidak ditawarkan)",
     nl_transfer_regions_title: "Tujuan transfer — atur harga per tujuan (kosongkan jika tidak ditawarkan)",
@@ -13085,6 +13134,8 @@ async function openNewInvoiceForm(){
   document.getElementById('inv-form-period-end').value = '';
   document.getElementById('inv-form-collection-date').value = '';
   document.getElementById('inv-form-vat-rate').value = '0';
+  document.getElementById('inv-form-vat-rate').disabled = false;
+  document.getElementById('inv-form-vat-exempt').checked = false;
   document.getElementById('inv-form-items').innerHTML = '';
   invoiceItemRowCount = 0;
   await populateInvoiceFormSelects();
@@ -13152,14 +13203,21 @@ function getInvoiceItemsFromForm(){
   });
   return items;
 }
+function onVatExemptToggle(){
+  const exempt = document.getElementById('inv-form-vat-exempt').checked;
+  const rateInput = document.getElementById('inv-form-vat-rate');
+  rateInput.disabled = exempt;
+  recalcInvoiceTotals();
+}
 function recalcInvoiceTotals(){
   const items = getInvoiceItemsFromForm();
   const net = items.reduce((s,it)=> s + Math.round(it.quantity * it.unit_price_idr), 0);
-  const vatRate = Number(document.getElementById('inv-form-vat-rate').value || 0);
-  const vat = Math.round(net * vatRate / 100);
+  const exempt = document.getElementById('inv-form-vat-exempt').checked;
+  const vatRate = exempt ? 0 : Number(document.getElementById('inv-form-vat-rate').value || 0);
+  const vat = exempt ? 0 : Math.round(net * vatRate / 100);
   const gross = net + vat;
   document.getElementById('inv-form-preview-net').textContent = formatIDR(net);
-  document.getElementById('inv-form-preview-vat').textContent = formatIDR(vat);
+  document.getElementById('inv-form-preview-vat').textContent = exempt ? 'steuerbefreit' : formatIDR(vat);
   document.getElementById('inv-form-preview-gross').textContent = formatIDR(gross);
 }
 
@@ -13173,7 +13231,8 @@ async function submitInvoiceForm(){
   const periodStart = document.getElementById('inv-form-period-start').value;
   const periodEnd = document.getElementById('inv-form-period-end').value;
   const collectionDate = document.getElementById('inv-form-collection-date').value || null;
-  const vatRate = Number(document.getElementById('inv-form-vat-rate').value || 0);
+  const vatExempt = document.getElementById('inv-form-vat-exempt').checked;
+  const vatRate = vatExempt ? 0 : Number(document.getElementById('inv-form-vat-rate').value || 0);
   const items = getInvoiceItemsFromForm();
 
   if((type==='driver' && !driverId) || (type==='villa' && !villaId)){ statusEl.textContent = 'Bitte einen Empfänger auswählen.'; return; }
@@ -13189,12 +13248,12 @@ async function submitInvoiceForm(){
     // invoices/invoice_items lehnt das automatisch ab, falls die Rechnung inzwischen nicht mehr im
     // Entwurf-Status ist -- doppelte Absicherung, nicht nur UI-seitig.
     const net = items.reduce((s,it)=> s + Math.round(it.quantity * it.unit_price_idr), 0);
-    const vat = Math.round(net * vatRate / 100);
+    const vat = vatExempt ? 0 : Math.round(net * vatRate / 100);
     const gross = net + vat;
     const { error: updErr } = await supabaseClient.from('invoices').update({
       driver_id: driverId, villa_partner_id: villaId, recipient_type: type,
       period_start: periodStart, period_end: periodEnd, collection_date: collectionDate,
-      vat_rate: vatRate, amount_net: net, vat_amount: vat, amount_gross: gross,
+      vat_rate: vatRate, vat_amount: vat, amount_net: net, amount_gross: gross, vat_exempt: vatExempt,
       updated_at: new Date().toISOString()
     }).eq('id', editingId);
     if(updErr){ statusEl.style.color='var(--danger)'; statusEl.textContent = 'Fehler: ' + updErr.message; return; }
@@ -13222,7 +13281,8 @@ async function submitInvoiceForm(){
     p_collection_date: collectionDate,
     p_vat_rate: vatRate,
     p_items: items,
-    p_created_by: createdBy
+    p_created_by: createdBy,
+    p_vat_exempt: vatExempt
   });
   if(error){ statusEl.style.color='var(--danger)'; statusEl.textContent = 'Fehler: ' + error.message; return; }
   await openInvoiceDetail(newId);
@@ -13236,7 +13296,7 @@ async function openInvoiceDetail(invoiceId){
 
   const { data: inv, error } = await supabaseClient
     .from('invoices')
-    .select('*, drivers(name, lw_number, phone, email), villa_partners(name, slug, contact_name, contact_email, contact_phone)')
+    .select('*, drivers(name, lw_number, phone, email, address, tax_number), villa_partners(name, slug, contact_name, contact_email, contact_phone, address, tax_number)')
     .eq('id', invoiceId).single();
   if(error || !inv){ wrap.innerHTML = '<div class="empty-state">Rechnung konnte nicht geladen werden.</div>'; return; }
 
@@ -13245,6 +13305,9 @@ async function openInvoiceDetail(invoiceId){
   const recipientName = inv.recipient_type === 'driver'
     ? (inv.drivers ? escapeHtml(inv.drivers.name) + ' (' + (inv.drivers.lw_number||'—') + ')' : '—')
     : (inv.villa_partners ? escapeHtml(inv.villa_partners.name) : '—');
+  const recipientRecord = inv.recipient_type === 'driver' ? inv.drivers : inv.villa_partners;
+  const recipientAddress = recipientRecord && recipientRecord.address ? escapeHtml(recipientRecord.address) : null;
+  const recipientTaxNumber = recipientRecord && recipientRecord.tax_number ? escapeHtml(recipientRecord.tax_number) : null;
 
   const itemsHtml = (items||[]).map(it=>`
     <tr>
@@ -13274,11 +13337,14 @@ async function openInvoiceDetail(invoiceId){
         </div>
         <span class="status-pill ${invoiceStatusPillClass(inv.status)}">${invoiceStatusLabel(inv.status)}</span>
       </div>
+      ${!recipientAddress ? `<p class="form-error" style="margin-bottom:14px;">⚠ Keine Adresse hinterlegt — Pflichtangabe für eine gültige Rechnung. Bitte im ${inv.recipient_type==='driver' ? 'Fahrerprofil' : 'Villa-Verwalten-Bereich'} ergänzen, bevor die Rechnung finalisiert/versendet wird.</p>` : ''}
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px; font-size:0.92rem;">
         <div><strong>Rechnungsdatum</strong><br>${inv.invoice_date}</div>
         <div><strong>Zeitraum</strong><br>${inv.period_start} – ${inv.period_end}</div>
         <div><strong>Datum Einzug</strong><br>${inv.collection_date || '—'}</div>
         <div><strong>Absender</strong><br>Rydanu UG</div>
+        <div><strong>Empfänger-Adresse</strong><br>${recipientAddress || '<span style="color:var(--danger);">fehlt</span>'}</div>
+        <div><strong>Steuernummer Empfänger</strong><br>${recipientTaxNumber || '—'}</div>
       </div>
       <table style="width:100%; border-collapse:collapse; margin-bottom:14px; font-size:0.9rem;">
         <thead><tr style="border-bottom:1px solid var(--line);"><th style="text-align:left;">Position</th><th style="text-align:right;">Menge</th><th style="text-align:right;">Einzelpreis</th><th style="text-align:right;">Gesamt</th></tr></thead>
@@ -13286,7 +13352,7 @@ async function openInvoiceDetail(invoiceId){
       </table>
       <div style="text-align:right; margin-bottom:18px;">
         <div>Netto: ${formatIDR(inv.amount_net)}</div>
-        <div>MwSt (${inv.vat_rate}%): ${formatIDR(inv.vat_amount)}</div>
+        <div>${inv.vat_exempt ? 'MwSt-befreit' : 'MwSt (' + inv.vat_rate + '%): ' + formatIDR(inv.vat_amount)}</div>
         <div style="font-size:1.1rem; font-weight:700;">Brutto: ${formatIDR(inv.amount_gross)}</div>
       </div>
       <div>${actionsHtml}</div>
@@ -13313,6 +13379,8 @@ async function editInvoiceDraft(invoiceId){
   document.getElementById('inv-form-period-end').value = inv.period_end;
   document.getElementById('inv-form-collection-date').value = inv.collection_date || '';
   document.getElementById('inv-form-vat-rate').value = inv.vat_rate;
+  document.getElementById('inv-form-vat-exempt').checked = !!inv.vat_exempt;
+  document.getElementById('inv-form-vat-rate').disabled = !!inv.vat_exempt;
   document.getElementById('inv-form-items').innerHTML = '';
   invoiceItemRowCount = 0;
   (items||[]).forEach(it=> addInvoiceItemRow(it.description, it.quantity, it.unit_price_idr));
@@ -14957,6 +15025,14 @@ async function initVillaApplyPage(){
         <label>${t('va_email_label')}</label>
         <input type="email" id="va-email" required placeholder="${t('va_email_placeholder')}" style="width:100%; margin-top:4px;">
       </div>
+      <div class="form-field" style="margin-bottom:12px;">
+        <label>${t('va_address_label')}</label>
+        <input type="text" id="va-address" required placeholder="${t('va_address_placeholder')}" style="width:100%; margin-top:4px;">
+      </div>
+      <div class="form-field" style="margin-bottom:12px;">
+        <label>${t('va_taxnumber_label')} <span style="font-weight:400; opacity:0.7;">${t('va_message_optional')}</span></label>
+        <input type="text" id="va-taxnumber" style="width:100%; margin-top:4px;">
+      </div>
       <div class="form-field" style="margin-bottom:16px;">
         <label>${t('va_message_label')} <span style="font-weight:400; opacity:0.7;">${t('va_message_optional')}</span></label>
         <textarea id="va-message" rows="2" style="width:100%; margin-top:4px;"></textarea>
@@ -14970,8 +15046,9 @@ async function submitVillaApplication(){
   const name = document.getElementById('va-name').value.trim();
   const phone = document.getElementById('va-phone').value.trim();
   const email = document.getElementById('va-email').value.trim();
+  const address = document.getElementById('va-address').value.trim();
   const errEl = document.getElementById('va-error');
-  if(!name || !phone || !email){
+  if(!name || !phone || !email || !address){
     errEl.textContent = t('va_err_missing_fields');
     return;
   }
@@ -14984,7 +15061,9 @@ async function submitVillaApplication(){
     p_contact_phone: phone,
     p_contact_email: email,
     p_region: document.getElementById('va-region').value,
-    p_message: document.getElementById('va-message').value.trim() || null
+    p_message: document.getElementById('va-message').value.trim() || null,
+    p_address: address,
+    p_tax_number: document.getElementById('va-taxnumber').value.trim() || null
   });
   if(error){
     console.error('Villa-Bewerbung fehlgeschlagen:', error);
@@ -15339,12 +15418,15 @@ async function handleDriverSignup(){
   const seats = document.getElementById('auth-signup-seats').value.trim();
   const plate = document.getElementById('auth-signup-plate').value.trim();
   const color = document.getElementById('auth-signup-color').value.trim();
+  const address = document.getElementById('auth-signup-address').value.trim();
+  const taxNumber = document.getElementById('auth-signup-taxnumber').value.trim();
   const referralInput = document.getElementById('auth-signup-referral').value.trim();
   document.getElementById('auth-error').textContent = '';
   if(!name || !password || !phoneRaw){ showAuthError({message:'Bitte Name, Telefonnummer und Passwort ausfüllen.'}); return; }
   const phone = normalizePhoneE164(phoneRaw, country);
   if(!isValidE164(phone)){ showAuthError({message:'Bitte eine gültige Telefonnummer eingeben.'}); return; }
   if(!plate || !color){ showAuthError({message:'Bitte Kennzeichen und Fahrzeugfarbe angeben.'}); return; }
+  if(!address){ showAuthError({message:'Bitte deine vollständige Adresse angeben (Pflichtangabe für Rechnungen).'}); return; }
   const missingDocs = updateSignupDocStatus() < 4;
   if(missingDocs){ showAuthError({message:'Bitte alle 4 Dokumente hochladen (Führerschein, Versicherung, Fahrzeugpapiere, Selfie).'}); return; }
 
@@ -15365,7 +15447,7 @@ async function handleDriverSignup(){
   const vehicle = { vtype, car, seats, plate, color };
   const { data: updatedDriver, error: vehicleErr } = await supabaseClient
     .from('drivers')
-    .update({ vehicle, phone, email: email || null, region })
+    .update({ vehicle, phone, email: email || null, region, address, tax_number: taxNumber || null })
     .eq('id', realDriverProfile.id)
     .select()
     .single();
@@ -17607,7 +17689,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v325</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v326</div>
 
 </body>
 </html>
