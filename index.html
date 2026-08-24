@@ -5755,6 +5755,40 @@ function resizeImageToBlob(file, maxDim, quality, callback){
   };
   reader.readAsDataURL(file);
 }
+// Bild-Komprimierung fuer Dokumenten-Uploads (Fuehrerschein, Versicherung, Fahrzeugpapiere, Selfie).
+// Anders als bei Avatar/Galerie (siehe cropImageToSquare/resizeImageToBlob oben) muss der Text auf
+// den Dokumenten lesbar bleiben, daher hoehere maxDim/Qualitaet. PDFs und andere Nicht-Bild-Dateien
+// (z.B. gescanntes Dokument als .pdf) werden bewusst NICHT angefasst -- die wuerden durch die
+// Canvas-Verarbeitung kaputtgehen. Gibt ein Promise zurueck mit { body, ext }.
+function compressDocumentImageIfNeeded(file){
+  return new Promise((resolve) => {
+    const originalExt = (file.name.split('.').pop() || 'jpg').toLowerCase();
+    if(!file.type || !file.type.startsWith('image/') || file.type === 'image/gif' || file.type === 'image/svg+xml'){
+      resolve({ body: file, ext: originalExt });
+      return;
+    }
+    const maxDim = 1600, quality = 0.85;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob((blob) => {
+          if(blob) resolve({ body: blob, ext: 'jpg' });
+          else resolve({ body: file, ext: originalExt }); // Fallback: Original hochladen statt gar nichts
+        }, 'image/jpeg', quality);
+      };
+      img.onerror = () => resolve({ body: file, ext: originalExt });
+      img.src = e.target.result;
+    };
+    reader.onerror = () => resolve({ body: file, ext: originalExt });
+    reader.readAsDataURL(file);
+  });
+}
 async function handleRealPageMediaUpload(event){
   const file = event.target.files[0];
   if(!file) return;
@@ -8428,10 +8462,10 @@ async function uploadReRequestedDoc(key, inputEl){
   if(!file || !realDriverProfile) return;
   const statusEl = document.getElementById('doc-reupload-status-'+key);
   if(statusEl) statusEl.textContent = '⏳ Wird hochgeladen...';
-  const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+  const { body, ext } = await compressDocumentImageIfNeeded(file);
   const path = `${realDriverProfile.id}/${key}.${ext}`;
   try{
-    const { error: upErr } = await supabaseClient.storage.from('driver-documents').upload(path, file, { upsert:true });
+    const { error: upErr } = await supabaseClient.storage.from('driver-documents').upload(path, body, { upsert:true });
     if(upErr){ console.error('Dokument konnte nicht hochgeladen werden:', upErr); if(statusEl) statusEl.textContent = '❌ Fehler beim Hochladen'; return; }
     const newDocuments = { ...(realDriverProfile.documents||{}), [key]: path };
     const newRequested = (realDriverProfile.docs_requested||[]).filter(k => k!==key);
@@ -15684,10 +15718,10 @@ async function handleDriverSignup(){
     const input = document.getElementById('auth-signup-doc-'+f);
     if(input && input.files && input.files.length){
       const file = input.files[0];
-      const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
-      const path = `${realDriverProfile.id}/${f}.${ext}`;
       try{
-        const { error: upErr } = await supabaseClient.storage.from('driver-documents').upload(path, file, { upsert:true });
+        const { body, ext } = await compressDocumentImageIfNeeded(file);
+        const path = `${realDriverProfile.id}/${f}.${ext}`;
+        const { error: upErr } = await supabaseClient.storage.from('driver-documents').upload(path, body, { upsert:true });
         if(upErr){ console.error('Dokument "'+f+'" konnte nicht hochgeladen werden:', upErr); uploadFailed = true; }
         else { documents[f] = path; }
       } catch(uploadEx){
@@ -17910,7 +17944,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v328</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v329</div>
 
 </body>
 </html>
