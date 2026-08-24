@@ -13289,6 +13289,7 @@ async function submitInvoiceForm(){
 }
 
 // ---------- Detailansicht (eigene Unterseite, kein Popup -- so von Joerg gewuenscht) ----------
+let lastInvoicePdfData = null;
 async function openInvoiceDetail(invoiceId){
   showInvoiceView('detail');
   const wrap = document.getElementById('inv-detail-content');
@@ -13302,12 +13303,23 @@ async function openInvoiceDetail(invoiceId){
 
   const { data: items } = await supabaseClient.from('invoice_items').select('*').eq('invoice_id', invoiceId).order('position');
 
+  // Bei einer Storno-Rechnung: Nummer der Original-Rechnung nachladen fuer eine lesbare Referenz
+  // statt der rohen UUID (rechtlich muss die Korrekturrechnung eindeutig auf die Original-
+  // Rechnungsnummer verweisen, siehe Konzept-PDF Punkt 4.2).
+  let originalInvoiceNumber = null;
+  if(inv.replaces_invoice_id){
+    const { data: origInv } = await supabaseClient.from('invoices').select('invoice_number').eq('id', inv.replaces_invoice_id).single();
+    if(origInv) originalInvoiceNumber = origInv.invoice_number;
+  }
+
   const recipientName = inv.recipient_type === 'driver'
     ? (inv.drivers ? escapeHtml(inv.drivers.name) + ' (' + (inv.drivers.lw_number||'—') + ')' : '—')
     : (inv.villa_partners ? escapeHtml(inv.villa_partners.name) : '—');
   const recipientRecord = inv.recipient_type === 'driver' ? inv.drivers : inv.villa_partners;
   const recipientAddress = recipientRecord && recipientRecord.address ? escapeHtml(recipientRecord.address) : null;
   const recipientTaxNumber = recipientRecord && recipientRecord.tax_number ? escapeHtml(recipientRecord.tax_number) : null;
+  const recipientEmail = inv.recipient_type === 'driver' ? (inv.drivers && inv.drivers.email) : (inv.villa_partners && inv.villa_partners.contact_email);
+  const recipientPhone = inv.recipient_type === 'driver' ? (inv.drivers && inv.drivers.phone) : (inv.villa_partners && inv.villa_partners.contact_phone);
 
   const itemsHtml = (items||[]).map(it=>`
     <tr>
@@ -13317,26 +13329,54 @@ async function openInvoiceDetail(invoiceId){
       <td style="text-align:right;">${formatIDR(it.line_total_idr)}</td>
     </tr>`).join('');
 
+  // Rohdaten fuer die PDF-Erzeugung (buildInvoicePdf() liest ausschliesslich hieraus) --
+  // gleiches Zwischenspeicher-Muster wie beim bestehenden Gebuehren-Beleg (lastReceiptPdfData).
+  lastInvoicePdfData = {
+    id: inv.id,
+    invoiceNumber: inv.invoice_number,
+    invoiceDate: inv.invoice_date,
+    periodStart: inv.period_start,
+    periodEnd: inv.period_end,
+    collectionDate: inv.collection_date,
+    status: inv.status,
+    recipientName: inv.recipient_type === 'driver' ? (inv.drivers ? inv.drivers.name : '—') : (inv.villa_partners ? inv.villa_partners.name : '—'),
+    recipientAddress: recipientRecord ? (recipientRecord.address || '') : '',
+    recipientTaxNumber: recipientRecord ? (recipientRecord.tax_number || '') : '',
+    recipientEmail: recipientEmail || null,
+    recipientPhone: recipientPhone || null,
+    items: (items||[]).map(it=>({ description: it.description, quantity: it.quantity, unitPrice: it.unit_price_idr, lineTotal: it.line_total_idr })),
+    amountNet: inv.amount_net, vatRate: inv.vat_rate, vatAmount: inv.vat_amount, amountGross: inv.amount_gross,
+    vatExempt: inv.vat_exempt, originalInvoiceNumber
+  };
+
   let actionsHtml = '';
   if(inv.status === 'draft'){
     actionsHtml += `<button type="button" class="period-btn" onclick="editInvoiceDraft('${inv.id}')" style="margin-right:8px;">✎ Bearbeiten</button>`;
     actionsHtml += `<button type="button" class="period-btn" onclick="markInvoicePaidAdmin('${inv.id}')" style="background:var(--gold); border-color:var(--gold); color:var(--ink); font-weight:700;">✓ Als bezahlt markieren</button>`;
+    actionsHtml += `<div style="margin-top:10px;"><button type="button" class="link-btn" style="width:auto;" onclick="openInvoicePdf('open')">📄 PDF-Vorschau</button></div>`;
+    actionsHtml += `<p class="dash-head" style="display:block; margin-top:4px; font-style:italic;">E-Mail-/WhatsApp-Versand erst möglich, sobald die Rechnung als bezahlt markiert ist (danach eingefroren).</p>`;
   } else if(inv.status === 'paid'){
     actionsHtml += `<button type="button" class="period-btn" onclick="cancelInvoiceAdmin('${inv.id}')" style="color:var(--danger); border-color:var(--danger);">Rechnung stornieren</button>`;
-    actionsHtml += `<p class="dash-head" style="display:block; margin-top:10px; font-style:italic;">PDF-Download, E-Mail- und WhatsApp-Versand folgen in Phase 3.</p>`;
+    actionsHtml += `<div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap;">
+      <button type="button" class="link-btn" style="width:auto; background:var(--paper-dim); padding:8px 14px; border-radius:6px;" onclick="openInvoicePdf('save')">📄 PDF herunterladen</button>
+      <button type="button" class="link-btn" style="width:auto; background:var(--paper-dim); padding:8px 14px; border-radius:6px;" onclick="sendInvoiceEmailAdmin('${inv.id}')" id="inv-send-email-btn">✉️ Per E-Mail senden</button>
+      <button type="button" class="link-btn" style="width:auto; background:var(--paper-dim); padding:8px 14px; border-radius:6px;" onclick="sendInvoiceWhatsappAdmin('${inv.id}')" id="inv-send-wa-btn">💬 Per WhatsApp senden</button>
+    </div>`;
   } else if(inv.status === 'cancelled'){
     actionsHtml += `<p class="dash-head" style="display:block;">Diese Rechnung wurde storniert. Die Gegen-Rechnung findest du in der Liste (gleicher Zeitraum, neuere Rechnungsnummer).</p>`;
+    actionsHtml += `<div style="margin-top:10px;"><button type="button" class="link-btn" style="width:auto;" onclick="openInvoicePdf('open')">📄 PDF-Vorschau (Original)</button></div>`;
   }
 
   wrap.innerHTML = `
     <div class="panel" style="padding:20px; max-width:640px;">
       <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px;">
         <div>
-          <h3 style="margin:0 0 4px;">Rechnung #${inv.invoice_number}</h3>
+          <h3 style="margin:0 0 4px;">${inv.replaces_invoice_id ? 'Korrekturrechnung ' : 'Rechnung '}#${inv.invoice_number}</h3>
           <div class="dash-head" style="display:block;">${recipientName}</div>
         </div>
         <span class="status-pill ${invoiceStatusPillClass(inv.status)}">${invoiceStatusLabel(inv.status)}</span>
       </div>
+      ${inv.replaces_invoice_id ? `<p class="dash-head" style="display:block; margin-bottom:10px;">Korrigiert/storniert Rechnung #${originalInvoiceNumber ?? '—'}.</p>` : ''}
       ${!recipientAddress ? `<p class="form-error" style="margin-bottom:14px;">⚠ Keine Adresse hinterlegt — Pflichtangabe für eine gültige Rechnung. Bitte im ${inv.recipient_type==='driver' ? 'Fahrerprofil' : 'Villa-Verwalten-Bereich'} ergänzen, bevor die Rechnung finalisiert/versendet wird.</p>` : ''}
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px; font-size:0.92rem;">
         <div><strong>Rechnungsdatum</strong><br>${inv.invoice_date}</div>
@@ -13401,6 +13441,185 @@ async function cancelInvoiceAdmin(invoiceId){
   const { data: newId, error } = await supabaseClient.rpc('cancel_invoice', { p_invoice_id: invoiceId, p_created_by: createdBy });
   if(error){ alert('Fehler: ' + error.message); return; }
   openInvoiceDetail(newId);
+}
+
+// ============================================================
+// Mini-ERP Rechnungen -- Phase 3 (24.8.): PDF-Erzeugung, E-Mail- und WhatsApp-Versand.
+// PDF wird komplett im Browser mit jsPDF erzeugt (gleiches Muster wie der bestehende
+// Gebuehren-Beleg, siehe buildFeeReceiptPdf) -- kein Server-seitiges PDF-Rendering noetig.
+// Fuer Versand (E-Mail-Anhang, WhatsApp-Link) wird das PDF zusaetzlich einmalig in den privaten
+// 'invoice-pdfs'-Bucket hochgeladen; die send-invoice-email Edge Function laedt es von dort
+// serverseitig und haengt es per Resend an. So gibt es nur EINE PDF-Erzeugungs-Logik (im Browser),
+// nicht zwei parallele (Browser + Deno).
+// ============================================================
+function buildInvoicePdf(){
+  if(!lastInvoicePdfData || !window.jspdf) return null;
+  const d = lastInvoicePdfData;
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+  const forestGreen = [26, 61, 41];
+  const gold = [196, 154, 61];
+  const ink = [40, 40, 35];
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const marginX = 18;
+  let y = 22;
+
+  const isStorno = !!d.originalInvoiceNumber;
+  const docTitle = isStorno ? 'KORREKTURRECHNUNG' : 'RECHNUNG';
+
+  // Kopfzeile
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(20); doc.setTextColor(...forestGreen);
+  doc.text('Rydanu', marginX, y);
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor(...gold);
+  doc.text(docTitle, pageWidth - marginX, y, { align: 'right' });
+  y += 3;
+  doc.setDrawColor(...forestGreen); doc.setLineWidth(0.6);
+  doc.line(marginX, y, pageWidth - marginX, y);
+  y += 8;
+
+  // Absender / Empfaenger nebeneinander
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(9.5); doc.setTextColor(...ink);
+  doc.text('Von', marginX, y);
+  doc.text('An', pageWidth/2 + 4, y);
+  y += 5;
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(9.5);
+  const senderLines = ['Rydanu UG', 'Dülkenstraße 13', '51143 Köln', 'Deutschland'];
+  const recipientLines = [d.recipientName].concat(doc.splitTextToSize(d.recipientAddress || 'Adresse fehlt', 75));
+  if(d.recipientTaxNumber) recipientLines.push('Steuernr.: ' + d.recipientTaxNumber);
+  let ySender = y, yRecipient = y;
+  senderLines.forEach(l=>{ doc.text(l, marginX, ySender); ySender += 4.6; });
+  recipientLines.forEach(l=>{ doc.text(l, pageWidth/2 + 4, yRecipient); yRecipient += 4.6; });
+  y = Math.max(ySender, yRecipient) + 6;
+
+  if(isStorno){
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(9.5); doc.setTextColor(...ink);
+    doc.text(`Korrigiert/storniert Rechnung #${d.originalInvoiceNumber}`, marginX, y);
+    y += 7;
+  }
+
+  // Meta-Infos
+  doc.setFontSize(10); doc.setTextColor(...ink);
+  const metaRow = (label, value) => {
+    doc.setFont('helvetica', 'bold'); doc.text(label, marginX, y);
+    doc.setFont('helvetica', 'normal'); doc.text(String(value), marginX + 48, y);
+    y += 6;
+  };
+  metaRow('Rechnungsnummer', d.invoiceNumber);
+  metaRow('Rechnungsdatum', d.invoiceDate);
+  metaRow('Abrechnungszeitraum', d.periodStart + ' – ' + d.periodEnd);
+  if(d.collectionDate) metaRow('Datum Einzug', d.collectionDate);
+  y += 3;
+
+  // Tabellenkopf
+  doc.setFillColor(...forestGreen);
+  doc.rect(marginX, y - 5.5, pageWidth - marginX * 2, 8, 'F');
+  doc.setTextColor(255,255,255); doc.setFont('helvetica','bold'); doc.setFontSize(9);
+  doc.text('POSITION', marginX + 2, y);
+  doc.text('MENGE', pageWidth - marginX - 62, y, { align:'right' });
+  doc.text('EINZELPREIS', pageWidth - marginX - 32, y, { align:'right' });
+  doc.text('GESAMT', pageWidth - marginX - 2, y, { align:'right' });
+  y += 8;
+
+  doc.setTextColor(...ink);
+  (d.items||[]).forEach((it, i)=>{
+    if(i % 2 === 1){ doc.setFillColor(244,244,238); doc.rect(marginX, y - 5, pageWidth - marginX*2, 7.5, 'F'); }
+    doc.setFont('helvetica','normal'); doc.setFontSize(9.5);
+    doc.text(String(it.description), marginX + 2, y);
+    doc.text(String(it.quantity), pageWidth - marginX - 62, y, { align:'right' });
+    doc.text(formatIDR(it.unitPrice), pageWidth - marginX - 32, y, { align:'right' });
+    doc.text(formatIDR(it.lineTotal), pageWidth - marginX - 2, y, { align:'right' });
+    y += 7.5;
+  });
+
+  y += 3;
+  doc.setDrawColor(...ink); doc.setLineWidth(0.3);
+  doc.line(pageWidth/2, y, pageWidth - marginX, y);
+  y += 6;
+  doc.setFont('helvetica','normal'); doc.setFontSize(9.5);
+  doc.text('Netto', pageWidth/2, y); doc.text(formatIDR(d.amountNet), pageWidth - marginX, y, { align:'right' }); y += 5.5;
+  doc.text(d.vatExempt ? 'MwSt-befreit' : `MwSt (${d.vatRate}%)`, pageWidth/2, y);
+  if(!d.vatExempt) doc.text(formatIDR(d.vatAmount), pageWidth - marginX, y, { align:'right' });
+  y += 7;
+  doc.setFont('helvetica','bold'); doc.setFontSize(11.5);
+  doc.text('Gesamtbetrag', pageWidth/2, y); doc.text(formatIDR(d.amountGross), pageWidth - marginX, y, { align:'right' });
+
+  // Fussnote
+  const footY = doc.internal.pageSize.getHeight() - 22;
+  doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(140,140,130);
+  const footerText = 'Rydanu ist kein Fahrdienst und hat keine eigenen Fahrer, sondern vermittelt nur zwischen Kunde und unabhängigem, privatem Fahrer bzw. Villa-Partner.'
+    + (d.vatExempt ? ' Kein Ausweis von Umsatzsteuer.' : '');
+  doc.text(doc.splitTextToSize(footerText, pageWidth - marginX*2), marginX, footY);
+  doc.text('Rydanu UG · Dülkenstraße 13 · 51143 Köln · Deutschland', marginX, footY + 8);
+
+  return doc;
+}
+function openInvoicePdf(mode){
+  const doc = buildInvoicePdf();
+  if(!doc){ alert('PDF konnte nicht erzeugt werden — bitte nochmal versuchen.'); return; }
+  const filename = `Rydanu-Rechnung-${lastInvoicePdfData.invoiceNumber}.pdf`;
+  if(mode === 'save'){ doc.save(filename); }
+  else { window.open(doc.output('bloburl'), '_blank'); }
+}
+// Laedt das aktuell in lastInvoicePdfData gehaltene PDF einmalig in den privaten Storage-Bucket
+// hoch (upsert, damit ein erneuter Versand nach einer Korrektur den alten Stand ueberschreibt).
+// Gibt den Storage-Pfad zurueck, den sowohl die Edge Function als auch der WhatsApp-Link brauchen.
+async function uploadInvoicePdfToStorage(){
+  const doc = buildInvoicePdf();
+  if(!doc) throw new Error('PDF konnte nicht erzeugt werden.');
+  const blob = doc.output('blob');
+  const path = `${lastInvoicePdfData.id}/rechnung-${lastInvoicePdfData.invoiceNumber}.pdf`;
+  const { error } = await supabaseClient.storage.from('invoice-pdfs').upload(path, blob, { upsert: true, contentType: 'application/pdf' });
+  if(error) throw error;
+  return path;
+}
+async function sendInvoiceEmailAdmin(invoiceId){
+  if(!lastInvoicePdfData || !lastInvoicePdfData.recipientEmail){
+    alert('Für diesen Empfänger ist keine E-Mail-Adresse hinterlegt.');
+    return;
+  }
+  const btn = document.getElementById('inv-send-email-btn');
+  const original = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Sende…';
+  try{
+    const pdfPath = await uploadInvoicePdfToStorage();
+    const { data, error } = await supabaseClient.functions.invoke('send-invoice-email', { body: { invoiceId, pdfPath } });
+    if(error || (data && data.error)){
+      console.error('Rechnungs-E-Mail fehlgeschlagen:', error || data.error);
+      alert('E-Mail-Versand fehlgeschlagen: ' + (data && data.error ? data.error : (error && error.message) || 'unbekannter Fehler'));
+      btn.disabled = false; btn.textContent = original;
+      return;
+    }
+    btn.textContent = '✓ Gesendet';
+    setTimeout(()=>{ btn.disabled = false; btn.textContent = original; }, 2500);
+  } catch(e){
+    console.error('Rechnungs-E-Mail fehlgeschlagen:', e);
+    alert('E-Mail-Versand fehlgeschlagen: ' + e.message);
+    btn.disabled = false; btn.textContent = original;
+  }
+}
+// WhatsApp: Datei-Anhang direkt aus der App heraus ist ueber wa.me technisch nicht moeglich --
+// gleicher Zwischenschritt wie im Konzept-PDF vorgesehen: PDF hochladen, zeitlich begrenzten
+// Signed-Link erzeugen (7 Tage, danach automatisch nicht mehr abrufbar), Link in den WhatsApp-Text.
+async function sendInvoiceWhatsappAdmin(invoiceId){
+  if(!lastInvoicePdfData || !lastInvoicePdfData.recipientPhone){
+    alert('Für diesen Empfänger ist keine Telefonnummer hinterlegt.');
+    return;
+  }
+  const btn = document.getElementById('inv-send-wa-btn');
+  const original = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Bereite vor…';
+  try{
+    const pdfPath = await uploadInvoicePdfToStorage();
+    const { data: signed, error: signErr } = await supabaseClient.storage.from('invoice-pdfs').createSignedUrl(pdfPath, 60*60*24*7);
+    if(signErr || !signed){ throw signErr || new Error('Link konnte nicht erzeugt werden.'); }
+    const text = `Hello! Please find your Rydanu invoice #${lastInvoicePdfData.invoiceNumber} (${lastInvoicePdfData.periodStart} – ${lastInvoicePdfData.periodEnd}) here:\n${signed.signedUrl}\n\nThis link stays valid for 7 days.`;
+    window.open(waCallLinkWithText(lastInvoicePdfData.recipientPhone, text), '_blank');
+    btn.disabled = false; btn.textContent = original;
+  } catch(e){
+    console.error('WhatsApp-Versand vorbereiten fehlgeschlagen:', e);
+    alert('Fehler: ' + e.message);
+    btn.disabled = false; btn.textContent = original;
+  }
 }
 // Zeit-Textfelder (22.8., dritter Anlauf): input[type=time] liess sich auf iOS trotz mehrerer CSS-
 // Versuche nicht zuverlaessig an die anderen Felder angleichen (blieb eine graue "Pille"). Jetzt
@@ -17689,7 +17908,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v326</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v327</div>
 
 </body>
 </html>
