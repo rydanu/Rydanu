@@ -15698,8 +15698,21 @@ function toggleAuthForm(which){
 // registrieren"-Button in diesem Fall bewusst gar nicht (verhindert den verwirrenden Sprung ins
 // eigene Dashboard), aber als Admin will Joerg das Formular trotzdem ab und zu testen koennen.
 // Aendert NICHTS an realDriverProfile / der echten Login-Sitzung -- rein visuell fuer den Test.
+// Bugfix (24.8., Joerg gemeldet: Formular sprang sofort wieder weg): vorher rief diese Funktion
+// switchView('driver') auf -- das loest aber IMMER auch checkDriverAuthState() aus. Ist parallel
+// dazu bereits eine echte Fahrer-Sitzung aktiv (z.B. weil das Admin-Konto zufaellig auch ein
+// eigenes Fahrerprofil hat), gewinnt der asynchrone checkDriverAuthState-Aufruf den Wettlauf und
+// zeigt das Dashboard wieder an, obwohl hier bewusst das Signup-Formular erzwungen werden soll.
+// Fix: Tab-Wechsel hier von Hand nachbauen, ohne checkDriverAuthState() ueberhaupt zu triggern.
 function openRegisterDriverTestAccess(){
-  switchView('driver');
+  document.getElementById('view-customer').classList.remove('active');
+  document.getElementById('view-driver').classList.add('active');
+  document.getElementById('view-admin').classList.remove('active');
+  document.getElementById('tab-customer').classList.remove('active');
+  document.getElementById('tab-driver').classList.remove('active');
+  document.getElementById('tab-admin').classList.remove('active');
+  updateLombokBandVisibility('driver');
+  forceLayoutReflow();
   document.getElementById('driver-auth-gate').style.display = 'flex';
   document.getElementById('driver-dash-wrap').style.display = 'none';
   toggleAuthForm('signup');
@@ -18064,7 +18077,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v331</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v332</div>
 
 </body>
 </html>
