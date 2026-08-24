@@ -2448,6 +2448,11 @@
         <span class="at-title">Geld — Gebühren &amp; Gutschriften</span>
         <span class="at-sub">Individuelle Sätze, Gutschriften &amp; Guthaben aufladen</span>
       </button>
+      <button type="button" class="admin-tile" id="admin-tile-invoices" onclick="showAdminSection('invoices'); loadInvoicesList();" style="grid-column:1 / -1;">
+        <span class="at-icon">🧾</span>
+        <span class="at-title">Rechnungen</span>
+        <span class="at-sub">Rechnungen für Fahrer &amp; Villa-Partner erstellen, archivieren &amp; verwalten</span>
+      </button>
     </div>
 
     <button type="button" class="admin-back-link" id="admin-back-link" onclick="showAdminHome()" style="display:none;">‹ Zurück zur Übersicht</button>
@@ -2630,6 +2635,105 @@
     </div>
     <button type="button" class="link-btn" onclick="openBalanceOverviewModal()">📋 <span data-i18n="admin_view_balances_btn">Alle Guthaben anzeigen</span> (<span id="balance-overview-count">0</span>)</button>
     </div>
+    </div>
+    </div>
+
+    <div id="admin-sec-invoices" style="display:none;">
+    <h2 style="margin-top:0;">🧾 Rechnungen</h2>
+    <p class="dash-head" style="display:block; margin-bottom:20px;">Rechnungen für Fahrer und Villa-Partner erstellen, archivieren, versenden und verwalten. Absender: Rydanu UG.</p>
+
+    <div id="inv-view-list">
+      <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px; align-items:flex-end;">
+        <div class="form-field" style="margin-bottom:0;">
+          <label>Monat</label>
+          <input type="month" id="inv-filter-month" onchange="renderInvoicesList()">
+        </div>
+        <div class="form-field" style="margin-bottom:0;">
+          <label>Kunde</label>
+          <select id="inv-filter-customer" onchange="renderInvoicesList()">
+            <option value="">Alle</option>
+          </select>
+        </div>
+        <div class="form-field" style="margin-bottom:0;">
+          <label>Empfänger-Art</label>
+          <select id="inv-filter-recipient" onchange="renderInvoicesList()">
+            <option value="">Alle</option>
+            <option value="driver">Fahrer</option>
+            <option value="villa">Villa</option>
+          </select>
+        </div>
+        <div class="form-field" style="margin-bottom:0;">
+          <label>Status</label>
+          <select id="inv-filter-status" onchange="renderInvoicesList()">
+            <option value="">Alle</option>
+            <option value="draft">Entwurf</option>
+            <option value="paid">Bezahlt</option>
+            <option value="cancelled">Storniert</option>
+          </select>
+        </div>
+        <button type="button" class="link-btn" onclick="resetInvoiceFilters()" style="width:auto; padding:8px 4px;">Filter zurücksetzen</button>
+      </div>
+      <button type="button" class="btn-primary" onclick="openNewInvoiceForm()" style="margin-bottom:18px;">+ Neue Rechnung</button>
+      <div id="inv-list"><div class="empty-state">Lädt…</div></div>
+    </div>
+
+    <div id="inv-view-new" style="display:none;">
+      <button type="button" class="admin-back-link" style="display:inline-flex; margin-bottom:14px;" onclick="showInvoiceView('list')">‹ Zurück zur Liste</button>
+      <h3 id="inv-form-title" style="margin-top:0;">Neue Rechnung</h3>
+      <input type="hidden" id="inv-form-editing-id" value="">
+      <div class="panel" style="padding:16px; max-width:560px;">
+        <div class="form-field">
+          <label>Empfänger-Typ</label>
+          <select id="inv-form-recipient-type" onchange="onInvoiceRecipientTypeChange()">
+            <option value="driver">Fahrer</option>
+            <option value="villa">Villa</option>
+          </select>
+        </div>
+        <div class="form-field" id="inv-form-driver-field">
+          <label>Fahrer auswählen</label>
+          <select id="inv-form-driver-select"></select>
+        </div>
+        <div class="form-field" id="inv-form-villa-field" style="display:none;">
+          <label>Villa auswählen</label>
+          <select id="inv-form-villa-select"></select>
+        </div>
+        <div style="display:flex; gap:10px;">
+          <div class="form-field" style="flex:1;">
+            <label>Zeitraum von</label>
+            <input type="date" id="inv-form-period-start">
+          </div>
+          <div class="form-field" style="flex:1;">
+            <label>Zeitraum bis</label>
+            <input type="date" id="inv-form-period-end">
+          </div>
+        </div>
+        <div class="form-field">
+          <label>Datum des Einzugs (optional)</label>
+          <input type="date" id="inv-form-collection-date">
+        </div>
+        <div class="form-field">
+          <label>MwSt-Satz in % (0 = keine)</label>
+          <input type="number" id="inv-form-vat-rate" min="0" step="0.1" value="0" oninput="recalcInvoiceTotals()">
+        </div>
+
+        <label style="font-weight:600; display:block; margin:14px 0 6px;">Positionen</label>
+        <div id="inv-form-items"></div>
+        <button type="button" class="link-btn" onclick="addInvoiceItemRow()" style="width:auto; margin:6px 0 14px;">+ Position hinzufügen</button>
+
+        <div class="panel" style="background:var(--paper-dim,#f7f7f2); padding:12px; margin-bottom:14px;">
+          <div style="display:flex; justify-content:space-between;"><span>Netto</span><strong id="inv-form-preview-net">IDR 0</strong></div>
+          <div style="display:flex; justify-content:space-between;"><span>MwSt</span><strong id="inv-form-preview-vat">IDR 0</strong></div>
+          <div style="display:flex; justify-content:space-between; font-size:1.05rem;"><span>Brutto</span><strong id="inv-form-preview-gross">IDR 0</strong></div>
+        </div>
+
+        <button type="button" class="period-btn" onclick="submitInvoiceForm()" style="background:var(--gold); border-color:var(--gold); color:var(--ink); font-weight:700;" id="inv-form-submit-btn">Entwurf erstellen</button>
+        <p class="form-error" id="inv-form-status"></p>
+      </div>
+    </div>
+
+    <div id="inv-view-detail" style="display:none;">
+      <button type="button" class="admin-back-link" style="display:inline-flex; margin-bottom:14px;" onclick="showInvoiceView('list')">‹ Zurück zur Liste</button>
+      <div id="inv-detail-content"><div class="empty-state">Lädt…</div></div>
     </div>
     </div>
 
@@ -12866,6 +12970,370 @@ function buildDriverBookingWaText(b){
   return `Hi ${b.who}! This is ${driverName}, your driver for "${b.tour}" on ${whenPart}.${pickupSentence} Feel free to message me if you have any questions before then!`;
 }
 function waCallLinkWithText(phone, text){ return waCallLink(phone) + '?text=' + encodeURIComponent(text); }
+
+// ============================================================
+// Mini-ERP Rechnungen (24.8., Phase 2 -- Admin-Oberflaeche)
+// Datenbank-Fundament (Tabellen, Trigger, RPC-Funktionen create_invoice_draft/mark_invoice_paid/
+// cancel_invoice) wurde in der gleichen Sitzung als Phase 1 gebaut, siehe Migration
+// "create_invoices_mini_erp_foundation". Admin-Panel ist bewusst nicht uebersetzt (data-i18n) --
+// gleiche Konvention wie der Rest des Admin-Bereichs (deutsch belassen, siehe frueherer
+// Uebersetzungs-Sweep).
+// Phase 3 (PDF/E-Mail/WhatsApp-Versand) folgt separat, noch nicht Teil dieser Sitzung.
+// ============================================================
+let invoiceItemRowCount = 0;
+
+function invoiceStatusLabel(status){
+  return { draft:'Entwurf', paid:'Bezahlt', cancelled:'Storniert' }[status] || status;
+}
+function invoiceStatusPillClass(status){
+  return { draft:'pending', paid:'confirmed', cancelled:'cancelled' }[status] || '';
+}
+
+function showInvoiceView(view){
+  ['list','new','detail'].forEach(v=>{
+    const el = document.getElementById('inv-view-'+v);
+    if(el) el.style.display = (v===view) ? 'block' : 'none';
+  });
+  if(view === 'list') renderInvoicesList();
+}
+
+async function loadInvoicesList(){
+  await populateInvoiceFilterCustomerSelect();
+  showInvoiceView('list');
+}
+
+// Kombinierte "Kunde"-Filterliste aus Fahrern + Villen, damit man wie gewuenscht nach einem
+// konkreten Empfaenger filtern kann (nicht nur nach Fahrer/Villa als Kategorie).
+async function populateInvoiceFilterCustomerSelect(){
+  const sel = document.getElementById('inv-filter-customer');
+  if(!sel) return;
+  const current = sel.value;
+  const { data: drivers } = await supabaseClient.from('drivers').select('id, name, lw_number').order('name');
+  const { data: villas } = await supabaseClient.from('villa_partners').select('id, name').order('name');
+  let opts = '<option value="">Alle</option>';
+  opts += (drivers||[]).map(d => `<option value="driver:${d.id}">🚗 ${escapeHtml(d.name)} (${d.lw_number||'—'})</option>`).join('');
+  opts += (villas||[]).map(v => `<option value="villa:${v.id}">🏠 ${escapeHtml(v.name)}</option>`).join('');
+  sel.innerHTML = opts;
+  if(current && sel.querySelector(`option[value="${current}"]`)) sel.value = current;
+}
+
+function resetInvoiceFilters(){
+  document.getElementById('inv-filter-month').value = '';
+  document.getElementById('inv-filter-customer').value = '';
+  document.getElementById('inv-filter-recipient').value = '';
+  document.getElementById('inv-filter-status').value = '';
+  renderInvoicesList();
+}
+
+async function renderInvoicesList(){
+  const listEl = document.getElementById('inv-list');
+  if(!listEl) return;
+  listEl.innerHTML = '<div class="empty-state">Lädt…</div>';
+
+  const month = document.getElementById('inv-filter-month').value; // "2026-08"
+  const customerFilter = document.getElementById('inv-filter-customer').value; // "driver:<id>" / "villa:<id>"
+  const recipientFilter = document.getElementById('inv-filter-recipient').value;
+  const statusFilter = document.getElementById('inv-filter-status').value;
+
+  let query = supabaseClient
+    .from('invoices')
+    .select('id, invoice_number, recipient_type, driver_id, villa_partner_id, invoice_date, period_start, period_end, amount_gross, currency, status, drivers(name, lw_number), villa_partners(name, slug)')
+    .order('invoice_number', { ascending:false });
+
+  if(customerFilter){
+    const [ctype, cid] = customerFilter.split(':');
+    query = ctype === 'driver' ? query.eq('driver_id', cid) : query.eq('villa_partner_id', cid);
+  } else if(recipientFilter){
+    query = query.eq('recipient_type', recipientFilter);
+  }
+  if(statusFilter) query = query.eq('status', statusFilter);
+  if(month){
+    const [y,m] = month.split('-');
+    const from = `${y}-${m}-01`;
+    const to = new Date(Number(y), Number(m), 0).toISOString().slice(0,10); // letzter Tag des Monats
+    query = query.lte('period_start', to).gte('period_end', from);
+  }
+
+  const { data, error } = await query;
+  if(error){ listEl.innerHTML = '<div class="empty-state">Fehler beim Laden: '+escapeHtml(error.message)+'</div>'; return; }
+  const rows = data || [];
+  if(rows.length === 0){ listEl.innerHTML = '<div class="empty-state">Keine Rechnungen gefunden.</div>'; return; }
+
+  listEl.innerHTML = rows.map(r=>{
+    const name = r.recipient_type === 'driver'
+      ? (r.drivers ? escapeHtml(r.drivers.name) + ' (' + (r.drivers.lw_number||'—') + ')' : '—')
+      : (r.villa_partners ? escapeHtml(r.villa_partners.name) : '—');
+    return `
+    <div class="booking-row" style="cursor:pointer;" onclick="openInvoiceDetail('${r.id}')">
+      <div>
+        <div class="who">#${r.invoice_number} · ${name}</div>
+        <div class="when">${r.period_start} – ${r.period_end} · ${formatIDR(r.amount_gross)}</div>
+      </div>
+      <span class="status-pill ${invoiceStatusPillClass(r.status)}">${invoiceStatusLabel(r.status)}</span>
+    </div>`;
+  }).join('');
+}
+
+// ---------- Neue Rechnung erstellen / bestehenden Entwurf bearbeiten (gleiches Formular) ----------
+async function openNewInvoiceForm(){
+  document.getElementById('inv-form-editing-id').value = '';
+  document.getElementById('inv-form-title').textContent = 'Neue Rechnung';
+  document.getElementById('inv-form-submit-btn').textContent = 'Entwurf erstellen';
+  document.getElementById('inv-form-status').textContent = '';
+  document.getElementById('inv-form-recipient-type').value = 'driver';
+  document.getElementById('inv-form-period-start').value = '';
+  document.getElementById('inv-form-period-end').value = '';
+  document.getElementById('inv-form-collection-date').value = '';
+  document.getElementById('inv-form-vat-rate').value = '0';
+  document.getElementById('inv-form-items').innerHTML = '';
+  invoiceItemRowCount = 0;
+  await populateInvoiceFormSelects();
+  onInvoiceRecipientTypeChange();
+  addInvoiceItemRow();
+  showInvoiceView('new');
+}
+
+async function populateInvoiceFormSelects(){
+  const dSel = document.getElementById('inv-form-driver-select');
+  const vSel = document.getElementById('inv-form-villa-select');
+  const { data: drivers } = await supabaseClient.from('drivers').select('id, name, lw_number').eq('status','approved').order('name');
+  dSel.innerHTML = (drivers||[]).map(d=>`<option value="${d.id}">${escapeHtml(d.name)} (${d.lw_number||'—'})</option>`).join('');
+  const { data: villas } = await supabaseClient.from('villa_partners').select('id, name, slug').order('name');
+  vSel.innerHTML = (villas||[]).map(v=>`<option value="${v.id}">${escapeHtml(v.name)}</option>`).join('');
+}
+
+function onInvoiceRecipientTypeChange(){
+  const type = document.getElementById('inv-form-recipient-type').value;
+  document.getElementById('inv-form-driver-field').style.display = (type==='driver') ? '' : 'none';
+  document.getElementById('inv-form-villa-field').style.display = (type==='villa') ? '' : 'none';
+}
+
+function addInvoiceItemRow(desc, qty, unit){
+  invoiceItemRowCount++;
+  const idx = invoiceItemRowCount;
+  const wrap = document.getElementById('inv-form-items');
+  const row = document.createElement('div');
+  row.className = 'inv-item-row';
+  row.id = 'inv-item-row-'+idx;
+  row.style.cssText = 'display:flex; gap:8px; margin-bottom:8px; align-items:flex-end;';
+  row.innerHTML = `
+    <div class="form-field" style="flex:2; margin-bottom:0;">
+      <label>Bezeichnung</label>
+      <input type="text" class="inv-item-desc" value="${desc ? escapeHtml(desc) : ''}" placeholder="z.B. Vermittlungsprovision August 2026" oninput="recalcInvoiceTotals()">
+    </div>
+    <div class="form-field" style="flex:0 0 68px; margin-bottom:0;">
+      <label>Menge</label>
+      <input type="number" class="inv-item-qty" value="${qty!=null?qty:1}" min="0" step="0.01" oninput="recalcInvoiceTotals()">
+    </div>
+    <div class="form-field" style="flex:0 0 130px; margin-bottom:0;">
+      <label>Einzelpreis (IDR)</label>
+      <input type="number" class="inv-item-unit" value="${unit!=null?unit:''}" min="0" step="1000" oninput="recalcInvoiceTotals()">
+    </div>
+    <button type="button" class="link-btn" style="width:auto; color:var(--danger); padding:8px 6px;" onclick="removeInvoiceItemRow(${idx})">🗑</button>
+  `;
+  wrap.appendChild(row);
+  recalcInvoiceTotals();
+}
+function removeInvoiceItemRow(idx){
+  const row = document.getElementById('inv-item-row-'+idx);
+  if(row) row.remove();
+  recalcInvoiceTotals();
+}
+function getInvoiceItemsFromForm(){
+  const rows = document.querySelectorAll('#inv-form-items .inv-item-row');
+  const items = [];
+  rows.forEach(row=>{
+    const desc = row.querySelector('.inv-item-desc').value.trim();
+    const qty = Number(row.querySelector('.inv-item-qty').value || 0);
+    const unit = Number(row.querySelector('.inv-item-unit').value || 0);
+    if(desc && qty > 0){
+      items.push({ description: desc, quantity: qty, unit_price_idr: unit });
+    }
+  });
+  return items;
+}
+function recalcInvoiceTotals(){
+  const items = getInvoiceItemsFromForm();
+  const net = items.reduce((s,it)=> s + Math.round(it.quantity * it.unit_price_idr), 0);
+  const vatRate = Number(document.getElementById('inv-form-vat-rate').value || 0);
+  const vat = Math.round(net * vatRate / 100);
+  const gross = net + vat;
+  document.getElementById('inv-form-preview-net').textContent = formatIDR(net);
+  document.getElementById('inv-form-preview-vat').textContent = formatIDR(vat);
+  document.getElementById('inv-form-preview-gross').textContent = formatIDR(gross);
+}
+
+async function submitInvoiceForm(){
+  const statusEl = document.getElementById('inv-form-status');
+  statusEl.style.color = '';
+  const editingId = document.getElementById('inv-form-editing-id').value;
+  const type = document.getElementById('inv-form-recipient-type').value;
+  const driverId = type === 'driver' ? document.getElementById('inv-form-driver-select').value : null;
+  const villaId = type === 'villa' ? document.getElementById('inv-form-villa-select').value : null;
+  const periodStart = document.getElementById('inv-form-period-start').value;
+  const periodEnd = document.getElementById('inv-form-period-end').value;
+  const collectionDate = document.getElementById('inv-form-collection-date').value || null;
+  const vatRate = Number(document.getElementById('inv-form-vat-rate').value || 0);
+  const items = getInvoiceItemsFromForm();
+
+  if((type==='driver' && !driverId) || (type==='villa' && !villaId)){ statusEl.textContent = 'Bitte einen Empfänger auswählen.'; return; }
+  if(!periodStart || !periodEnd){ statusEl.textContent = 'Bitte den Abrechnungszeitraum angeben.'; return; }
+  if(periodEnd < periodStart){ statusEl.textContent = 'Das Enddatum liegt vor dem Startdatum.'; return; }
+  if(items.length === 0){ statusEl.textContent = 'Bitte mindestens eine Position mit Menge und Preis angeben.'; return; }
+
+  const createdBy = (realDriverProfile && realDriverProfile.name) ? realDriverProfile.name : 'admin';
+
+  if(editingId){
+    // Bestehenden Entwurf bearbeiten: Betraege serverunabhaengig hier neu berechnen (Formular ist
+    // die einzige Quelle), dann Kopf-Update + Positionen komplett ersetzen. Der Schutz-Trigger auf
+    // invoices/invoice_items lehnt das automatisch ab, falls die Rechnung inzwischen nicht mehr im
+    // Entwurf-Status ist -- doppelte Absicherung, nicht nur UI-seitig.
+    const net = items.reduce((s,it)=> s + Math.round(it.quantity * it.unit_price_idr), 0);
+    const vat = Math.round(net * vatRate / 100);
+    const gross = net + vat;
+    const { error: updErr } = await supabaseClient.from('invoices').update({
+      driver_id: driverId, villa_partner_id: villaId, recipient_type: type,
+      period_start: periodStart, period_end: periodEnd, collection_date: collectionDate,
+      vat_rate: vatRate, amount_net: net, vat_amount: vat, amount_gross: gross,
+      updated_at: new Date().toISOString()
+    }).eq('id', editingId);
+    if(updErr){ statusEl.style.color='var(--danger)'; statusEl.textContent = 'Fehler: ' + updErr.message; return; }
+    const { error: delErr } = await supabaseClient.from('invoice_items').delete().eq('invoice_id', editingId);
+    if(delErr){ statusEl.style.color='var(--danger)'; statusEl.textContent = 'Fehler beim Aktualisieren der Positionen: ' + delErr.message; return; }
+    const itemRows = items.map((it, i)=>({
+      invoice_id: editingId, position: i+1, description: it.description,
+      quantity: it.quantity, unit_price_idr: it.unit_price_idr,
+      line_total_idr: Math.round(it.quantity * it.unit_price_idr)
+    }));
+    const { error: itemsErr } = await supabaseClient.from('invoice_items').insert(itemRows);
+    if(itemsErr){ statusEl.style.color='var(--danger)'; statusEl.textContent = 'Fehler bei den Positionen: ' + itemsErr.message; return; }
+    await openInvoiceDetail(editingId);
+    return;
+  }
+
+  // Neue Rechnung: Betragsberechnung passiert bewusst serverseitig in create_invoice_draft()
+  // (keine Fremdwerte von aussen uebernommen), Positionen werden mitgegeben und dort verrechnet.
+  const { data: newId, error } = await supabaseClient.rpc('create_invoice_draft', {
+    p_recipient_type: type,
+    p_driver_id: driverId,
+    p_villa_partner_id: villaId,
+    p_period_start: periodStart,
+    p_period_end: periodEnd,
+    p_collection_date: collectionDate,
+    p_vat_rate: vatRate,
+    p_items: items,
+    p_created_by: createdBy
+  });
+  if(error){ statusEl.style.color='var(--danger)'; statusEl.textContent = 'Fehler: ' + error.message; return; }
+  await openInvoiceDetail(newId);
+}
+
+// ---------- Detailansicht (eigene Unterseite, kein Popup -- so von Joerg gewuenscht) ----------
+async function openInvoiceDetail(invoiceId){
+  showInvoiceView('detail');
+  const wrap = document.getElementById('inv-detail-content');
+  wrap.innerHTML = '<div class="empty-state">Lädt…</div>';
+
+  const { data: inv, error } = await supabaseClient
+    .from('invoices')
+    .select('*, drivers(name, lw_number, phone, email), villa_partners(name, slug, contact_name, contact_email, contact_phone)')
+    .eq('id', invoiceId).single();
+  if(error || !inv){ wrap.innerHTML = '<div class="empty-state">Rechnung konnte nicht geladen werden.</div>'; return; }
+
+  const { data: items } = await supabaseClient.from('invoice_items').select('*').eq('invoice_id', invoiceId).order('position');
+
+  const recipientName = inv.recipient_type === 'driver'
+    ? (inv.drivers ? escapeHtml(inv.drivers.name) + ' (' + (inv.drivers.lw_number||'—') + ')' : '—')
+    : (inv.villa_partners ? escapeHtml(inv.villa_partners.name) : '—');
+
+  const itemsHtml = (items||[]).map(it=>`
+    <tr>
+      <td>${escapeHtml(it.description)}</td>
+      <td style="text-align:right;">${it.quantity}</td>
+      <td style="text-align:right;">${formatIDR(it.unit_price_idr)}</td>
+      <td style="text-align:right;">${formatIDR(it.line_total_idr)}</td>
+    </tr>`).join('');
+
+  let actionsHtml = '';
+  if(inv.status === 'draft'){
+    actionsHtml += `<button type="button" class="period-btn" onclick="editInvoiceDraft('${inv.id}')" style="margin-right:8px;">✎ Bearbeiten</button>`;
+    actionsHtml += `<button type="button" class="period-btn" onclick="markInvoicePaidAdmin('${inv.id}')" style="background:var(--gold); border-color:var(--gold); color:var(--ink); font-weight:700;">✓ Als bezahlt markieren</button>`;
+  } else if(inv.status === 'paid'){
+    actionsHtml += `<button type="button" class="period-btn" onclick="cancelInvoiceAdmin('${inv.id}')" style="color:var(--danger); border-color:var(--danger);">Rechnung stornieren</button>`;
+    actionsHtml += `<p class="dash-head" style="display:block; margin-top:10px; font-style:italic;">PDF-Download, E-Mail- und WhatsApp-Versand folgen in Phase 3.</p>`;
+  } else if(inv.status === 'cancelled'){
+    actionsHtml += `<p class="dash-head" style="display:block;">Diese Rechnung wurde storniert. Die Gegen-Rechnung findest du in der Liste (gleicher Zeitraum, neuere Rechnungsnummer).</p>`;
+  }
+
+  wrap.innerHTML = `
+    <div class="panel" style="padding:20px; max-width:640px;">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px;">
+        <div>
+          <h3 style="margin:0 0 4px;">Rechnung #${inv.invoice_number}</h3>
+          <div class="dash-head" style="display:block;">${recipientName}</div>
+        </div>
+        <span class="status-pill ${invoiceStatusPillClass(inv.status)}">${invoiceStatusLabel(inv.status)}</span>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px; font-size:0.92rem;">
+        <div><strong>Rechnungsdatum</strong><br>${inv.invoice_date}</div>
+        <div><strong>Zeitraum</strong><br>${inv.period_start} – ${inv.period_end}</div>
+        <div><strong>Datum Einzug</strong><br>${inv.collection_date || '—'}</div>
+        <div><strong>Absender</strong><br>Rydanu UG</div>
+      </div>
+      <table style="width:100%; border-collapse:collapse; margin-bottom:14px; font-size:0.9rem;">
+        <thead><tr style="border-bottom:1px solid var(--line);"><th style="text-align:left;">Position</th><th style="text-align:right;">Menge</th><th style="text-align:right;">Einzelpreis</th><th style="text-align:right;">Gesamt</th></tr></thead>
+        <tbody>${itemsHtml}</tbody>
+      </table>
+      <div style="text-align:right; margin-bottom:18px;">
+        <div>Netto: ${formatIDR(inv.amount_net)}</div>
+        <div>MwSt (${inv.vat_rate}%): ${formatIDR(inv.vat_amount)}</div>
+        <div style="font-size:1.1rem; font-weight:700;">Brutto: ${formatIDR(inv.amount_gross)}</div>
+      </div>
+      <div>${actionsHtml}</div>
+      <p class="form-error" id="inv-detail-status"></p>
+    </div>
+  `;
+}
+
+async function editInvoiceDraft(invoiceId){
+  const { data: inv, error } = await supabaseClient.from('invoices').select('*').eq('id', invoiceId).single();
+  if(error || !inv){ alert('Rechnung konnte nicht geladen werden.'); return; }
+  const { data: items } = await supabaseClient.from('invoice_items').select('*').eq('invoice_id', invoiceId).order('position');
+
+  await populateInvoiceFormSelects();
+  document.getElementById('inv-form-editing-id').value = invoiceId;
+  document.getElementById('inv-form-title').textContent = 'Rechnung #' + inv.invoice_number + ' bearbeiten';
+  document.getElementById('inv-form-submit-btn').textContent = 'Änderungen speichern';
+  document.getElementById('inv-form-status').textContent = '';
+  document.getElementById('inv-form-recipient-type').value = inv.recipient_type;
+  onInvoiceRecipientTypeChange();
+  if(inv.recipient_type === 'driver') document.getElementById('inv-form-driver-select').value = inv.driver_id;
+  else document.getElementById('inv-form-villa-select').value = inv.villa_partner_id;
+  document.getElementById('inv-form-period-start').value = inv.period_start;
+  document.getElementById('inv-form-period-end').value = inv.period_end;
+  document.getElementById('inv-form-collection-date').value = inv.collection_date || '';
+  document.getElementById('inv-form-vat-rate').value = inv.vat_rate;
+  document.getElementById('inv-form-items').innerHTML = '';
+  invoiceItemRowCount = 0;
+  (items||[]).forEach(it=> addInvoiceItemRow(it.description, it.quantity, it.unit_price_idr));
+  if((items||[]).length === 0) addInvoiceItemRow();
+  showInvoiceView('new');
+}
+
+async function markInvoicePaidAdmin(invoiceId){
+  if(!confirm('Diese Rechnung als bezahlt markieren? Sie ist danach eingefroren und kann nur noch storniert werden, nicht mehr bearbeitet.')) return;
+  const { error } = await supabaseClient.rpc('mark_invoice_paid', { p_invoice_id: invoiceId });
+  if(error){ alert('Fehler: ' + error.message); return; }
+  openInvoiceDetail(invoiceId);
+}
+
+async function cancelInvoiceAdmin(invoiceId){
+  if(!confirm('Diese Rechnung wirklich stornieren? Es wird automatisch eine neue Gegen-Rechnung mit eigener, neuer Nummer erzeugt -- die Original-Rechnung bleibt unveraendert erhalten (gesetzlich vorgeschrieben), nur der Status aendert sich.')) return;
+  const createdBy = (realDriverProfile && realDriverProfile.name) ? realDriverProfile.name : 'admin';
+  const { data: newId, error } = await supabaseClient.rpc('cancel_invoice', { p_invoice_id: invoiceId, p_created_by: createdBy });
+  if(error){ alert('Fehler: ' + error.message); return; }
+  openInvoiceDetail(newId);
+}
 // Zeit-Textfelder (22.8., dritter Anlauf): input[type=time] liess sich auf iOS trotz mehrerer CSS-
 // Versuche nicht zuverlaessig an die anderen Felder angleichen (blieb eine graue "Pille"). Jetzt
 // ganz normale Textfelder mit automatischer HH:MM-Formatierung beim Tippen, damit die Eingabe
@@ -15700,7 +16168,7 @@ async function rejectRealDriver(id){
   alert(msgError ? 'Fahrer abgelehnt ✓ (die Benachrichtigung konnte allerdings nicht gesendet werden)' : 'Fahrer abgelehnt ✓');
 }
 // ---- Admin: Kachelmenü <-> einzelne Abschnitte (weniger Scrollen) ----
-const ADMIN_SECTIONS = ['pending','openpay','stats','driverstats','messages','block','documents','money','villa','villabookings','pwreset'];
+const ADMIN_SECTIONS = ['pending','openpay','stats','driverstats','messages','block','documents','money','villa','villabookings','pwreset','invoices'];
 function showAdminSection(id){
   const menu = document.getElementById('admin-tile-menu');
   if(menu) menu.style.display = 'none';
@@ -17139,7 +17607,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v324</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v325</div>
 
 </body>
 </html>
