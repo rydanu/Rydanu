@@ -16444,7 +16444,7 @@ function renderRealAdminPendingDrivers(list){
   }
   el.innerHTML = list.map(p=>`
     <div class="panel" style="margin-bottom:16px;">
-      <div class="panel-head"><h3 class="admin-driver-name">${escapeHtml(p.name||'—')}</h3><span class="status-pill pending">Pending</span></div>
+      <div class="panel-head"><h3 class="admin-driver-name">${escapeHtml(p.name||'—')}</h3><span class="status-pill pending">Ausstehend</span></div>
       <div class="booking-row"><div><div class="who">Region</div></div><span>${p.region==='lombok' ? 'Lombok' : 'Bali'}</span></div>
       <div class="booking-row"><div><div class="who">E-Mail</div></div><span>${escapeHtml(p.email||'—')}</span></div>
       <div class="booking-row"><div><div class="who">Telefon</div></div><span>${escapeHtml(p.phone||'—')}</span></div>
@@ -16455,10 +16455,10 @@ function renderRealAdminPendingDrivers(list){
       </div>
       <div style="padding:0 20px 16px;">
         <button type="button" class="link-btn" style="padding:0; margin-bottom:12px;" onclick="jumpToAdminDocuments('${p.id}')">📄 Dokumente ansehen</button>
-        <button class="book-btn" onclick="approveRealDriver('${p.id}')">✓ Approve driver</button>
+        <button class="book-btn" onclick="approveRealDriver('${p.id}')">✓ Fahrer freischalten</button>
         <div class="reject-box">
-          <textarea id="reject-reason-real-${p.id}" rows="2" placeholder="Reason for rejection (required to reject)..."></textarea>
-          <button type="button" class="cancel-btn" style="width:100%;padding:9px;border-radius:5px;" onclick="rejectRealDriver('${p.id}')">✕ Reject driver</button>
+          <textarea id="reject-reason-real-${p.id}" rows="2" placeholder="Grund für Ablehnung (bei Ablehnung erforderlich)..."></textarea>
+          <button type="button" class="cancel-btn" style="width:100%;padding:9px;border-radius:5px;" onclick="rejectRealDriver('${p.id}')">✕ Fahrer ablehnen</button>
         </div>
       </div>
     </div>`).join('');
@@ -16555,7 +16555,7 @@ function renderAdminList(){
     }).join('');
     return `
     <div class="panel" style="margin-bottom:16px;">
-      <div class="panel-head"><h3>${p.fullName}</h3><span class="status-pill pending">Pending</span></div>
+      <div class="panel-head"><h3>${p.fullName}</h3><span class="status-pill pending">Ausstehend</span></div>
       <div class="booking-row"><div><div class="who">Region</div></div><span>${p.region}</span></div>
       <div class="booking-row"><div><div class="who">Languages</div></div><span>${p.langs.join(', ')}</span></div>
       <div style="padding:12px 20px;">
@@ -16563,10 +16563,10 @@ function renderAdminList(){
         <div class="doc-review-row">${docTiles}</div>
       </div>
       <div style="padding:0 20px 16px;">
-        <button class="book-btn" onclick="approveDriver('${p.id}')">✓ Approve driver</button>
+        <button class="book-btn" onclick="approveDriver('${p.id}')">✓ Fahrer freischalten</button>
         <div class="reject-box">
-          <textarea id="reject-reason-${p.id}" rows="2" placeholder="Reason for rejection (required to reject)..."></textarea>
-          <button type="button" class="cancel-btn" style="width:100%;padding:9px;border-radius:5px;" onclick="rejectDriver('${p.id}')">✕ Reject driver</button>
+          <textarea id="reject-reason-${p.id}" rows="2" placeholder="Grund für Ablehnung (bei Ablehnung erforderlich)..."></textarea>
+          <button type="button" class="cancel-btn" style="width:100%;padding:9px;border-radius:5px;" onclick="rejectDriver('${p.id}')">✕ Fahrer ablehnen</button>
         </div>
       </div>
     </div>`;
@@ -17944,7 +17944,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v329</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v330</div>
 
 </body>
 </html>
