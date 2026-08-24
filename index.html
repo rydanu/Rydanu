@@ -9614,7 +9614,7 @@ function updateVillaDot(){
 // ---------- Push-Benachrichtigungen (VAPID) ----------
 // Oeffentlicher Schluessel -- unkritisch, darf im Frontend stehen (Gegenstueck zum privaten
 // Schluessel, der ausschliesslich serverseitig in der Edge Function notify-villa-request liegt).
-const VAPID_PUBLIC_KEY = 'BDTglWC9xbTz3et89j23ZJfFMJmJLJTLWPaiVxavRt45bmuP_maarOH5Fc1lbckz5CLXsWeHffO0JpqYrsDC1y4';
+const VAPID_PUBLIC_KEY = 'BLis_aPTXp6alv8X1ZWuQCNRviUFOfGQVUr7eIMYC87XUnodToNXdHiTNQo7cAT9zObLgvgjC_qwEh2NjcoGrOQ';
 function urlBase64ToUint8Array(base64String){
   const padding = '='.repeat((4 - base64String.length % 4) % 4);
   const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
@@ -18077,7 +18077,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v332</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v333</div>
 
 </body>
 </html>
