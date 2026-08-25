@@ -9887,6 +9887,66 @@ function updateRegisterButtonVisibility(){
   const btn = document.getElementById('tab-register-btn');
   if(btn) btn.style.display = realDriverProfile ? 'none' : '';
 }
+// ============================================
+// Pre-Launch: Menü nach Domain + Rolle trennen (ab 26.8.)
+// Ziel (Jörg-Vorgabe): Kunden auf rydanu.com sehen nur den Kunden-Tab + Reise-Ratgeber-Menü.
+// Fahrer auf getrydanu.com sehen nur "Fahrer-Dashboard" + "Als Fahrer registrieren". Admin
+// (Rolle 'admin' in user_metadata) sieht auf BEIDEN Domains alles, ausser dem
+// Registrierungs-Button (ergibt fuer einen Admin keinen Sinn). Bleibt weiterhin EINE einzige
+// index.html-Datei -- die Umschaltung passiert rein im Browser anhand von location.hostname,
+// kein Build-Prozess, kein zweiter Dateibaum.
+//
+// Staging hat keine eigene zweite Domain (nur eine einzelne Vorschau-Adresse) -- damit beide
+// Ansichten trotzdem dort testbar sind, gilt ein rein optischer Test-Schalter per Adresszeile:
+//   ?ansicht=fahrer  -> zeigt die Fahrer-Domain-Ansicht
+//   ?ansicht=admin   -> zeigt testweise "alles sichtbar" (KEINE echten Zusatz-Rechte, nur Optik)
+// Auf den echten Live-Domains (rydanu.com / getrydanu.com) wird dieser Schalter ignoriert --
+// dort zaehlt ausschliesslich die tatsaechliche Domain.
+// ============================================
+function getMenuDomainMode(){
+  const host = location.hostname || '';
+  if(/(^|\.)getrydanu\.com$/i.test(host)) return 'driver';
+  if(/(^|\.)rydanu\.com$/i.test(host)) return 'customer';
+  // Weder rydanu.com noch getrydanu.com (Staging-Vorschau, localhost, IP...) -- Testschalter erlauben.
+  const testParam = new URLSearchParams(location.search).get('ansicht');
+  if(testParam === 'fahrer') return 'driver';
+  if(testParam === 'admin') return 'admin_test';
+  return 'customer';
+}
+function applyRoleBasedMenuVisibility(){
+  const tabCustomer = document.getElementById('tab-customer');
+  const tabDriver = document.getElementById('tab-driver');
+  const tabRegister = document.getElementById('tab-register-btn');
+  const tabAdmin = document.getElementById('tab-admin');
+  const hamburger = document.querySelector('.hamburger-btn');
+  if(!tabCustomer || !tabDriver || !tabAdmin) return;
+
+  const mode = getMenuDomainMode();
+  const showEverything = isAdminSession || mode === 'admin_test';
+
+  if(showEverything){
+    tabCustomer.style.display = '';
+    tabDriver.style.display = '';
+    tabAdmin.style.display = '';
+    if(hamburger) hamburger.style.display = '';
+    if(tabRegister) tabRegister.style.display = 'none'; // Registrierung ergibt fuer Admin keinen Sinn
+    return;
+  }
+
+  tabAdmin.style.display = 'none'; // Admin-Tab nie fuer Nicht-Admins sichtbar, auf keiner Domain
+
+  if(mode === 'driver'){
+    tabCustomer.style.display = 'none';
+    tabDriver.style.display = '';
+    if(hamburger) hamburger.style.display = 'none'; // Reise-Ratgeber ist Kunden-Content
+    updateRegisterButtonVisibility(); // Button nur zeigen, wenn noch kein eigenes Fahrerprofil eingeloggt ist
+  } else {
+    tabCustomer.style.display = '';
+    tabDriver.style.display = 'none';
+    if(hamburger) hamburger.style.display = '';
+    if(tabRegister) tabRegister.style.display = 'none'; // Registrierung nur auf der Fahrer-Domain
+  }
+}
 function openRealRegisterDriver(){
   document.getElementById('view-customer').classList.remove('active');
   document.getElementById('view-driver').classList.add('active');
@@ -13793,13 +13853,24 @@ function unlockSite(){
   try{ localStorage.setItem(DOOR_UNLOCK_KEY, '1'); }catch(e){}
   loadRealPublicListings();
   updateLombokBandVisibility('customer');
-  // Bugfix (20.8., Joerg gemeldet): checkDriverAuthState() lief bisher nur beim aktiven Wechsel
-  // auf den "Fahrer-Dashboard"-Tab -- auf der Startseite wusste die App darum kurz noch nicht,
-  // dass schon ein echter Fahrer eingeloggt ist. Der "+ Als Fahrer registrieren"-Button war
-  // dadurch faelschlich sichtbar; ein Klick sprang dann ueberraschend ins eigene Dashboard statt
-  // ins Registrierungsformular. Jetzt wird der Login-Status sofort beim Seitenaufruf geprueft
-  // (silent=true, damit keine Fehlermeldung fuer normale Besucher ohne Fahrerkonto erscheint).
-  checkDriverAuthState(true);
+  // Pre-Launch-Menütrennung (26.8.): sofort beim Seitenaufruf domain-abhaengig die passenden
+  // Tabs ein-/ausblenden (noch vor dem asynchronen Login-Check) -- verhindert ein kurzes
+  // Aufblitzen der falschen Tabs auf rydanu.com/getrydanu.com.
+  applyRoleBasedMenuVisibility();
+  if(getMenuDomainMode() === 'driver'){
+    // Fahrer-Domain (getrydanu.com): startet direkt im Fahrer-Bereich statt in der Kundensuche.
+    // switchViewProgrammatic() loest selbst checkDriverAuthState() aus -- der separate Aufruf
+    // unten entfaellt hier bewusst, um die Pruefung nicht doppelt anzustossen.
+    switchViewProgrammatic('driver');
+  } else {
+    // Bugfix (20.8., Joerg gemeldet): checkDriverAuthState() lief bisher nur beim aktiven Wechsel
+    // auf den "Fahrer-Dashboard"-Tab -- auf der Startseite wusste die App darum kurz noch nicht,
+    // dass schon ein echter Fahrer eingeloggt ist. Der "+ Als Fahrer registrieren"-Button war
+    // dadurch faelschlich sichtbar; ein Klick sprang dann ueberraschend ins eigene Dashboard statt
+    // ins Registrierungsformular. Jetzt wird der Login-Status sofort beim Seitenaufruf geprueft
+    // (silent=true, damit keine Fehlermeldung fuer normale Besucher ohne Fahrerkonto erscheint).
+    checkDriverAuthState(true);
+  }
   // Bugfix (20.8., Joerg gemeldet): siehe forceLayoutReflow() weiter unten im Code.
   forceLayoutReflow();
 }
@@ -14912,7 +14983,11 @@ async function checkDriverAuthState(silent){
     if(regBtnHint) regBtnHint.style.display = 'none';
   }
   const { data: { session } } = await supabaseClient.auth.getSession();
-  updateIsAdminSession();
+  // Bugfix im Rahmen der Menü-Trennung (26.8.): updateIsAdminSession() lief hier bisher OHNE
+  // await ("fire and forget") -- die neue Menü-Sichtbarkeits-Funktion braucht isAdminSession aber
+  // zuverlaessig aufgeloest, sonst blieben Admin-Tabs kurzzeitig faelschlich versteckt. Jetzt
+  // gewartet, bevor es weitergeht.
+  await updateIsAdminSession();
   const gate = document.getElementById('driver-auth-gate');
   const dash = document.getElementById('driver-dash-wrap');
   const pendingBanner = document.getElementById('driver-pending-banner');
@@ -14923,6 +14998,7 @@ async function checkDriverAuthState(silent){
     realDriverProfile = null;
     clearDriverProfileHint();
     updateRegisterButtonVisibility();
+    applyRoleBasedMenuVisibility();
     return;
   }
   setAuthLoading(true);
@@ -14938,6 +15014,7 @@ async function checkDriverAuthState(silent){
     realDriverProfile = null;
     clearDriverProfileHint();
     updateRegisterButtonVisibility();
+    applyRoleBasedMenuVisibility();
     if(!silent){
       showAuthError({message:'Profil konnte nicht geladen werden. Bitte nochmal versuchen.'});
     } else {
@@ -14948,6 +15025,7 @@ async function checkDriverAuthState(silent){
   realDriverProfile = driverRow;
   cacheDriverProfileHint(driverRow);
   updateRegisterButtonVisibility();
+  applyRoleBasedMenuVisibility();
   gate.style.display = 'none';
   dash.style.display = 'grid';
   pendingBanner.style.display = driverRow.status === 'pending' ? 'block' : 'none';
@@ -15056,7 +15134,7 @@ function switchView(view){
   // Ohne diesen Reset blieb das Signup-Formular beim Tab-Wechsel einfach stehen.
   if(view==='driver'){ toggleAuthForm('login'); }
   if(view==='driver'){ checkDriverAuthState(true); }
-  if(view==='admin'){ updateIsAdminSession().then(()=>{ renderAdminList(); loadAdminPendingDrivers(); loadRealAdminMessages(); loadAdminDocsResubmittedCount(); renderAdminOpenPayments(); loadVillaApplicationsCount(); }); }
+  if(view==='admin'){ updateIsAdminSession().then(()=>{ applyRoleBasedMenuVisibility(); renderAdminList(); loadAdminPendingDrivers(); loadRealAdminMessages(); loadAdminDocsResubmittedCount(); renderAdminOpenPayments(); loadVillaApplicationsCount(); }); }
 }
 function switchViewProgrammatic(view){
   document.getElementById('view-customer').classList.toggle('active', view==='customer');
@@ -15071,7 +15149,7 @@ function switchViewProgrammatic(view){
   if(regBtn2) regBtn2.classList.remove('active');
   if(view==='driver'){ toggleAuthForm('login'); }
   if(view==='driver'){ checkDriverAuthState(true); }
-  if(view==='admin'){ updateIsAdminSession().then(()=>{ renderAdminList(); loadAdminPendingDrivers(); loadRealAdminMessages(); loadAdminDocsResubmittedCount(); renderAdminOpenPayments(); loadVillaApplicationsCount(); }); }
+  if(view==='admin'){ updateIsAdminSession().then(()=>{ applyRoleBasedMenuVisibility(); renderAdminList(); loadAdminPendingDrivers(); loadRealAdminMessages(); loadAdminDocsResubmittedCount(); renderAdminOpenPayments(); loadVillaApplicationsCount(); }); }
 }
 // ---- admin: approve pending drivers ----
 let adminPeriod = 'month';
@@ -16530,7 +16608,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v336</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v337</div>
 
 </body>
 </html>
