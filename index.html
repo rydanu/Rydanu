@@ -13839,6 +13839,17 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLI
 const GOOGLE_PLACES_API_KEY = 'AIzaSyACr3tIZO1chp1rpC6jfVHd92mHdEqqZB0';
 
 let realDriverProfile = null; // vom Server geladenes echtes Fahrerprofil (ersetzt die Demo-Daten fuer Baustein 1)
+// Bugfix (26.8., Joerg gemeldet per Screenshot auf /lombok): isAdminSession stand bisher erst
+// sehr weit unten im Code (direkt vor updateIsAdminSession()). Die neue Menü-Sichtbarkeits-Funktion
+// (applyRoleBasedMenuVisibility) liest isAdminSession aber schon ganz am Anfang beim Laden der
+// Seite, noch bevor das Skript an dieser spaeteren Stelle angekommen ist -- das crashte mit
+// "Cannot access 'isAdminSession' before initialization" (Temporal Dead Zone), sobald die
+// Baustellen-Tuer schon vorher entsperrt war (dann laeuft der Login-Check synchron statt
+// asynchron). Der Crash brach den ganzen Ladevorgang mittendrin ab, wodurch KEINE der neuen
+// Menü-Regeln mehr griff -- alle Tabs blieben im urspruenglichen "alles sichtbar"-Zustand
+// (erklaert auch das tiefer gerutschte Logo: 6 statt 2 Tabs brauchten mehr Platz und brachen um).
+// Fix: Deklaration ganz nach oben, zu den anderen globalen Status-Variablen.
+let isAdminSession = false;
 
 // ============================================
 // BAUSTELLEN-TÜR (Phase 3) — Login-Sperre vor der ganzen Plattform.
@@ -15498,7 +15509,8 @@ async function requestDocReuploadWhatsApp(driverId, docKey, docLabel, driverPhon
 // Fahrerprofil hat: realDriverProfile bleibt dann null, obwohl die Person echter Admin ist, und
 // die Funktionen zeigten faelschlich die Demo-Daten (nur 1 Fahrer "Wayan Sudiartha") statt der
 // echten Fahrerliste. isAdminSession prueft die Admin-Rolle direkt und unabhaengig davon.
-let isAdminSession = false;
+// (Deklaration von isAdminSession wurde nach oben verschoben, siehe Bugfix 26.8. bei
+// realDriverProfile -- hier bleibt nur noch die Funktion.)
 async function updateIsAdminSession(){
   const { data: { session } } = await supabaseClient.auth.getSession();
   isAdminSession = !!(session && session.user && session.user.user_metadata && session.user.user_metadata.role === 'admin');
@@ -16619,7 +16631,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v338</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v339</div>
 
 </body>
 </html>
