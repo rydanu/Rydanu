@@ -22,7 +22,7 @@
      gebraucht werden (Supabase-Backend, CDN-Skripte, Pexels-Bilder) -- der Browser baut die
      Verbindung (DNS + TLS) schon im Hintergrund auf, bevor er die eigentliche Datei anfordert.
      Reine Beschleunigung, aendert an der Funktion nichts. -->
-<link rel="preconnect" href="https://xpmrefoscyroihoglmum.supabase.co">
+<link rel="preconnect" href="https://dfwbixcegggijkftontt.supabase.co">
 <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="preconnect" href="https://images.pexels.com">
@@ -787,13 +787,6 @@
   .register-driver-btn{
     width:100%; background:var(--gold); color:var(--ink); border:none; font-weight:700; font-size:0.82rem;
     padding:10px; border-radius:5px; cursor:pointer; margin-bottom:20px; font-family:'Public Sans';
-  }
-  .demo-switcher{
-    margin: 4px 20px 14px; padding:10px 12px; border:1px dashed var(--gold-deep); border-radius:6px; background:rgba(201,162,39,0.08);
-  }
-  .demo-switcher-label{ font-family:'JetBrains Mono'; font-size:0.65rem; font-weight:700; text-transform:uppercase; letter-spacing:0.03em; color:var(--teal); margin-bottom:6px; }
-  .demo-switcher select{
-    width:100%; padding:7px 8px; font-family:'Public Sans'; font-size:0.85rem; font-weight:600; border-radius:4px; border:1px solid var(--line); background:var(--paper); color:var(--ink);
   }
   .dash-nav-item{
     display:flex; align-items:center; gap:10px; padding:10px 10px; border-radius:5px;
@@ -2080,10 +2073,6 @@
           </div>
         </div>
       </div>
-      <div class="demo-switcher" style="display:none;">
-        <div class="demo-switcher-label" data-i18n="demo_switch_driver_label">🎭 Demo — view as driver</div>
-        <select id="demo-driver-select" onchange="loadDriverContext(this.value)"></select>
-      </div>
       <div class="dash-nav-item active" data-section="overview" data-i18n="nav_overview" onclick="showDashSection('overview')">Overview</div>
       <div class="dash-nav-item" data-section="listings" data-i18n="nav_listings" onclick="showDashSection('listings')">My listings</div>
       <div class="dash-nav-item" data-section="bookings" onclick="showDashSection('bookings')"><span data-i18n="nav_bookings">Bookings</span> <span class="inbox-dot" id="bookings-dot" style="display:none;"></span></div>
@@ -2388,23 +2377,14 @@
       <p class="note" id="admin-current-account" style="margin:0;"></p>
       <button type="button" class="cancel-btn" style="padding:8px 16px; font-size:0.85rem;" onclick="handleDriverLogout()">🚪 Abmelden</button>
     </div>
-    <!-- Entwickler-Tools fuer die Demo-Daten -- bewusst nur hier im Admin-Bereich (nicht mehr im
-         oeffentlichen Footer, siehe Audit 12. August): betrifft ausschliesslich lokale Demo-Daten
-         in diesem Browser, niemals echte Supabase-Daten. -->
-    <details style="margin-bottom:20px;">
-      <summary style="cursor:pointer; font-family:'JetBrains Mono'; font-size:0.68rem; color:var(--ink-soft); text-transform:uppercase; letter-spacing:0.03em;">Entwickler-Tools (nur Demo-Daten)</summary>
-      <div style="margin-top:8px; display:flex; gap:10px; flex-wrap:wrap;">
-        <button type="button" onclick="resetDemoData()" style="background:none;border:1px solid var(--line);color:var(--ink-soft);border-radius:8px;padding:6px 10px;cursor:pointer;font-family:'JetBrains Mono';font-size:0.68rem;">Reset demo data</button>
-        <button type="button" onclick="openDataTransfer('export')" style="background:none;border:1px solid var(--line);color:var(--ink-soft);border-radius:8px;padding:6px 10px;cursor:pointer;font-family:'JetBrains Mono';font-size:0.68rem;">Export data</button>
-        <button type="button" onclick="openDataTransfer('import')" style="background:none;border:1px solid var(--line);color:var(--ink-soft);border-radius:8px;padding:6px 10px;cursor:pointer;font-family:'JetBrains Mono';font-size:0.68rem;">Import data</button>
-        <!-- Admin-Testzugang (20.8., Joerg-Wunsch): das normale "+ Als Fahrer registrieren" ist
-             absichtlich versteckt, sobald man als echter Fahrer eingeloggt ist (verhindert den
-             verwirrenden Sprung ins eigene Dashboard fuer normale Besucher). Als Admin will Joerg
-             das Formular trotzdem ab und zu testen koennen -- dieser Button zeigt es IMMER, ohne
-             an der normalen Logik fuer echte Besucher etwas zu aendern. -->
-        <button type="button" onclick="openRegisterDriverTestAccess()" style="background:none;border:1px solid var(--line);color:var(--ink-soft);border-radius:8px;padding:6px 10px;cursor:pointer;font-family:'JetBrains Mono';font-size:0.68rem;">🧪 Registrierungsformular testen</button>
-      </div>
-    </details>
+    <!-- Admin-Testzugang (20.8., Joerg-Wunsch): das normale "+ Als Fahrer registrieren" ist
+         absichtlich versteckt, sobald man als echter Fahrer eingeloggt ist (verhindert den
+         verwirrenden Sprung ins eigene Dashboard fuer normale Besucher). Als Admin will Joerg
+         das Formular trotzdem ab und zu testen koennen -- dieser Button zeigt es IMMER, ohne
+         an der normalen Logik fuer echte Besucher etwas zu aendern. -->
+    <div style="margin-bottom:20px;">
+      <button type="button" onclick="openRegisterDriverTestAccess()" style="background:none;border:1px solid var(--line);color:var(--ink-soft);border-radius:8px;padding:6px 10px;cursor:pointer;font-family:'JetBrains Mono';font-size:0.68rem;">🧪 Registrierungsformular testen</button>
+    </div>
 
     <div class="admin-tile-grid" id="admin-tile-menu">
       <button type="button" class="admin-tile" id="admin-tile-pending" onclick="showAdminSection('pending')">
@@ -2481,7 +2461,6 @@
     <div id="admin-sec-openpay" style="display:none;">
     <h2 style="margin-top:0;" data-i18n="admin_openpay_title">Open payments</h2>
     <p class="dash-head" style="display:block; margin-bottom:14px;" data-i18n="admin_openpay_sub">All drivers with open fees right now. You can collect fees manually here at any time — real billing also runs automatically every day.</p>
-    <button type="button" class="link-btn" id="admin-run-settlement-btn" onclick="runMonthEndSettlementManual()" style="margin-bottom:14px; text-align:left; padding:0;">▶ <span data-i18n="admin_run_settlement_btn">Run month-end settlement now (test)</span></button>
     <div class="panel" id="admin-openpayments-list" style="margin-bottom:8px;"></div>
 
     </div>
@@ -2974,10 +2953,10 @@
     <div class="modal-body">
       <div class="form-field" style="margin-bottom:14px;">
         <label data-i18n="admin_filter_by_driver">Nach Fahrer filtern</label>
-        <select id="fee-overrides-filter-select" onchange="renderFeeOverridesList()"></select>
+        <select id="fee-overrides-filter-select" onchange="renderRealFeeOverridesList()"></select>
       </div>
       <label class="nl-service-check" style="margin-bottom:14px;">
-        <input type="checkbox" id="fee-overrides-active-only" checked onchange="renderFeeOverridesList()">
+        <input type="checkbox" id="fee-overrides-active-only" checked onchange="renderRealFeeOverridesList()">
         <span data-i18n="admin_fo_active_only">Nur aktive anzeigen</span>
       </label>
       <div id="admin-fee-overrides-list"></div>
@@ -2996,7 +2975,7 @@
     <div class="modal-body">
       <div class="form-field" style="margin-bottom:14px;">
         <label data-i18n="admin_filter_by_driver">Nach Fahrer filtern</label>
-        <select id="fee-credits-filter-select" onchange="renderFeeCreditsList()"></select>
+        <select id="fee-credits-filter-select" onchange="renderRealFeeCreditsList()"></select>
       </div>
       <div id="admin-fee-credits-list"></div>
     </div>
@@ -3013,7 +2992,7 @@
     <div class="modal-body">
       <div class="form-field" style="margin-bottom:14px;">
         <label data-i18n="admin_filter_by_driver">Nach Fahrer filtern</label>
-        <select id="fee-charges-filter-select" onchange="renderFeeChargesList()"></select>
+        <select id="fee-charges-filter-select" onchange="renderRealFeeChargesList()"></select>
       </div>
       <div id="admin-fee-charges-list"></div>
     </div>
@@ -3650,31 +3629,6 @@
   </div>
 </div>
 
-<!-- demo data export / import modal -->
-<div class="modal-bg" id="data-transfer-modal-bg">
-  <div class="modal">
-    <div class="modal-header">
-      <button class="modal-close" onclick="closeDataTransfer()">✕</button>
-      <span class="eyebrow">Rydanu Demo</span>
-      <h2 id="dt-title">Export data</h2>
-    </div>
-    <div class="modal-body">
-      <p class="note" id="dt-hint" style="margin-top:0;"></p>
-      <div id="dt-upload-row" style="display:none; margin-bottom:14px;">
-        <label class="review-photo-label" for="dt-file-input">📄 <span data-i18n="dt_upload_btn">Upload a .txt file instead</span></label>
-        <input type="file" id="dt-file-input" accept=".txt,text/plain" style="display:none;" onchange="handleDataTransferFile(event)">
-      </div>
-      <div class="form-field">
-        <textarea id="dt-textarea" rows="7" style="font-family:'JetBrains Mono'; font-size:0.68rem;"></textarea>
-      </div>
-      <p class="form-error" id="dt-status" style="color:var(--teal);"></p>
-      <button class="book-btn" id="dt-action-btn" onclick="dataTransferAction()">Copy to clipboard</button>
-      <button class="link-btn" id="dt-download-btn" onclick="downloadDataTransferFile()" style="display:none; width:100%; text-align:center; margin-top:8px;">💾 <span data-i18n="dt_download_btn">Download as .txt file</span></button>
-      <button class="link-btn" id="dt-lite-btn" onclick="exportWithoutPhotos()" style="display:none; width:100%; text-align:center; margin-top:8px;">📉 Export without photos (faster, smaller)</button>
-    </div>
-  </div>
-</div>
-
 <!-- driver: receipt detail modal -->
 <div class="modal-bg" id="receipt-modal-bg">
   <div class="modal" style="max-width:440px;">
@@ -4206,20 +4160,6 @@
   </div>
 </div>
 
-<!-- document preview modal -->
-<div class="modal-bg" id="doc-preview-modal-bg">
-  <div class="modal" style="max-width:520px;">
-    <div class="modal-header">
-      <button class="modal-close" onclick="closeDocPreview()">✕</button>
-      <span class="eyebrow">Document</span>
-      <h2 id="doc-preview-title">Preview</h2>
-    </div>
-    <div class="modal-body" style="text-align:center;">
-      <img id="doc-preview-img" src="" alt="Document preview" style="max-width:100%; border-radius:6px; border:1px solid var(--line);">
-    </div>
-  </div>
-</div>
-
 <!-- terms modal -->
 <div class="modal-bg" id="terms-modal-bg">
   <div class="modal">
@@ -4513,192 +4453,22 @@ function renderServiceRegionChips(rowId, island){
   else row.innerHTML = html;
 }
 
-// ---- persistence: keep demo changes across reloads on this device/browser ----
-const STORAGE_KEY = 'ryvio_demo_state_v1';
-const LEGACY_STORAGE_KEY = 'ryvio_demo_state_v1'; // pre-rebrand key — migrated automatically if found
-function saveState(){
-  const state = { driverProfiles, driverDataStore, drivers, currentDriverId, currentLang, calEvents, supportThreads, lastSettlementRunDateISO, feeOverrides, feeCredits };
-  try{
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  }catch(e){
-    // storage full — free up space in stages, biggest offenders first, so the
-    // driver's own small avatar photo is the very last thing ever removed
-    const slim = JSON.parse(JSON.stringify(state));
-    const tryStages = [
-      () => { // stage 1: drop page gallery videos (by far the largest items)
-        Object.values(slim.driverProfiles || {}).forEach(p=>{
-          if(p.page && Array.isArray(p.page.media)){
-            p.page.media = p.page.media.filter(m=>m.type!=='video');
-          }
-        });
-      },
-      () => { // stage 2: drop page gallery photos too
-        Object.values(slim.driverProfiles || {}).forEach(p=>{
-          if(p.page) p.page.media = [];
-        });
-      },
-      () => { // stage 3: drop uploaded registration documents
-        Object.values(slim.driverProfiles || {}).forEach(p=>{
-          Object.values(p.docs || {}).forEach(d=>{ if(d && d.dataUrl) d.dataUrl = null; });
-        });
-      },
-      () => { // stage 4 (last resort): drop the driver's own small profile photo
-        Object.values(slim.driverProfiles || {}).forEach(p=>{ if(p.photo) p.photo = null; });
-        (slim.drivers || []).forEach(d=>{ if(d.photo) d.photo = null; });
-      },
-    ];
-    let saved = false;
-    for(const stage of tryStages){
-      stage();
-      try{
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(slim));
-        saved = true;
-        break;
-      }catch(e2){ /* try next stage */ }
-    }
-    if(saved){
-      console.warn('Rydanu demo: storage limit reached — some large media had to be dropped to keep saving working');
-      if(!window.__storageWarningShown){
-        window.__storageWarningShown = true;
-        setTimeout(()=>{ alert('⚠️ Storage limit reached on this device.\n\nSome photos/videos could not be saved and were removed automatically so your bookings, messages and settings keep working.\n\nPlease export your data now (footer → "Export data") to back it up safely, and consider removing some gallery photos.'); }, 300);
-      }
-    } else {
-      console.warn('Rydanu demo: could not save state even after freeing space', e);
-    }
-  }
+// ---- persistence: nur noch die Sprachauswahl (DE/EN/ID) wird device-lokal gemerkt ----
+// Ersetzt das alte Demo-Zustands-Objekt (ryvio_demo_state_v1), das frueher Fake-Fahrerdaten,
+// Fake-Buchungen usw. im Browser gespeichert hat. Die Sprachauswahl war da mit reingepackt --
+// bekommt jetzt einen eigenen, minimalen Speicherplatz, damit sie fuer echte Besucher weiterhin
+// ueber einen Seiten-Reload hinweg erhalten bleibt.
+const LANG_STORAGE_KEY = 'rydanu_lang';
+function saveLangPreference(lang){
+  try{ localStorage.setItem(LANG_STORAGE_KEY, lang); }catch(e){}
 }
-function loadSavedState(){
-  try{
-    let raw = localStorage.getItem(STORAGE_KEY);
-    if(!raw){
-      // one-time migration: bring over data saved before the Rydanu rebrand
-      const legacy = localStorage.getItem(LEGACY_STORAGE_KEY);
-      if(legacy){
-        localStorage.setItem(STORAGE_KEY, legacy);
-        raw = legacy;
-      }
-    }
-    if(!raw) return false;
-    const state = JSON.parse(raw);
-    if(state.driverProfiles) driverProfiles = state.driverProfiles;
-    if(state.driverDataStore) driverDataStore = state.driverDataStore;
-    // Nachbesserung (4. August): state.drivers wird bewusst NICHT mehr wiederhergestellt.
-    // Das ist die eigentliche Ursache, warum Demo-Fahrer-Karten (z.B. "Wayan Sudiartha") trotz
-    // leerem `drivers`-Array im Code (Phase 5) auf Geraeten/Browsern wieder auftauchen konnten,
-    // die die alte Demo-Version vor der Supabase-Umstellung schon mal benutzt hatten: der lokal
-    // gespeicherte Browser-Stand (localStorage) hat die alten Demo-Karten in die echte Suche
-    // zurueckgeschrieben. Die echte Suche laedt Fahrer ausschliesslich ueber loadRealPublicListings().
-    if(state.calEvents) calEvents = state.calEvents;
-    if(state.supportThreads) supportThreads = state.supportThreads;
-    if(state.lastSettlementRunDateISO) lastSettlementRunDateISO = state.lastSettlementRunDateISO;
-    if(state.feeOverrides && Array.isArray(state.feeOverrides)) feeOverrides = state.feeOverrides;
-    if(state.feeCredits && Array.isArray(state.feeCredits)) feeCredits = state.feeCredits;
-    if(state.currentDriverId) currentDriverId = state.currentDriverId;
-    if(state.currentLang) currentLang = state.currentLang;
-    normalizeLoadedState();
-    return true;
-  }catch(e){
-    console.warn('Rydanu demo: could not load saved state', e);
-    // this previously failed completely silently — the app just looked "reset" with
-    // no explanation, which is exactly the confusing symptom to avoid
-    setTimeout(()=>{ alert('⚠️ Could not load your saved Rydanu data on this device — it may be corrupted or too large for this browser\'s storage.\n\nIf you just imported a file, please try again using "Export without photos" instead.\n\n(Technical detail: ' + (e && e.message ? e.message : e) + ')'); }, 300);
-    return false;
-  }
-}
-// Fills in any fields that didn't exist yet in older saved versions of the app,
-// so opening a new version with old browser data never crashes the page.
-function normalizeLoadedState(){
-  try{
-    Object.keys(driverProfiles || {}).forEach(id=>{
-      const p = driverProfiles[id];
-      if(!p) return;
-      if(!p.docs) p.docs = {};
-      if(!p.vehicle) p.vehicle = {vtype:'Standard Car', car:'', plate:'', color:''};
-      if(!p.vehicle.vtype) p.vehicle.vtype = 'Standard Car';
-      if(!p.payment) p.payment = {qris:true, link:''};
-      if(!p.langs) p.langs = ['EN'];
-      if(!p.lwNumber) p.lwNumber = 'RY-' + Math.floor(100 + Math.random()*899);
-      if(p.lwNumber && /^LW-/i.test(p.lwNumber)) p.lwNumber = p.lwNumber.replace(/^LW-/i, 'RY-');
-      if(!p.status) p.status = 'approved';
-      if(p.referredBy === undefined) p.referredBy = null;
-      if(p.blockedReason === undefined) p.blockedReason = p.status==='blocked' ? 'admin' : null;
-      if(p.referralBonusGranted === undefined) p.referralBonusGranted = false;
-      if(!p.page) p.page = { about:'', media:[] };
-    });
-    Object.keys(driverDataStore || {}).forEach(id=>{
-      const s = driverDataStore[id];
-      if(!s) return;
-      if(!Array.isArray(s.listings)) s.listings = [];
-      if(!Array.isArray(s.bookings)) s.bookings = [];
-      if(!Array.isArray(s.completed)) s.completed = [];
-      if(!Array.isArray(s.reviews)) s.reviews = [];
-      if(!Array.isArray(s.receipts)) s.receipts = [];
-      s.receipts = s.receipts.filter(r => !r || r.amount >= 1000 || r.amount === 0); // drops stray pre-IDR leftovers like amount:3
-      if(!Array.isArray(s.messages)) s.messages = [];
-      if(!Array.isArray(s.tourRequests)) s.tourRequests = [];
-      if(!s.stats) s.stats = {views:0, rating:'New'};
-      if(s.stats.referralCredit === undefined) s.stats.referralCredit = 0;
-      if(s.stats.adminCredit === undefined) s.stats.adminCredit = 0;
-      if(s.openPayment === undefined) s.openPayment = null;
-      s.listings.forEach(l=>{
-        if(!Array.isArray(l.services)) l.services = [];
-        if(!Array.isArray(l.spots)) l.spots = [];
-        if(!Array.isArray(l.extras)) l.extras = [];
-        if(l.serviceRegions===undefined) l.serviceRegions = [];
-        if(!l.airportRegions) l.airportRegions = {};
-        if(!l.transferRegions) l.transferRegions = {};
-        l.fee = feeForPrice(l.price, l.spots, id); // always reflect the current fee rules, not a stale stored value
-      });
-      s.bookings.forEach(b=>{ if(!b.status) b.status = 'pending'; });
-    });
-    (drivers || []).forEach(d=>{
-      if(!Array.isArray(d.services)) d.services = [];
-      if(!Array.isArray(d.spots)) d.spots = [];
-      if(!Array.isArray(d.extras)) d.extras = [];
-      if(d.serviceRegions===undefined) d.serviceRegions = [];
-      if(!d.airportRegions) d.airportRegions = {};
-      if(!d.transferRegions) d.transferRegions = {};
-      if(!d.lang) d.lang = ['EN'];
-      if(!d.vehicleType) d.vehicleType = 'Standard Car';
-    });
-    Object.keys(supportThreads || {}).forEach(id=>{
-      const th = supportThreads[id];
-      if(th && !Array.isArray(th.entries)) th.entries = [];
-    });
-    purgeOldDeletedMessages();
-    if(!driverProfiles[currentDriverId]) currentDriverId = Object.keys(driverProfiles)[0] || 'wayan';
-    Object.keys(driverProfiles).forEach(id=>{ syncDriverRating(id); });
-    // old versions keyed blocked calendar days by plain day-number within a fixed "July 2026" — migrate to dated keys
-    const oldKeys = Object.keys(calEvents || {}).filter(k => /^\d{1,2}$/.test(k));
-    if(oldKeys.length){
-      oldKeys.forEach(k=>{
-        const migrated = '2026-07-' + String(k).padStart(2,'0');
-        if(!calEvents[migrated]) calEvents[migrated] = calEvents[k];
-        delete calEvents[k];
-      });
-    }
-  }catch(e){ console.warn('Rydanu demo: state normalization skipped a field', e); }
-}
-// Demo-Gegenstueck zum taeglichen Supabase-Cronjob: entfernt Nachrichten/Chat-Verlaeufe, die seit
-// 30+ Tagen im Ordner "Gelöscht" liegen, endgueltig. Wird bei jedem Start geprueft (localStorage
-// kennt keinen eigenen Cronjob), betrifft also nur die Demo-Daten — echte Fahrer/Admin laufen ueber
-// die Supabase-Funktion purge_deleted_messages().
-function purgeOldDeletedMessages(){
-  try{
-    const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
-    const cutoff = Date.now() - THIRTY_DAYS_MS;
-    Object.values(driverDataStore || {}).forEach(s=>{
-      if(!s || !Array.isArray(s.messages)) return;
-      s.messages = s.messages.filter(m => !(m.deleted && m.deletedAt && new Date(m.deletedAt).getTime() < cutoff));
-    });
-    Object.keys(supportThreads || {}).forEach(id=>{
-      const th = supportThreads[id];
-      if(th && th.deleted && th.deletedAt && new Date(th.deletedAt).getTime() < cutoff){
-        delete supportThreads[id];
-      }
-    });
-  }catch(e){ console.warn('Rydanu demo: purge of old deleted messages skipped', e); }
-}
+// Uebergangs-Stub (25. August): mehrere alte, aktuell unerreichbare Demo-Codepfade (alte
+// Fahrerseiten-Demo-Anzeige, alte lokale Admin-Sonderkonditionen-Verwaltung -- geplante
+// Phase-2-Bereinigung, siehe Uebergabe) rufen an vereinzelten Stellen noch saveState() auf.
+// Diese Pfade sind seit dem Entfernen des Demo-Fahrers "Wayan" nicht mehr erreichbar (driverProfiles
+// ist jetzt leer), der Aufruf bleibt als reiner Sicherheits-Stub bestehen (macht bewusst nichts),
+// damit kein harter Absturz entsteht, falls doch noch eine Stelle uebersehen wurde.
+function saveState(){}
 let srStarRating = 0;
 let srReviewPhoto = null;
 let srBookingId = null;
@@ -5554,10 +5324,9 @@ function openDriverPageFromModal(){
   if(!currentDriver || !currentDriver.ownerId) return;
   openDriverPage(currentDriver.ownerId, 'visitor');
 }
-// echtes Fahrer-Dashboard -> eigene "My Page" oeffnen (nutzt realDriverProfile statt der Demo-ID)
+// echtes Fahrer-Dashboard -> eigene "My Page" oeffnen
 function openMyPageOwner(){
-  if(realDriverProfile){ openDriverPage(realDriverProfile.id, 'owner'); return; }
-  openDriverPage(currentDriverId, 'owner');
+  if(realDriverProfile) openDriverPage(realDriverProfile.id, 'owner');
 }
 function closeDriverPage(){ document.getElementById('driver-page').style.display = 'none'; }
 function renderDriverPage(){
@@ -6512,156 +6281,6 @@ async function cancelMyBooking(){
 let lastBookingRef = null;
 
 let dtMode = 'export';
-function openDataTransfer(mode){
-  dtMode = mode;
-  const ta = document.getElementById('dt-textarea');
-  document.getElementById('dt-status').textContent = '';
-  document.getElementById('dt-file-input').value = '';
-  if(mode==='export'){
-    document.getElementById('dt-title').textContent = t('dt_export_title');
-    document.getElementById('dt-upload-row').style.display = 'none';
-    saveState();
-    const raw = localStorage.getItem(STORAGE_KEY) || '';
-    ta.value = raw;
-    ta.readOnly = true;
-    const kb = Math.round(raw.length / 1024);
-    const sizeWarning = kb > 300 ? ' ' + t('dt_size_warning').replace('{kb}', kb) : ' (' + kb + ' KB)';
-    document.getElementById('dt-hint').innerHTML = t('dt_export_hint') + sizeWarning;
-    document.getElementById('dt-action-btn').textContent = t('dt_copy_btn');
-    document.getElementById('dt-lite-btn').style.display = 'block';
-    document.getElementById('dt-download-btn').style.display = 'block';
-  } else {
-    document.getElementById('dt-title').textContent = t('dt_import_title');
-    document.getElementById('dt-upload-row').style.display = 'block';
-    document.getElementById('dt-hint').textContent = t('dt_import_hint');
-    document.getElementById('dt-action-btn').textContent = t('dt_import_btn');
-    document.getElementById('dt-lite-btn').style.display = 'none';
-    document.getElementById('dt-download-btn').style.display = 'none';
-    ta.value = '';
-    ta.readOnly = false;
-  }
-  document.getElementById('data-transfer-modal-bg').classList.add('active');
-}
-function downloadDataTransferFile(){
-  const text = document.getElementById('dt-textarea').value;
-  const blob = new Blob([text], {type:'text/plain'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  const stamp = new Date().toISOString().slice(0,10);
-  a.download = 'ryvio-export-' + stamp + '.txt';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-  document.getElementById('dt-status').style.color = 'var(--teal)';
-  document.getElementById('dt-status').textContent = t('dt_file_downloaded');
-}
-function handleDataTransferFile(event){
-  const file = event.target.files[0];
-  if(!file) return;
-  const reader = new FileReader();
-  reader.onload = e=>{
-    document.getElementById('dt-textarea').value = e.target.result;
-    document.getElementById('dt-status').style.color = 'var(--teal)';
-    document.getElementById('dt-status').textContent = t('dt_file_loaded');
-  };
-  reader.onerror = ()=>{
-    document.getElementById('dt-status').style.color = '#C0392B';
-    document.getElementById('dt-status').textContent = t('dt_file_read_error');
-  };
-  reader.readAsText(file);
-}
-function closeDataTransfer(){ document.getElementById('data-transfer-modal-bg').classList.remove('active'); }
-function exportWithoutPhotos(){
-  const state = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
-  Object.values(state.driverProfiles || {}).forEach(p=>{
-    if(p.photo) p.photo = null;
-    if(p.page && p.page.media) p.page.media = [];
-    Object.values(p.docs || {}).forEach(d=>{ if(d && d.dataUrl) d.dataUrl = null; });
-  });
-  (state.drivers || []).forEach(d=>{ if(d.photo) d.photo = null; });
-  Object.values(state.driverDataStore || {}).forEach(s=>{
-    (s.reviews || []).forEach(r=>{ if(r.photo) r.photo = null; });
-  });
-  const lite = JSON.stringify(state);
-  const ta = document.getElementById('dt-textarea');
-  ta.value = lite;
-  const kb = Math.round(lite.length / 1024);
-  document.getElementById('dt-hint').textContent = t('dt_lite_ready').replace('{kb}', kb);
-  copyTextareaValue(ta, false);
-}
-// Tries the Clipboard API directly first (no DOM text-selection needed — selecting
-// megabytes of text is what actually freezes older iPhones). Falls back to the
-// classic select+execCommand only if the Clipboard API isn't available.
-function copyTextareaValue(ta, showGenericMessage){
-  const done = ()=>{ document.getElementById('dt-status').textContent = t('dt_copied'); };
-  const fail = ()=>{
-    try{
-      ta.focus();
-      ta.select();
-      ta.setSelectionRange(0, ta.value.length);
-      document.execCommand('copy');
-      document.getElementById('dt-status').textContent = t('dt_copied_short');
-    }catch(e){
-      document.getElementById('dt-status').textContent = t('dt_copy_failed');
-    }
-  };
-  if(navigator.clipboard && navigator.clipboard.writeText){
-    navigator.clipboard.writeText(ta.value).then(done, fail);
-  } else {
-    fail();
-  }
-}
-function dataTransferAction(){
-  const ta = document.getElementById('dt-textarea');
-  if(dtMode==='export'){
-    copyTextareaValue(ta, true);
-  } else {
-    const val = ta.value.trim();
-    document.getElementById('dt-status').textContent = t('dt_importing');
-    document.getElementById('dt-status').style.color = 'var(--teal)';
-    setTimeout(()=>{
-      let parsed;
-      try{
-        parsed = JSON.parse(val);
-        if(!parsed.driverProfiles || !parsed.driverDataStore) throw new Error('missing keys');
-      }catch(e){
-        document.getElementById('dt-status').textContent = t('dt_invalid_code');
-        document.getElementById('dt-status').style.color = '#C0392B';
-        return;
-      }
-      // the JSON itself is valid — now try to actually store it. This can separately
-      // fail on quota if the export included a lot of photos, which needs a very
-      // different, more actionable message than "invalid code".
-      try{
-        localStorage.setItem(STORAGE_KEY, val);
-      }catch(storageErr){
-        document.getElementById('dt-status').textContent = t('dt_storage_full');
-        document.getElementById('dt-status').style.color = '#C0392B';
-        return;
-      }
-      // verify the write actually landed correctly before reloading into it —
-      // otherwise a silent partial write would reload into what looks like a reset app
-      const readBack = localStorage.getItem(STORAGE_KEY);
-      let readBackOk = false;
-      try{ const rb = JSON.parse(readBack); readBackOk = !!(rb && rb.driverProfiles && rb.driverDataStore); }catch(e){ readBackOk = false; }
-      if(!readBackOk){
-        document.getElementById('dt-status').textContent = t('dt_storage_full');
-        document.getElementById('dt-status').style.color = '#C0392B';
-        return;
-      }
-      document.getElementById('dt-status').textContent = t('dt_imported_reloading');
-      setTimeout(()=>location.reload(), 600);
-    }, 30);
-  }
-}
-function resetDemoData(){
-  if(!confirm(t('confirm_reset_demo'))) return;
-  localStorage.removeItem(STORAGE_KEY);
-  location.reload();
-}
-
 // ---- simulated Bali places dataset (stand-in for Google Places Autocomplete) ----
 const baliPlaces = [
   {name:"Ngurah Rai International Airport", area:"Tuban"},
@@ -6852,44 +6471,21 @@ document.addEventListener('click', e=>{
   }
 });
 
-// ---- driver profile system (supports multiple registered drivers) ----
-let driverProfiles = {
-  wayan: { id:"wayan", name:"Wayan S.", fullName:"Wayan Sudiartha", lwNumber:"RY-104", region:"Amed", langs:["EN","ID"], photo:null, status:"approved", joinedDate:"2025-01-15", docs:{license:{name:"license.jpg",dataUrl:null},insurance:{name:"insurance.pdf",dataUrl:null},papers:{name:"papers.pdf",dataUrl:null},selfie:{name:"selfie.jpg",dataUrl:null}}, vehicle:{car:"Toyota Avanza", plate:"DK 1234 AB", color:"Silver"}, payment:{qris:true, link:"https://wise.com/pay/wayan-sudiartha"} }
-};
-let driverDataStore = {
-  wayan: {
-    listings: [
-      {name:"East Bali Waterfalls & Temples", price:"IDR 550,000", duration:"Full day", bookings:128, fee:"IDR 60,000", active:true, region:"Amed", services:["Photo"], spots:["Day tour"]},
-      {name:"Ubud Rice Terraces & Swing", price:"IDR 400,000", duration:"Half day", bookings:76, fee:"IDR 40,000", active:true, region:"Ubud", services:["Photo"], spots:["Half-day tour"]},
-      {name:"Airport Transfer — South Bali", price:"from IDR 180,000", duration:"Fixed rate", bookings:240, fee:"IDR 40,000", active:true, region:"Kuta", services:[], spots:["Airport Transfer"], airportRegions:{"Kuta":"IDR 180,000","Ubud":"IDR 300,000","Sidemen":"IDR 400,000","Amed":"IDR 500,000","Lovina":"IDR 550,000"}},
-    ],
-    bookings: [
-      {who:"Sarah M.", tour:"East Bali Waterfalls", when:"Jul 14, 08:00", status:"confirmed"},
-      {who:"Tom & Lena K.", tour:"Ubud Rice Terraces", when:"Jul 15, 07:30", status:"pending"},
-      {who:"Michael B.", tour:"Airport Transfer", when:"Jul 17, 14:00", status:"confirmed"},
-    ],
-    completed: [
-      {who:"Jonas P.", tour:"East Bali Waterfalls", when:"Jul 2, 08:00", status:"confirmed"},
-      {who:"Amy & Chris R.", tour:"Ubud Rice Terraces", when:"Jun 28, 07:30", status:"confirmed"},
-      {who:"Lena F.", tour:"Airport Transfer", when:"Jun 24, 14:00", status:"confirmed"},
-    ],
-    reviews: [
-      {name:"Sarah M.", stars:"★★★★★", text:"Wayan was fantastic — punctual, great English, and knew all the best spots off the beaten path."},
-      {name:"Tom K.", stars:"★★★★★", text:"Best day of our trip. Comfortable car, very safe driving, highly recommend booking directly."},
-      {name:"Michael B.", stars:"★★★★☆", text:"Great tour, just started 20 minutes late due to traffic — driver communicated well though."},
-    ],
-    stats: { views:312, rating:"4.9" },
-    receipts: [],
-    messages: [
-      {title:"Welcome to Rydanu! 🌴", body:"Your driver account is active. Your Rydanu number is RY-104 — keep it handy for all support requests.", date:"Jun 1, 2026", unread:false}
-    ]
-  }
-};
-let currentDriverId = "wayan";
-let driverListings = driverDataStore.wayan.listings;
-let driverBookings = driverDataStore.wayan.bookings;
-let completedBookings = driverDataStore.wayan.completed;
-let reviews = driverDataStore.wayan.reviews;
+// ---- driver profile system ----
+// Fruehere Demo-Fahrer "Wayan" (RY-104) entfernt (25. August) -- die App laeuft jetzt
+// ausschliesslich mit echten, aus Supabase geladenen Fahrerdaten (realDriverProfile).
+// driverProfiles/driverDataStore bleiben als leere Objekte bestehen, falls an vereinzelten
+// Stellen noch defensiv darauf zugegriffen wird (z.B. driverProfiles[irgendeineId] -> undefined,
+// kein Absturz). driverListings/driverBookings/completedBookings/reviews sind geteilte Variablen,
+// die von den echten Lade-Funktionen (loadRealPublicListings, loadRealBookings, usw.) befuellt
+// werden, sobald ein echter Fahrer eingeloggt ist -- starten deshalb leer statt mit Demo-Inhalt.
+let driverProfiles = {};
+let driverDataStore = {};
+let currentDriverId = null;
+let driverListings = [];
+let driverBookings = [];
+let completedBookings = [];
+let reviews = [];
 
 // ---- admin: per-driver fee overrides & fee credits ("Geld") ----
 // feeOverrides: [{id, driverId, percent, startDate:'YYYY-MM-DD', endDate:'YYYY-MM-DD'}]
@@ -6925,7 +6521,6 @@ function loadDriverContext(id){
   driverBookings = store.bookings;
   completedBookings = store.completed;
   reviews = store.reviews;
-  populateDemoDriverSwitcher();
   renderProfileChip();
   renderOverviewStats();
   renderDriverBookings();
@@ -6933,56 +6528,7 @@ function loadDriverContext(id){
   showDashSection('overview');
 }
 function renderProfileChip(){
-  if(realDriverProfile) return; // echte Fahrer werden ausschliesslich ueber applyRealDriverProfileToUI() dargestellt
-  const p = driverProfiles[currentDriverId];
-  document.getElementById('profile-pname').textContent = p.name;
-  const regionSet = new Set();
-  let allRegions = false;
-  (driverDataStore[currentDriverId].listings||[]).forEach(l=>{
-    if(l.serviceRegions==='all') allRegions = true;
-    else if(Array.isArray(l.serviceRegions)) l.serviceRegions.forEach(r=>regionSet.add(r));
-  });
-  const startLabel = allRegions ? t('all_regions') : (regionSet.size ? [...regionSet].join(', ') : p.region);
-  document.getElementById('profile-ploc').textContent = '🚐 ' + t('modal_start_label') + ': ' + startLabel;
-  const avatar = document.getElementById('driver-avatar');
-  if(p.photo){
-    avatar.style.backgroundImage = `url(${p.photo})`;
-    avatar.style.backgroundSize = 'cover';
-    avatar.style.backgroundPosition = 'center';
-    avatar.textContent='';
-  }
-  else { avatar.style.backgroundImage = 'none'; avatar.textContent = initials(p.fullName); }
-  const svcSet = new Set();
-  (driverDataStore[currentDriverId].listings||[]).forEach(l=>(l.services||[]).forEach(s=>svcSet.add(s)));
-  const svcEl = document.getElementById('profile-services');
-  svcEl.textContent = svcSet.size ? '✦ ' + serviceLabel([...svcSet]) + ' (' + t('surcharge_note') + ')' : '';
-  document.getElementById('profile-lwnumber').textContent = t('lw_number_label') + ' ' + (p.lwNumber || '—');
-  document.getElementById('profile-lwnumber').dataset.rawNumber = p.lwNumber || '';
-  updateInboxDot();
-  document.getElementById('dash-greeting').textContent = (currentLang==='de' ? 'Hallo, ' : currentLang==='id' ? 'Halo, ' : 'Hi, ') + p.name;
-  const banner = document.getElementById('pending-banner');
-  if(p.status==='pending'){
-    banner.style.display = 'block';
-    banner.classList.remove('rejected');
-    banner.innerHTML = '⏳ ' + t('pending_banner_text');
-  } else if(p.status==='blocked'){
-    banner.style.display = 'block';
-    banner.classList.add('rejected');
-    if(p.blockedReason==='payment'){
-      const store = driverDataStore[currentDriverId];
-      const owed = calcRawFeesIDR(store);
-      banner.innerHTML = '🚫 ' + t('payment_suspended_banner').replace('{amount}', formatIDR(owed)) + ' <button type="button" class="accept-btn" style="margin-left:8px;" onclick="payFees()">' + t('tap_to_pay') + '</button>';
-    } else {
-      banner.innerHTML = t('account_blocked_banner');
-    }
-  } else if(p.status==='rejected'){
-    banner.style.display = 'block';
-    banner.classList.add('rejected');
-    banner.innerHTML = t('rejected_banner').replace('{reason}', '<strong>' + (p.rejectReason||'—') + '</strong>');
-  } else {
-    banner.style.display = 'none';
-    banner.classList.remove('rejected');
-  }
+  // echte Fahrer werden ausschliesslich ueber applyRealDriverProfileToUI() dargestellt
 }
 // Fahrer werben Fahrer: kompakter WhatsApp-Button in der Uebersicht (22.8., Joerg-Wunsch, ersetzt die
 // alte grosse Kachel). Baut einen Link mit ?ref=<eigene RY-Nummer> -- landet ein neuer Fahrer darueber,
@@ -7040,8 +6586,7 @@ let driverPeriod = 'month';
 function setDriverPeriod(p){
   driverPeriod = p;
   document.querySelectorAll('#driver-period-tabs .period-btn').forEach(b=>b.classList.toggle('active', b.dataset.period===p));
-  if(realDriverProfile){ renderRealDriverPerformance(); return; }
-  renderDriverPerformance();
+  if(realDriverProfile) renderRealDriverPerformance();
 }
 // echte Buchungen & Umsatz nach Zeitraum (Tag/Monat/Jahr) fuer den echten Fahrer
 function renderRealDriverPerformance(){
@@ -7073,99 +6618,8 @@ function renderRealDriverPerformance(){
     <div class="stat-card"><div class="num">${cancelled}</div><div class="lbl">${t('driver_stat_cancelled')}</div></div>
   `;
 }
-function renderDriverPerformance(){
-  const el = document.getElementById('driver-perf-row');
-  if(!el) return;
-  const store = driverDataStore[currentDriverId];
-  const all = [...(store.bookings||[]), ...(store.completed||[])].filter(b=>b.status!=='cancel_requested');
-  const now = new Date(2026,6,23); // simulated "today" for this demo
-  const inPeriod = (b)=>{
-    const d = parseBookingDate(b);
-    if(!d) return driverPeriod==='year'; // if we can't parse a date, only count it in the broadest view
-    const bd = new Date(d.y, d.m, d.d);
-    if(driverPeriod==='day') return bd.toDateString()===now.toDateString();
-    if(driverPeriod==='month') return bd.getFullYear()===now.getFullYear() && bd.getMonth()===now.getMonth();
-    return bd.getFullYear()===now.getFullYear();
-  };
-  const scoped = all.filter(inPeriod);
-  const count = scoped.filter(b=>b.status!=='cancelled').length;
-  const revenue = scoped.filter(b=>b.status!=='cancelled').reduce((sum,b)=>sum + parseIDR(b.price), 0);
-  const cancelled = scoped.filter(b=>b.status==='cancelled').length;
-  const bookingFees = scoped.filter(b=>b.status!=='cancelled').reduce((sum,b)=>{
-    const listing = (store.listings||[]).find(l=>l.name===b.tour);
-    const feeStr = listing ? listing.fee : 'IDR 40,000';
-    return sum + parseIDR(feeStr);
-  }, 0);
-  const cancelFeesForPeriod = scoped.filter(b=>b.status==='cancelled' && b.cancelReason==='driver').length * CANCELLATION_FEE_IDR;
-  const feesForPeriod = bookingFees + cancelFeesForPeriod;
-  el.innerHTML = `
-    <div class="stat-card"><div class="num">${count}</div><div class="lbl">${t('driver_stat_bookings')}</div></div>
-    <div class="stat-card"><div class="num mono" style="font-size:1.05rem;">${formatIDR(revenue)}</div><div class="lbl">${t('driver_stat_revenue')}</div></div>
-    <div class="stat-card"><div class="num mono" style="font-size:1.05rem;">${formatIDR(feesForPeriod)}</div><div class="lbl">${t('driver_stat_fees')}</div></div>
-    <div class="stat-card"><div class="num">${cancelled}</div><div class="lbl">${t('driver_stat_cancelled')}</div></div>
-  `;
-}
-function calcRawFeesIDR(store){
-  if(store.stats.feesPaid) return 0;
-  const feeEligible = [
-    ...(store.bookings||[]).filter(b => b.status==='confirmed'),
-    ...(store.completed||[]).filter(b => b.status==='completed')
-  ];
-  const bookingFees = feeEligible.reduce((sum,b)=>{
-    const listing = (store.listings||[]).find(l=>l.name===b.tour);
-    const feeStr = listing ? listing.fee : 'IDR 40,000';
-    return sum + parseIDR(feeStr);
-  }, 0);
-  return bookingFees + (store.stats.cancellationFees || 0);
-}
-function calcOpenFeesIDR(store){
-  const raw = calcRawFeesIDR(store);
-  const credit = (store.stats.referralCredit || 0) + (store.stats.adminCredit || 0);
-  return Math.max(0, raw - credit);
-}
 function openRankInfoModal(){ document.getElementById('rank-info-modal-bg').classList.add('active'); }
 function closeRankInfoModal(){ document.getElementById('rank-info-modal-bg').classList.remove('active'); }
-document.getElementById('rank-info-modal-bg').addEventListener('click', e=>{ if(e.target.id==='rank-info-modal-bg') closeRankInfoModal(); });
-function renderRankPanel(){
-  const el = document.getElementById('rank-panel-body');
-  if(!el) return;
-  const bd = calcDriverPointBreakdown(currentDriverId);
-  if(!bd){ el.innerHTML = ''; return; }
-  const rank = getDriverRank(bd.total);
-  const next = getNextDriverRank(bd.total);
-  const badges = getDriverBadges(currentDriverId);
-
-  let progressHTML;
-  if(next){
-    const span = next.min - rank.min;
-    const into = bd.total - rank.min;
-    const pct = Math.min(100, Math.round((into/span)*100));
-    progressHTML = `
-      <div class="rank-progress-track"><div class="rank-progress-fill" style="width:${pct}%;"></div></div>
-      <div class="rank-points-row"><span>${bd.total} pts</span><span>${next.min - bd.total} ${t('rank_progress_to')} ${next.emoji} ${t(next.labelKey)}</span></div>
-    `;
-  } else {
-    progressHTML = `
-      <div class="rank-progress-track"><div class="rank-progress-fill" style="width:100%;"></div></div>
-      <div class="rank-points-row"><span>${bd.total} pts</span><span>🎉 ${t('rank_max_reached')}</span></div>
-    `;
-  }
-
-  const badgesHTML = badges.length
-    ? `<div class="milestone-badges">${badges.map(b=>`<span class="milestone-badge">${b.emoji} ${t(b.labelKey)}</span>`).join('')}</div>`
-    : '';
-
-  const breakdownHTML = bd.breakdown.filter(row=>row.points!==0).map(row=>`
-    <div class="rank-breakdown-line ${row.points<0?'negative':''}"><span>${t(row.label)}</span><span>${row.points>0?'+':''}${row.points}</span></div>
-  `).join('');
-
-  el.innerHTML = `
-    <div style="margin-bottom:10px;">${driverRankBadgeHTML(currentDriverId)}</div>
-    ${progressHTML}
-    ${badgesHTML ? `<div style="margin-top:14px; font-weight:700; font-size:0.82rem;">${t('rank_your_badges')}</div>${badgesHTML}` : ''}
-    <div style="margin-top:14px;">${breakdownHTML}</div>
-  `;
-}
 function renderCurrentFeeRate(){
   const el = document.getElementById('current-fee-rate-display');
   if(!el) return;
@@ -7504,42 +6958,7 @@ async function renderRealOverviewStats(){
   renderRealReviewsList(revs);
 }
 function renderOverviewStats(){
-  if(realDriverProfile){ renderRealOverviewStats(); return; }
-  const store = driverDataStore[currentDriverId];
-  document.getElementById('stat-views').textContent = store.stats.views;
-  document.getElementById('stat-rating').textContent = store.stats.rating;
-  renderRankPanel();
-  renderCurrentFeeRate();
-  const feeTotal = calcRawFeesIDR(store);
-  document.getElementById('stat-fees').textContent = formatIDR(feeTotal);
-  const cancelFeeRow = document.getElementById('cancellation-fee-row');
-  if(cancelFeeRow){
-    const cancelFees = (!store.stats.feesPaid && store.stats.cancellationFees) || 0;
-    cancelFeeRow.style.display = cancelFees > 0 ? 'flex' : 'none';
-    if(cancelFees > 0) document.getElementById('cancellation-fee-amount').textContent = formatIDR(cancelFees);
-  }
-  const hint = document.getElementById('pay-fees-hint');
-  if(hint) hint.textContent = feeTotal > 0 ? t('tap_to_pay') : '✓ ' + t('st_paid');
-  const credit = store.stats.referralCredit || 0;
-  const creditRow = document.getElementById('referral-credit-row');
-  if(creditRow){
-    creditRow.style.display = credit > 0 ? 'flex' : 'none';
-    document.getElementById('referral-credit-amount').textContent = formatIDR(credit) + ' ' + t('referral_credit_pending_note');
-  }
-  const adminCredit = store.stats.adminCredit || 0;
-  const adminCreditRow = document.getElementById('admin-credit-row');
-  if(adminCreditRow){
-    adminCreditRow.style.display = adminCredit > 0 ? 'flex' : 'none';
-    document.getElementById('admin-credit-amount').textContent = formatIDR(adminCredit) + ' ' + t('referral_credit_pending_note');
-  }
-  const codeEl = document.getElementById('referral-code-display');
-  if(codeEl){
-    const num = (driverProfiles[currentDriverId] && driverProfiles[currentDriverId].lwNumber) || '—';
-    codeEl.textContent = num;
-    codeEl.dataset.rawNumber = num;
-  }
-  renderDriverPerformance();
-  document.getElementById('stat-requests').textContent = store.bookings.length + (currentDriverId==='wayan' ? 6 : 0);
+  if(realDriverProfile) renderRealOverviewStats();
 }
 
 function todayDateLabel(d){
@@ -7552,144 +6971,14 @@ function hasValidPaymentMethod(profile){
 // Core settlement — shared by the manual "Pay now" button and the automatic month-end run.
 // Applies any available referral credit, records a receipt, clears an open-payment case
 // if one existed, and reinstates a payment-suspended driver. Returns null if nothing was owed.
-function settleDriverFees(driverId){
-  const store = driverDataStore[driverId];
-  const raw = calcRawFeesIDR(store);
-  if(raw <= 0) return null;
-  const adminCredit = store.stats.adminCredit || 0;
-  const referralCredit = store.stats.referralCredit || 0;
-  const totalCredit = adminCredit + referralCredit;
-  const creditUsed = Math.min(totalCredit, raw);
-  // draw down admin credit first, then referral credit
-  const adminCreditUsed = Math.min(adminCredit, creditUsed);
-  const referralCreditUsed = creditUsed - adminCreditUsed;
-  const amountToPay = raw - creditUsed;
-  store.stats.adminCredit = adminCredit - adminCreditUsed;
-  store.stats.referralCredit = referralCredit - referralCreditUsed;
-  store.stats.feesPaid = true;
-  store.stats.cancellationFees = 0;
-  if(!store.receipts) store.receipts = [];
-  const receiptNo = 'RCP-' + Math.floor(10000 + Math.random()*89999);
-  store.receipts.unshift({no:receiptNo, date:todayDateLabel(), amount:amountToPay, creditApplied: creditUsed || undefined});
-  const wasOverdue = !!store.openPayment;
-  store.openPayment = null;
-  const profile = driverProfiles[driverId];
-  let reinstated = false;
-  if(profile && profile.status==='blocked' && profile.blockedReason==='payment'){
-    profile.status = 'approved';
-    profile.blockedReason = null;
-    reinstated = true;
-  }
-  return {amountToPay, creditUsed, receiptNo, wasOverdue, reinstated};
-}
+// Kritischer Bug (14. August, live gefunden): der "Jetzt zahlen"-Button war fuer echte
+// Fahrer-Konten nie an Supabase angebunden -- er lief lautlos gegen den lokalen Demo-Speicher.
+// Echte Selbstzahlung ist bewusst noch nicht angebunden (kein Zahlungsanbieter) -- deshalb hier
+// ehrlich abfangen statt eine falsche Zahlung vorzutaeuschen. Die echte Abrechnung laeuft
+// automatisch taeglich per Datenbank-Cronjob (ryvio-daily-billing-job), kein manueller
+// Trigger vorhanden oder noetig.
 function payFees(){
-  // Kritischer Bug (14. August, live gefunden): dieser Button war fuer echte Fahrer-Konten nie
-  // an Supabase angebunden -- er lief lautlos gegen den lokalen Demo-Speicher (driverDataStore),
-  // zeigte eine "Zahlung erfolgreich"-Meldung, aber die echten drivers.fees_due_idr/balance_idr
-  // in der Datenbank blieben unveraendert. Echte Selbstzahlung ist bewusst noch nicht angebunden
-  // (kein Zahlungsanbieter) -- deshalb hier ehrlich abfangen statt eine falsche Zahlung vorzutaeuschen.
-  if(realDriverProfile){ alert(t('real_pay_not_yet')); return; }
-  const store = driverDataStore[currentDriverId];
-  const raw = calcRawFeesIDR(store);
-  if(raw <= 0){ alert(t('alert_no_fees')); return; }
-  const credit = (store.stats.referralCredit || 0) + (store.stats.adminCredit || 0);
-  const creditUsed = Math.min(credit, raw);
-  const amountToPay = raw - creditUsed;
-  const confirmMsg = amountToPay > 0
-    ? t('confirm_pay_fees') + ' ' + formatIDR(amountToPay) + (creditUsed > 0 ? ' (' + t('confirm_pay_fees_credit_note') + ' ' + formatIDR(creditUsed) + ')' : '') + '?'
-    : t('confirm_pay_fees_fully_covered') + ' ' + formatIDR(creditUsed) + '.';
-  if(!confirm(confirmMsg)) return;
-  const result = settleDriverFees(currentDriverId);
-  if(!result) return;
-  const paidNote = result.creditUsed > 0
-    ? t('payment_received_body_credit').replace('{amount}', formatIDR(result.amountToPay)).replace('{credit}', 'IDR ' + result.creditUsed.toLocaleString('en-US'))
-    : t('payment_received_body_plain').replace('{amount}', formatIDR(result.amountToPay));
-  pushInboxMessage(currentDriverId, t('payment_received_title').replace('{ref}', result.receiptNo), paidNote);
-  if(result.reinstated){
-    pushInboxMessage(currentDriverId, t('reinstated_inbox_title'), t('reinstated_inbox_body'));
-    renderDriverGrid(visibleDrivers());
-    renderProfileChip();
-  }
-  renderOverviewStats();
-  renderAdminOpenPayments();
-  updateInboxDot();
-  saveState();
-  alert(t('alert_fees_paid_1') + ' ' + formatIDR(result.amountToPay) + ' ✓\n\n' + t('alert_fees_paid_2') + ' ' + result.receiptNo);
-}
-// ---- automatic month-end settlement run ----
-let lastSettlementRunDateISO = null;
-function isLastDayOfMonth(d){
-  const next = new Date(d.getFullYear(), d.getMonth(), d.getDate()+1);
-  return next.getMonth() !== d.getMonth();
-}
-function runMonthEndSettlement(){
-  const today = new Date();
-  Object.keys(driverDataStore).forEach(id=>{
-    const profile = driverProfiles[id];
-    if(!profile || profile.status==='pending' || profile.status==='rejected') return;
-    const store = driverDataStore[id];
-    const raw = calcRawFeesIDR(store);
-    if(raw <= 0) return;
-    if(hasValidPaymentMethod(profile)){
-      const result = settleDriverFees(id);
-      if(!result) return;
-      pushInboxMessage(id, t('auto_payment_success_title'),
-        t('auto_payment_success_body').replace('{amount}', formatIDR(result.amountToPay)).replace('{ref}', result.receiptNo));
-      if(result.reinstated){
-        pushInboxMessage(id, t('reinstated_inbox_title'), t('reinstated_inbox_body'));
-      }
-    } else {
-      const dueDate = new Date(today); dueDate.setDate(dueDate.getDate()+5);
-      store.openPayment = {
-        amountDue: raw,
-        createdDateISO: today.toISOString().slice(0,10),
-        dueDateISO: dueDate.toISOString().slice(0,10)
-      };
-      pushInboxMessage(id, t('payment_failed_title'),
-        t('payment_failed_body').replace('{amount}', formatIDR(raw)).replace('{date}', todayDateLabel(dueDate)));
-    }
-  });
-  lastSettlementRunDateISO = today.toISOString().slice(0,10);
-  checkOverduePayments();
-  if(currentDriverId){ renderOverviewStats(); }
-  updateInboxDot();
-  renderAdminOpenPayments();
-  renderDriverGrid(visibleDrivers());
-  saveState();
-}
-function runMonthEndSettlementManual(){
-  if(realDriverProfile || isAdminSession){
-    // Punkt 3 (5. August): dieser Button hat nur Demo-Daten simuliert und niemals die echte
-    // Datenbank angefasst -- deshalb sah es im Admin-Bereich nach Erfolg aus, obwohl beim echten
-    // Fahrer nie etwas passiert ist. Die echte Abrechnung laeuft ohnehin automatisch taeglich per
-    // Cronjob (ryvio-daily-billing-job) -- kein manueller Trigger noetig oder aktuell gebaut.
-    alert(t('admin_settlement_real_note'));
-    return;
-  }
-  if(!confirm(t('admin_confirm_run_settlement'))) return;
-  runMonthEndSettlement();
-  alert(t('admin_settlement_done'));
-}
-// suspends any driver whose 5-day payment window has passed, unrelated to whether it's month-end
-function checkOverduePayments(){
-  const today = new Date();
-  let changed = false;
-  Object.keys(driverDataStore).forEach(id=>{
-    const store = driverDataStore[id];
-    const profile = driverProfiles[id];
-    if(!store.openPayment || !profile) return;
-    const due = new Date(store.openPayment.dueDateISO + 'T23:59:59');
-    if(today > due && profile.status !== 'blocked'){
-      profile.status = 'blocked';
-      profile.blockedReason = 'payment';
-      pushInboxMessage(id, t('suspended_inbox_title'), t('suspended_inbox_body').replace('{amount}', formatIDR(store.openPayment.amountDue)));
-      changed = true;
-    }
-  });
-  if(changed){
-    renderDriverGrid(visibleDrivers());
-    renderProfileChip();
-  }
+  alert(t('real_pay_not_yet'));
 }
 async function renderAdminOpenPayments(){
   const el = document.getElementById('admin-openpayments-list');
@@ -7946,21 +7235,7 @@ function confirmFinalCancel(){
     } else {
       alert(t('cancel_outcome_customer_1') + ' ' + b.who + '.\n\n' + t('cancel_outcome_customer_2'));
     }
-    return;
   }
-  moveBookingToCompleted(currentDriverId, i, 'cancelled', reason);
-  const store = driverDataStore[currentDriverId];
-  if(!store.stats.cancellationFees) store.stats.cancellationFees = 0;
-  if(reason === 'driver'){
-    store.stats.cancellationFees += CANCELLATION_FEE_IDR;
-    alert(t('cancel_outcome_driver_1') + ' ' + b.who + '.\n\n' + t('cancel_outcome_driver_2') + ' ' + formatIDR(CANCELLATION_FEE_IDR) + '.\n\n' + t('cancel_outcome_driver_3'));
-  } else {
-    alert(t('cancel_outcome_customer_1') + ' ' + b.who + '.\n\n' + t('cancel_outcome_customer_2'));
-  }
-  renderDriverBookings();
-  renderOverviewStats();
-  renderAllBookings();
-  saveState();
 }
 function closeCancelReasonModal(){ pendingCancelIndex = null; pendingCancelReason = null; document.getElementById('cancel-reason-modal-bg').classList.remove('active'); }
 document.getElementById('cancel-reason-modal-bg').addEventListener('click', e=>{ if(e.target.id==='cancel-reason-modal-bg') closeCancelReasonModal(); });
@@ -8016,34 +7291,7 @@ function completeBooking(i){
       supabaseClient.functions.invoke('send-tour-offer-email', { body: { type: 'booking_completed', bookingId: b.dbId } })
         .catch(err=>console.error('Dankes-Mail (Tour abgeschlossen) fehlgeschlagen:', err));
     });
-    return;
   }
-  moveBookingToCompleted(currentDriverId, i, 'completed');
-  checkReferralBonus(currentDriverId);
-  syncDriverRating(currentDriverId);
-  renderDriverBookings();
-  renderAllBookings();
-  renderOverviewStats();
-  renderDriverGrid(visibleDrivers());
-  saveState();
-}
-// grants the referrer an IDR 100,000 fee credit once their invited driver's FIRST booking is completed
-function checkReferralBonus(driverId){
-  const profile = driverProfiles[driverId];
-  if(!profile || !profile.referredBy || profile.referralBonusGranted) return;
-  const store = driverDataStore[driverId];
-  const completedCount = (store.completed || []).filter(b=>b.status==='completed').length;
-  if(completedCount !== 1) return; // only the driver's very first completed trip counts
-  const referrerId = profile.referredBy;
-  const referrerStore = driverDataStore[referrerId];
-  const referrerProfile = driverProfiles[referrerId];
-  if(!referrerStore || !referrerProfile) return;
-  const BONUS = 100000;
-  if(!referrerStore.stats.referralCredit) referrerStore.stats.referralCredit = 0;
-  referrerStore.stats.referralCredit += BONUS;
-  profile.referralBonusGranted = true;
-  pushInboxMessage(referrerId, t('referral_bonus_inbox_title'), t('referral_bonus_inbox_body').split('{name}').join(profile.fullName).replace('{amount}', formatIDR(BONUS)));
-  if(referrerId === currentDriverId){ renderOverviewStats(); updateInboxDot(); }
 }
 // driver acknowledges a customer-initiated cancellation request — only now does it actually disappear from "open"
 function confirmCancellation(i){
@@ -8059,13 +7307,7 @@ function confirmCancellation(i){
         .catch(err=>console.error('Storno-Bestaetigungs-Mail fehlgeschlagen:', err));
     });
     alert(t('cancel_outcome_customer_1') + ' ' + b.who + '.\n\n' + t('cancel_outcome_request_2'));
-    return;
   }
-  moveBookingToCompleted(currentDriverId, i, 'cancelled', 'customer');
-  renderDriverBookings();
-  renderAllBookings();
-  renderOverviewStats();
-  saveState();
 }
 function acceptBooking(i){
   const b = driverBookings[i];
@@ -8082,15 +7324,7 @@ function acceptBooking(i){
         .catch(err=>console.error('Bestaetigungs-Mail (Buchung bestaetigt) fehlgeschlagen:', err));
     });
     alert(t('alert_deposit_confirmed_1') + ' ' + b.who + ' ✓\n\n' + t('alert_deposit_confirmed_2'));
-    return;
   }
-  b.status = 'confirmed';
-  driverDataStore[currentDriverId].stats.feesPaid = false;
-  renderDriverBookings();
-  renderAllBookings();
-  renderOverviewStats();
-  saveState();
-  alert(t('alert_deposit_confirmed_1') + ' ' + b.who + ' ✓\n\n' + t('alert_deposit_confirmed_2'));
 }
 // Punkt 2 (5. August): der Fahrer kann eine noch offene Anfrage komplett ablehnen (z.B. keine Zeit,
 // passt nicht). Anders als bei "Stornieren" gibt es dabei keine Gebuehr -- die Tour wurde ja nie
@@ -8110,13 +7344,7 @@ function declineBooking(i){
         .catch(err=>console.error('Absage-Mail fehlgeschlagen:', err));
     });
     alert(t('decline_outcome_note') + ' ' + b.who + '.');
-    return;
   }
-  driverBookings.splice(i, 1);
-  renderDriverBookings();
-  renderAllBookings();
-  renderOverviewStats();
-  saveState();
 }
 
 // ---- dashboard section switching ----
@@ -8132,9 +7360,8 @@ function showDashSection(name){
   if(name==='requests'){ renderTourRequests(); markRequestsSeen(); }
   if(name==='villa'){ loadVillaRequests(); }
   if(name==='subscription') renderFeeStatements();
-  if(name==='inbox'){ if(realDriverProfile) loadRealInbox(); else renderInbox(); }
+  if(name==='inbox'){ if(realDriverProfile) loadRealInbox(); }
 }
-function getStore(){ return driverDataStore[currentDriverId]; }
 // Gebührenbelege (14. August, auf Jörgs Wunsch): kein Mail-Versand mehr behauptet — stattdessen
 // echte Belege (driver_messages vom Typ 'fee_receipt', z.B. aus adminCollectFeesNow) mit denselben
 // Neu/Archiviert-Reitern wie im Postfach. Solange noch kein echter Zahlungsanbieter angebunden ist,
@@ -8228,54 +7455,20 @@ async function openFeeReceiptBreakdown(messageId){
 async function renderFeeStatements(){
   const el = document.getElementById('feestatements-list');
   const tabs = document.getElementById('feestatements-view-tabs');
-  if(realDriverProfile){
-    if(tabs) tabs.style.display = '';
-    el.innerHTML = `<div class="empty-state">${t('loading_generic')}</div>`;
-    await loadRealFeeReceipts();
-    const filtered = realFeeReceipts.filter(m => feeStatementsViewTab==='archive' ? m.archived : !m.archived);
-    if(filtered.length === 0){
-      el.innerHTML = `<div class="empty-state">${feeStatementsViewTab==='archive' ? t('empty_archive') : t('empty_receipts')}</div>`;
-      return;
-    }
-    el.innerHTML = filtered.map(m => `
-      <div class="booking-row" style="cursor:pointer;" onclick="openFeeReceiptBreakdown('${m.id}')">
-        <div><div class="who">🧾 ${escapeHtml(m.subject||'')}</div><div class="when">${new Date(m.created_at).toLocaleDateString(currentLang==='de'?'de-DE':currentLang==='id'?'id-ID':'en-GB')} · ${escapeHtml(m.body||'')}</div></div>
-        ${!m.archived ? `<button type="button" class="accept-btn" onclick="event.stopPropagation(); archiveFeeReceipt('${m.id}')">✓ ${t('mark_done_btn')}</button>` : `<span class="mailbox-replied-tag">${t('archived_tag')}</span>`}
-      </div>`).join('');
+  if(!realDriverProfile) return;
+  if(tabs) tabs.style.display = '';
+  el.innerHTML = `<div class="empty-state">${t('loading_generic')}</div>`;
+  await loadRealFeeReceipts();
+  const filtered = realFeeReceipts.filter(m => feeStatementsViewTab==='archive' ? m.archived : !m.archived);
+  if(filtered.length === 0){
+    el.innerHTML = `<div class="empty-state">${feeStatementsViewTab==='archive' ? t('empty_archive') : t('empty_receipts')}</div>`;
     return;
   }
-  if(tabs) tabs.style.display = 'none';
-  const receipts = getStore().receipts || [];
-  if(receipts.length === 0){
-    el.innerHTML = `<div class="empty-state">${t('empty_receipts')}</div>`;
-    return;
-  }
-  el.innerHTML = receipts.map((r,i)=>`
-    <div class="booking-row" style="cursor:pointer;" onclick="openReceiptDetail(${i})">
-      <div><div class="who">🧾 Receipt ${r.no}</div><div class="when">${r.date} · Booking fees</div></div>
-      <span class="mono" style="font-weight:700;">${formatIDR(r.amount)}</span>
-      <span class="status-pill confirmed">${t('st_paid')}</span>
-    </div>
-  `).join('');
-}
-function openReceiptDetail(i){
-  const r = (getStore().receipts || [])[i];
-  if(!r) return;
-  const p = driverProfiles[currentDriverId];
-  document.getElementById('rcpt-no').textContent = r.no;
-  document.getElementById('rcpt-date').textContent = r.date;
-  document.getElementById('rcpt-driver').textContent = p.fullName;
-  document.getElementById('rcpt-lw').textContent = p.lwNumber || '—';
-  document.getElementById('rcpt-amount').textContent = formatIDR(r.amount);
-  document.getElementById('rcpt-total').textContent = formatIDR(r.amount);
-  const creditRow = document.getElementById('rcpt-row-credit');
-  if(r.creditApplied){
-    creditRow.style.display = 'flex';
-    document.getElementById('rcpt-credit').textContent = '− ' + formatIDR(r.creditApplied);
-  } else {
-    creditRow.style.display = 'none';
-  }
-  document.getElementById('receipt-modal-bg').classList.add('active');
+  el.innerHTML = filtered.map(m => `
+    <div class="booking-row" style="cursor:pointer;" onclick="openFeeReceiptBreakdown('${m.id}')">
+      <div><div class="who">🧾 ${escapeHtml(m.subject||'')}</div><div class="when">${new Date(m.created_at).toLocaleDateString(currentLang==='de'?'de-DE':currentLang==='id'?'id-ID':'en-GB')} · ${escapeHtml(m.body||'')}</div></div>
+      ${!m.archived ? `<button type="button" class="accept-btn" onclick="event.stopPropagation(); archiveFeeReceipt('${m.id}')">✓ ${t('mark_done_btn')}</button>` : `<span class="mailbox-replied-tag">${t('archived_tag')}</span>`}
+    </div>`).join('');
 }
 function closeReceiptDetail(){ document.getElementById('receipt-modal-bg').classList.remove('active'); }
 // Bugfix (Scan 14. August): dieses Fenster wird aktuell nirgends geoeffnet (totes Ueberbleibsel
@@ -8537,131 +7730,23 @@ function updateRealInboxDot(){
   driverUnreadMsgCount = unreadCount;
   syncDriverTopbarMail();
 }
-function pushInboxMessage(driverId, title, body, link){
-  const store = driverDataStore[driverId];
-  if(!store) return;
-  if(!store.messages) store.messages = [];
-  store.messages.unshift({title, body, date: todayMsgDate(), unread:true, archived:false, link: link || null});
-}
 let inboxViewTab = 'inbox';
 function setInboxViewTab(view){
   inboxViewTab = view;
   selectedInboxIds.clear();
   document.querySelectorAll('#inbox-view-tabs .period-btn').forEach(b=>b.classList.toggle('active', b.dataset.view===view));
-  if(realDriverProfile) renderRealInbox(); else renderInbox();
-}
-function renderInbox(){
-  const tabs = document.getElementById('inbox-view-tabs');
-  if(tabs) tabs.style.display = '';
-  const el = document.getElementById('inbox-list');
-  const all = getStore().messages || [];
-  const isDeletedView = inboxViewTab==='deleted';
-  const msgs = all.filter(m => {
-    if(isDeletedView) return !!m.deleted;
-    if(m.deleted) return false;
-    return inboxViewTab==='archive' ? m.archived : !m.archived;
-  });
-  if(msgs.length === 0){
-    el.innerHTML = `<div class="empty-state">${isDeletedView ? t('empty_deleted') : (inboxViewTab==='archive' ? t('empty_archive') : t('empty_inbox'))}</div>`;
-    return;
-  }
-  el.innerHTML = msgs.map(m=>{
-    const idx = all.indexOf(m);
-    const isRequestLink = m.link && m.link.type === 'tourRequest';
-    const clickAction = isRequestLink ? `openRequestFromInboxMessage(${idx})` : `openDriverMsgDetail(${idx})`;
-    return `
-    <div class="inbox-row ${m.unread?'unread':''}" style="cursor:${isDeletedView?'default':'pointer'};" ${isDeletedView ? '' : `onclick="${clickAction}"`}>
-      <div class="inbox-title">${m.unread?'● ':''}${isRequestLink ? '✨ ' : ''}${m.title}</div>
-      <div class="inbox-body">${m.body}</div>
-      <div class="inbox-date">${m.date} · Rydanu</div>
-      ${m.replied ? `<span class="mailbox-replied-tag">✓ ${t('admin_msg_replied')}</span>` : ''}
-      ${isDeletedView
-        ? `<button type="button" class="accept-btn" style="margin-top:8px;" onclick="event.stopPropagation(); restoreInboxMessage(${idx})">${t('restore_btn')}</button>`
-        : `${isRequestLink ? `<button type="button" class="accept-btn" style="margin-top:8px;" onclick="event.stopPropagation(); openRequestFromInboxMessage(${idx})">✨ ${t('tr_go_to_request_btn')}</button>` : ''}
-           ${!m.archived ? `<button type="button" class="accept-btn" style="margin-top:8px;" onclick="event.stopPropagation(); archiveInboxMessage(${idx})">✓ ${t('mark_done_btn')}</button>` : `<span class="mailbox-replied-tag">${t('archived_tag')}</span> <button type="button" class="mailbox-delete-x" title="Löschen" onclick="event.stopPropagation(); deleteInboxMessage(${idx})">✕</button>`}`
-      }
-    </div>
-  `;}).join('');
-  updateInboxDot();
-  saveState();
+  if(realDriverProfile) renderRealInbox();
 }
 let currentDriverMsgIndex = null;
-function openDriverMsgDetail(idx){
-  currentDriverMsgIndex = idx;
-  const all = getStore().messages || [];
-  const m = all[idx];
-  if(!m) return;
-  m.unread = false;
-  const p = driverProfiles[currentDriverId];
-  document.getElementById('driver-msg-subject').textContent = m.title;
-  document.getElementById('driver-msg-from').textContent = p.fullName + ' · ' + (p.lwNumber || '—') + ' · ' + m.date;
-  document.getElementById('driver-msg-body').textContent = m.body;
-  document.getElementById('driver-msg-reply-text').value = '';
-  document.getElementById('driver-msg-reply-status').textContent = m.replied ? t('admin_msg_replied_note') : '';
-  const replySection = document.getElementById('driver-msg-reply-section');
-  if(replySection) replySection.style.display = 'block';
-  document.getElementById('driver-msg-archive-btn').style.display = m.archived ? 'none' : 'block';
-  document.getElementById('driver-msg-detail-modal-bg').classList.add('active');
-  renderInbox();
-  saveState();
-}
 function closeDriverMsgDetail(){ document.getElementById('driver-msg-detail-modal-bg').classList.remove('active'); }
-function sendDriverMsgReply(){
-  if(currentDriverMsgIndex === null) return;
-  const all = getStore().messages || [];
-  const m = all[currentDriverMsgIndex];
-  if(!m) return;
-  const reply = document.getElementById('driver-msg-reply-text').value.trim();
-  if(!reply){
-    document.getElementById('driver-msg-reply-status').textContent = t('admin_msg_reply_empty');
-    return;
-  }
-  addDriverEntry(currentDriverId, reply, 'Re: ' + m.title);
-  m.replied = true;
-  renderInbox();
-  closeDriverMsgDetail();
-}
-function archiveCurrentDriverMsg(){
-  if(currentDriverMsgIndex === null) return;
-  archiveInboxMessage(currentDriverMsgIndex);
-  closeDriverMsgDetail();
-}
-function archiveInboxMessage(idx){
-  const all = getStore().messages || [];
-  if(all[idx]){ all[idx].archived = true; }
-  renderInbox();
-  saveState();
-}
-// verschiebt eine Nachricht in den Ordner "Gelöscht" statt sie sofort zu entfernen — endgültig
-// gelöscht wird sie erst automatisch nach 30 Tagen (siehe purgeOldDeletedMessages)
-function deleteInboxMessage(idx){
-  if(!confirm(t('confirm_move_to_deleted'))) return;
-  const all = getStore().messages || [];
-  if(all[idx]){ all[idx].deleted = true; all[idx].deletedAt = new Date().toISOString(); }
-  renderInbox();
-  updateInboxDot();
-  saveState();
-}
-function restoreInboxMessage(idx){
-  const all = getStore().messages || [];
-  if(all[idx]){ all[idx].deleted = false; all[idx].deletedAt = null; }
-  renderInbox();
-  updateInboxDot();
-  saveState();
-}
+// Sicherheits-Stubs: der Archivieren-Button bekommt seinen echten Klick-Handler zur Laufzeit von
+// openRealMsgDetail() zugewiesen (archiveBtn.onclick = ...), das "Antworten"-Feld ist im echten
+// Ablauf komplett versteckt (replySection.style.display='none') -- diese HTML-Attribute greifen also
+// im Normalfall nie, bleiben aber als reines Sicherheitsnetz bestehen (kein harter Absturz moeglich).
+function archiveCurrentDriverMsg(){}
+function sendDriverMsgReply(){}
 function updateInboxDot(){
-  if(realDriverProfile){ updateRealInboxDot(); return; }
-  const msgs = (driverDataStore[currentDriverId] && driverDataStore[currentDriverId].messages) || [];
-  const unreadCount = msgs.filter(m=>m.unread && !m.archived && !m.deleted).length;
-  const dot = document.getElementById('inbox-dot');
-  if(dot){
-    dot.style.display = unreadCount > 0 ? 'inline-block' : 'none';
-    dot.textContent = unreadCount > 0 ? String(unreadCount) : '';
-  }
-  const navItem = dot ? dot.closest('.dash-nav-item') : null;
-  if(navItem) navItem.classList.toggle('has-unread', unreadCount > 0);
-  driverUnreadMsgCount = unreadCount;
-  syncDriverTopbarMail();
+  if(realDriverProfile) updateRealInboxDot();
 }
 // Baustein (Buchungs-Alarm): neue, noch nicht angesehene Buchungsanfragen bekommen dieselbe
 // Aufmerksamkeit wie ungelesene Nachrichten — Umschlag oben, roter Punkt am Menüpunkt "Bookings",
@@ -8704,8 +7789,6 @@ function markBookingSeen(b){
     supabaseClient.from('bookings').update({ driver_seen:true }).eq('id', b.dbId).then(({error})=>{
       if(error) console.error('Buchung konnte nicht als gesehen markiert werden:', error);
     });
-  } else {
-    saveState();
   }
 }
 // Baustein 11 Nachbesserung: Badge auch bei neuen, noch nicht geprüften Fahrer-Registrierungen zeigen,
@@ -8714,13 +7797,8 @@ let realPendingDriverCount = 0;
 function updateAdminMailBadge(){
   const tabMail = document.getElementById('tab-admin-mail');
   if(tabMail){
-    if(realDriverProfile){
-      const hasUnread = realAdminThreads.some(t=>t.unread_for_admin) || realPendingDriverCount > 0 || realDocsResubmittedCount > 0;
-      tabMail.style.display = hasUnread ? 'inline-flex' : 'none';
-    } else {
-      const hasUnread = Object.values(supportThreads).some(th => th.unreadForAdmin);
-      tabMail.style.display = hasUnread ? 'inline-block' : 'none';
-    }
+    const hasUnread = realAdminThreads.some(t=>t.unread_for_admin) || realPendingDriverCount > 0 || realDocsResubmittedCount > 0;
+    tabMail.style.display = hasUnread ? 'inline-flex' : 'none';
   }
   updateAdminTileAlerts();
 }
@@ -9147,26 +8225,7 @@ function toggleListing(i){
     });
   }
 }
-function openRequestFromInboxMessage(msgIdx){
-  const store = getStore();
-  const msg = store.messages[msgIdx];
-  if(!msg || !msg.link || msg.link.type !== 'tourRequest') return;
-  msg.unread = false;
-  const reqIdx = (store.tourRequests || []).findIndex(r => r.ref === msg.link.ref);
-  if(reqIdx === -1){
-    // request no longer exists (e.g. deleted) — fall back to the normal message view
-    openDriverMsgDetail(msgIdx);
-    return;
-  }
-  saveState();
-  if(store.tourRequests[reqIdx].status === 'offered'){
-    showDashSection('requests');
-  } else {
-    createOfferFromRequest(reqIdx);
-  }
-}
-// Punkt 3 (heute): echte Anfragen kommen jetzt aus tour_inquiries (Supabase), Demo-Fahrer nutzen
-// weiterhin driverDataStore. getRequestRows() liefert eine einheitliche Liste, egal welche Quelle.
+// Punkt 3: echte Anfragen kommen aus tour_inquiries (Supabase). getRequestRows() liefert diese Liste.
 let realTourInquiries = [];
 async function loadRealTourInquiries(){
   if(!realDriverProfile) return;
@@ -9176,8 +8235,7 @@ async function loadRealTourInquiries(){
   renderTourRequests();
 }
 function getRequestRows(){
-  if(realDriverProfile) return realTourInquiries;
-  return (driverDataStore[currentDriverId] && driverDataStore[currentDriverId].tourRequests) || [];
+  return realDriverProfile ? realTourInquiries : [];
 }
 let requestsViewTab = 'open';
 function setRequestsViewTab(view){
@@ -9245,16 +8303,10 @@ async function declineTourRequest(i){
   const r = getRequestRows()[i];
   if(!r) return;
   if(!confirm(t('confirm_decline_request') + ' ' + (r.name || r.customer_name) + '?')) return;
-  if(realDriverProfile){
-    const { error } = await supabaseClient.from('tour_inquiries').update({status:'declined'}).eq('id', r.id);
-    if(error){ console.error('Konnte nicht abgelehnt werden:', error); alert(t('villa_action_err')); return; }
-    r.status = 'declined';
-    renderTourRequests();
-    return;
-  }
+  const { error } = await supabaseClient.from('tour_inquiries').update({status:'declined'}).eq('id', r.id);
+  if(error){ console.error('Konnte nicht abgelehnt werden:', error); alert(t('villa_action_err')); return; }
   r.status = 'declined';
   renderTourRequests();
-  saveState();
 }
 // Baustein (Anfragen-Alarm): dieselbe Logik wie beim Buchungs-Alarm -- Umschlag oben, roter Punkt
 // am Menuepunkt "Anfragen", und ein auffaelliger Banner, sobald eine neue, noch nicht gesehene
@@ -9614,7 +8666,7 @@ function updateVillaDot(){
 // ---------- Push-Benachrichtigungen (VAPID) ----------
 // Oeffentlicher Schluessel -- unkritisch, darf im Frontend stehen (Gegenstueck zum privaten
 // Schluessel, der ausschliesslich serverseitig in der Edge Function notify-villa-request liegt).
-const VAPID_PUBLIC_KEY = 'BDTglWC9xbTz3et89j23ZJfFMJmJLJTLWPaiVxavRt45bmuP_maarOH5Fc1lbckz5CLXsWeHffO0JpqYrsDC1y4';
+const VAPID_PUBLIC_KEY = 'BLis_aPTXp6alv8X1ZWuQCNRviUFOfGQVUr7eIMYC87XUnodToNXdHiTNQo7cAT9zObLgvgjC_qwEh2NjcoGrOQ';
 function urlBase64ToUint8Array(base64String){
   const padding = '='.repeat((4 - base64String.length % 4) % 4);
   const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
@@ -10112,44 +9164,31 @@ let pendingOfferRequestIndex = null;
 function createOfferFromRequest(i){
   pendingOfferRequestIndex = i;
   const r = getRequestRows()[i];
-  if(!r) return;
-  if(realDriverProfile){
-    // echte Anfrage -> vorausgefuelltes individuelles Angebot (bestehender Baustein C/D-Flow),
-    // NICHT mehr die alte oeffentliche Angebots-Erstellung wie frueher im Demo-Pfad
-    if(r.date_wanted) checkDateConflict(r.date_wanted, null);
-    openCustomOfferModal();
-    document.getElementById('co-name').value = r.customer_name || '';
-    document.getElementById('co-email').value = r.customer_email || '';
-    pendingOfferCustomerPhone = r.customer_phone || null;
-    document.getElementById('co-desc').value = r.destination || '';
-    if(r.date_wanted) document.getElementById('co-date').value = r.date_wanted;
-    if(r.pickup_time) document.getElementById('co-time').value = r.pickup_time;
-    // Punkt 8 (5. August): Abholort wurde vom Kunden bereits bei der Anfrage festgelegt --
-    // deshalb hier fixiert (nicht mehr editierbar) statt als "(optional)"-Feld. Aenderungen
-    // dazu traegt der Fahrer stattdessen in "Notiz an den Kunden" ein.
-    const coPickup = document.getElementById('co-pickup');
-    if(r.pickup){
-      coPickup.value = r.pickup;
-      coPickup.readOnly = true;
-      document.getElementById('co-pickup-hint').style.display = 'block';
-    } else {
-      coPickup.value = '';
-      coPickup.readOnly = false;
-      document.getElementById('co-pickup-hint').style.display = 'none';
-    }
-    document.getElementById('co-notes').value = r.notes ? (t('co_prefill_from_request') + ' "' + r.notes + '"') : '';
-    coSelectedHighlights = Array.isArray(r.highlights) ? r.highlights.slice() : [];
-    renderHighlightChips('co-highlights-row');
-    return;
+  if(!r || !realDriverProfile) return;
+  if(r.date_wanted) checkDateConflict(r.date_wanted, null);
+  openCustomOfferModal();
+  document.getElementById('co-name').value = r.customer_name || '';
+  document.getElementById('co-email').value = r.customer_email || '';
+  pendingOfferCustomerPhone = r.customer_phone || null;
+  document.getElementById('co-desc').value = r.destination || '';
+  if(r.date_wanted) document.getElementById('co-date').value = r.date_wanted;
+  if(r.pickup_time) document.getElementById('co-time').value = r.pickup_time;
+  // Punkt 8 (5. August): Abholort wurde vom Kunden bereits bei der Anfrage festgelegt --
+  // deshalb hier fixiert (nicht mehr editierbar) statt als "(optional)"-Feld. Aenderungen
+  // dazu traegt der Fahrer stattdessen in "Notiz an den Kunden" ein.
+  const coPickup = document.getElementById('co-pickup');
+  if(r.pickup){
+    coPickup.value = r.pickup;
+    coPickup.readOnly = true;
+    document.getElementById('co-pickup-hint').style.display = 'block';
+  } else {
+    coPickup.value = '';
+    coPickup.readOnly = false;
+    document.getElementById('co-pickup-hint').style.display = 'none';
   }
-  showDashSection('listings');
-  if(document.getElementById('add-listing-form').style.display === 'none'){
-    toggleAddForm();
-  }
-  document.getElementById('nl-name').value = r.destination;
-  const ctx = document.getElementById('nl-request-context');
-  ctx.style.display = 'block';
-  ctx.innerHTML = `ⓘ ${t('nl_request_context_note').split('{name}').join(r.name).replace('{ref}', r.ref)}`;
+  document.getElementById('co-notes').value = r.notes ? (t('co_prefill_from_request') + ' "' + r.notes + '"') : '';
+  coSelectedHighlights = Array.isArray(r.highlights) ? r.highlights.slice() : [];
+  renderHighlightChips('co-highlights-row');
 }
 
 function toggleAddForm(){
@@ -10488,9 +9527,7 @@ function addListing(){
   }
   err.textContent = '';
 
-  const profile = driverProfiles[currentDriverId];
-  const region = serviceRegions==='all' ? profile.region : serviceRegions[0];
-  const isApproved = profile.status !== 'pending';
+  const region = serviceRegions==='all' ? (realDriverProfile ? (realDriverProfile.home_area || realDriverProfile.region) : null) : serviceRegions[0];
   const tourSpecialRates = collectSpecialRates('nl');
 
   driverListings.unshift({name, price, duration, bookings:0, fee:feeForPrice(price, spots), active:true, region, services, spots, extras, serviceRegions, featured, airportRegions, transferRegions, pickupRegionPrices, tourSpecialRates});
@@ -10517,29 +9554,6 @@ function addListing(){
       }
       loadRealPublicListings();
     });
-  }
-
-  // this listing only becomes publicly bookable once the driver's account is approved
-  // (nur fuer die alte Demo — echte Fahrer werden ueber loadRealPublicListings() eingeblendet)
-  if(!realDriverProfile && isApproved){
-    drivers.unshift({
-      name: profile.fullName, tour:name, duration, vehicle:vehicleDisplayString(profile.vehicle), vehicleType:(profile.vehicle && profile.vehicle.vtype) || 'Standard Car',
-      lang: profile.langs.length ? profile.langs : ["EN"], rating:"New · 0 tours", price,
-      badge: featured ? "⭐ Top offer" : "", featured, region: region || profile.region, services, spots, extras, serviceRegions, airportRegions, transferRegions, pickupRegionPrices,
-      photo: profile.photo, ownerId: currentDriverId, active:true,
-      femaleDriver: !!profile.femaleDriver, childFriendly: !!profile.childFriendly, tourGuideCertified: !!profile.tourGuideCertified, firstAidTrained: !!profile.firstAidTrained
-    });
-  }
-
-  if(pendingOfferRequestIndex !== null){
-    const req = driverDataStore[currentDriverId].tourRequests[pendingOfferRequestIndex];
-    if(req){
-      req.status = 'offered';
-      req.offeredTourName = name;
-    }
-    pendingOfferRequestIndex = null;
-    document.getElementById('nl-request-context').style.display = 'none';
-    renderTourRequests();
   }
 
   document.getElementById('nl-name').value='';
@@ -11101,31 +10115,7 @@ document.querySelectorAll('[data-group="ep-island"] .chip').forEach(chip=>{
   chip.addEventListener('click', ()=> setEpIsland(chip.dataset.value));
 });
 function openEditProfile(){
-  if(realDriverProfile){ openEditProfileReal(); return; }
-  const p = driverProfiles[currentDriverId];
-  document.getElementById('ep-name').value = p.fullName;
-  epServiceRegionsByIsland = { bali: p.serviceRegions ? [...p.serviceRegions] : (p.region ? [p.region] : []), lombok: p.serviceRegionsLombok ? [...p.serviceRegionsLombok] : [] };
-  setEpIsland(p.island || 'bali');
-  epSelectedLangs = [...p.langs];
-  document.querySelectorAll('[data-group="ep-lang"] .chip').forEach(c=>{
-    c.classList.toggle('chip-active', epSelectedLangs.includes(c.dataset.value));
-  });
-  const v = p.vehicle || {};
-  document.getElementById('ep-vtype').value = v.vtype || 'Standard Car';
-  document.getElementById('ep-car').value = v.car || '';
-  document.getElementById('ep-seats').value = v.seats || '';
-  document.getElementById('ep-plate').value = v.plate || '';
-  document.getElementById('ep-color').value = v.color || '';
-  document.getElementById('ep-female').checked = !!p.femaleDriver;
-  document.getElementById('ep-childfriendly').checked = !!p.childFriendly;
-  document.getElementById('ep-guidecert').checked = !!p.tourGuideCertified;
-  document.getElementById('ep-firstaid').checked = !!p.firstAidTrained;
-  const pay = p.payment || {};
-  document.getElementById('ep-paylink').value = pay.link || '';
-  document.getElementById('ep-qris').checked = pay.qris !== false;
-  document.getElementById('ep-phone').value = '';
-  document.getElementById('ep-error').textContent = '';
-  document.getElementById('edit-profile-modal-bg').classList.add('active');
+  if(realDriverProfile) openEditProfileReal();
 }
 // echtes Fahrerprofil ins Bearbeiten-Formular laden (Baustein 10)
 function openEditProfileReal(){
@@ -11182,50 +10172,7 @@ document.querySelectorAll('[data-group="ep-lang"] .chip').forEach(chip=>{
   });
 });
 function saveEditProfile(){
-  if(realDriverProfile){ saveEditProfileReal(); return; }
-  const name = document.getElementById('ep-name').value.trim();
-  if(!name){
-    document.getElementById('ep-error').textContent = t('ep_err_name');
-    return;
-  }
-  const p = driverProfiles[currentDriverId];
-  p.fullName = name;
-  p.name = name.split(' ')[0];
-  p.serviceRegions = [...epSelectedServiceRegions];
-  if(epSelectedServiceRegions.length) p.region = epSelectedServiceRegions[0];
-  p.langs = epSelectedLangs.length ? [...epSelectedLangs] : ['EN'];
-  p.vehicle = {
-    vtype: document.getElementById('ep-vtype').value,
-    car: document.getElementById('ep-car').value.trim(),
-    seats: document.getElementById('ep-seats').value.trim(),
-    plate: document.getElementById('ep-plate').value.trim(),
-    color: document.getElementById('ep-color').value.trim()
-  };
-  p.femaleDriver = document.getElementById('ep-female').checked;
-  p.childFriendly = document.getElementById('ep-childfriendly').checked;
-  p.tourGuideCertified = document.getElementById('ep-guidecert').checked;
-  p.firstAidTrained = document.getElementById('ep-firstaid').checked;
-  p.payment = {
-    qris: document.getElementById('ep-qris').checked,
-    link: document.getElementById('ep-paylink').value.trim()
-  };
-
-  // keep public listings in sync with the updated profile
-  drivers.filter(d => d.ownerId===currentDriverId).forEach(d=>{
-    d.name = p.fullName;
-    d.lang = p.langs;
-    d.vehicle = vehicleDisplayString(p.vehicle);
-    d.vehicleType = p.vehicle.vtype;
-    d.femaleDriver = p.femaleDriver;
-    d.childFriendly = p.childFriendly;
-    d.tourGuideCertified = p.tourGuideCertified;
-    d.firstAidTrained = p.firstAidTrained;
-  });
-
-  renderProfileChip();
-  renderDriverGrid(visibleDrivers());
-  closeEditProfile();
-  saveState();
+  if(realDriverProfile) saveEditProfileReal();
 }
 // echtes Fahrerprofil in Supabase speichern (Baustein 10)
 async function saveEditProfileReal(){
@@ -11593,7 +10540,7 @@ const translations = {
     fp_err_no_phone: "Please enter your phone number first.", fp_err_no_email: "Please enter your email address.", generic_please_wait: "One moment...", fp_err_prefix: "Error: ", fp_email_sent_success: "Email sent ✓ — please open the link in the email (check your spam folder too).",
     np_err_mismatch: "The two passwords don't match.", np_success_alert: "New password saved ✓ You're now logged in.", np_title: "Set new password", np_label_new: "New password (min. 6 characters)", np_placeholder_new: "New password", np_label_confirm: "Repeat new password", np_placeholder_confirm: "Repeat password", np_save_btn: "Save password",
     auth_login_title: "🚗 Driver area", auth_login_note: "Log in with phone number<br>(0062&nbsp;/&nbsp;+62) or email and password.", auth_login_id_placeholder: "Phone number or email", auth_password_placeholder: "Password", auth_login_btn: "Log in", auth_forgot_link: "Forgot password?", auth_no_account_prefix: "No account yet? ", auth_register_link: "Register now", auth_signup_note: "Create a new driver account.", auth_signup_name_placeholder: "Your name *", auth_signup_phone_placeholder: "Phone / WhatsApp *", auth_signup_password_placeholder: "Password (min. 6 characters) *", auth_signup_email_placeholder: "Email (optional)", auth_signup_car_placeholder: "Model — e.g. Toyota Avanza", auth_signup_seats_placeholder: "Seats", auth_signup_plate_placeholder: "License plate *", auth_signup_color_placeholder: "Vehicle color *", auth_signup_address_placeholder: "Address * (for invoices)", auth_signup_taxnumber_placeholder: "Tax number (optional)", auth_signup_referral_placeholder: "Referral code (optional) — e.g. RY-104", auth_docs_title: "Upload documents — all 4 are required", auth_doc_license: "Driver's license *", auth_doc_insurance: "Insurance *", auth_doc_papers: "Vehicle papers *", auth_doc_selfie: "Selfie *", auth_docs_uploaded_suffix: " / 4 uploaded", auth_docs_all_needed_suffix: " — all 4 needed", auth_signup_btn: "Register", auth_have_account_prefix: "Already have an account? ", auth_loading_text: "⏳ One moment...",
-    va_title: "Become a Rydanu Villa Partner", va_intro: "Your guests can then request a driver for transfers directly via a personal link — free for you, you earn a commission per successful booking. We'll get in touch shortly after you sign up.", va_name_label: "Villa / hotel name", va_name_placeholder: "e.g. Sunset Bali Villas", va_contact_label: "Contact person", va_contact_placeholder: "e.g. Made", va_region_label: "Region", va_phone_label: "WhatsApp / phone", va_phone_placeholder: "e.g. +62812...", va_email_label: "Email", va_email_placeholder: "e.g. manager@villa.com", va_address_label: "Address", va_address_placeholder: "e.g. Jl. Sunset Road No. 5, Seminyak, Bali", va_taxnumber_label: "Tax number", va_message_label: "Message", va_message_optional: "(optional)", va_submit_btn: "Send request", va_err_missing_fields: "Please fill in villa name, contact person, region, WhatsApp number, email, and address.", va_err_generic: "Something went wrong — please try again.", va_success_title: "✓ Thank you!", va_success_body: "Your application has reached us — we'll be in touch shortly.",
+    va_title: "Become a Rydanu Villa Partner", va_intro: "Your guests can then request a driver for transfers directly via a personal link — free for you, you earn a commission per successful booking. We'll get in touch shortly after you sign up.", va_name_label: "Villa / hotel name", va_name_placeholder: "e.g. Sunset Bali Villas", va_contact_label: "Contact person", va_contact_placeholder: "e.g. Made", va_region_label: "Region", va_phone_label: "WhatsApp / phone", va_phone_placeholder: "812 3456 7890", va_email_label: "Email", va_email_placeholder: "e.g. manager@villa.com", va_address_label: "Address", va_address_placeholder: "e.g. Jl. Sunset Road No. 5, Seminyak, Bali", va_taxnumber_label: "Tax number", va_message_label: "Message", va_message_optional: "(optional)", va_submit_btn: "Send request", va_err_missing_fields: "Please fill in villa name, contact person, region, WhatsApp number, email, and address.", va_err_generic: "Something went wrong — please try again.", va_success_title: "✓ Thank you!", va_success_body: "Your application has reached us — we'll be in touch shortly.",
     reg_lombok_kuta: "Kuta Lombok (South)", reg_lombok_senggigi: "Senggigi (West)", reg_lombok_gili: "Gili Islands (North)", reg_lombok_sembalun: "Sembalun (East)",
     nl_airport_regions_title: "Airport destination regions — set a price per region (leave empty if not offered)",
     nl_transfer_regions_title: "Transfer destinations — set a price per destination (leave empty if not offered)",
@@ -11940,7 +10887,7 @@ const translations = {
     fp_err_no_phone: "Bitte zuerst deine Telefonnummer eingeben.", fp_err_no_email: "Bitte E-Mail-Adresse eingeben.", generic_please_wait: "Einen Moment...", fp_err_prefix: "Fehler: ", fp_email_sent_success: "E-Mail verschickt ✓ — bitte den Link in der Mail öffnen (auch im Spam-Ordner nachschauen).",
     np_err_mismatch: "Die beiden Passwörter stimmen nicht überein.", np_success_alert: "Neues Passwort gespeichert ✓ Du bist jetzt eingeloggt.", np_title: "Neues Passwort setzen", np_label_new: "Neues Passwort (mind. 6 Zeichen)", np_placeholder_new: "Neues Passwort", np_label_confirm: "Neues Passwort wiederholen", np_placeholder_confirm: "Passwort wiederholen", np_save_btn: "Passwort speichern",
     auth_login_title: "🚗 Fahrer-Bereich", auth_login_note: "Anmeldung mit Telefonnummer<br>(0062&nbsp;/&nbsp;+62) oder E-Mail und Passwort.", auth_login_id_placeholder: "Telefonnummer oder E-Mail", auth_password_placeholder: "Passwort", auth_login_btn: "Anmelden", auth_forgot_link: "Passwort vergessen?", auth_no_account_prefix: "Noch kein Konto? ", auth_register_link: "Jetzt registrieren", auth_signup_note: "Neues Fahrerkonto anlegen.", auth_signup_name_placeholder: "Dein Name *", auth_signup_phone_placeholder: "Telefon / WhatsApp *", auth_signup_password_placeholder: "Passwort (mind. 6 Zeichen) *", auth_signup_email_placeholder: "E-Mail (optional)", auth_signup_car_placeholder: "Modell — z.B. Toyota Avanza", auth_signup_seats_placeholder: "Sitzplätze", auth_signup_plate_placeholder: "Kennzeichen *", auth_signup_color_placeholder: "Fahrzeugfarbe *", auth_signup_address_placeholder: "Adresse * (für Rechnungen)", auth_signup_taxnumber_placeholder: "Steuernummer (optional)", auth_signup_referral_placeholder: "Empfehlungs-Code (optional) — z.B. RY-104", auth_docs_title: "Dokumente hochladen — alle 4 sind Pflicht", auth_doc_license: "Führerschein *", auth_doc_insurance: "Versicherung *", auth_doc_papers: "Fahrzeugpapiere *", auth_doc_selfie: "Selfie *", auth_docs_uploaded_suffix: " / 4 hochgeladen", auth_docs_all_needed_suffix: " — alle 4 nötig", auth_signup_btn: "Registrieren", auth_have_account_prefix: "Schon ein Konto? ", auth_loading_text: "⏳ Einen Moment...",
-    va_title: "Rydanu Villa-Partner werden", va_intro: "Ihre Gäste können dann über einen persönlichen Link direkt einen Fahrer für Transfers anfragen — kostenlos für Sie, Sie erhalten eine Provision pro erfolgreicher Buchung. Wir melden uns nach Ihrer Anmeldung kurz bei Ihnen.", va_name_label: "Name der Villa / des Hotels", va_name_placeholder: "z.B. Sunset Bali Villas", va_contact_label: "Ansprechpartner", va_contact_placeholder: "z.B. Made", va_region_label: "Region", va_phone_label: "WhatsApp / Telefon", va_phone_placeholder: "z.B. +62812...", va_email_label: "E-Mail", va_email_placeholder: "z.B. manager@villa.com", va_address_label: "Adresse", va_address_placeholder: "z.B. Jl. Sunset Road No. 5, Seminyak, Bali", va_taxnumber_label: "Steuernummer", va_message_label: "Nachricht", va_message_optional: "(optional)", va_submit_btn: "Anfrage senden", va_err_missing_fields: "Bitte Name, Ansprechpartner, Region, WhatsApp-Nummer, E-Mail und Adresse ausfüllen.", va_err_generic: "Etwas ist schiefgelaufen — bitte nochmal versuchen.", va_success_title: "✓ Danke!", va_success_body: "Ihre Anmeldung ist bei uns eingegangen — wir melden uns in Kürze bei Ihnen.",
+    va_title: "Rydanu Villa-Partner werden", va_intro: "Ihre Gäste können dann über einen persönlichen Link direkt einen Fahrer für Transfers anfragen — kostenlos für Sie, Sie erhalten eine Provision pro erfolgreicher Buchung. Wir melden uns nach Ihrer Anmeldung kurz bei Ihnen.", va_name_label: "Name der Villa / des Hotels", va_name_placeholder: "z.B. Sunset Bali Villas", va_contact_label: "Ansprechpartner", va_contact_placeholder: "z.B. Made", va_region_label: "Region", va_phone_label: "WhatsApp / Telefon", va_phone_placeholder: "812 3456 7890", va_email_label: "E-Mail", va_email_placeholder: "z.B. manager@villa.com", va_address_label: "Adresse", va_address_placeholder: "z.B. Jl. Sunset Road No. 5, Seminyak, Bali", va_taxnumber_label: "Steuernummer", va_message_label: "Nachricht", va_message_optional: "(optional)", va_submit_btn: "Anfrage senden", va_err_missing_fields: "Bitte Name, Ansprechpartner, Region, WhatsApp-Nummer, E-Mail und Adresse ausfüllen.", va_err_generic: "Etwas ist schiefgelaufen — bitte nochmal versuchen.", va_success_title: "✓ Danke!", va_success_body: "Ihre Anmeldung ist bei uns eingegangen — wir melden uns in Kürze bei Ihnen.",
     reg_lombok_kuta: "Kuta Lombok (Süd)", reg_lombok_senggigi: "Senggigi (West)", reg_lombok_gili: "Gili-Inseln (Nord)", reg_lombok_sembalun: "Sembalun (Ost)",
     nl_airport_regions_title: "Flughafen-Zielregionen — Preis pro Region festlegen (leer lassen, wenn nicht angeboten)",
     nl_transfer_regions_title: "Transfer-Ziele — Preis pro Ziel festlegen (leer lassen, wenn nicht angeboten)",
@@ -12287,7 +11234,7 @@ const translations = {
     fp_err_no_phone: "Silakan masukkan nomor telepon Anda terlebih dahulu.", fp_err_no_email: "Silakan masukkan alamat email.", generic_please_wait: "Sebentar...", fp_err_prefix: "Kesalahan: ", fp_email_sent_success: "Email terkirim ✓ — silakan buka tautan di email (periksa juga folder spam).",
     np_err_mismatch: "Kedua kata sandi tidak cocok.", np_success_alert: "Kata sandi baru tersimpan ✓ Anda sekarang sudah masuk.", np_title: "Buat kata sandi baru", np_label_new: "Kata sandi baru (min. 6 karakter)", np_placeholder_new: "Kata sandi baru", np_label_confirm: "Ulangi kata sandi baru", np_placeholder_confirm: "Ulangi kata sandi", np_save_btn: "Simpan kata sandi",
     auth_login_title: "🚗 Area sopir", auth_login_note: "Masuk dengan nomor telepon<br>(0062&nbsp;/&nbsp;+62) atau email dan kata sandi.", auth_login_id_placeholder: "Nomor telepon atau email", auth_password_placeholder: "Kata sandi", auth_login_btn: "Masuk", auth_forgot_link: "Lupa kata sandi?", auth_no_account_prefix: "Belum punya akun? ", auth_register_link: "Daftar sekarang", auth_signup_note: "Buat akun sopir baru.", auth_signup_name_placeholder: "Nama Anda *", auth_signup_phone_placeholder: "Telepon / WhatsApp *", auth_signup_password_placeholder: "Kata sandi (min. 6 karakter) *", auth_signup_email_placeholder: "Email (opsional)", auth_signup_car_placeholder: "Model — mis. Toyota Avanza", auth_signup_seats_placeholder: "Jumlah kursi", auth_signup_plate_placeholder: "Plat nomor *", auth_signup_color_placeholder: "Warna kendaraan *", auth_signup_address_placeholder: "Alamat * (untuk faktur)", auth_signup_taxnumber_placeholder: "NPWP (opsional)", auth_signup_referral_placeholder: "Kode referral (opsional) — mis. RY-104", auth_docs_title: "Unggah dokumen — keempatnya wajib", auth_doc_license: "SIM *", auth_doc_insurance: "Asuransi *", auth_doc_papers: "STNK/BPKB *", auth_doc_selfie: "Selfie *", auth_docs_uploaded_suffix: " / 4 diunggah", auth_docs_all_needed_suffix: " — keempatnya diperlukan", auth_signup_btn: "Daftar", auth_have_account_prefix: "Sudah punya akun? ", auth_loading_text: "⏳ Sebentar...",
-    va_title: "Menjadi Mitra Villa Rydanu", va_intro: "Tamu Anda kemudian dapat langsung meminta sopir untuk transfer melalui tautan pribadi — gratis untuk Anda, Anda mendapatkan komisi per pemesanan yang berhasil. Kami akan menghubungi Anda segera setelah pendaftaran.", va_name_label: "Nama villa / hotel", va_name_placeholder: "mis. Sunset Bali Villas", va_contact_label: "Kontak person", va_contact_placeholder: "mis. Made", va_region_label: "Wilayah", va_phone_label: "WhatsApp / telepon", va_phone_placeholder: "mis. +62812...", va_email_label: "Email", va_email_placeholder: "mis. manager@villa.com", va_address_label: "Alamat", va_address_placeholder: "mis. Jl. Sunset Road No. 5, Seminyak, Bali", va_taxnumber_label: "NPWP", va_message_label: "Pesan", va_message_optional: "(opsional)", va_submit_btn: "Kirim permintaan", va_err_missing_fields: "Silakan isi nama villa, kontak person, wilayah, nomor WhatsApp, email, dan alamat.", va_err_generic: "Terjadi kesalahan — silakan coba lagi.", va_success_title: "✓ Terima kasih!", va_success_body: "Pendaftaran Anda telah kami terima — kami akan segera menghubungi Anda.",
+    va_title: "Menjadi Mitra Villa Rydanu", va_intro: "Tamu Anda kemudian dapat langsung meminta sopir untuk transfer melalui tautan pribadi — gratis untuk Anda, Anda mendapatkan komisi per pemesanan yang berhasil. Kami akan menghubungi Anda segera setelah pendaftaran.", va_name_label: "Nama villa / hotel", va_name_placeholder: "mis. Sunset Bali Villas", va_contact_label: "Kontak person", va_contact_placeholder: "mis. Made", va_region_label: "Wilayah", va_phone_label: "WhatsApp / telepon", va_phone_placeholder: "812 3456 7890", va_email_label: "Email", va_email_placeholder: "mis. manager@villa.com", va_address_label: "Alamat", va_address_placeholder: "mis. Jl. Sunset Road No. 5, Seminyak, Bali", va_taxnumber_label: "NPWP", va_message_label: "Pesan", va_message_optional: "(opsional)", va_submit_btn: "Kirim permintaan", va_err_missing_fields: "Silakan isi nama villa, kontak person, wilayah, nomor WhatsApp, email, dan alamat.", va_err_generic: "Terjadi kesalahan — silakan coba lagi.", va_success_title: "✓ Terima kasih!", va_success_body: "Pendaftaran Anda telah kami terima — kami akan segera menghubungi Anda.",
     reg_lombok_kuta: "Kuta Lombok (Selatan)", reg_lombok_senggigi: "Senggigi (Barat)", reg_lombok_gili: "Gili (Utara)", reg_lombok_sembalun: "Sembalun (Timur)",
     nl_airport_regions_title: "Wilayah tujuan bandara — atur harga per wilayah (kosongkan jika tidak ditawarkan)",
     nl_transfer_regions_title: "Tujuan transfer — atur harga per tujuan (kosongkan jika tidak ditawarkan)",
@@ -12427,7 +11374,7 @@ function setLanguage(lang){
   if(document.getElementById('dash-greeting')) renderProfileChip();
   const searchInputEl = document.getElementById('search-input');
   if(searchInputEl) updateLombokSoftSuggest(searchInputEl.value.trim().toLowerCase());
-  saveState();
+  saveLangPreference(lang);
 }
 // Nach jedem Neu-Rendern von Filter-Chips (Sprachwechsel, Insel-Wechsel) die vorher getroffene
 // Auswahl (selectedFilters) wieder als chip-active markieren -- sonst wirkt es beim Sprachwechsel so,
@@ -13701,74 +12648,16 @@ function driverMonthsActive(driverId){
   let months = (now.getFullYear()-joined.getFullYear())*12 + (now.getMonth()-joined.getMonth());
   return Math.max(0, months);
 }
-function calcDriverPointBreakdown(driverId){
-  const store = driverDataStore[driverId];
-  if(!store) return null;
-  const completedTours = (store.completed || []).filter(b => b.status !== 'cancelled');
-  const selfCancelled = (store.completed || []).filter(b => b.status === 'cancelled' && b.cancelReason === 'driver');
-  const reviews = store.reviews || [];
-  const badReviews = reviews.filter(r => reviewStarsCount(r) < 4);
-  const revenue = completedTours.reduce((sum,b) => sum + parseIDR(b.price), 0);
-  const monthsActive = driverMonthsActive(driverId);
-  const referredActive = Object.values(driverProfiles).filter(p => p.referredBy === driverId && p.status === 'approved').length;
-
-  const pTours = completedTours.length * 2;
-  const pMonths = monthsActive * 1;
-  const pReferrals = referredActive * 10;
-  const pRevenue = Math.floor(revenue / 1000000) * 3;
-  const pBadReviews = -(badReviews.length * 2);
-  const pCancelled = -(selfCancelled.length * 3);
-  const total = Math.max(0, pTours + pMonths + pReferrals + pRevenue + pBadReviews + pCancelled);
-
-  return {
-    total, monthsActive, referredActive, revenue,
-    toursCount: completedTours.length, badReviewsCount: badReviews.length, selfCancelledCount: selfCancelled.length,
-    breakdown: [
-      { label:'rank_pts_tours', points:pTours },
-      { label:'rank_pts_months', points:pMonths },
-      { label:'rank_pts_referrals', points:pReferrals },
-      { label:'rank_pts_revenue', points:pRevenue },
-      { label:'rank_pts_badreviews', points:pBadReviews },
-      { label:'rank_pts_cancelled', points:pCancelled },
-    ],
-    avgRating: reviews.length ? (reviews.reduce((s,r)=>s+reviewStarsCount(r),0)/reviews.length) : 0,
-    reviewCount: reviews.length,
-  };
-}
 function getDriverRank(points){
   return DRIVER_RANKS.find(r => points >= r.min) || DRIVER_RANKS[DRIVER_RANKS.length-1];
 }
-function getNextDriverRank(points){
-  const idx = DRIVER_RANKS.findIndex(r => points >= r.min);
-  return idx > 0 ? DRIVER_RANKS[idx-1] : null;
-}
-const DRIVER_MILESTONE_BADGES = [
-  { key:'veteran_tours',  emoji:'🚐', labelKey:'badge_veteran_tours',  test:(b)=> b.toursCount >= 50 },
-  { key:'veteran_time',   emoji:'🕰️', labelKey:'badge_veteran_time',   test:(b)=> b.monthsActive >= 12 },
-  { key:'referrer',       emoji:'🤝', labelKey:'badge_referrer',       test:(b)=> b.referredActive >= 1 },
-  { key:'ambassador',     emoji:'🤝', labelKey:'badge_ambassador',     test:(b)=> b.referredActive >= 5 },
-  { key:'crowd_favorite', emoji:'⭐', labelKey:'badge_crowd_favorite', test:(b)=> b.reviewCount >= 10 && b.avgRating >= 4.8 },
-  { key:'top_performer',  emoji:'🏆', labelKey:'badge_top_performer',  test:(b)=> b.revenue >= 10000000 },
-];
-function getDriverBadges(driverId){
-  const b = calcDriverPointBreakdown(driverId);
-  if(!b) return [];
-  return DRIVER_MILESTONE_BADGES.filter(m => m.test(b));
-}
 function driverRankBadgeHTML(driverId, size){
-  // Bugfix (Demo-vs-Echt-Check, 5. August): fuer den echten eingeloggten Fahrer wurde hier immer
-  // ueber die Demo-Datenstruktur nachgeschlagen -> zeigte in "Meine Angebote" faelschlich den
-  // Demo-Rang (Wayan) statt des tatsaechlichen eigenen Rangs an.
   if(realDriverProfile && driverId === realDriverProfile.id){
     const rank = getDriverRank(realDriverProfile.rank_points || 0);
     const cls = size === 'sm' ? 'rank-badge rank-badge-sm' : 'rank-badge';
     return `<span class="${cls} rank-${rank.key}">${rank.emoji} ${t(rank.labelKey)}</span>`;
   }
-  const b = calcDriverPointBreakdown(driverId);
-  if(!b) return '';
-  const rank = getDriverRank(b.total);
-  const cls = size === 'sm' ? 'rank-badge rank-badge-sm' : 'rank-badge';
-  return `<span class="${cls} rank-${rank.key}">${rank.emoji} ${t(rank.labelKey)}</span>`;
+  return '';
 }
 // Rang-Badge fuer eine Fahrerkarte in der Suche — funktioniert sowohl fuer Demo- als auch fuer echte Fahrer (Baustein 10)
 function ownerRankBadgeHTML(d, size){
@@ -13951,7 +12840,6 @@ function openTerms(type){
 }
 function closeTerms(){ document.getElementById('terms-modal-bg').classList.remove('active'); }
 document.getElementById('terms-modal-bg').addEventListener('click', e=>{ if(e.target.id==='terms-modal-bg') closeTerms(); });
-document.getElementById('doc-preview-modal-bg').addEventListener('click', e=>{ if(e.target.id==='doc-preview-modal-bg') closeDocPreview(); });
 document.getElementById('support-modal-bg').addEventListener('click', e=>{ if(e.target.id==='support-modal-bg') closeSupportMsg(); });
 document.getElementById('admin-msg-detail-modal-bg').addEventListener('click', e=>{ if(e.target.id==='admin-msg-detail-modal-bg') closeAdminMsgDetail(); });
 document.getElementById('driver-thread-modal-bg').addEventListener('click', e=>{ if(e.target.id==='driver-thread-modal-bg') closeDriverThreadView(); });
@@ -13960,7 +12848,6 @@ document.getElementById('booking-detail-modal-bg').addEventListener('click', e=>
 document.getElementById('receipt-modal-bg').addEventListener('click', e=>{ if(e.target.id==='receipt-modal-bg') closeReceiptDetail(); });
 document.getElementById('standalone-review-modal-bg').addEventListener('click', e=>{ if(e.target.id==='standalone-review-modal-bg') closeStandaloneReview(); });
 document.getElementById('my-booking-modal-bg').addEventListener('click', e=>{ if(e.target.id==='my-booking-modal-bg') closeMyBooking(); });
-document.getElementById('data-transfer-modal-bg').addEventListener('click', e=>{ if(e.target.id==='data-transfer-modal-bg') closeDataTransfer(); });
 document.getElementById('edit-listing-modal-bg').addEventListener('click', e=>{ if(e.target.id==='edit-listing-modal-bg') closeEditListing(); });
 
 // ---- tour location map ----
@@ -14104,17 +12991,7 @@ function cropImageToSquare(file, size, callback){
 }
 
 function handlePhotoUpload(event){
-  if(realDriverProfile){ handleRealPhotoUpload(event); return; }
-  const file = event.target.files[0];
-  if(!file) return;
-  cropImageToSquare(file, 500, (dataUrl) => {
-    driverProfiles[currentDriverId].photo = dataUrl;
-    renderProfileChip();
-    // reflect the same photo on all of this driver's public listings
-    drivers.filter(d => d.ownerId===currentDriverId).forEach(d => d.photo = dataUrl);
-    renderDriverGrid(visibleDrivers());
-    saveState();
-  });
+  if(realDriverProfile) handleRealPhotoUpload(event);
 }
 // echtes Profilfoto hochladen: in Supabase Storage speichern und drivers.avatar_url aktualisieren (Baustein 10)
 async function handleRealPhotoUpload(event){
@@ -14817,31 +13694,21 @@ function openCalDayDetail(key, dayBookings){
 function closeCalDayDetail(){ document.getElementById('cal-day-modal-bg').classList.remove('active'); }
 document.getElementById('cal-day-modal-bg').addEventListener('click', e=>{ if(e.target.id==='cal-day-modal-bg') closeCalDayDetail(); });
 async function toggleBlock(el, key){
-  if(realDriverProfile){
-    if(realBlockedDays.has(key)){
-      const { error } = await supabaseClient.from('calendar_blocked_days').delete()
-        .eq('driver_id', realDriverProfile.id).eq('blocked_date', key);
-      if(error){ console.error('Tag konnte nicht entsperrt werden:', error); return; }
-      realBlockedDays.delete(key);
-      el.classList.remove('blocked');
-    } else {
-      const { error } = await supabaseClient.from('calendar_blocked_days').insert({
-        driver_id: realDriverProfile.id, blocked_date: key
-      });
-      if(error){ console.error('Tag konnte nicht blockiert werden:', error); return; }
-      realBlockedDays.add(key);
-      el.classList.add('blocked');
-    }
-    return;
-  }
-  if(calEvents[key]){
+  if(!realDriverProfile) return;
+  if(realBlockedDays.has(key)){
+    const { error } = await supabaseClient.from('calendar_blocked_days').delete()
+      .eq('driver_id', realDriverProfile.id).eq('blocked_date', key);
+    if(error){ console.error('Tag konnte nicht entsperrt werden:', error); return; }
+    realBlockedDays.delete(key);
     el.classList.remove('blocked');
-    delete calEvents[key];
   } else {
+    const { error } = await supabaseClient.from('calendar_blocked_days').insert({
+      driver_id: realDriverProfile.id, blocked_date: key
+    });
+    if(error){ console.error('Tag konnte nicht blockiert werden:', error); return; }
+    realBlockedDays.add(key);
     el.classList.add('blocked');
-    calEvents[key] = {status:'blocked'};
   }
-  saveState();
 }
 // laedt die echten blockierten Tage des eingeloggten Fahrers aus Supabase
 async function loadRealBlockedDays(){
@@ -14890,8 +13757,8 @@ function goHome(){
 // ============================================
 // SUPABASE — echte Fahrer-Anmeldung (Baustein 1)
 // ============================================
-const SUPABASE_URL = 'https://xpmrefoscyroihoglmum.supabase.co';
-const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_UB_OEdt_7dKMm7gKz_w3Sw_GeafRGHu';
+const SUPABASE_URL = 'https://dfwbixcegggijkftontt.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_lnR0unyW2i_b6_9PuK8zjw__yJn-Hos';
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 
 // Google Places API (New) -- Ersatz fuer Nominatim/OpenStreetMap (23. August, siehe searchPlacesBali()
@@ -15285,7 +14152,21 @@ async function initVillaApplyPage(){
       </div>
       <div class="form-field" style="margin-bottom:12px;">
         <label>${t('va_phone_label')}</label>
-        <input type="tel" id="va-phone" required placeholder="${t('va_phone_placeholder')}" style="width:100%; margin-top:4px;">
+        <div style="display:flex; gap:8px; margin-top:4px;">
+          <select id="va-country" style="flex:0 0 112px;">
+            <option value="62" selected>🇮🇩 +62</option>
+            <option value="49">🇩🇪 +49</option>
+            <option value="61">🇦🇺 +61</option>
+            <option value="65">🇸🇬 +65</option>
+            <option value="60">🇲🇾 +60</option>
+            <option value="1">🇺🇸 +1</option>
+            <option value="44">🇬🇧 +44</option>
+            <option value="33">🇫🇷 +33</option>
+            <option value="81">🇯🇵 +81</option>
+            <option value="86">🇨🇳 +86</option>
+          </select>
+          <input type="tel" id="va-phone" required inputmode="tel" placeholder="812 3456 7890" style="flex:1;">
+        </div>
       </div>
       <div class="form-field" style="margin-bottom:12px;">
         <label>${t('va_email_label')}</label>
@@ -15312,7 +14193,9 @@ async function submitVillaApplication(){
   const name = document.getElementById('va-name').value.trim();
   const contactName = document.getElementById('va-contact-name').value.trim();
   const region = document.getElementById('va-region').value;
-  const phone = document.getElementById('va-phone').value.trim();
+  const phoneRawInput = document.getElementById('va-phone').value.trim();
+  const vaCountry = document.getElementById('va-country').value;
+  const phone = phoneRawInput ? normalizePhoneE164(phoneRawInput, vaCountry) : '';
   const email = document.getElementById('va-email').value.trim();
   const address = document.getElementById('va-address').value.trim();
   const errEl = document.getElementById('va-error');
@@ -16190,18 +15073,6 @@ function switchViewProgrammatic(view){
   if(view==='driver'){ checkDriverAuthState(true); }
   if(view==='admin'){ updateIsAdminSession().then(()=>{ renderAdminList(); loadAdminPendingDrivers(); loadRealAdminMessages(); loadAdminDocsResubmittedCount(); renderAdminOpenPayments(); loadVillaApplicationsCount(); }); }
 }
-function populateDemoDriverSwitcher(){
-  const sel = document.getElementById('demo-driver-select');
-  if(!sel) return;
-  const ids = Object.keys(driverProfiles);
-  sel.innerHTML = ids.map(id=>{
-    const p = driverProfiles[id];
-    const statusTag = p.status==='pending' ? ' (pending)' : (p.status==='blocked' ? ' (blocked)' : '');
-    return `<option value="${id}">${p.fullName}${statusTag}</option>`;
-  }).join('');
-  sel.value = currentDriverId;
-}
-
 // ---- admin: approve pending drivers ----
 let adminPeriod = 'month';
 function setAdminPeriod(p){
@@ -16545,8 +15416,6 @@ async function updateIsAdminSession(){
   const versionFooter = document.getElementById('version-footer');
   if(versionFooter) versionFooter.style.display = isAdminSession ? 'block' : 'none';
   const el = document.getElementById('admin-current-account');
-  const settlementBtn = document.getElementById('admin-run-settlement-btn');
-  if(settlementBtn) settlementBtn.style.display = (session) ? 'none' : '';
   if(el){
     if(!session){ el.textContent = '⚠️ Nicht eingeloggt.'; }
     else if(isAdminSession){ el.innerHTML = `Eingeloggt als: <strong>${escapeHtml(session.user.email)}</strong>`; }
@@ -16670,171 +15539,47 @@ function renderAdminList(){
   renderFeeOverridePanel();
   renderAdminOpenPayments();
   populateAdminDocumentsSelect();
+  // Die Liste der ausstehenden Fahrer wird direkt danach von loadAdminPendingDrivers()
+  // -> renderRealAdminPendingDrivers() in dasselbe Element (#admin-pending-list) geschrieben.
   const el = document.getElementById('admin-pending-list');
-  const pending = Object.values(driverProfiles).filter(p => p.status==='pending');
-  if(pending.length === 0){
-    el.innerHTML = `<div class="empty-state">${t('admin_empty_pending')}</div>`;
-    return;
-  }
-  const docLabels = {license:"Driver's license", insurance:"Car insurance", papers:"Vehicle papers", selfie:"Selfie"};
-  el.innerHTML = pending.map(p=>{
-    const docTiles = Object.keys(docLabels).map(k=>{
-      const d = p.docs ? p.docs[k] : null;
-      if(!d) return `<div class="doc-review-tile missing"><span class="doc-icon">✕</span><span>${docLabels[k]}</span><span class="doc-status">not uploaded</span></div>`;
-      const preview = d.dataUrl
-        ? `<img src="${d.dataUrl}" alt="${docLabels[k]}" class="doc-thumb" onclick="openDocPreview('${p.id}','${k}')">`
-        : `<span class="doc-icon">📄</span>`;
-      return `<div class="doc-review-tile"><span>${preview}</span><span>${docLabels[k]}</span><span class="doc-status">✓ ${d.name ? d.name.slice(0,18) : 'uploaded'}</span></div>`;
-    }).join('');
-    return `
-    <div class="panel" style="margin-bottom:16px;">
-      <div class="panel-head"><h3>${p.fullName}</h3><span class="status-pill pending">Ausstehend</span></div>
-      <div class="booking-row"><div><div class="who">Region</div></div><span>${p.region}</span></div>
-      <div class="booking-row"><div><div class="who">Languages</div></div><span>${p.langs.join(', ')}</span></div>
-      <div style="padding:12px 20px;">
-        <div class="filter-group-title">Uploaded documents — tap image to enlarge</div>
-        <div class="doc-review-row">${docTiles}</div>
-      </div>
-      <div style="padding:0 20px 16px;">
-        <button class="book-btn" onclick="approveDriver('${p.id}')">✓ Fahrer freischalten</button>
-        <div class="reject-box">
-          <textarea id="reject-reason-${p.id}" rows="2" placeholder="Grund für Ablehnung (bei Ablehnung erforderlich)..."></textarea>
-          <button type="button" class="cancel-btn" style="width:100%;padding:9px;border-radius:5px;" onclick="rejectDriver('${p.id}')">✕ Fahrer ablehnen</button>
-        </div>
-      </div>
-    </div>`;
-  }).join('');
-}
-function approveDriver(id){
-  const p = driverProfiles[id];
-  if(!p) return;
-  p.status = 'approved';
-  // publish any listings they already created while pending
-  const store = driverDataStore[id];
-  store.listings.forEach(listing=>{
-    const alreadyPublic = drivers.some(d => d.ownerId===id && d.tour===listing.name);
-    if(!alreadyPublic){
-      drivers.unshift({
-        name:p.fullName, tour:listing.name, duration:listing.duration, vehicle:vehicleDisplayString(p.vehicle), vehicleType:(p.vehicle && p.vehicle.vtype) || 'Standard Car',
-        lang:p.langs.length?p.langs:["EN"], rating:"New · 0 tours", price:listing.price,
-        badge:"", region:listing.region||p.region, services:listing.services||[], serviceRegions:listing.serviceRegions,
-        photo:p.photo, ownerId:id, active:listing.active,
-        femaleDriver: !!p.femaleDriver, childFriendly: !!p.childFriendly, tourGuideCertified: !!p.tourGuideCertified, firstAidTrained: !!p.firstAidTrained
-      });
-    }
-  });
-  pushInboxMessage(id, t('approved_inbox_title'), t('approved_inbox_body'));
-  renderDriverGrid(visibleDrivers());
-  renderAdminList();
-  saveState();
-  alert(t('approved_alert').replace('{name}', p.fullName));
-}
-function rejectDriver(id){
-  const p = driverProfiles[id];
-  if(!p) return;
-  const reason = document.getElementById('reject-reason-'+id).value.trim();
-  if(!reason){
-    alert(t('admin_err_rejection_reason'));
-    return;
-  }
-  if(!confirm(t('admin_confirm_reject').replace('{name}', p.fullName).replace('{reason}', reason))) return;
-  p.status = 'rejected';
-  p.rejectReason = reason;
-  pushInboxMessage(id, t('rejected_inbox_title'), t('rejected_inbox_body').replace('{reason}', reason));
-  renderAdminList();
-  saveState();
-  alert(t('rejected_alert').replace('{name}', p.fullName));
+  if(el) el.innerHTML = `<div class="empty-state">${t('loading_generic')}</div>`;
 }
 function renderAdminBlockList(){
-  if(realDriverProfile || isAdminSession){ renderRealAdminBlockList(); return; }
-  const el = document.getElementById('admin-drivers-list');
-  if(!el) return;
-  const searchInput = document.getElementById('drivers-block-search');
-  const query = (searchInput ? searchInput.value : '').trim().toLowerCase();
-  let activeProfiles = Object.values(driverProfiles).filter(p => p.status==='approved' || p.status==='blocked');
-  const countEl = document.getElementById('admin-drivers-count');
-  if(countEl) countEl.textContent = activeProfiles.length;
-  if(query){
-    activeProfiles = activeProfiles.filter(p =>
-      p.fullName.toLowerCase().includes(query) ||
-      (p.lwNumber||'').toLowerCase().includes(query) ||
-      (p.region||'').toLowerCase().includes(query)
-    );
-  }
-  if(activeProfiles.length === 0){
-    el.innerHTML = `<div class="empty-state">${t('admin_empty_approved')}</div>`;
-    return;
-  }
-  el.innerHTML = activeProfiles.map(p=>`
-    <div class="booking-row admin-driver-row ${p.status==='blocked'?'blocked-row':''}" onclick="toggleBlockDriver('${p.id}')">
-      <div><div class="who">${p.fullName}</div><div class="when">${p.region} · ${p.langs.join(', ')}</div></div>
-      <span class="status-pill ${p.status==='blocked'?'pending':'confirmed'}">${p.status==='blocked' ? (p.blockedReason==='payment' ? t('admin_status_suspended') : t('admin_status_blocked')) : t('admin_status_active')}</span>
-    </div>
-  `).join('');
+  if(realDriverProfile || isAdminSession) renderRealAdminBlockList();
 }
 function openDriversBlockModal(){ document.getElementById('drivers-block-modal-bg').classList.add('active'); renderAdminBlockList(); }
 function closeDriversBlockModal(){ document.getElementById('drivers-block-modal-bg').classList.remove('active'); }
 document.getElementById('drivers-block-modal-bg').addEventListener('click', e=>{ if(e.target.id==='drivers-block-modal-bg') closeDriversBlockModal(); });
 
 // ---- admin: Geld — fee overrides & fee credits ----
-function allDriverOptionsHTML(){
-  return Object.values(driverProfiles)
-    .filter(p => p.status==='approved' || p.status==='blocked')
-    .map(p => `<option value="${p.id}">${p.fullName} (${p.lwNumber})</option>`).join('');
-}
-function allDriverFilterOptionsHTML(){
-  return `<option value="">${t('admin_all_drivers_option')}</option>` + allDriverOptionsHTML();
-}
 async function renderFeeOverridePanel(){
   const driverSel = document.getElementById('fee-override-driver-select');
   const creditSel = document.getElementById('fee-credit-driver-select');
   if(!driverSel || !creditSel) return; // not on this view
-  if(realDriverProfile || isAdminSession){
-    await loadRealAllDriversCache();
-    const optsHTML = realDriverOptionsHTML();
-    driverSel.innerHTML = optsHTML;
-    creditSel.innerHTML = optsHTML;
-    const topupSel = document.getElementById('balance-topup-driver-select');
-    if(topupSel) topupSel.innerHTML = optsHTML;
-    const pwresetSel = document.getElementById('pwreset-driver-select');
-    if(pwresetSel) pwresetSel.innerHTML = optsHTML;
-    const chargeSel = document.getElementById('fee-charge-driver-select');
-    if(chargeSel) chargeSel.innerHTML = optsHTML;
-    const ovFilter = document.getElementById('fee-overrides-filter-select');
-    const crFilter = document.getElementById('fee-credits-filter-select');
-    if(ovFilter) ovFilter.innerHTML = realDriverFilterOptionsHTML();
-    if(crFilter) crFilter.innerHTML = realDriverFilterOptionsHTML();
-    const chFilter = document.getElementById('fee-charges-filter-select');
-    if(chFilter) chFilter.innerHTML = realDriverFilterOptionsHTML();
-    const balFilter = document.getElementById('balance-overview-filter-select');
-    if(balFilter) balFilter.innerHTML = realDriverFilterOptionsHTML();
-    const balCount = document.getElementById('balance-overview-count');
-    if(balCount) balCount.textContent = realAllDriversCache.length;
-    renderRealFeeOverridesList();
-    renderRealFeeCreditsList();
-    renderRealFeeChargesList();
-    return;
-  }
-  const optsHTML = allDriverOptionsHTML();
+  if(!(realDriverProfile || isAdminSession)) return;
+  await loadRealAllDriversCache();
+  const optsHTML = realDriverOptionsHTML();
   driverSel.innerHTML = optsHTML;
   creditSel.innerHTML = optsHTML;
+  const topupSel = document.getElementById('balance-topup-driver-select');
+  if(topupSel) topupSel.innerHTML = optsHTML;
+  const pwresetSel = document.getElementById('pwreset-driver-select');
+  if(pwresetSel) pwresetSel.innerHTML = optsHTML;
   const chargeSel = document.getElementById('fee-charge-driver-select');
   if(chargeSel) chargeSel.innerHTML = optsHTML;
   const ovFilter = document.getElementById('fee-overrides-filter-select');
   const crFilter = document.getElementById('fee-credits-filter-select');
+  if(ovFilter) ovFilter.innerHTML = realDriverFilterOptionsHTML();
+  if(crFilter) crFilter.innerHTML = realDriverFilterOptionsHTML();
   const chFilter = document.getElementById('fee-charges-filter-select');
-  if(ovFilter && !ovFilter.dataset.populated){ ovFilter.innerHTML = allDriverFilterOptionsHTML(); ovFilter.dataset.populated = '1'; }
-  if(crFilter && !crFilter.dataset.populated){ crFilter.innerHTML = allDriverFilterOptionsHTML(); crFilter.dataset.populated = '1'; }
-  if(chFilter && !chFilter.dataset.populated){ chFilter.innerHTML = allDriverFilterOptionsHTML(); chFilter.dataset.populated = '1'; }
-  renderFeeOverridesList();
-  renderFeeCreditsList();
-  renderFeeChargesList();
-  const ovCount = document.getElementById('fee-overrides-count');
-  if(ovCount) ovCount.textContent = feeOverrides.length;
-  const crCount = document.getElementById('fee-credits-count');
-  if(crCount) crCount.textContent = feeCredits.length;
-  const chCount = document.getElementById('fee-charges-count');
-  if(chCount) chCount.textContent = feeCharges.length;
+  if(chFilter) chFilter.innerHTML = realDriverFilterOptionsHTML();
+  const balFilter = document.getElementById('balance-overview-filter-select');
+  if(balFilter) balFilter.innerHTML = realDriverFilterOptionsHTML();
+  const balCount = document.getElementById('balance-overview-count');
+  if(balCount) balCount.textContent = realAllDriversCache.length;
+  renderRealFeeOverridesList();
+  renderRealFeeCreditsList();
+  renderRealFeeChargesList();
 }
 function openFeeOverridesModal(){ document.getElementById('fee-overrides-modal-bg').classList.add('active'); }
 function closeFeeOverridesModal(){ document.getElementById('fee-overrides-modal-bg').classList.remove('active'); }
@@ -16844,260 +15589,16 @@ function closeFeeCreditsModal(){ document.getElementById('fee-credits-modal-bg')
 document.getElementById('fee-credits-modal-bg').addEventListener('click', e=>{ if(e.target.id==='fee-credits-modal-bg') closeFeeCreditsModal(); });
 document.getElementById('fee-charges-modal-bg').addEventListener('click', e=>{ if(e.target.id==='fee-charges-modal-bg') closeFeeChargesModal(); });
 function createFeeOverride(){
-  if(realDriverProfile || isAdminSession){ createRealFeeOverride(); return; }
-  const driverId = document.getElementById('fee-override-driver-select').value;
-  const percent = document.getElementById('fee-override-percent').value;
-  const start = document.getElementById('fee-override-start').value;
-  const end = document.getElementById('fee-override-end').value;
-  const statusEl = document.getElementById('fee-override-status');
-  if(!driverId || percent === '' || percent === null){
-    statusEl.textContent = t('admin_fo_fill_required');
-    return;
-  }
-  if(Number(percent) < 0){
-    statusEl.textContent = t('admin_fo_negative_error');
-    return;
-  }
-  feeOverrides.push({
-    id: 'fo_' + Date.now(),
-    driverId, percent: Number(percent),
-    startDate: start || null, endDate: end || null,
-  });
-  statusEl.style.color = 'var(--teal)';
-  statusEl.textContent = t('admin_fo_saved');
-  // notify the driver so they know their fee rate changed
-  const range = (start || end) ? t('admin_fo_range_from_to').replace('{start}', start||'…').replace('{end}', end||'…') : t('admin_fo_range_immediate');
-  const noticeBody = Number(percent) === 0
-    ? t('admin_fo_notify_body_vip').replace('{range}', range)
-    : t('admin_fo_notify_body_set').replace('{percent}', Number(percent)).replace('{range}', range);
-  pushInboxMessage(driverId, t('admin_fo_notify_title'), noticeBody);
-  document.getElementById('fee-override-percent').value = '';
-  document.getElementById('fee-override-start').value = '';
-  document.getElementById('fee-override-end').value = '';
-  renderFeeOverridesList();
-  const ovCount = document.getElementById('fee-overrides-count');
-  if(ovCount) ovCount.textContent = feeOverrides.length;
-  if(currentDriverId === driverId){ renderOverviewStats(); renderCurrentFeeRate(); }
-  updateInboxDot();
-  saveState();
-}
-function deleteFeeOverride(id){
-  if(!confirm(t('admin_fo_confirm_delete'))) return;
-  const removed = feeOverrides.find(o => o.id === id);
-  feeOverrides = feeOverrides.filter(o => o.id !== id);
-  if(removed){
-    pushInboxMessage(removed.driverId, t('admin_fo_notify_title'), t('admin_fo_notify_body_removed'));
-    if(currentDriverId === removed.driverId){ renderOverviewStats(); renderCurrentFeeRate(); }
-    updateInboxDot();
-  }
-  renderFeeOverridesList();
-  const ovCount = document.getElementById('fee-overrides-count');
-  if(ovCount) ovCount.textContent = feeOverrides.length;
-  saveState();
-}
-function renderFeeOverridesList(){
-  if(realDriverProfile || isAdminSession){ renderRealFeeOverridesList(); return; }
-  const el = document.getElementById('admin-fee-overrides-list');
-  if(!el) return;
-  const filterSel = document.getElementById('fee-overrides-filter-select');
-  const filterDriverId = filterSel ? filterSel.value : '';
-  const activeOnlyEl = document.getElementById('fee-overrides-active-only');
-  const activeOnly = activeOnlyEl ? activeOnlyEl.checked : true;
-  let list = filterDriverId ? feeOverrides.filter(o => o.driverId === filterDriverId) : feeOverrides;
-  const todayISO = new Date().toISOString().slice(0,10);
-  if(activeOnly) list = list.filter(o => (!o.startDate || o.startDate <= todayISO) && (!o.endDate || o.endDate >= todayISO));
-  if(list.length === 0){
-    el.innerHTML = `<div class="empty-state">${filterDriverId ? t('admin_fo_empty_filtered') : t('admin_fo_empty_default')}</div>`;
-    return;
-  }
-  el.innerHTML = list.slice().reverse().map(o=>{
-    const p = driverProfiles[o.driverId];
-    const name = p ? p.fullName : o.driverId;
-    const active = getActiveFeeOverride(o.driverId) && getActiveFeeOverride(o.driverId).id === o.id;
-    const range = (o.startDate || o.endDate) ? `${o.startDate||'…'} – ${o.endDate||'…'}` : t('admin_fo_unlimited');
-    return `
-    <div class="booking-row">
-      <div><div class="who">${name} — ${o.percent}%</div><div class="when">${range} ${active ? '· <span style="color:var(--teal); font-weight:700;">'+t('admin_fo_active_tag')+'</span>' : ''}</div></div>
-      <button type="button" class="link-btn" style="color:var(--danger);" onclick="deleteFeeOverride('${o.id}')">${t('admin_delete_btn')}</button>
-    </div>`;
-  }).join('');
+  if(realDriverProfile || isAdminSession) createRealFeeOverride();
 }
 function createFeeCredit(){
-  if(realDriverProfile || isAdminSession){ createRealFeeCredit(); return; }
-  const driverId = document.getElementById('fee-credit-driver-select').value;
-  const amount = document.getElementById('fee-credit-amount').value;
-  const note = document.getElementById('fee-credit-note').value;
-  const statusEl = document.getElementById('fee-credit-status');
-  if(!driverId || !amount || Number(amount) <= 0){
-    statusEl.textContent = t('admin_fc_fill_required');
-    return;
-  }
-  const store = driverDataStore[driverId];
-  if(!store){
-    statusEl.textContent = t('admin_fc_driver_not_found');
-    return;
-  }
-  const amountNum = Number(amount);
-  feeCredits.push({
-    id: 'fc_' + Date.now(),
-    driverId, amountIDR: amountNum, note: note || '',
-    dateISO: new Date().toISOString(),
-  });
-  // actually credit the driver's account so it reduces what they owe
-  if(store.stats.adminCredit === undefined) store.stats.adminCredit = 0;
-  store.stats.adminCredit += amountNum;
-  // notify the driver in their inbox
-  const creditNote = note ? ': ' + note : '';
-  pushInboxMessage(driverId, t('admin_fc_notify_title'),
-    t('admin_fc_notify_body').replace('{amount}', formatIDR(amountNum)).replace('{note}', creditNote));
-  statusEl.style.color = 'var(--teal)';
-  statusEl.textContent = t('admin_fc_created');
-  document.getElementById('fee-credit-amount').value = '';
-  document.getElementById('fee-credit-note').value = '';
-  renderFeeCreditsList();
-  const crCount = document.getElementById('fee-credits-count');
-  if(crCount) crCount.textContent = feeCredits.length;
-  if(currentDriverId === driverId) renderOverviewStats();
-  updateInboxDot();
-  saveState();
-}
-function deleteFeeCredit(id){
-  if(!confirm(t('admin_fc_confirm_delete'))) return;
-  const credit = feeCredits.find(c => c.id === id);
-  if(credit){
-    const store = driverDataStore[credit.driverId];
-    if(store){
-      store.stats.adminCredit = Math.max(0, (store.stats.adminCredit || 0) - credit.amountIDR);
-      if(currentDriverId === credit.driverId) renderOverviewStats();
-    }
-  }
-  feeCredits = feeCredits.filter(c => c.id !== id);
-  renderFeeCreditsList();
-  const crCount2 = document.getElementById('fee-credits-count');
-  if(crCount2) crCount2.textContent = feeCredits.length;
-  saveState();
+  if(realDriverProfile || isAdminSession) createRealFeeCredit();
 }
 function createFeeCharge(){
-  if(realDriverProfile || isAdminSession){ createRealFeeCharge(); return; }
-  const driverId = document.getElementById('fee-charge-driver-select').value;
-  const amount = document.getElementById('fee-charge-amount').value;
-  const note = document.getElementById('fee-charge-note').value.trim();
-  const statusEl = document.getElementById('fee-charge-status');
-  if(!driverId || !amount || Number(amount) <= 0){
-    statusEl.textContent = t('admin_fch_fill_required');
-    return;
-  }
-  if(!note){
-    statusEl.textContent = t('admin_fch_note_required');
-    return;
-  }
-  const store = driverDataStore[driverId];
-  if(!store){
-    statusEl.textContent = t('admin_fc_driver_not_found');
-    return;
-  }
-  const amountNum = Number(amount);
-  feeCharges.push({
-    id: 'fch_' + Date.now(),
-    driverId, amountIDR: amountNum, note,
-    dateISO: new Date().toISOString(),
-  });
-  if(store.stats.adminCredit === undefined) store.stats.adminCredit = 0;
-  store.stats.adminCredit -= amountNum;
-  const chargeNote = ': ' + note;
-  pushInboxMessage(driverId, t('admin_fch_notify_title'),
-    t('admin_fch_notify_body').replace('{amount}', formatIDR(amountNum)).replace('{note}', chargeNote));
-  statusEl.style.color = 'var(--teal)';
-  statusEl.textContent = t('admin_fch_created');
-  document.getElementById('fee-charge-amount').value = '';
-  document.getElementById('fee-charge-note').value = '';
-  renderFeeChargesList();
-  const chCount = document.getElementById('fee-charges-count');
-  if(chCount) chCount.textContent = feeCharges.length;
-  if(currentDriverId === driverId) renderOverviewStats();
-  updateInboxDot();
-  saveState();
-}
-function deleteFeeCharge(id){
-  if(!confirm(t('admin_fch_confirm_delete'))) return;
-  const charge = feeCharges.find(c => c.id === id);
-  if(charge){
-    const store = driverDataStore[charge.driverId];
-    if(store){
-      store.stats.adminCredit = (store.stats.adminCredit || 0) + charge.amountIDR;
-      if(currentDriverId === charge.driverId) renderOverviewStats();
-    }
-  }
-  feeCharges = feeCharges.filter(c => c.id !== id);
-  renderFeeChargesList();
-  const chCount2 = document.getElementById('fee-charges-count');
-  if(chCount2) chCount2.textContent = feeCharges.length;
-  saveState();
-}
-function renderFeeChargesList(){
-  if(realDriverProfile || isAdminSession){ renderRealFeeChargesList(); return; }
-  const el = document.getElementById('admin-fee-charges-list');
-  if(!el) return;
-  const filterSel = document.getElementById('fee-charges-filter-select');
-  const filterDriverId = filterSel ? filterSel.value : '';
-  const list = filterDriverId ? feeCharges.filter(c => c.driverId === filterDriverId) : feeCharges;
-  if(list.length === 0){
-    el.innerHTML = `<div class="empty-state">${filterDriverId ? t('admin_fch_empty_filtered') : t('admin_fch_empty_default')}</div>`;
-    return;
-  }
-  const localeMap = {en:'en-GB', de:'de-DE', id:'id-ID'};
-  el.innerHTML = list.slice().reverse().map(c=>{
-    const p = driverProfiles[c.driverId];
-    const name = p ? p.fullName : c.driverId;
-    const dateStr = new Date(c.dateISO).toLocaleDateString(localeMap[currentLang] || 'en-GB');
-    return `
-    <div class="booking-row">
-      <div><div class="who">${name} — ${formatIDR(c.amountIDR)}</div><div class="when">${dateStr}${c.note ? ' · ' + c.note : ''}</div></div>
-      <button type="button" class="link-btn" style="color:var(--danger);" onclick="deleteFeeCharge('${c.id}')">${t('admin_delete_btn')}</button>
-    </div>`;
-  }).join('');
+  if(realDriverProfile || isAdminSession) createRealFeeCharge();
 }
 function openFeeChargesModal(){ document.getElementById('fee-charges-modal-bg').classList.add('active'); }
 function closeFeeChargesModal(){ document.getElementById('fee-charges-modal-bg').classList.remove('active'); }
-function renderFeeCreditsList(){
-  if(realDriverProfile || isAdminSession){ renderRealFeeCreditsList(); return; }
-  const el = document.getElementById('admin-fee-credits-list');
-  if(!el) return;
-  const filterSel = document.getElementById('fee-credits-filter-select');
-  const filterDriverId = filterSel ? filterSel.value : '';
-  const list = filterDriverId ? feeCredits.filter(c => c.driverId === filterDriverId) : feeCredits;
-  if(list.length === 0){
-    el.innerHTML = `<div class="empty-state">${filterDriverId ? t('admin_fc_empty_filtered') : t('admin_fc_empty_default')}</div>`;
-    return;
-  }
-  const localeMap = {en:'en-GB', de:'de-DE', id:'id-ID'};
-  el.innerHTML = list.slice().reverse().map(c=>{
-    const p = driverProfiles[c.driverId];
-    const name = p ? p.fullName : c.driverId;
-    const dateStr = new Date(c.dateISO).toLocaleDateString(localeMap[currentLang] || 'en-GB');
-    return `
-    <div class="booking-row">
-      <div><div class="who">${name} — ${formatIDR(c.amountIDR)}</div><div class="when">${dateStr}${c.note ? ' · ' + c.note : ''}</div></div>
-      <button type="button" class="link-btn" style="color:var(--danger);" onclick="deleteFeeCredit('${c.id}')">${t('admin_delete_btn')}</button>
-    </div>`;
-  }).join('');
-}
-function toggleBlockDriver(id){
-  const p = driverProfiles[id];
-  if(!p) return;
-  if(p.status==='blocked'){
-    if(!confirm(t('admin_confirm_unblock').replace('{name}', p.fullName))) return;
-    p.status = 'approved';
-    p.blockedReason = null;
-  } else {
-    if(!confirm(t('admin_confirm_block').replace('{name}', p.fullName))) return;
-    p.status = 'blocked';
-    p.blockedReason = 'admin';
-  }
-  renderAdminBlockList();
-  renderDriverGrid(visibleDrivers());
-  saveState();
-}
 
 // ---- echter Admin-Bereich (Baustein 9b): Fahrer sperren/entsperren, Sonderkonditionen, Gutschriften, Guthaben aufladen ----
 let realAllDriversCache = [];
@@ -17569,16 +16070,6 @@ async function openSupportMsg(){
       openDriverThreadView();
       return;
     }
-    document.getElementById('sup-subject').value='';
-    document.getElementById('sup-body').value='';
-    document.getElementById('sup-error').textContent='';
-    document.getElementById('support-modal-bg').classList.add('active');
-    return;
-  }
-  const thread = supportThreads[currentDriverId];
-  if(thread && thread.entries.length){
-    openDriverThreadView();
-    return;
   }
   document.getElementById('sup-subject').value='';
   document.getElementById('sup-body').value='';
@@ -17593,41 +16084,26 @@ async function sendSupportMsg(){
     document.getElementById('sup-error').textContent = t('support_error');
     return;
   }
-  if(realDriverProfile){
-    const { error } = await supabaseClient.from('support_thread_messages').insert({ driver_id: realDriverProfile.id, sender:'driver', body });
-    if(error){ console.error('Nachricht konnte nicht gesendet werden:', error); document.getElementById('sup-error').textContent = 'Etwas ist schiefgelaufen. Bitte nochmal versuchen.'; return; }
-    await supabaseClient.from('support_threads').update({ subject }).eq('driver_id', realDriverProfile.id);
-    closeSupportMsg();
-    alert(t('support_sent'));
-    return;
-  }
-  addDriverEntry(currentDriverId, body, subject);
+  if(!realDriverProfile) return;
+  const { error } = await supabaseClient.from('support_thread_messages').insert({ driver_id: realDriverProfile.id, sender:'driver', body });
+  if(error){ console.error('Nachricht konnte nicht gesendet werden:', error); document.getElementById('sup-error').textContent = 'Etwas ist schiefgelaufen. Bitte nochmal versuchen.'; return; }
+  await supabaseClient.from('support_threads').update({ subject }).eq('driver_id', realDriverProfile.id);
   closeSupportMsg();
   alert(t('support_sent'));
 }
 async function openDriverThreadView(){
-  if(realDriverProfile){
-    await loadMyThread();
-    document.getElementById('driver-thread-subject').textContent = realThread ? realThread.subject : '';
-    renderThreadEntries('driver-thread-entries', (realThread ? realThread.messages : []).map(m=>({from:m.sender, body:m.body, date: formatDateDisplay((m.created_at||'').slice(0,10))})));
-    document.getElementById('driver-thread-reply-text').value = '';
-    document.getElementById('driver-thread-reply-status').textContent = '';
-    const archiveBtn = document.getElementById('driver-thread-archive-btn');
-    if(archiveBtn) archiveBtn.style.display = (realThread && !realThread.archived) ? 'block' : 'none';
-    document.getElementById('driver-thread-modal-bg').classList.add('active');
-    await supabaseClient.from('support_threads').update({ unread_for_driver:false }).eq('driver_id', realDriverProfile.id);
-    mySupportThreadUnread = false;
-    updateRealInboxDot();
-    return;
-  }
-  const archiveBtn = document.getElementById('driver-thread-archive-btn');
-  if(archiveBtn) archiveBtn.style.display = 'none';
-  const thread = getOrCreateThread(currentDriverId);
-  document.getElementById('driver-thread-subject').textContent = thread.subject;
-  renderThreadEntries('driver-thread-entries', thread.entries);
+  if(!realDriverProfile) return;
+  await loadMyThread();
+  document.getElementById('driver-thread-subject').textContent = realThread ? realThread.subject : '';
+  renderThreadEntries('driver-thread-entries', (realThread ? realThread.messages : []).map(m=>({from:m.sender, body:m.body, date: formatDateDisplay((m.created_at||'').slice(0,10))})));
   document.getElementById('driver-thread-reply-text').value = '';
   document.getElementById('driver-thread-reply-status').textContent = '';
+  const archiveBtn = document.getElementById('driver-thread-archive-btn');
+  if(archiveBtn) archiveBtn.style.display = (realThread && !realThread.archived) ? 'block' : 'none';
   document.getElementById('driver-thread-modal-bg').classList.add('active');
+  await supabaseClient.from('support_threads').update({ unread_for_driver:false }).eq('driver_id', realDriverProfile.id);
+  mySupportThreadUnread = false;
+  updateRealInboxDot();
 }
 // Fahrer markiert den Chat-Verlauf selbst als erledigt (archiviert den echten Thread + alle zugehörigen Posteingang-Kopien)
 async function archiveMyThread(){
@@ -17645,13 +16121,9 @@ async function sendDriverThreadReply(){
     document.getElementById('driver-thread-reply-status').textContent = t('admin_msg_reply_empty');
     return;
   }
-  if(realDriverProfile){
-    const { error } = await supabaseClient.from('support_thread_messages').insert({ driver_id: realDriverProfile.id, sender:'driver', body: reply });
-    if(error){ console.error('Antwort konnte nicht gesendet werden:', error); document.getElementById('driver-thread-reply-status').textContent = 'Etwas ist schiefgelaufen.'; return; }
-    closeDriverThreadView();
-    return;
-  }
-  addDriverEntry(currentDriverId, reply);
+  if(!realDriverProfile) return;
+  const { error } = await supabaseClient.from('support_thread_messages').insert({ driver_id: realDriverProfile.id, sender:'driver', body: reply });
+  if(error){ console.error('Antwort konnte nicht gesendet werden:', error); document.getElementById('driver-thread-reply-status').textContent = 'Etwas ist schiefgelaufen.'; return; }
   closeDriverThreadView();
 }
 
@@ -17982,38 +16454,19 @@ function archiveCurrentAdminMsg(){
   archiveAdminMessage(currentAdminThreadDriverId);
   closeAdminMsgDetail();
 }
-function openDocPreview(profileId, docKey){
-  const p = driverProfiles[profileId];
-  const d = p && p.docs ? p.docs[docKey] : null;
-  if(!d || !d.dataUrl) return;
-  document.getElementById('doc-preview-img').src = d.dataUrl;
-  document.getElementById('doc-preview-title').textContent = (d.name || docKey);
-  document.getElementById('doc-preview-modal-bg').classList.add('active');
-}
-function closeDocPreview(){ document.getElementById('doc-preview-modal-bg').classList.remove('active'); }
 
-// ---- restore persisted demo state (if this browser has used the demo before) ----
+// ---- Sprachpraeferenz laden (eigener Speicherplatz, siehe saveLangPreference weiter oben) ----
 try{
-  if(loadSavedState()){
-    loadDriverContext(currentDriverId);
-    renderDriverGrid(visibleDrivers());
-    setLanguage(currentLang);
-  } else {
-    populateDemoDriverSwitcher();
-    renderProfileChip();
-    renderOverviewStats();
-    renderDriverBookings();
-  }
+  try{
+    const savedLang = localStorage.getItem(LANG_STORAGE_KEY);
+    if(savedLang) currentLang = savedLang;
+  }catch(e){}
+  setLanguage(currentLang);
   // rydanu.id (die lokale indonesische Domain) soll immer auf Indonesisch starten,
   // unabhängig von einer evtl. gespeicherten Spracheinstellung. Der Sprachumschalter
   // (DE/EN/ID) bleibt danach ganz normal bedienbar, das gilt nur für den Seitenstart.
   if(location.hostname.endsWith('rydanu.id') && currentLang !== 'id'){
     setLanguage('id');
-  }
-  checkOverduePayments();
-  const todayISO = new Date().toISOString().slice(0,10);
-  if(isLastDayOfMonth(new Date()) && lastSettlementRunDateISO !== todayISO){
-    runMonthEndSettlement();
   }
   renderAdminOpenPayments();
   updateInboxDot();
@@ -18077,7 +16530,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v333</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v336</div>
 
 </body>
 </html>
