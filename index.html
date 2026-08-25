@@ -22,7 +22,7 @@
      gebraucht werden (Supabase-Backend, CDN-Skripte, Pexels-Bilder) -- der Browser baut die
      Verbindung (DNS + TLS) schon im Hintergrund auf, bevor er die eigentliche Datei anfordert.
      Reine Beschleunigung, aendert an der Funktion nichts. -->
-<link rel="preconnect" href="https://dfwbixcegggijkftontt.supabase.co">
+<link rel="preconnect" href="https://xpmrefoscyroihoglmum.supabase.co">
 <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="preconnect" href="https://images.pexels.com">
@@ -8666,7 +8666,7 @@ function updateVillaDot(){
 // ---------- Push-Benachrichtigungen (VAPID) ----------
 // Oeffentlicher Schluessel -- unkritisch, darf im Frontend stehen (Gegenstueck zum privaten
 // Schluessel, der ausschliesslich serverseitig in der Edge Function notify-villa-request liegt).
-const VAPID_PUBLIC_KEY = 'BLis_aPTXp6alv8X1ZWuQCNRviUFOfGQVUr7eIMYC87XUnodToNXdHiTNQo7cAT9zObLgvgjC_qwEh2NjcoGrOQ';
+const VAPID_PUBLIC_KEY = 'BDTglWC9xbTz3et89j23ZJfFMJmJLJTLWPaiVxavRt45bmuP_maarOH5Fc1lbckz5CLXsWeHffO0JpqYrsDC1y4';
 function urlBase64ToUint8Array(base64String){
   const padding = '='.repeat((4 - base64String.length % 4) % 4);
   const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
@@ -13757,8 +13757,8 @@ function goHome(){
 // ============================================
 // SUPABASE — echte Fahrer-Anmeldung (Baustein 1)
 // ============================================
-const SUPABASE_URL = 'https://dfwbixcegggijkftontt.supabase.co';
-const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_lnR0unyW2i_b6_9PuK8zjw__yJn-Hos';
+const SUPABASE_URL = 'https://xpmrefoscyroihoglmum.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_UB_OEdt_7dKMm7gKz_w3Sw_GeafRGHu';
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 
 // Google Places API (New) -- Ersatz fuer Nominatim/OpenStreetMap (23. August, siehe searchPlacesBali()
