@@ -1534,6 +1534,7 @@
   <div class="tabs">
     <button type="button" class="hamburger-btn" onclick="toggleSeoMenu()" aria-label="Menü">☰</button>
     <button class="tab-btn active" id="tab-customer" data-i18n="tab_travelers" onclick="switchView('customer')">For Travelers</button>
+    <button type="button" class="tab-btn" id="tab-lombok-link" onclick="location.href='/lombok'" style="background:#C9895F; color:#fff; font-weight:700;"><span data-i18n="tab_lombok">🌴 Lombok</span></button>
     <button class="tab-btn" id="tab-driver" onclick="switchView('driver')"><span data-i18n="tab_driver">Driver Dashboard</span> <span class="tab-mail-badge" id="tab-driver-mail" style="display:none;">✉️</span></button>
     <button class="tab-btn tab-btn-register" id="tab-register-btn" data-i18n="tab_register" onclick="openRealRegisterDriver()">+ Register as Driver</button>
     <button class="tab-btn tab-btn-admin" id="tab-admin" onclick="switchView('admin')"><span data-i18n="tab_admin">🔐 Admin</span> <span class="tab-mail-badge" id="tab-admin-mail" style="display:none;">✉️</span></button>
@@ -9918,11 +9919,16 @@ function applyRoleBasedMenuVisibility(){
   const tabDriver = document.getElementById('tab-driver');
   const tabRegister = document.getElementById('tab-register-btn');
   const tabAdmin = document.getElementById('tab-admin');
+  const tabLombok = document.getElementById('tab-lombok-link');
   const hamburger = document.querySelector('.hamburger-btn');
   if(!tabCustomer || !tabDriver || !tabAdmin) return;
 
   const mode = getMenuDomainMode();
   const showEverything = isAdminSession || mode === 'admin_test';
+  // Lombok-Pill-Button (26.8., Joerg-Wunsch): nur auf der Kunden-Seite sinnvoll, und nicht mehr
+  // zeigen, wenn man schon auf /lombok selbst ist (dort steht bereits "← Zurück zu Bali").
+  const onLombokPage = (typeof _isLombokLanding !== 'undefined' && _isLombokLanding);
+  const showLombokBtn = !onLombokPage && mode !== 'driver';
 
   if(showEverything){
     tabCustomer.style.display = '';
@@ -9930,10 +9936,12 @@ function applyRoleBasedMenuVisibility(){
     tabAdmin.style.display = '';
     if(hamburger) hamburger.style.display = '';
     if(tabRegister) tabRegister.style.display = 'none'; // Registrierung ergibt fuer Admin keinen Sinn
+    if(tabLombok) tabLombok.style.display = showLombokBtn ? '' : 'none';
     return;
   }
 
   tabAdmin.style.display = 'none'; // Admin-Tab nie fuer Nicht-Admins sichtbar, auf keiner Domain
+  if(tabLombok) tabLombok.style.display = showLombokBtn ? '' : 'none';
 
   if(mode === 'driver'){
     tabCustomer.style.display = 'none';
@@ -10321,6 +10329,7 @@ let currentLang = 'en';
 const translations = {
   en: {
     tab_travelers: "For Travelers",
+    tab_lombok: "🌴 Lombok",
     tab_driver: "Driver Dashboard",
     tab_register: "+ Register as Driver",
     tab_admin: "🔐 Admin",
@@ -10668,6 +10677,7 @@ const translations = {
   },
   de: {
     tab_travelers: "Für Reisende",
+    tab_lombok: "🌴 Lombok",
     tab_driver: "Fahrer-Dashboard",
     tab_register: "+ Als Fahrer registrieren",
     tab_admin: "🔐 Admin",
@@ -11015,6 +11025,7 @@ const translations = {
   },
   id: {
     tab_travelers: "Untuk Wisatawan",
+    tab_lombok: "🌴 Lombok",
     tab_driver: "Dasbor Sopir",
     tab_register: "+ Daftar sebagai Sopir",
     tab_admin: "🔐 Admin",
@@ -16608,7 +16619,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v337</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v338</div>
 
 </body>
 </html>
