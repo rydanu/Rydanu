@@ -1632,7 +1632,7 @@
 <!-- Wiederverwendbare Info-Seite (fuer alle SEO-Unterseiten) -->
 <div class="driver-page" id="info-page" style="display:none;">
   <div class="dp-topbar">
-    <button type="button" class="dp-back" onclick="closeInfoPage()">‹ <span data-i18n="dp_back">Back</span></button>
+    <button type="button" class="dp-back" onclick="closeInfoPage(event)">‹ <span data-i18n="dp_back">Back</span></button>
   </div>
   <div class="info-article">
     <div class="info-article-hero" id="info-page-hero"></div>
@@ -1640,7 +1640,7 @@
       <p class="info-eyebrow" id="info-page-eyebrow"></p>
       <h1 id="info-page-title"></h1>
       <div id="info-page-body"></div>
-      <button type="button" class="info-back-bottom" onclick="closeInfoPage()">‹ <span id="info-back-bottom-label">Zurück zur Übersicht</span></button>
+      <button type="button" class="info-back-bottom" onclick="closeInfoPage(event)">‹ <span id="info-back-bottom-label">Zurück zur Übersicht</span></button>
     </div>
   </div>
 </div>
@@ -5202,7 +5202,14 @@ function openInfoPage(pageId){
 // kann man direkt eine andere Unterseite waehlen); klickt man von dort NICHT auf einen weiteren
 // Menuepunkt, sondern daneben (Overlay), schliesst sich das Menue ueber den bestehenden
 // closeSeoMenu()-Mechanismus und man landet auf der Startseite.
-function closeInfoPage(){
+//
+// Bugfix (Sitzung danach, Joerg-Screenshot): seit dem neuen globalen Aussen-Klick-Listener (schliesst
+// Panels bei Klick ausserhalb) wurde das hier neu geoeffnete seo-menu-panel im GLEICHEN Klick sofort
+// wieder zugeklappt -- der Rueck-Klick selbst zaehlte als "ausserhalb", weil er von der Ratgeberseite
+// kam, nicht vom Panel selbst. e.stopPropagation() verhindert, dass dieser Klick den globalen
+// Aussen-Klick-Listener ueberhaupt erreicht.
+function closeInfoPage(e){
+  if(e) e.stopPropagation();
   document.getElementById('info-page').style.display = 'none';
   document.getElementById('seo-menu-panel').classList.add('active');
 }
@@ -16797,7 +16804,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v347</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v348</div>
 
 </body>
 </html>
