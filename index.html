@@ -9928,7 +9928,15 @@ function applyRoleBasedMenuVisibility(){
   if(!tabCustomer || !tabDriver || !tabAdmin) return;
 
   const mode = getMenuDomainMode();
-  const showEverything = isAdminSession || mode === 'admin_test';
+  // Bugfix (26.8. Abend, Joerg-Screenshot): auf einer echten Domain (rydanu.com/getrydanu.com) gilt
+  // ausschliesslich isAdminSession -- unveraendert. Auf der Staging-Vorschau (keine der beiden echten
+  // Domains) hat der explizite Test-Schalter ?ansicht=... jetzt Vorrang vor isAdminSession, damit ein
+  // Testaccount, der gleichzeitig Admin UND Fahrer ist (wie admin.test@rydanu-staging.local), trotzdem
+  // gezielt die reine Fahrer-Ansicht simulieren kann. Vorher hat isAdminSession den Schalter immer
+  // uebersteuert, der Admin-Tab blieb faelschlich sichtbar.
+  const onRealDomain = /(^|\.)getrydanu\.com$/i.test(location.hostname || '') || /(^|\.)rydanu\.com$/i.test(location.hostname || '');
+  const testParam = onRealDomain ? null : new URLSearchParams(location.search).get('ansicht');
+  const showEverything = testParam ? (testParam === 'admin') : isAdminSession;
   // Lombok-Pill-Button (26.8., Joerg-Wunsch): nur auf der Kunden-Seite sinnvoll, und nicht mehr
   // zeigen, wenn man schon auf /lombok selbst ist (dort steht bereits "← Zurück zu Bali").
   const onLombokPage = (typeof _isLombokLanding !== 'undefined' && _isLombokLanding);
@@ -16635,7 +16643,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v341</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v342</div>
 
 </body>
 </html>
