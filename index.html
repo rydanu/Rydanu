@@ -734,6 +734,12 @@
     .topbar-right{ flex-wrap:wrap; row-gap:10px; }
     .topbar-right-main{ margin-left:0; gap:10px; row-gap:8px; }
     .tabs{ flex-wrap:wrap; row-gap:6px; }
+    /* 26.8.: etwas schmalere Buttons auf dem Handy, damit "Reise-Infos" + "Fragen" + "Nach Lombok?"
+       (bzw. die EN/ID-Entsprechungen) in JEDER Sprache in einer Zeile bleiben und die Seite beim
+       Sprachwechsel nicht mehr springt. Getestet bis runter auf 375px (iPhone SE) in DE/EN/ID.
+       WICHTIG falls jemand tab_travelers/tab_faq/tab_lombok später wieder verlängert: unbedingt bei
+       375px in allen 3 Sprachen erneut prüfen, ob die Zeile noch umbruchfrei bleibt. */
+    .tab-btn{ padding:8px 13px; }
     .lang-switch{ margin-left:0; }
   }
   .admin-driver-row:hover{ border-color:var(--teal); }
@@ -10828,7 +10834,7 @@ const translations = {
     lst_bookings_suffix: "bookings", lst_per_booking_suffix: "/ booking", lst_no_start_point: "No starting point set", lst_pickup_prefix: "Pickup:", lst_not_included_prefix: "Not included:",
   },
   de: {
-    tab_travelers: "Infos für Reisende",
+    tab_travelers: "Reise-Infos", // 26.8.: gekürzt (war "Infos für Reisende") — sonst brechen die 3 Kopf-Pillen bei DE auf 2 Zeilen um, siehe .tab-btn Mobile-Padding weiter unten
     tab_faq: "❓ Fragen",
     tab_lombok: "🌴 Nach Lombok?",
     tab_driver: "Fahrer-Dashboard",
@@ -11187,7 +11193,7 @@ const translations = {
     lst_bookings_suffix: "Buchungen", lst_per_booking_suffix: "/ Buchung", lst_no_start_point: "Kein Startpunkt festgelegt", lst_pickup_prefix: "Abholung:", lst_not_included_prefix: "Nicht enthalten:",
   },
   id: {
-    tab_travelers: "Info untuk Wisatawan",
+    tab_travelers: "Info Wisata", // 26.8.: gekürzt (war "Info untuk Wisatawan") — gleicher Grund wie bei DE, siehe dort
     tab_faq: "❓ FAQ",
     tab_lombok: "🌴 Ke Lombok?",
     tab_driver: "Dasbor Sopir",
@@ -16804,7 +16810,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v348</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v349</div>
 
 </body>
 </html>
