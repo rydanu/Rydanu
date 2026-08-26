@@ -309,7 +309,7 @@
   /* Ebene 1: reine Fahrer-Karten (nur der gruene Kopfbereich, keine Tour-Details) */
   .drivers-only-grid{
     display:grid; grid-template-columns:repeat(auto-fill, minmax(270px,1fr));
-    gap:16px; padding:0 32px 40px;
+    gap:20px; padding:0 32px 40px;
   }
   .driver-only-card{
     background:linear-gradient(135deg, var(--teal-soft), var(--paper-dim));
@@ -333,7 +333,7 @@
 
   .driver-grid{
     display:grid; grid-template-columns:repeat(auto-fill, minmax(270px,1fr));
-    gap:20px; padding:0 32px 56px;
+    gap:22px; padding:0 32px 56px;
   }
   .driver-card{
     background:#fff; border:1px solid var(--line); border-radius:var(--radius-card); overflow:hidden;
@@ -369,7 +369,7 @@
      nicht identisch zur Tourenkarte, obwohl beide official denselben Fahrernamen zeigen. Jetzt
      exakt dieselbe Regel wie bei .driver-card-header h3. */
   .driver-only-card h3{ font-size:1.05rem; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0; }
-  .driver-body{ padding:16px; display:flex; flex-direction:column; flex:1; }
+  .driver-body{ padding:18px; display:flex; flex-direction:column; flex:1; }
   .rating{ font-family:'JetBrains Mono'; font-size:0.78rem; color:var(--gold-deep); display:flex; align-items:center; gap:10px; flex-wrap:nowrap; overflow:hidden; font-weight:700; margin-bottom:8px; }
   .rating .r-part{ font-weight:700; }
   .rating .r-stars{ color:var(--gold-deep); }
@@ -559,7 +559,7 @@
     text-align:center; cursor:pointer; animation: newBookingPulse 1.6s ease-in-out infinite;
   }
   @keyframes newBookingPulse{ 0%,100%{ opacity:1; } 50%{ opacity:0.82; } }
-  .dash-nav{ border-right:1px solid var(--line); padding:28px 20px; }
+  .dash-nav{ border-right:1px solid var(--line); padding:32px 22px; }
   .dash-nav .profile-chip{
     display:flex; flex-direction:column; align-items:center; text-align:center;
     gap:6px; margin-bottom:28px; padding:18px 14px; background:var(--paper-dim); border-radius:10px;
@@ -795,7 +795,14 @@
   .dash-nav-item.active{ background:var(--ink); color:var(--paper); font-weight:600; }
 
   .dash-main{ padding:32px 36px; }
-  .dash-head{ display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:28px; }
+  /* Layout-Politur Teil 2 (26.8., Joerg-Wunsch: "mehr Luft/Abstaende, tieferer Apple-Style-Feinschliff,
+     Farben unangetastet"). Bewusst NUR Abstaende zwischen/innerhalb von Bloecken ohne feste Hoehe
+     angefasst (.dash-head, .stat-row/.stat-card, .booking-row nur vertikal, .dash-nav nur Desktop,
+     Fahrer-/Tour-Karten-Grid-Abstaende, .driver-body). Bewusst NICHT angefasst: .driver-card-header
+     (feste Hoehe 280px, frueherer Abschneide-Bug bei Badges), Formularfelder (erst am 24.8. auf
+     einheitliche 48px-Hoehe gebracht), Buttons/Badges/Chips (bereits in Teil 1 poliert, bei mehr
+     Platz anfaellig fuer Umbrueche). Keine Farbe geaendert. */
+  .dash-head{ display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:34px; }
   .dash-head h2, .dash-head h3{ font-size:1.15rem; }
   .dash-head p{ color:var(--ink-soft); font-size:0.9rem; margin-top:4px; }
   /* Aenderung (22.8., Joerg-Wunsch): NUR die Begruessung "Hallo, ..." auf der Uebersichtsseite
@@ -835,8 +842,8 @@
     border-color:var(--gold); background:#FFF7DA; color:#7A5C00;
   }
 
-  .stat-row{ display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:32px; }
-  .stat-card{ background:#fff; border:1px solid var(--line); border-radius:var(--radius-card); padding:18px; box-shadow:var(--shadow-card); }
+  .stat-row{ display:grid; grid-template-columns:repeat(4,1fr); gap:18px; margin-bottom:38px; }
+  .stat-card{ background:#fff; border:1px solid var(--line); border-radius:var(--radius-card); padding:20px; box-shadow:var(--shadow-card); }
   .admin-tile-grid{ display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:8px; }
   .admin-tile{
     border:1px solid var(--line); border-radius:var(--radius-card); padding:18px 16px; cursor:pointer;
@@ -864,14 +871,14 @@
   .villa-stats-col{ padding-left:24px; border-left:1px solid var(--line); }
   @media (max-width:860px){ .villa-stats-col{ padding-left:0; border-left:none; margin-top:28px; padding-top:20px; border-top:1px solid var(--line); } }
   .stat-card .num{ font-family:'Public Sans', sans-serif; font-size:1.7rem; font-weight:700; }
-  .stat-card .lbl{ font-family:'JetBrains Mono'; font-size:0.68rem; text-transform:uppercase; letter-spacing:0.08em; color:var(--ink-soft); margin-top:4px; }
+  .stat-card .lbl{ font-family:'JetBrains Mono'; font-size:0.68rem; text-transform:uppercase; letter-spacing:0.08em; color:var(--ink-soft); margin-top:6px; }
 
   .panel{ background:#fff; border:1px solid var(--line); border-radius:var(--radius-card); margin-bottom:24px; box-shadow:var(--shadow-card); }
   .panel-head{ padding:16px 20px; border-bottom:1px solid var(--line); display:flex; justify-content:space-between; align-items:center; }
   .panel-head h3{ font-size:1rem; font-weight:600; font-family:'Public Sans'; }
   .add-btn{ background:var(--ink); color:var(--paper); border:none; padding:7px 14px; border-radius:4px; font-size:0.78rem; font-weight:600; cursor:pointer; }
 
-  .booking-row{ display:flex; justify-content:space-between; align-items:center; padding:14px 20px; border-bottom:1px solid var(--line); font-size:0.85rem; gap:10px; flex-wrap:wrap; }
+  .booking-row{ display:flex; justify-content:space-between; align-items:center; padding:17px 20px; border-bottom:1px solid var(--line); font-size:0.85rem; gap:10px; flex-wrap:wrap; }
   .cancel-btn{
     background:none; border:1px solid #C0392B; color:#C0392B; font-family:'Public Sans'; font-weight:600;
     font-size:0.72rem; padding:5px 12px; border-radius:14px; cursor:pointer; white-space:nowrap;
@@ -16628,7 +16635,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v340</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v341</div>
 
 </body>
 </html>
