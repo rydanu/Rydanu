@@ -134,7 +134,10 @@
      Buchstaben (z.B. "J") sieht diese Zierschrift sonst schief/verzerrt aus. */
   #dash-greeting, #modal-name, #dp-name, .driver-card-header h3, .admin-driver-name{ font-family:'Public Sans', sans-serif; }
 
-  /* ---------- topbar ---------- */
+  .become-driver-link{
+    color:var(--teal); font-size:0.85rem; font-weight:600; text-decoration:none;
+  }
+  .become-driver-link:hover{ text-decoration:underline; }
   .topbar{
     display:flex; align-items:stretch; flex-wrap:wrap; gap:14px;
     padding:calc(16px + env(safe-area-inset-top)) 20px 16px; border-bottom:1px solid var(--line);
@@ -691,24 +694,23 @@
     width:38px; height:38px; border-radius:20px; cursor:pointer; margin-right:6px;
   }
   .hamburger-btn:hover{ border-color:var(--teal); color:var(--teal); background:var(--teal-soft); }
-  .seo-menu-overlay{
-    display:none; position:fixed; inset:0; background:rgba(11,61,34,0.45); z-index:400;
-  }
-  .seo-menu-overlay.active{ display:block; }
   .seo-menu-panel{
-    position:fixed; top:0; left:-320px; width:300px; height:100%; background:var(--paper); z-index:401;
-    box-shadow:4px 0 18px rgba(0,0,0,0.15); transition:left 0.22s ease; overflow-y:auto;
+    display:none; margin:0 20px 16px; background:#fff; border:1px solid var(--line);
+    border-radius:var(--radius-card); padding:16px; box-shadow:var(--shadow-card);
   }
-  .seo-menu-panel.active{ left:0; }
-  .seo-menu-head{
-    display:flex; justify-content:space-between; align-items:center; background:var(--ink); color:var(--paper);
-    padding:20px 20px 16px; font-family:'Public Sans', sans-serif; font-weight:700; font-size:1.15rem;
+  .seo-menu-panel.active{ display:block; }
+  .seo-panel-title{
+    text-align:center; font-family:'JetBrains Mono'; font-size:0.72rem; font-weight:700;
+    text-transform:uppercase; letter-spacing:0.06em; color:var(--ink-soft); margin-bottom:12px;
   }
-  .seo-menu-link{
-    display:block; padding:16px 20px; border-bottom:1px solid var(--line); color:var(--ink);
-    text-decoration:none; font-weight:600; font-size:0.95rem;
+  .seo-tile-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .seo-tile{
+    display:block; text-align:center; text-decoration:none; color:var(--ink);
+    background:var(--paper-dim); border-radius:10px; padding:14px 8px; transition:background .15s ease;
   }
-  .seo-menu-link:hover{ background:var(--teal-soft); }
+  .seo-tile:hover{ background:var(--teal-soft); }
+  .seo-tile-icon{ display:block; font-size:1.2rem; margin-bottom:5px; }
+  .seo-tile-lbl{ display:block; font-size:0.75rem; font-weight:600; line-height:1.3; }
   @media (max-width:1024px){
     .topbar{ row-gap:10px; }
     .logo{ width:100%; }
@@ -1538,14 +1540,16 @@
     <span id="ryvio-rating-summary"></span>
   </div>
   <div class="tabs">
-    <button type="button" class="hamburger-btn" onclick="toggleSeoMenu()" aria-label="Menü">☰</button>
-    <button class="tab-btn active" id="tab-customer" data-i18n="tab_travelers" onclick="switchView('customer')">For Travelers</button>
+    <button class="tab-btn active" id="tab-customer" data-i18n="tab_travelers" onclick="handleTravelersTabClick()">For Travelers</button>
     <button type="button" class="tab-btn" id="tab-lombok-link" onclick="location.href='/lombok'" style="background:#C9895F; color:#fff; font-weight:700;"><span data-i18n="tab_lombok">🌴 Lombok</span></button>
     <button type="button" class="tab-btn" id="lombok-back-btn-header" onclick="location.href='/'" style="display:none; background:#C9895F; color:#fff; font-weight:700;"><span data-i18n="lombok_back_to_bali">← Back to Bali</span></button>
     <button class="tab-btn" id="tab-driver" onclick="switchView('driver')"><span data-i18n="tab_driver">Driver Dashboard</span> <span class="tab-mail-badge" id="tab-driver-mail" style="display:none;">✉️</span></button>
     <button class="tab-btn tab-btn-register" id="tab-register-btn" data-i18n="tab_register" onclick="openRealRegisterDriver()">+ Register as Driver</button>
     <button class="tab-btn tab-btn-admin" id="tab-admin" onclick="switchView('admin')"><span data-i18n="tab_admin">🔐 Admin</span> <span class="tab-mail-badge" id="tab-admin-mail" style="display:none;">✉️</span></button>
   </div>
+  </div>
+  <div id="become-driver-hint" style="display:none; text-align:center; padding:2px 20px 10px;">
+    <a href="#" class="become-driver-link" data-i18n="become_driver_hint" onclick="openRealRegisterDriver(); return false;">Möchtest du Fahrer werden? → Hier registrieren</a>
   </div>
   <div class="lang-switch">
     <button type="button" class="lang-btn active" data-lang="en" onclick="setLanguage('en')">EN</button>
@@ -1555,21 +1559,19 @@
   </div>
 </div>
 
-<!-- SEO-Menü: Ratgeber-Unterseiten (Baustein 10) -->
-<div class="seo-menu-overlay" id="seo-menu-overlay" onclick="closeSeoMenu()"></div>
+<!-- SEO-Menü: Ratgeber-Unterseiten (Baustein 10, 26.8. Abend zu Kachel-Ansicht umgebaut) -->
 <div class="seo-menu-panel" id="seo-menu-panel">
-  <div class="seo-menu-head">
-    <span data-i18n="seo_menu_title">Travel Guide</span>
-    <button type="button" class="modal-close" onclick="closeSeoMenu()">✕</button>
+  <div class="seo-panel-title" data-i18n="seo_menu_title">Travel Guide</div>
+  <div class="seo-tile-grid">
+    <a href="#" class="seo-tile" onclick="openInfoPage('anreise'); return false;"><span class="seo-tile-icon">✈️</span><span class="seo-tile-lbl" data-i18n="seo_menu_anreise">Getting to Bali</span></a>
+    <a href="#" class="seo-tile" onclick="openInfoPage('aktivitaeten'); return false;"><span class="seo-tile-icon">🌴</span><span class="seo-tile-lbl" data-i18n="seo_menu_aktivitaeten">Activities &amp; Sights</span></a>
+    <a href="#" class="seo-tile" onclick="openInfoPage('einreise'); return false;"><span class="seo-tile-icon">🛂</span><span class="seo-tile-lbl" data-i18n="seo_menu_einreise">Entry requirements</span></a>
+    <a href="#" class="seo-tile" onclick="openInfoPage('reisetipps'); return false;"><span class="seo-tile-icon">💡</span><span class="seo-tile-lbl" data-i18n="seo_menu_reisetipps">Bali travel tips</span></a>
+    <a href="#" class="seo-tile" onclick="openInfoPage('reisezeit'); return false;"><span class="seo-tile-icon">☀️</span><span class="seo-tile-lbl" data-i18n="seo_menu_reisezeit">Best time to visit</span></a>
+    <a href="#" class="seo-tile" onclick="openInfoPage('lombok'); return false;"><span class="seo-tile-icon">🏝️</span><span class="seo-tile-lbl" data-i18n="seo_menu_lombok">Discovering Lombok</span></a>
+    <a href="#" class="seo-tile" onclick="openInfoPage('transport'); return false;"><span class="seo-tile-icon">🚕</span><span class="seo-tile-lbl" data-i18n="seo_menu_transport">Getting around Bali</span></a>
+    <a href="#" class="seo-tile" onclick="openInfoPage('warum'); return false;"><span class="seo-tile-icon">🙏</span><span class="seo-tile-lbl" data-i18n="seo_menu_warum">Why Rydanu exists</span></a>
   </div>
-  <a href="#" class="seo-menu-link" onclick="openInfoPage('anreise'); return false;">✈️ <span data-i18n="seo_menu_anreise">Getting to Bali</span></a>
-  <a href="#" class="seo-menu-link" onclick="openInfoPage('aktivitaeten'); return false;">🌴 <span data-i18n="seo_menu_aktivitaeten">Activities &amp; Sights</span></a>
-  <a href="#" class="seo-menu-link" onclick="openInfoPage('einreise'); return false;">🛂 <span data-i18n="seo_menu_einreise">Entry requirements</span></a>
-  <a href="#" class="seo-menu-link" onclick="openInfoPage('reisetipps'); return false;">💡 <span data-i18n="seo_menu_reisetipps">Bali travel tips</span></a>
-  <a href="#" class="seo-menu-link" onclick="openInfoPage('reisezeit'); return false;">☀️ <span data-i18n="seo_menu_reisezeit">Best time to visit</span></a>
-  <a href="#" class="seo-menu-link" onclick="openInfoPage('lombok'); return false;">🏝️ <span data-i18n="seo_menu_lombok">Discovering Lombok</span></a>
-  <a href="#" class="seo-menu-link" onclick="openInfoPage('transport'); return false;">🚕 <span data-i18n="seo_menu_transport">Getting around Bali</span></a>
-  <a href="#" class="seo-menu-link" onclick="openInfoPage('warum'); return false;">🙏 <span data-i18n="seo_menu_warum">Why Rydanu exists</span></a>
 </div>
 
 <!-- Wiederverwendbare Info-Seite (fuer alle SEO-Unterseiten) -->
@@ -5078,12 +5080,14 @@ const INFO_PAGES = {
   }
 };
 function toggleSeoMenu(){
-  document.getElementById('seo-menu-overlay').classList.toggle('active');
   document.getElementById('seo-menu-panel').classList.toggle('active');
 }
 function closeSeoMenu(){
-  document.getElementById('seo-menu-overlay').classList.remove('active');
   document.getElementById('seo-menu-panel').classList.remove('active');
+}
+function handleTravelersTabClick(){
+  switchView('customer');
+  toggleSeoMenu();
 }
 function openInfoPage(pageId){
   const page = INFO_PAGES[pageId];
@@ -5106,7 +5110,6 @@ function openInfoPage(pageId){
 // closeSeoMenu()-Mechanismus und man landet auf der Startseite.
 function closeInfoPage(){
   document.getElementById('info-page').style.display = 'none';
-  document.getElementById('seo-menu-overlay').classList.add('active');
   document.getElementById('seo-menu-panel').classList.add('active');
 }
 
@@ -9924,6 +9927,7 @@ function applyRoleBasedMenuVisibility(){
   const tabRegister = document.getElementById('tab-register-btn');
   const tabAdmin = document.getElementById('tab-admin');
   const tabLombok = document.getElementById('tab-lombok-link');
+  const becomeDriverHint = document.getElementById('become-driver-hint');
   const hamburger = document.querySelector('.hamburger-btn');
   if(!tabCustomer || !tabDriver || !tabAdmin) return;
 
@@ -9949,6 +9953,7 @@ function applyRoleBasedMenuVisibility(){
     if(hamburger) hamburger.style.display = '';
     if(tabRegister) tabRegister.style.display = 'none'; // Registrierung ergibt fuer Admin keinen Sinn
     if(tabLombok) tabLombok.style.display = showLombokBtn ? '' : 'none';
+    if(becomeDriverHint) becomeDriverHint.style.display = 'none'; // Admin sieht eh alles, Hinweis unnoetig
     return;
   }
 
@@ -9959,12 +9964,17 @@ function applyRoleBasedMenuVisibility(){
     tabCustomer.style.display = 'none';
     tabDriver.style.display = '';
     if(hamburger) hamburger.style.display = 'none'; // Reise-Ratgeber ist Kunden-Content
+    if(becomeDriverHint) becomeDriverHint.style.display = 'none'; // schon im Fahrerbereich, Hinweis unnoetig
     updateRegisterButtonVisibility(); // Button nur zeigen, wenn noch kein eigenes Fahrerprofil eingeloggt ist
   } else {
     tabCustomer.style.display = '';
     tabDriver.style.display = 'none';
     if(hamburger) hamburger.style.display = '';
     if(tabRegister) tabRegister.style.display = 'none'; // Registrierung nur auf der Fahrer-Domain
+    // Neu (26.8. Abend, Joerg-Wunsch): kleiner, dezenter Hinweislink fuer den seltenen Fall, dass
+    // jemand ueber die Kunden-Domain nach "Fahrer werden" sucht -- ohne den alten grossen
+    // "+Register as Driver"-Tab wiederzubeleben, der auf der Kunden-Seite keinen Sinn ergibt.
+    if(becomeDriverHint) becomeDriverHint.style.display = '';
   }
 }
 function openRealRegisterDriver(){
@@ -10340,11 +10350,12 @@ async function saveEditProfileReal(){
 let currentLang = 'en';
 const translations = {
   en: {
-    tab_travelers: "For Travelers",
+    tab_travelers: "Travel Info",
     tab_lombok: "🌴 Lombok",
     tab_driver: "Driver Dashboard",
     tab_register: "+ Register as Driver",
     tab_admin: "🔐 Admin",
+    become_driver_hint: "Want to become a driver? → Register here",
     seo_menu_title: "Travel Guide", seo_menu_anreise: "Getting to Bali", seo_menu_aktivitaeten: "Activities & Sights", seo_menu_einreise: "Entry requirements", seo_menu_reisetipps: "Bali travel tips", seo_menu_reisezeit: "Best time to visit", seo_menu_lombok: "Discovering Lombok", seo_menu_transport: "Getting around Bali", seo_menu_warum: "Why Rydanu exists",
     hero_eyebrow: "Bali's driver marketplace", logo_tagline: "Local drivers. Anywhere in Bali", logo_tagline_lombok: "Local drivers. Anywhere in Lombok", lombok_eyecatcher_text: "🌴 Now also on Lombok — discover drivers →", lombok_soft_suggest_text: "Did you mean Lombok? → This way", lombok_soft_suggest_text_zone: "Did you mean {zone} on Lombok? → This way", lombok_hero_title: "🏝️ Rydanu Lombok — local drivers, real prices", lombok_hero_subtitle: "Kuta Lombok, Senggigi, the Gili Islands, Sembalun — your driver is ready, wherever on the island.", lombok_back_to_bali: "← Back to Bali",
     hero_headline_pre: "Local ", hero_headline_word: "drivers", hero_headline_post: "<br>Anywhere in Bali",
@@ -10689,11 +10700,12 @@ const translations = {
     lst_bookings_suffix: "bookings", lst_per_booking_suffix: "/ booking", lst_no_start_point: "No starting point set", lst_pickup_prefix: "Pickup:", lst_not_included_prefix: "Not included:",
   },
   de: {
-    tab_travelers: "Für Reisende",
+    tab_travelers: "Infos für Reisende",
     tab_lombok: "🌴 Lombok",
     tab_driver: "Fahrer-Dashboard",
     tab_register: "+ Als Fahrer registrieren",
     tab_admin: "🔐 Admin",
+    become_driver_hint: "Möchtest du Fahrer werden? → Hier registrieren",
     seo_menu_title: "Reise-Ratgeber", seo_menu_anreise: "Anreise nach Bali", seo_menu_aktivitaeten: "Aktivitäten & Sehenswürdigkeiten", seo_menu_einreise: "Einreisebestimmungen", seo_menu_reisetipps: "Reise-Tipps für Bali", seo_menu_reisezeit: "Beste Reisezeit", seo_menu_lombok: "Lombok entdecken", seo_menu_transport: "Transport auf Bali", seo_menu_warum: "Warum es Rydanu gibt",
     hero_eyebrow: "Balis Fahrer-Marktplatz", logo_tagline: "Lokale Fahrer. Überall auf Bali", logo_tagline_lombok: "Lokale Fahrer. Überall auf Lombok", lombok_eyecatcher_text: "🌴 Jetzt auch auf Lombok unterwegs — Fahrer entdecken →", lombok_soft_suggest_text: "Meintest du Lombok? → Hier entlang", lombok_soft_suggest_text_zone: "Meintest du {zone} auf Lombok? → Hier entlang", lombok_hero_title: "🏝️ Rydanu Lombok — lokale Fahrer, echte Preise", lombok_hero_subtitle: "Kuta Lombok, Senggigi, Gili-Inseln, Sembalun — dein Fahrer wartet, egal wo auf der Insel.", lombok_back_to_bali: "← Zurück zu Bali",
     hero_headline_pre: "Lokale ", hero_headline_word: "Fahrer", hero_headline_post: "<br>Überall auf Bali",
@@ -11038,11 +11050,12 @@ const translations = {
     lst_bookings_suffix: "Buchungen", lst_per_booking_suffix: "/ Buchung", lst_no_start_point: "Kein Startpunkt festgelegt", lst_pickup_prefix: "Abholung:", lst_not_included_prefix: "Nicht enthalten:",
   },
   id: {
-    tab_travelers: "Untuk Wisatawan",
+    tab_travelers: "Info untuk Wisatawan",
     tab_lombok: "🌴 Lombok",
     tab_driver: "Dasbor Sopir",
     tab_register: "+ Daftar sebagai Sopir",
     tab_admin: "🔐 Admin",
+    become_driver_hint: "Ingin jadi sopir? → Daftar di sini",
     seo_menu_title: "Panduan Perjalanan", seo_menu_anreise: "Perjalanan ke Bali", seo_menu_aktivitaeten: "Aktivitas & Tempat Wisata", seo_menu_einreise: "Ketentuan Masuk", seo_menu_reisetipps: "Tips Perjalanan Bali", seo_menu_reisezeit: "Waktu Terbaik Berkunjung", seo_menu_lombok: "Menjelajahi Lombok", seo_menu_transport: "Transportasi di Bali", seo_menu_warum: "Mengapa Rydanu Ada",
     hero_eyebrow: "Marketplace sopir lokal Bali", logo_tagline: "Sopir lokal. Di mana saja di Bali", logo_tagline_lombok: "Sopir lokal. Di mana saja di Lombok", lombok_eyecatcher_text: "🌴 Kini juga di Lombok — temukan sopir →", lombok_soft_suggest_text: "Maksud Anda Lombok? → Lewat sini", lombok_soft_suggest_text_zone: "Maksud Anda {zone} di Lombok? → Lewat sini", lombok_hero_title: "🏝️ Rydanu Lombok — sopir lokal, harga sebenarnya", lombok_hero_subtitle: "Kuta Lombok, Senggigi, Gili, Sembalun — sopir Anda siap, di mana pun di pulau ini.", lombok_back_to_bali: "← Kembali ke Bali",
     hero_headline_pre: "", hero_headline_word: "Sopir", hero_headline_post: " lokal<br>Di mana saja di Bali",
@@ -15153,6 +15166,7 @@ function forceLayoutReflow(){
   });
 }
 function switchView(view){
+  if(view!=='customer') closeSeoMenu();
   document.getElementById('view-customer').classList.toggle('active', view==='customer');
   document.getElementById('view-driver').classList.toggle('active', view==='driver');
   document.getElementById('view-admin').classList.toggle('active', view==='admin');
@@ -15171,6 +15185,7 @@ function switchView(view){
   if(view==='admin'){ updateIsAdminSession().then(()=>{ applyRoleBasedMenuVisibility(); renderAdminList(); loadAdminPendingDrivers(); loadRealAdminMessages(); loadAdminDocsResubmittedCount(); renderAdminOpenPayments(); loadVillaApplicationsCount(); }); }
 }
 function switchViewProgrammatic(view){
+  if(view!=='customer') closeSeoMenu();
   document.getElementById('view-customer').classList.toggle('active', view==='customer');
   document.getElementById('view-driver').classList.toggle('active', view==='driver');
   document.getElementById('view-admin').classList.toggle('active', view==='admin');
@@ -16643,7 +16658,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v342</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v344</div>
 
 </body>
 </html>
