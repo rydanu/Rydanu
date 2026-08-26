@@ -5163,6 +5163,26 @@ function toggleFaqItem(id){
   document.querySelectorAll('.faq-item.open').forEach(el => el.classList.remove('open'));
   if(!wasOpen) item.classList.add('open');
 }
+// Bugfix (28.8., Joerg-Screenshot): Klick auf eine leere Flaeche neben den Pillen hat weder das
+// FAQ- noch das "Fuer Reisende"-Panel geschlossen -- nur ein erneuter Klick auf die jeweilige
+// Pille oder auf eine ANDERE Pille (die closeSeoMenu()/closeFaqMenu() intern mitausloest) hat
+// funktioniert. Jetzt: globaler Klick-Listener schliesst beide Panels bei jedem Klick ausserhalb
+// von Panel + zugehoeriger Pille. Klicks auf die Pillen selbst sind bewusst ausgenommen, damit das
+// bestehende Auf/Zu-per-Klick weiterhin genauso funktioniert.
+document.addEventListener('click', e=>{
+  const faqPanel = document.getElementById('faq-menu-panel');
+  if(faqPanel && faqPanel.classList.contains('active')){
+    if(!e.target.closest('#faq-menu-panel') && !e.target.closest('#tab-faq-link')){
+      closeFaqMenu();
+    }
+  }
+  const seoPanel = document.getElementById('seo-menu-panel');
+  if(seoPanel && seoPanel.classList.contains('active')){
+    if(!e.target.closest('#seo-menu-panel') && !e.target.closest('#tab-customer')){
+      closeSeoMenu();
+    }
+  }
+});
 function openInfoPage(pageId){
   const page = INFO_PAGES[pageId];
   if(!page) return;
@@ -16777,7 +16797,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v346</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v347</div>
 
 </body>
 </html>
