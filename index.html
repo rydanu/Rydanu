@@ -9897,25 +9897,36 @@ function updateRegisterButtonVisibility(){
 }
 // ============================================
 // Pre-Launch: Menü nach Domain + Rolle trennen (ab 26.8.)
-// Ziel (Jörg-Vorgabe): Kunden auf rydanu.com sehen nur den Kunden-Tab + Reise-Ratgeber-Menü.
-// Fahrer auf getrydanu.com sehen nur "Fahrer-Dashboard" + "Als Fahrer registrieren". Admin
-// (Rolle 'admin' in user_metadata) sieht auf BEIDEN Domains alles, ausser dem
+// Ziel (Jörg-Vorgabe): Kunden auf rydanu.com/rydanu.de sehen nur den Kunden-Tab + Reise-Ratgeber-Menü.
+// Fahrer auf getrydanu.app sehen nur "Fahrer-Dashboard" + "Als Fahrer registrieren". Admin
+// (Rolle 'admin' in user_metadata) sieht auf ALLEN Domains alles, ausser dem
 // Registrierungs-Button (ergibt fuer einen Admin keinen Sinn). Bleibt weiterhin EINE einzige
 // index.html-Datei -- die Umschaltung passiert rein im Browser anhand von location.hostname,
 // kein Build-Prozess, kein zweiter Dateibaum.
+//
+// Bugfix (27.8., Joerg-Screenshot): getrydanu.com existiert gar nicht -- die echte Fahrer-Domain
+// ist getrydanu.app. Kunden-Seite laeuft unter rydanu.com UND rydanu.de. Vorher war nur
+// getrydanu.com/rydanu.com hinterlegt, dadurch fiel getrydanu.app faelschlich auf die
+// Kunden-Ansicht zurueck (die reguläre Fallback-Regel fuer "unbekannte Domain").
 //
 // Staging hat keine eigene zweite Domain (nur eine einzelne Vorschau-Adresse) -- damit beide
 // Ansichten trotzdem dort testbar sind, gilt ein rein optischer Test-Schalter per Adresszeile:
 //   ?ansicht=fahrer  -> zeigt die Fahrer-Domain-Ansicht
 //   ?ansicht=admin   -> zeigt testweise "alles sichtbar" (KEINE echten Zusatz-Rechte, nur Optik)
-// Auf den echten Live-Domains (rydanu.com / getrydanu.com) wird dieser Schalter ignoriert --
-// dort zaehlt ausschliesslich die tatsaechliche Domain.
+// Auf den echten Live-Domains wird dieser Schalter ignoriert -- dort zaehlt ausschliesslich die
+// tatsaechliche Domain.
 // ============================================
+function isRealDriverDomain(host){
+  return /(^|\.)getrydanu\.app$/i.test(host || '');
+}
+function isRealCustomerDomain(host){
+  return /(^|\.)rydanu\.com$/i.test(host || '') || /(^|\.)rydanu\.de$/i.test(host || '');
+}
 function getMenuDomainMode(){
   const host = location.hostname || '';
-  if(/(^|\.)getrydanu\.com$/i.test(host)) return 'driver';
-  if(/(^|\.)rydanu\.com$/i.test(host)) return 'customer';
-  // Weder rydanu.com noch getrydanu.com (Staging-Vorschau, localhost, IP...) -- Testschalter erlauben.
+  if(isRealDriverDomain(host)) return 'driver';
+  if(isRealCustomerDomain(host)) return 'customer';
+  // Weder Kunden- noch Fahrer-Domain (Staging-Vorschau, localhost, IP...) -- Testschalter erlauben.
   const testParam = new URLSearchParams(location.search).get('ansicht');
   if(testParam === 'fahrer') return 'driver';
   if(testParam === 'admin') return 'admin_test';
@@ -9932,13 +9943,13 @@ function applyRoleBasedMenuVisibility(){
   if(!tabCustomer || !tabDriver || !tabAdmin) return;
 
   const mode = getMenuDomainMode();
-  // Bugfix (26.8. Abend, Joerg-Screenshot): auf einer echten Domain (rydanu.com/getrydanu.com) gilt
-  // ausschliesslich isAdminSession -- unveraendert. Auf der Staging-Vorschau (keine der beiden echten
-  // Domains) hat der explizite Test-Schalter ?ansicht=... jetzt Vorrang vor isAdminSession, damit ein
-  // Testaccount, der gleichzeitig Admin UND Fahrer ist (wie admin.test@rydanu-staging.local), trotzdem
-  // gezielt die reine Fahrer-Ansicht simulieren kann. Vorher hat isAdminSession den Schalter immer
+  // Bugfix (26.8. Abend, Joerg-Screenshot): auf einer echten Domain gilt ausschliesslich
+  // isAdminSession -- unveraendert. Auf der Staging-Vorschau (keine der echten Domains) hat der
+  // explizite Test-Schalter ?ansicht=... jetzt Vorrang vor isAdminSession, damit ein Testaccount,
+  // der gleichzeitig Admin UND Fahrer ist (wie admin.test@rydanu-staging.local), trotzdem gezielt
+  // die reine Fahrer-Ansicht simulieren kann. Vorher hat isAdminSession den Schalter immer
   // uebersteuert, der Admin-Tab blieb faelschlich sichtbar.
-  const onRealDomain = /(^|\.)getrydanu\.com$/i.test(location.hostname || '') || /(^|\.)rydanu\.com$/i.test(location.hostname || '');
+  const onRealDomain = isRealDriverDomain(location.hostname || '') || isRealCustomerDomain(location.hostname || '');
   const testParam = onRealDomain ? null : new URLSearchParams(location.search).get('ansicht');
   const showEverything = testParam ? (testParam === 'admin') : isAdminSession;
   // Lombok-Pill-Button (26.8., Joerg-Wunsch): nur auf der Kunden-Seite sinnvoll, und nicht mehr
@@ -13862,7 +13873,7 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLI
 
 // Google Places API (New) -- Ersatz fuer Nominatim/OpenStreetMap (23. August, siehe searchPlacesBali()
 // weiter unten). Der Key ist bewusst im Frontend sichtbar, das ist bei dieser API normal/vorgesehen --
-// er ist bei Google auf die Domains rydanu.com/getrydanu.com (HTTP-Referrer) und auf "Places API (New)"
+// er ist bei Google auf die Domains rydanu.com/getrydanu.app (HTTP-Referrer) und auf "Places API (New)"
 // eingeschraenkt, kann also selbst wenn ihn jemand abliest nirgendwo anders missbraucht werden.
 const GOOGLE_PLACES_API_KEY = 'AIzaSyACr3tIZO1chp1rpC6jfVHd92mHdEqqZB0';
 
@@ -13905,10 +13916,10 @@ function unlockSite(){
   updateLombokBandVisibility('customer');
   // Pre-Launch-Menütrennung (26.8.): sofort beim Seitenaufruf domain-abhaengig die passenden
   // Tabs ein-/ausblenden (noch vor dem asynchronen Login-Check) -- verhindert ein kurzes
-  // Aufblitzen der falschen Tabs auf rydanu.com/getrydanu.com.
+  // Aufblitzen der falschen Tabs auf rydanu.com/getrydanu.app.
   applyRoleBasedMenuVisibility();
   if(getMenuDomainMode() === 'driver'){
-    // Fahrer-Domain (getrydanu.com): startet direkt im Fahrer-Bereich statt in der Kundensuche.
+    // Fahrer-Domain (getrydanu.app): startet direkt im Fahrer-Bereich statt in der Kundensuche.
     // switchViewProgrammatic() loest selbst checkDriverAuthState() aus -- der separate Aufruf
     // unten entfaellt hier bewusst, um die Pruefung nicht doppelt anzustossen.
     switchViewProgrammatic('driver');
@@ -16658,7 +16669,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v344</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v345</div>
 
 </body>
 </html>
