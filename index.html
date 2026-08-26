@@ -1497,11 +1497,10 @@
 
 <div id="site-content" style="display:none;">
 
-<!-- Lombok-Eyecatcher-Band (Bauplan Kap. 2.3): schmales Band, eigene Akzentfarbe (Sand/Terracotta),
-     nur auf der normalen Bali-Seite sichtbar, nie auf der Lombok-Landingpage selbst. -->
-<div id="lombok-eyecatcher-band" style="display:none; background:#C9895F; color:#fff; text-align:center; padding:calc(8px + env(safe-area-inset-top)) 14px 8px; font-size:0.82rem; font-weight:600; cursor:pointer;" onclick="location.href='/lombok'">
-  <span data-i18n="lombok_eyecatcher_text">🌴 Jetzt auch auf Lombok unterwegs — Fahrer entdecken →</span>
-</div>
+<!-- Lombok-Eyecatcher-Band (Bauplan Kap. 2.3) entfernt (26.8., Joerg-Wunsch): war das obere braune
+     Band, das auf der Bali-Startseite zu Lombok verlinkte. Ueberfluessig geworden, seit der
+     kompaktere "🌴 Lombok"-Pill-Button direkt in der Tab-Leiste denselben Zweck erfuellt, ohne
+     zusaetzliche Zeile/Hoehe ueber dem Header zu brauchen (Logo sass dadurch spuerbar tiefer). -->
 
 <!-- Eigener Foto-Hero fuer die Lombok-Landingpage (Bauplan Kap. 2.2) -- nur sichtbar auf /lombok.
      Fotos: lizenzfrei von Pexels (keine Namensnennung noetig), gleiche Quelle wie die Bali-Ratgeberseiten.
@@ -1535,6 +1534,7 @@
     <button type="button" class="hamburger-btn" onclick="toggleSeoMenu()" aria-label="Menü">☰</button>
     <button class="tab-btn active" id="tab-customer" data-i18n="tab_travelers" onclick="switchView('customer')">For Travelers</button>
     <button type="button" class="tab-btn" id="tab-lombok-link" onclick="location.href='/lombok'" style="background:#C9895F; color:#fff; font-weight:700;"><span data-i18n="tab_lombok">🌴 Lombok</span></button>
+    <button type="button" class="tab-btn" id="lombok-back-btn-header" onclick="location.href='/'" style="display:none; background:#C9895F; color:#fff; font-weight:700;"><span data-i18n="lombok_back_to_bali">← Back to Bali</span></button>
     <button class="tab-btn" id="tab-driver" onclick="switchView('driver')"><span data-i18n="tab_driver">Driver Dashboard</span> <span class="tab-mail-badge" id="tab-driver-mail" style="display:none;">✉️</span></button>
     <button class="tab-btn tab-btn-register" id="tab-register-btn" data-i18n="tab_register" onclick="openRealRegisterDriver()">+ Register as Driver</button>
     <button class="tab-btn tab-btn-admin" id="tab-admin" onclick="switchView('admin')"><span data-i18n="tab_admin">🔐 Admin</span> <span class="tab-mail-badge" id="tab-admin-mail" style="display:none;">✉️</span></button>
@@ -1544,9 +1544,6 @@
     <button type="button" class="lang-btn active" data-lang="en" onclick="setLanguage('en')">EN</button>
     <button type="button" class="lang-btn" data-lang="de" onclick="setLanguage('de')">DE</button>
     <button type="button" class="lang-btn" data-lang="id" onclick="setLanguage('id')">ID</button>
-    <button type="button" id="lombok-back-btn-header" onclick="location.href='/'" style="display:none; margin-left:6px; background:#C9895F; color:#fff; border:none; border-radius:14px; padding:6px 12px; font-size:0.72rem; font-weight:700; cursor:pointer; white-space:nowrap; font-family:'JetBrains Mono', monospace;">
-      <span data-i18n="lombok_back_to_bali">← Back to Bali</span>
-    </button>
   </div>
   </div>
 </div>
@@ -1555,23 +1552,23 @@
 <div class="seo-menu-overlay" id="seo-menu-overlay" onclick="closeSeoMenu()"></div>
 <div class="seo-menu-panel" id="seo-menu-panel">
   <div class="seo-menu-head">
-    <span>Reise-Ratgeber</span>
+    <span data-i18n="seo_menu_title">Travel Guide</span>
     <button type="button" class="modal-close" onclick="closeSeoMenu()">✕</button>
   </div>
-  <a href="#" class="seo-menu-link" onclick="openInfoPage('anreise'); return false;">✈️ Anreise nach Bali</a>
-  <a href="#" class="seo-menu-link" onclick="openInfoPage('aktivitaeten'); return false;">🌴 Aktivitäten &amp; Sehenswürdigkeiten</a>
-  <a href="#" class="seo-menu-link" onclick="openInfoPage('einreise'); return false;">🛂 Einreisebestimmungen</a>
-  <a href="#" class="seo-menu-link" onclick="openInfoPage('reisetipps'); return false;">💡 Reise-Tipps für Bali</a>
-  <a href="#" class="seo-menu-link" onclick="openInfoPage('reisezeit'); return false;">☀️ Beste Reisezeit</a>
-  <a href="#" class="seo-menu-link" onclick="openInfoPage('lombok'); return false;">🏝️ Lombok entdecken</a>
-  <a href="#" class="seo-menu-link" onclick="openInfoPage('transport'); return false;">🚕 Transport auf Bali</a>
-  <a href="#" class="seo-menu-link" onclick="openInfoPage('warum'); return false;">🙏 Warum es Rydanu gibt</a>
+  <a href="#" class="seo-menu-link" onclick="openInfoPage('anreise'); return false;">✈️ <span data-i18n="seo_menu_anreise">Getting to Bali</span></a>
+  <a href="#" class="seo-menu-link" onclick="openInfoPage('aktivitaeten'); return false;">🌴 <span data-i18n="seo_menu_aktivitaeten">Activities &amp; Sights</span></a>
+  <a href="#" class="seo-menu-link" onclick="openInfoPage('einreise'); return false;">🛂 <span data-i18n="seo_menu_einreise">Entry requirements</span></a>
+  <a href="#" class="seo-menu-link" onclick="openInfoPage('reisetipps'); return false;">💡 <span data-i18n="seo_menu_reisetipps">Bali travel tips</span></a>
+  <a href="#" class="seo-menu-link" onclick="openInfoPage('reisezeit'); return false;">☀️ <span data-i18n="seo_menu_reisezeit">Best time to visit</span></a>
+  <a href="#" class="seo-menu-link" onclick="openInfoPage('lombok'); return false;">🏝️ <span data-i18n="seo_menu_lombok">Discovering Lombok</span></a>
+  <a href="#" class="seo-menu-link" onclick="openInfoPage('transport'); return false;">🚕 <span data-i18n="seo_menu_transport">Getting around Bali</span></a>
+  <a href="#" class="seo-menu-link" onclick="openInfoPage('warum'); return false;">🙏 <span data-i18n="seo_menu_warum">Why Rydanu exists</span></a>
 </div>
 
 <!-- Wiederverwendbare Info-Seite (fuer alle SEO-Unterseiten) -->
 <div class="driver-page" id="info-page" style="display:none;">
   <div class="dp-topbar">
-    <button type="button" class="dp-back" onclick="closeInfoPage()">‹ Zurück</button>
+    <button type="button" class="dp-back" onclick="closeInfoPage()">‹ <span data-i18n="dp_back">Back</span></button>
   </div>
   <div class="info-article">
     <div class="info-article-hero" id="info-page-hero"></div>
@@ -10333,6 +10330,7 @@ const translations = {
     tab_driver: "Driver Dashboard",
     tab_register: "+ Register as Driver",
     tab_admin: "🔐 Admin",
+    seo_menu_title: "Travel Guide", seo_menu_anreise: "Getting to Bali", seo_menu_aktivitaeten: "Activities & Sights", seo_menu_einreise: "Entry requirements", seo_menu_reisetipps: "Bali travel tips", seo_menu_reisezeit: "Best time to visit", seo_menu_lombok: "Discovering Lombok", seo_menu_transport: "Getting around Bali", seo_menu_warum: "Why Rydanu exists",
     hero_eyebrow: "Bali's driver marketplace", logo_tagline: "Local drivers. Anywhere in Bali", logo_tagline_lombok: "Local drivers. Anywhere in Lombok", lombok_eyecatcher_text: "🌴 Now also on Lombok — discover drivers →", lombok_soft_suggest_text: "Did you mean Lombok? → This way", lombok_soft_suggest_text_zone: "Did you mean {zone} on Lombok? → This way", lombok_hero_title: "🏝️ Rydanu Lombok — local drivers, real prices", lombok_hero_subtitle: "Kuta Lombok, Senggigi, the Gili Islands, Sembalun — your driver is ready, wherever on the island.", lombok_back_to_bali: "← Back to Bali",
     hero_headline_pre: "Local ", hero_headline_word: "drivers", hero_headline_post: "<br>Anywhere in Bali",
     hero_title: "All of Bali talks about it.",
@@ -10681,6 +10679,7 @@ const translations = {
     tab_driver: "Fahrer-Dashboard",
     tab_register: "+ Als Fahrer registrieren",
     tab_admin: "🔐 Admin",
+    seo_menu_title: "Reise-Ratgeber", seo_menu_anreise: "Anreise nach Bali", seo_menu_aktivitaeten: "Aktivitäten & Sehenswürdigkeiten", seo_menu_einreise: "Einreisebestimmungen", seo_menu_reisetipps: "Reise-Tipps für Bali", seo_menu_reisezeit: "Beste Reisezeit", seo_menu_lombok: "Lombok entdecken", seo_menu_transport: "Transport auf Bali", seo_menu_warum: "Warum es Rydanu gibt",
     hero_eyebrow: "Balis Fahrer-Marktplatz", logo_tagline: "Lokale Fahrer. Überall auf Bali", logo_tagline_lombok: "Lokale Fahrer. Überall auf Lombok", lombok_eyecatcher_text: "🌴 Jetzt auch auf Lombok unterwegs — Fahrer entdecken →", lombok_soft_suggest_text: "Meintest du Lombok? → Hier entlang", lombok_soft_suggest_text_zone: "Meintest du {zone} auf Lombok? → Hier entlang", lombok_hero_title: "🏝️ Rydanu Lombok — lokale Fahrer, echte Preise", lombok_hero_subtitle: "Kuta Lombok, Senggigi, Gili-Inseln, Sembalun — dein Fahrer wartet, egal wo auf der Insel.", lombok_back_to_bali: "← Zurück zu Bali",
     hero_headline_pre: "Lokale ", hero_headline_word: "Fahrer", hero_headline_post: "<br>Überall auf Bali",
     hero_title: "Darüber spricht Bali.",
@@ -11029,6 +11028,7 @@ const translations = {
     tab_driver: "Dasbor Sopir",
     tab_register: "+ Daftar sebagai Sopir",
     tab_admin: "🔐 Admin",
+    seo_menu_title: "Panduan Perjalanan", seo_menu_anreise: "Perjalanan ke Bali", seo_menu_aktivitaeten: "Aktivitas & Tempat Wisata", seo_menu_einreise: "Ketentuan Masuk", seo_menu_reisetipps: "Tips Perjalanan Bali", seo_menu_reisezeit: "Waktu Terbaik Berkunjung", seo_menu_lombok: "Menjelajahi Lombok", seo_menu_transport: "Transportasi di Bali", seo_menu_warum: "Mengapa Rydanu Ada",
     hero_eyebrow: "Marketplace sopir lokal Bali", logo_tagline: "Sopir lokal. Di mana saja di Bali", logo_tagline_lombok: "Sopir lokal. Di mana saja di Lombok", lombok_eyecatcher_text: "🌴 Kini juga di Lombok — temukan sopir →", lombok_soft_suggest_text: "Maksud Anda Lombok? → Lewat sini", lombok_soft_suggest_text_zone: "Maksud Anda {zone} di Lombok? → Lewat sini", lombok_hero_title: "🏝️ Rydanu Lombok — sopir lokal, harga sebenarnya", lombok_hero_subtitle: "Kuta Lombok, Senggigi, Gili, Sembalun — sopir Anda siap, di mana pun di pulau ini.", lombok_back_to_bali: "← Kembali ke Bali",
     hero_headline_pre: "", hero_headline_word: "Sopir", hero_headline_post: " lokal<br>Di mana saja di Bali",
     hero_title: "Seluruh Bali membicarakannya.",
@@ -15111,18 +15111,15 @@ function applyRealDriverProfileToUI(d){
 }
 
 function updateLombokBandVisibility(view){
-  const band = document.getElementById('lombok-eyecatcher-band');
-  if(band){
-    // Nie auf der Lombok-Landingpage selbst zeigen (waere sinnlos, man ist ja schon da) und nur
-    // auf dem Kunden-Tab, nicht im Fahrer-Dashboard oder Admin-Bereich.
-    band.style.display = (view==='customer' && !(typeof _isLombokLanding !== 'undefined' && _isLombokLanding)) ? 'block' : 'none';
-  }
+  // Band-Logik entfernt (26.8.) -- siehe Kommentar bei site-content im HTML. Funktion bleibt
+  // bestehen (wird an mehreren Stellen aufgerufen), kuemmert sich jetzt nur noch um den
+  // "Zurueck zu Bali"-Button.
   const backBtn = document.getElementById('lombok-back-btn-header');
   if(backBtn && typeof _isLombokLanding !== 'undefined' && _isLombokLanding){
     // "Zurueck zu Bali" nur auf dem Kunden-Tab der Lombok-Landingpage zeigen, nicht im Fahrer-/Admin-Bereich
     // (dort macht der Insel-Kontext ohnehin keinen Sinn). Ersetzt den frueheren Foto-Hero-Banner (18.8.):
     // Header soll 1:1 wie auf Bali aussehen, nur dieser Button kommt zusaetzlich dazu.
-    backBtn.style.display = (view==='customer') ? 'inline-flex' : 'none';
+    backBtn.style.display = (view==='customer') ? '' : 'none';
   }
 }
 // Bugfix (20.8., Joerg gemeldet): iOS/Chrome verrechnen sich manchmal beim Layout, wenn ein
@@ -16631,7 +16628,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v339</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v340</div>
 
 </body>
 </html>
