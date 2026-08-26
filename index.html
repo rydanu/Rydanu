@@ -711,6 +711,23 @@
   .seo-tile:hover{ background:var(--teal-soft); }
   .seo-tile-icon{ display:block; font-size:1.2rem; margin-bottom:5px; }
   .seo-tile-lbl{ display:block; font-size:0.75rem; font-weight:600; line-height:1.3; }
+  .faq-menu-panel{
+    display:none; margin:0 20px 16px; background:#fff; border:1px solid var(--line);
+    border-radius:var(--radius-card); padding:16px; box-shadow:var(--shadow-card);
+  }
+  .faq-menu-panel.active{ display:block; }
+  .faq-list{ display:flex; flex-direction:column; }
+  .faq-item{ border-bottom:1px solid var(--paper-dim); }
+  .faq-item:last-child{ border-bottom:none; }
+  .faq-question{
+    width:100%; text-align:left; background:none; border:none; padding:12px 2px;
+    font-family:'Public Sans'; font-size:0.85rem; font-weight:600; color:var(--ink);
+    cursor:pointer; display:flex; justify-content:space-between; align-items:center; gap:10px;
+  }
+  .faq-caret{ transition:transform .2s ease; color:var(--ink-soft); flex-shrink:0; }
+  .faq-item.open .faq-caret{ transform:rotate(180deg); }
+  .faq-answer{ display:none; padding:0 2px 14px; font-size:0.8rem; line-height:1.5; color:var(--ink-soft); }
+  .faq-item.open .faq-answer{ display:block; }
   @media (max-width:1024px){
     .topbar{ row-gap:10px; }
     .logo{ width:100%; }
@@ -1541,6 +1558,7 @@
   </div>
   <div class="tabs">
     <button class="tab-btn active" id="tab-customer" data-i18n="tab_travelers" onclick="handleTravelersTabClick()">For Travelers</button>
+    <button type="button" class="tab-btn" id="tab-faq-link" onclick="toggleFaqMenu()" style="background:var(--teal); color:#fff; font-weight:700;"><span data-i18n="tab_faq">❓ Fragen</span></button>
     <button type="button" class="tab-btn" id="tab-lombok-link" onclick="location.href='/lombok'" style="background:#C9895F; color:#fff; font-weight:700;"><span data-i18n="tab_lombok">🌴 Lombok</span></button>
     <button type="button" class="tab-btn" id="lombok-back-btn-header" onclick="location.href='/'" style="display:none; background:#C9895F; color:#fff; font-weight:700;"><span data-i18n="lombok_back_to_bali">← Back to Bali</span></button>
     <button class="tab-btn" id="tab-driver" onclick="switchView('driver')"><span data-i18n="tab_driver">Driver Dashboard</span> <span class="tab-mail-badge" id="tab-driver-mail" style="display:none;">✉️</span></button>
@@ -1571,6 +1589,43 @@
     <a href="#" class="seo-tile" onclick="openInfoPage('lombok'); return false;"><span class="seo-tile-icon">🏝️</span><span class="seo-tile-lbl" data-i18n="seo_menu_lombok">Discovering Lombok</span></a>
     <a href="#" class="seo-tile" onclick="openInfoPage('transport'); return false;"><span class="seo-tile-icon">🚕</span><span class="seo-tile-lbl" data-i18n="seo_menu_transport">Getting around Bali</span></a>
     <a href="#" class="seo-tile" onclick="openInfoPage('warum'); return false;"><span class="seo-tile-icon">🙏</span><span class="seo-tile-lbl" data-i18n="seo_menu_warum">Why Rydanu exists</span></a>
+  </div>
+</div>
+
+<!-- FAQ-Menü (28.8., Joerg-Wunsch): aufklappbare Liste haeufiger Fragen, neben der Lombok-Pille.
+     Bewusst Variante A (feste Klick-Liste, kein KI-Chatbot) -- kostenlos, kein laufender Aufwand.
+     Gleicher Baustil wie das "Fuer Reisende"-Kachel-Panel, aber Akkordeon statt Navigation. -->
+<div class="faq-menu-panel" id="faq-menu-panel">
+  <div class="seo-panel-title" data-i18n="faq_panel_title">Frequently Asked Questions</div>
+  <div class="faq-list">
+    <div class="faq-item" id="faq-item-1">
+      <button type="button" class="faq-question" onclick="toggleFaqItem(1)"><span data-i18n="faq_q1">How does payment work?</span><span class="faq-caret">▾</span></button>
+      <div class="faq-answer" id="faq-answer-1" data-i18n="faq_a1">You pay your driver directly – in cash or via the payment method they provide (e.g. QRIS). Rydanu never handles payments itself.</div>
+    </div>
+    <div class="faq-item" id="faq-item-2">
+      <button type="button" class="faq-question" onclick="toggleFaqItem(2)"><span data-i18n="faq_q2">Is Rydanu a taxi company?</span><span class="faq-caret">▾</span></button>
+      <div class="faq-answer" id="faq-answer-2" data-i18n="faq_a2">No. Rydanu isn't a ride service and has no drivers of its own – we simply connect you with an independent, private driver on the ground.</div>
+    </div>
+    <div class="faq-item" id="faq-item-3">
+      <button type="button" class="faq-question" onclick="toggleFaqItem(3)"><span data-i18n="faq_q3">Can I also book in Lombok?</span><span class="faq-caret">▾</span></button>
+      <div class="faq-answer" id="faq-answer-3" data-i18n="faq_a3">Yes! Rydanu is active on Lombok too – just switch over using the "🌴 To Lombok?" button above.</div>
+    </div>
+    <div class="faq-item" id="faq-item-4">
+      <button type="button" class="faq-question" onclick="toggleFaqItem(4)"><span data-i18n="faq_q4">Are the drivers safe/verified?</span><span class="faq-caret">▾</span></button>
+      <div class="faq-answer" id="faq-answer-4" data-i18n="faq_a4">Every driver uploads their license and insurance proof during registration, and is checked before they can offer rides.</div>
+    </div>
+    <div class="faq-item" id="faq-item-5">
+      <button type="button" class="faq-question" onclick="toggleFaqItem(5)"><span data-i18n="faq_q5">What does a ride cost?</span><span class="faq-caret">▾</span></button>
+      <div class="faq-answer" id="faq-answer-5" data-i18n="faq_a5">Each driver sets their own price, shown transparently before you book – no haggling needed.</div>
+    </div>
+    <div class="faq-item" id="faq-item-6">
+      <button type="button" class="faq-question" onclick="toggleFaqItem(6)"><span data-i18n="faq_q6">Do I need to register to book?</span><span class="faq-caret">▾</span></button>
+      <div class="faq-answer" id="faq-answer-6" data-i18n="faq_a6">No, you don't need an account – just pick a driver, send a request, done.</div>
+    </div>
+    <div class="faq-item" id="faq-item-7">
+      <button type="button" class="faq-question" onclick="toggleFaqItem(7)"><span data-i18n="faq_q7">Staying at a partner villa?</span><span class="faq-caret">▾</span></button>
+      <div class="faq-answer" id="faq-answer-7" data-i18n="faq_a7">Using your accommodation's personal link or QR code gets you a matching driver especially fast – no need to search yourself.</div>
+    </div>
   </div>
 </div>
 
@@ -5080,6 +5135,7 @@ const INFO_PAGES = {
   }
 };
 function toggleSeoMenu(){
+  closeFaqMenu();
   document.getElementById('seo-menu-panel').classList.toggle('active');
 }
 function closeSeoMenu(){
@@ -5089,6 +5145,44 @@ function handleTravelersTabClick(){
   switchView('customer');
   toggleSeoMenu();
 }
+// FAQ-Panel (28.8., Joerg-Wunsch): eigenes Akkordeon-Menue neben der Lombok-Pille, Variante A
+// (feste Klick-Liste). Schliesst das "Fuer Reisende"-Kachelmenue mit, damit nie beide gleichzeitig
+// offen stehen -- gleiches Prinzip wie umgekehrt in toggleSeoMenu().
+function toggleFaqMenu(){
+  closeSeoMenu();
+  document.getElementById('faq-menu-panel').classList.toggle('active');
+}
+function closeFaqMenu(){
+  const panel = document.getElementById('faq-menu-panel');
+  if(panel) panel.classList.remove('active');
+}
+function toggleFaqItem(id){
+  const item = document.getElementById('faq-item-' + id);
+  if(!item) return;
+  const wasOpen = item.classList.contains('open');
+  document.querySelectorAll('.faq-item.open').forEach(el => el.classList.remove('open'));
+  if(!wasOpen) item.classList.add('open');
+}
+// Bugfix (28.8., Joerg-Screenshot): Klick auf eine leere Flaeche neben den Pillen hat weder das
+// FAQ- noch das "Fuer Reisende"-Panel geschlossen -- nur ein erneuter Klick auf die jeweilige
+// Pille oder auf eine ANDERE Pille (die closeSeoMenu()/closeFaqMenu() intern mitausloest) hat
+// funktioniert. Jetzt: globaler Klick-Listener schliesst beide Panels bei jedem Klick ausserhalb
+// von Panel + zugehoeriger Pille. Klicks auf die Pillen selbst sind bewusst ausgenommen, damit das
+// bestehende Auf/Zu-per-Klick weiterhin genauso funktioniert.
+document.addEventListener('click', e=>{
+  const faqPanel = document.getElementById('faq-menu-panel');
+  if(faqPanel && faqPanel.classList.contains('active')){
+    if(!e.target.closest('#faq-menu-panel') && !e.target.closest('#tab-faq-link')){
+      closeFaqMenu();
+    }
+  }
+  const seoPanel = document.getElementById('seo-menu-panel');
+  if(seoPanel && seoPanel.classList.contains('active')){
+    if(!e.target.closest('#seo-menu-panel') && !e.target.closest('#tab-customer')){
+      closeSeoMenu();
+    }
+  }
+});
 function openInfoPage(pageId){
   const page = INFO_PAGES[pageId];
   if(!page) return;
@@ -9938,6 +10032,7 @@ function applyRoleBasedMenuVisibility(){
   const tabRegister = document.getElementById('tab-register-btn');
   const tabAdmin = document.getElementById('tab-admin');
   const tabLombok = document.getElementById('tab-lombok-link');
+  const tabFaq = document.getElementById('tab-faq-link');
   const becomeDriverHint = document.getElementById('become-driver-hint');
   const hamburger = document.querySelector('.hamburger-btn');
   if(!tabCustomer || !tabDriver || !tabAdmin) return;
@@ -9956,6 +10051,9 @@ function applyRoleBasedMenuVisibility(){
   // zeigen, wenn man schon auf /lombok selbst ist (dort steht bereits "← Zurück zu Bali").
   const onLombokPage = (typeof _isLombokLanding !== 'undefined' && _isLombokLanding);
   const showLombokBtn = !onLombokPage && mode !== 'driver';
+  // FAQ-Pille (28.8.): anders als die Lombok-Pille bleibt sie auch auf /lombok selbst sichtbar --
+  // ist eine allgemeine Fragen-Liste, kein "wechsle rueber"-Link.
+  const showFaqBtn = mode !== 'driver';
 
   if(showEverything){
     tabCustomer.style.display = '';
@@ -9964,17 +10062,20 @@ function applyRoleBasedMenuVisibility(){
     if(hamburger) hamburger.style.display = '';
     if(tabRegister) tabRegister.style.display = 'none'; // Registrierung ergibt fuer Admin keinen Sinn
     if(tabLombok) tabLombok.style.display = showLombokBtn ? '' : 'none';
+    if(tabFaq) tabFaq.style.display = showFaqBtn ? '' : 'none';
     if(becomeDriverHint) becomeDriverHint.style.display = 'none'; // Admin sieht eh alles, Hinweis unnoetig
     return;
   }
 
   tabAdmin.style.display = 'none'; // Admin-Tab nie fuer Nicht-Admins sichtbar, auf keiner Domain
   if(tabLombok) tabLombok.style.display = showLombokBtn ? '' : 'none';
+  if(tabFaq) tabFaq.style.display = showFaqBtn ? '' : 'none';
 
   if(mode === 'driver'){
     tabCustomer.style.display = 'none';
     tabDriver.style.display = '';
     if(hamburger) hamburger.style.display = 'none'; // Reise-Ratgeber ist Kunden-Content
+    closeFaqMenu(); // Sicherheitsnetz: Panel darf nie offen bleiben, wenn die Pille selbst versteckt wird
     if(becomeDriverHint) becomeDriverHint.style.display = 'none'; // schon im Fahrerbereich, Hinweis unnoetig
     updateRegisterButtonVisibility(); // Button nur zeigen, wenn noch kein eigenes Fahrerprofil eingeloggt ist
   } else {
@@ -10362,12 +10463,21 @@ let currentLang = 'en';
 const translations = {
   en: {
     tab_travelers: "Travel Info",
-    tab_lombok: "🌴 Lombok",
+    tab_faq: "❓ FAQ",
+    tab_lombok: "🌴 To Lombok?",
     tab_driver: "Driver Dashboard",
     tab_register: "+ Register as Driver",
     tab_admin: "🔐 Admin",
     become_driver_hint: "Want to become a driver? → Register here",
     seo_menu_title: "Travel Guide", seo_menu_anreise: "Getting to Bali", seo_menu_aktivitaeten: "Activities & Sights", seo_menu_einreise: "Entry requirements", seo_menu_reisetipps: "Bali travel tips", seo_menu_reisezeit: "Best time to visit", seo_menu_lombok: "Discovering Lombok", seo_menu_transport: "Getting around Bali", seo_menu_warum: "Why Rydanu exists",
+    faq_panel_title: "Frequently Asked Questions",
+    faq_q1: "How does payment work?", faq_a1: "You pay your driver directly – in cash or via the payment method they provide (e.g. QRIS). Rydanu never handles payments itself.",
+    faq_q2: "Is Rydanu a taxi company?", faq_a2: "No. Rydanu isn't a ride service and has no drivers of its own – we simply connect you with an independent, private driver on the ground.",
+    faq_q3: "Can I also book in Lombok?", faq_a3: "Yes! Rydanu is active on Lombok too – just switch over using the \"🌴 To Lombok?\" button above.",
+    faq_q4: "Are the drivers safe/verified?", faq_a4: "Every driver uploads their license and insurance proof during registration, and is checked before they can offer rides.",
+    faq_q5: "What does a ride cost?", faq_a5: "Each driver sets their own price, shown transparently before you book – no haggling needed.",
+    faq_q6: "Do I need to register to book?", faq_a6: "No, you don't need an account – just pick a driver, send a request, done.",
+    faq_q7: "Staying at a partner villa?", faq_a7: "Using your accommodation's personal link or QR code gets you a matching driver especially fast – no need to search yourself.",
     hero_eyebrow: "Bali's driver marketplace", logo_tagline: "Local drivers. Anywhere in Bali", logo_tagline_lombok: "Local drivers. Anywhere in Lombok", lombok_eyecatcher_text: "🌴 Now also on Lombok — discover drivers →", lombok_soft_suggest_text: "Did you mean Lombok? → This way", lombok_soft_suggest_text_zone: "Did you mean {zone} on Lombok? → This way", lombok_hero_title: "🏝️ Rydanu Lombok — local drivers, real prices", lombok_hero_subtitle: "Kuta Lombok, Senggigi, the Gili Islands, Sembalun — your driver is ready, wherever on the island.", lombok_back_to_bali: "← Back to Bali",
     hero_headline_pre: "Local ", hero_headline_word: "drivers", hero_headline_post: "<br>Anywhere in Bali",
     hero_title: "All of Bali talks about it.",
@@ -10712,12 +10822,21 @@ const translations = {
   },
   de: {
     tab_travelers: "Infos für Reisende",
-    tab_lombok: "🌴 Lombok",
+    tab_faq: "❓ Fragen",
+    tab_lombok: "🌴 Nach Lombok?",
     tab_driver: "Fahrer-Dashboard",
     tab_register: "+ Als Fahrer registrieren",
     tab_admin: "🔐 Admin",
     become_driver_hint: "Möchtest du Fahrer werden? → Hier registrieren",
     seo_menu_title: "Reise-Ratgeber", seo_menu_anreise: "Anreise nach Bali", seo_menu_aktivitaeten: "Aktivitäten & Sehenswürdigkeiten", seo_menu_einreise: "Einreisebestimmungen", seo_menu_reisetipps: "Reise-Tipps für Bali", seo_menu_reisezeit: "Beste Reisezeit", seo_menu_lombok: "Lombok entdecken", seo_menu_transport: "Transport auf Bali", seo_menu_warum: "Warum es Rydanu gibt",
+    faq_panel_title: "Häufige Fragen",
+    faq_q1: "Wie funktioniert die Bezahlung?", faq_a1: "Du zahlst direkt an deinen Fahrer – bar oder über die von ihm angegebene Zahlungsmethode (z. B. QRIS). Rydanu wickelt selbst keine Zahlungen ab.",
+    faq_q2: "Ist Rydanu ein Taxiunternehmen?", faq_a2: "Nein. Rydanu ist kein Fahrdienst und hat keine eigenen Fahrer – wir vermitteln nur zwischen dir und einem unabhängigen, privaten Fahrer vor Ort.",
+    faq_q3: "Kann ich auch in Lombok buchen?", faq_a3: "Ja! Rydanu ist auch auf Lombok aktiv – wechsle einfach über den \"🌴 Nach Lombok?\"-Button oben.",
+    faq_q4: "Sind die Fahrer sicher/geprüft?", faq_a4: "Jeder Fahrer lädt bei der Registrierung Führerschein und Versicherungsnachweis hoch, und wird geprüft, bevor er Fahrten anbieten darf.",
+    faq_q5: "Was kostet eine Fahrt?", faq_a5: "Der Preis wird von jedem Fahrer selbst festgelegt und ist vor der Buchung transparent sichtbar – kein Verhandeln nötig.",
+    faq_q6: "Muss ich mich registrieren, um zu buchen?", faq_a6: "Nein, du brauchst kein Konto – einfach Fahrer aussuchen, Anfrage stellen, fertig.",
+    faq_q7: "Wohnst du in einer Partner-Villa?", faq_a7: "Über den persönlichen Link oder QR-Code deiner Unterkunft bekommst du besonders schnell einen passenden Fahrer direkt vermittelt – ohne selbst lange suchen zu müssen.",
     hero_eyebrow: "Balis Fahrer-Marktplatz", logo_tagline: "Lokale Fahrer. Überall auf Bali", logo_tagline_lombok: "Lokale Fahrer. Überall auf Lombok", lombok_eyecatcher_text: "🌴 Jetzt auch auf Lombok unterwegs — Fahrer entdecken →", lombok_soft_suggest_text: "Meintest du Lombok? → Hier entlang", lombok_soft_suggest_text_zone: "Meintest du {zone} auf Lombok? → Hier entlang", lombok_hero_title: "🏝️ Rydanu Lombok — lokale Fahrer, echte Preise", lombok_hero_subtitle: "Kuta Lombok, Senggigi, Gili-Inseln, Sembalun — dein Fahrer wartet, egal wo auf der Insel.", lombok_back_to_bali: "← Zurück zu Bali",
     hero_headline_pre: "Lokale ", hero_headline_word: "Fahrer", hero_headline_post: "<br>Überall auf Bali",
     hero_title: "Darüber spricht Bali.",
@@ -11062,12 +11181,21 @@ const translations = {
   },
   id: {
     tab_travelers: "Info untuk Wisatawan",
-    tab_lombok: "🌴 Lombok",
+    tab_faq: "❓ FAQ",
+    tab_lombok: "🌴 Ke Lombok?",
     tab_driver: "Dasbor Sopir",
     tab_register: "+ Daftar sebagai Sopir",
     tab_admin: "🔐 Admin",
     become_driver_hint: "Ingin jadi sopir? → Daftar di sini",
     seo_menu_title: "Panduan Perjalanan", seo_menu_anreise: "Perjalanan ke Bali", seo_menu_aktivitaeten: "Aktivitas & Tempat Wisata", seo_menu_einreise: "Ketentuan Masuk", seo_menu_reisetipps: "Tips Perjalanan Bali", seo_menu_reisezeit: "Waktu Terbaik Berkunjung", seo_menu_lombok: "Menjelajahi Lombok", seo_menu_transport: "Transportasi di Bali", seo_menu_warum: "Mengapa Rydanu Ada",
+    faq_panel_title: "Pertanyaan Umum",
+    faq_q1: "Bagaimana cara pembayarannya?", faq_a1: "Anda membayar langsung ke pengemudi Anda – tunai atau melalui metode pembayaran yang mereka sediakan (mis. QRIS). Rydanu sendiri tidak pernah menangani pembayaran.",
+    faq_q2: "Apakah Rydanu perusahaan taksi?", faq_a2: "Tidak. Rydanu bukan layanan transportasi dan tidak memiliki pengemudi sendiri – kami hanya menghubungkan Anda dengan sopir pribadi yang independen di lapangan.",
+    faq_q3: "Bisakah saya memesan di Lombok juga?", faq_a3: "Ya! Rydanu juga aktif di Lombok – cukup beralih lewat tombol \"🌴 Ke Lombok?\" di atas.",
+    faq_q4: "Apakah pengemudi aman/terverifikasi?", faq_a4: "Setiap pengemudi mengunggah SIM dan bukti asuransi saat pendaftaran, dan diperiksa sebelum boleh menawarkan perjalanan.",
+    faq_q5: "Berapa biaya perjalanan?", faq_a5: "Setiap pengemudi menetapkan harganya sendiri, ditampilkan secara transparan sebelum Anda memesan – tanpa perlu tawar-menawar.",
+    faq_q6: "Apakah saya harus mendaftar untuk memesan?", faq_a6: "Tidak, Anda tidak perlu akun – cukup pilih pengemudi, kirim permintaan, selesai.",
+    faq_q7: "Menginap di villa mitra?", faq_a7: "Melalui tautan pribadi atau kode QR akomodasi Anda, Anda akan dihubungkan dengan pengemudi yang cocok jauh lebih cepat – tanpa perlu mencari sendiri.",
     hero_eyebrow: "Marketplace sopir lokal Bali", logo_tagline: "Sopir lokal. Di mana saja di Bali", logo_tagline_lombok: "Sopir lokal. Di mana saja di Lombok", lombok_eyecatcher_text: "🌴 Kini juga di Lombok — temukan sopir →", lombok_soft_suggest_text: "Maksud Anda Lombok? → Lewat sini", lombok_soft_suggest_text_zone: "Maksud Anda {zone} di Lombok? → Lewat sini", lombok_hero_title: "🏝️ Rydanu Lombok — sopir lokal, harga sebenarnya", lombok_hero_subtitle: "Kuta Lombok, Senggigi, Gili, Sembalun — sopir Anda siap, di mana pun di pulau ini.", lombok_back_to_bali: "← Kembali ke Bali",
     hero_headline_pre: "", hero_headline_word: "Sopir", hero_headline_post: " lokal<br>Di mana saja di Bali",
     hero_title: "Seluruh Bali membicarakannya.",
@@ -16669,7 +16797,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v345</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v347</div>
 
 </body>
 </html>
