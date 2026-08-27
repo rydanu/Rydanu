@@ -149,7 +149,7 @@
   .logo-mark{ display:none; }
   .lang-switch{ display:flex; align-items:center; align-self:flex-end; margin-bottom:1px; }
   .logo-wordstack{ display:flex; flex-direction:column; align-items:flex-start; min-width:0; }
-  .logo-word{ height:84px; width:auto; display:block; flex-shrink:0; }
+  .logo-word{ height:90px; width:auto; display:block; flex-shrink:0; } /* 28.8.: von 84px auf 90px, Joerg-Wunsch "minimal groesser" auf dem Handy */
   .logo-tagline{
     font-family:'Public Sans', sans-serif; font-weight:700; font-size:0.8rem; letter-spacing:-0.005em;
     color:var(--ink-soft); line-height:1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
@@ -739,7 +739,7 @@
        Sprachwechsel nicht mehr springt. Getestet bis runter auf 375px (iPhone SE) in DE/EN/ID.
        WICHTIG falls jemand tab_travelers/tab_faq/tab_lombok später wieder verlängert: unbedingt bei
        375px in allen 3 Sprachen erneut prüfen, ob die Zeile noch umbruchfrei bleibt. */
-    .tab-btn{ padding:8px 13px; }
+    .tab-btn{ padding:6px 11px; font-size:0.78rem; }
     /* 27.8.: Sprachbuttons (EN/DE/ID) sollen auf dem Handy IMMER in einer eigenen Zeile stehen,
        unter dem "Fahrer werden?"-Link -- unabhaengig davon wie lang der Link-Text in der jeweiligen
        Sprache ist. Vorher ist es je nach Sprache unterschiedlich umgebrochen (DE/EN: eigene Zeile,
@@ -747,6 +747,19 @@
        flex-basis:100% auf einem Flex-Kind erzwingt in einem flex-wrap-Container einen Zeilenumbruch
        direkt davor, unabhaengig vom Inhalt -- deshalb ist es jetzt in allen 3 Sprachen gleich. */
     .lang-switch{ margin-left:0; flex-basis:100%; justify-content:flex-start; }
+    /* 28.8.: .tabs hat einen eigenen 4px-Innenabstand (padding:4px) fuer den runden Hintergrund --
+       dadurch stand die erste Pille ("Reise-Infos" etc.) ca. 4px weiter rechts als Logo/Tagline
+       daneben, wirkte "nicht buendig" (Joerg-Screenshot). Negativer margin-left gleicht genau diese
+       4px wieder aus, der Hintergrund-Rahmen selbst bleibt optisch unveraendert (padding bleibt),
+       nur die ganze Pillen-Reihe ruesckt 4px nach links, exakt auf Hoehe von Logo/Tagline. */
+    .tabs{ margin-left:-4px; }
+    /* 28.8.: "Moechtest du Fahrer werden?"-Link stand bisher zentriert mit eigenem 20px
+       Links-/Rechts-Abstand (text-align:center + padding:2px 20px 10px direkt inline im HTML) --
+       dadurch nicht buendig zu Logo/Tagline/Pillen (Joerg-Screenshot). !important noetig, da JS
+       diesen Inline-Style aktiv setzt (gleiche Technik wie beim Desktop-Fix fuer dasselbe Element,
+       siehe #become-driver-hint weiter oben im Desktop-Block). Oben/unten-Abstand (2px/10px) bleibt
+       unangetastet, nur links/rechts auf 0 + linksbuendig statt zentriert. */
+    #become-driver-hint{ text-align:left !important; padding-left:0 !important; padding-right:0 !important; }
   }
 
   /* ===================================================================================
@@ -780,8 +793,9 @@
 
     /* Punkt 6 (27.8., Joerg-Feedback nach erster Runde): Logo (Pin-Icon + Schriftzug + Tagline)
        wirkte neben den kraeftigen, farbigen Buttons in der Kopfzeile zu klein/zurueckhaltend --
-       auf Desktop dadurch vergroessert, damit das Gesamtbild stimmiger wirkt. Handy unveraendert
-       (84px bleibt dort bestehen, war laut Joerg dort schon perfekt). */
+       auf Desktop dadurch vergroessert, damit das Gesamtbild stimmiger wirkt.
+       28.8.: Handy-Logo (Basisregel oben, .logo-word 84px->90px) auf Joerg-Wunsch ebenfalls leicht
+       vergroessert -- Desktop bleibt unabhaengig davon fix bei 108px. */
     .logo-word{ height:108px; }
     .logo-tagline{ font-size:1rem; }
   }
@@ -16858,7 +16872,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v354</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v357</div>
 
 </body>
 </html>
