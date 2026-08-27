@@ -777,6 +777,13 @@
     /* Punkt 5: Schrift in den Reise-Ratgeber-Kacheln (SEO-Menue) auf Desktop groesser/fetter --
        auf dem Handy war die kleine Schrift ok, auf dem grossen Bildschirm wirkte sie verloren. */
     .seo-tile-lbl{ font-size:0.95rem; font-weight:700; }
+
+    /* Punkt 6 (27.8., Joerg-Feedback nach erster Runde): Logo (Pin-Icon + Schriftzug + Tagline)
+       wirkte neben den kraeftigen, farbigen Buttons in der Kopfzeile zu klein/zurueckhaltend --
+       auf Desktop dadurch vergroessert, damit das Gesamtbild stimmiger wirkt. Handy unveraendert
+       (84px bleibt dort bestehen, war laut Joerg dort schon perfekt). */
+    .logo-word{ height:108px; }
+    .logo-tagline{ font-size:1rem; }
   }
 
   .admin-driver-row:hover{ border-color:var(--teal); }
@@ -16851,7 +16858,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v353</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v354</div>
 
 </body>
 </html>
