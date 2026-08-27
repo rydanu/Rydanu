@@ -746,7 +746,7 @@
        weil der Text laenger ist -- ID: gleiche Zeile wie der Link, weil der Text dort kuerzer ist).
        flex-basis:100% auf einem Flex-Kind erzwingt in einem flex-wrap-Container einen Zeilenumbruch
        direkt davor, unabhaengig vom Inhalt -- deshalb ist es jetzt in allen 3 Sprachen gleich. */
-    .lang-switch{ margin-left:0; flex-basis:100%; justify-content:center; }
+    .lang-switch{ margin-left:0; flex-basis:100%; justify-content:flex-start; }
   }
   .admin-driver-row:hover{ border-color:var(--teal); }
   .admin-driver-row.blocked-row{ opacity:0.65; background:#FBE4DC; }
@@ -16809,7 +16809,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v351</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v352</div>
 
 </body>
 </html>
