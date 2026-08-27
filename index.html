@@ -753,6 +753,13 @@
        4px wieder aus, der Hintergrund-Rahmen selbst bleibt optisch unveraendert (padding bleibt),
        nur die ganze Pillen-Reihe ruesckt 4px nach links, exakt auf Hoehe von Logo/Tagline. */
     .tabs{ margin-left:-4px; }
+    /* 28.8.: "Moechtest du Fahrer werden?"-Link stand bisher zentriert mit eigenem 20px
+       Links-/Rechts-Abstand (text-align:center + padding:2px 20px 10px direkt inline im HTML) --
+       dadurch nicht buendig zu Logo/Tagline/Pillen (Joerg-Screenshot). !important noetig, da JS
+       diesen Inline-Style aktiv setzt (gleiche Technik wie beim Desktop-Fix fuer dasselbe Element,
+       siehe #become-driver-hint weiter oben im Desktop-Block). Oben/unten-Abstand (2px/10px) bleibt
+       unangetastet, nur links/rechts auf 0 + linksbuendig statt zentriert. */
+    #become-driver-hint{ text-align:left !important; padding-left:0 !important; padding-right:0 !important; }
   }
 
   /* ===================================================================================
@@ -16865,7 +16872,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v356</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v357</div>
 
 </body>
 </html>
