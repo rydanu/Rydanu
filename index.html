@@ -748,6 +748,44 @@
        direkt davor, unabhaengig vom Inhalt -- deshalb ist es jetzt in allen 3 Sprachen gleich. */
     .lang-switch{ margin-left:0; flex-basis:100%; justify-content:flex-start; }
   }
+
+  /* ===================================================================================
+     27.8. -- Desktop-Feinschliff (Joerg-Wunsch, 5 Punkte). GILT NUR AB 1025px, bewusst als
+     eigener, sauber abgegrenzter Block direkt nach dem Mobile-Media-Query (bis 1024px) --
+     dadurch garantiert null Aenderung an der Handy-Ansicht, die laut Joerg bereits perfekt ist.
+     Betrifft automatisch auch die Lombok-Seite, da beide Seiten denselben Code/dieselben Klassen
+     benutzen (Single-Page-App, kein separates Lombok-Template).
+     ================================================================================== */
+  @media (min-width:1025px){
+    /* Punkt 1: "Moechtest du Fahrer werden?"-Link wandert aus der Kopfzeile in den Footer.
+       !important noetig, da JS per applyRoleBasedMenuVisibility() aktiv einen Inline-Style auf
+       das Original setzt (display:'' bzw. 'none') -- ohne !important wuerde das den Wechsel
+       hierher wieder aufheben. Der Footer-Zwilling selbst braucht kein !important, da JS dort
+       (siehe oben) ohnehin exakt denselben Wert synchron mitsetzt. */
+    #become-driver-hint{ display:none !important; }
+    .become-driver-link-footer{ font-size:0.8rem; color:var(--ink-soft); }
+    .become-driver-link-footer:hover{ color:var(--teal); }
+
+    /* Punkt 2+4: "Verfuegbare Fahrer/Touren diese Woche" -- Ueberschrift + Umschalter/Sortierung
+       zentrieren statt linksbuendig. Gilt fuer Bali UND Lombok (gleicher Code). */
+    .section-label-stacked{ align-items:center; text-align:center; }
+    .section-controls-row{ justify-content:center; }
+
+    /* Punkt 3: FAQ-Box schmaler + zentriert statt randlos ueber die volle Bildschirmbreite. */
+    .faq-menu-panel{ max-width:700px; margin-left:auto; margin-right:auto; }
+
+    /* Punkt 5: Schrift in den Reise-Ratgeber-Kacheln (SEO-Menue) auf Desktop groesser/fetter --
+       auf dem Handy war die kleine Schrift ok, auf dem grossen Bildschirm wirkte sie verloren. */
+    .seo-tile-lbl{ font-size:0.95rem; font-weight:700; }
+
+    /* Punkt 6 (27.8., Joerg-Feedback nach erster Runde): Logo (Pin-Icon + Schriftzug + Tagline)
+       wirkte neben den kraeftigen, farbigen Buttons in der Kopfzeile zu klein/zurueckhaltend --
+       auf Desktop dadurch vergroessert, damit das Gesamtbild stimmiger wirkt. Handy unveraendert
+       (84px bleibt dort bestehen, war laut Joerg dort schon perfekt). */
+    .logo-word{ height:108px; }
+    .logo-tagline{ font-size:1rem; }
+  }
+
   .admin-driver-row:hover{ border-color:var(--teal); }
   .admin-driver-row.blocked-row{ opacity:0.65; background:#FBE4DC; }
   /* Baustein 10: Admin-Listen als 2-spaltige Kachel-Ansicht statt langer Einzelspalte */
@@ -1817,6 +1855,13 @@
   </div>
 
   <footer>
+    <!-- 27.8. (Joerg-Wunsch, nur Desktop): "Moechtest du Fahrer werden?"-Hinweis zusaetzlich hier als
+         Duplikat -- auf Desktop wird die Kopfzeilen-Version per CSS ausgeblendet und stattdessen diese
+         hier gezeigt. JS haelt beide synchron (siehe applyRoleBasedMenuVisibility). Am Handy bleibt
+         alles wie gehabt: diese Footer-Version bleibt dort per CSS immer versteckt. -->
+    <div id="become-driver-hint-footer" style="display:none; padding-bottom:10px;">
+      <a href="#" class="become-driver-link become-driver-link-footer" data-i18n="become_driver_hint" onclick="openRealRegisterDriver(); return false;">Möchtest du Fahrer werden? → Hier registrieren</a>
+    </div>
     <svg width="14" height="18" viewBox="0 0 100 130" fill="var(--ink-soft)" style="vertical-align:-5px; margin-right:6px;">
       <path d="M50 8 C76 8 94 28 94 54 C94 82 50 122 50 122 C50 122 6 82 6 54 C6 28 24 8 50 8 Z"/>
     </svg><span data-i18n="footer_tagline">RYDANU — Software platform for independent Bali drivers. Payments processed directly to drivers.</span>
@@ -10049,6 +10094,7 @@ function applyRoleBasedMenuVisibility(){
   const tabLombok = document.getElementById('tab-lombok-link');
   const tabFaq = document.getElementById('tab-faq-link');
   const becomeDriverHint = document.getElementById('become-driver-hint');
+  const becomeDriverHintFooter = document.getElementById('become-driver-hint-footer'); // 27.8.: Desktop-Footer-Zwilling, bleibt synchron zum Original
   const hamburger = document.querySelector('.hamburger-btn');
   if(!tabCustomer || !tabDriver || !tabAdmin) return;
 
@@ -10079,6 +10125,7 @@ function applyRoleBasedMenuVisibility(){
     if(tabLombok) tabLombok.style.display = showLombokBtn ? '' : 'none';
     if(tabFaq) tabFaq.style.display = showFaqBtn ? '' : 'none';
     if(becomeDriverHint) becomeDriverHint.style.display = 'none'; // Admin sieht eh alles, Hinweis unnoetig
+    if(becomeDriverHintFooter) becomeDriverHintFooter.style.display = 'none';
     return;
   }
 
@@ -10092,6 +10139,7 @@ function applyRoleBasedMenuVisibility(){
     if(hamburger) hamburger.style.display = 'none'; // Reise-Ratgeber ist Kunden-Content
     closeFaqMenu(); // Sicherheitsnetz: Panel darf nie offen bleiben, wenn die Pille selbst versteckt wird
     if(becomeDriverHint) becomeDriverHint.style.display = 'none'; // schon im Fahrerbereich, Hinweis unnoetig
+    if(becomeDriverHintFooter) becomeDriverHintFooter.style.display = 'none';
     updateRegisterButtonVisibility(); // Button nur zeigen, wenn noch kein eigenes Fahrerprofil eingeloggt ist
   } else {
     tabCustomer.style.display = '';
@@ -10102,6 +10150,7 @@ function applyRoleBasedMenuVisibility(){
     // jemand ueber die Kunden-Domain nach "Fahrer werden" sucht -- ohne den alten grossen
     // "+Register as Driver"-Tab wiederzubeleben, der auf der Kunden-Seite keinen Sinn ergibt.
     if(becomeDriverHint) becomeDriverHint.style.display = '';
+    if(becomeDriverHintFooter) becomeDriverHintFooter.style.display = '';
   }
 }
 function openRealRegisterDriver(){
@@ -16809,7 +16858,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v352</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v354</div>
 
 </body>
 </html>
