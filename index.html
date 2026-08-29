@@ -7488,11 +7488,8 @@ function confirmCancellation(i){
 function acceptBooking(i){
   const b = driverBookings[i];
   if(realDriverProfile && b.dbId){
-    const timeInput = prompt(t('prompt_pickup_time_msg'), b.pickupTime || '');
-    const pickupTimeVal = (timeInput && timeInput.trim()) ? timeInput.trim() : null;
     const updatePayload = { status: 'confirmed' };
-    if(pickupTimeVal) updatePayload.pickup_time = pickupTimeVal;
-    updateRealBookingLocally(i, 'confirmed', pickupTimeVal ? { pickupTime: pickupTimeVal } : {});
+    updateRealBookingLocally(i, 'confirmed', {});
     supabaseClient.from('bookings').update(updatePayload).eq('id', b.dbId).then(({error})=>{
       if(error){ console.error('Konnte nicht bestätigt werden:', error); loadRealBookings(); return; }
       loadRealBookings();
@@ -16872,7 +16869,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v369</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v370</div>
 
 </body>
 </html>
