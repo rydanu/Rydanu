@@ -2210,8 +2210,8 @@
       <div class="dash-nav-item" id="nav-calendar-item" data-i18n="nav_calendar" onclick="openCalendar()">Calendar</div>
       <div class="dash-nav-item" data-section="subscription" data-i18n="nav_subscription" onclick="showDashSection('subscription')">Fees &amp; billing</div>
       <div class="dash-nav-item" data-section="inbox" onclick="showDashSection('inbox')"><span data-i18n="nav_inbox">Inbox</span> <span class="inbox-dot" id="inbox-dot" style="display:none;"></span></div>
-      <button type="button" class="wa-support-btn" onclick="openSupportMsg()" data-i18n="support_btn">✉️ Message to Rydanu Support</button>
       <button type="button" class="wa-support-btn" onclick="jumpToTopup()" data-i18n="nav_topup_btn">💰 Top up balance</button>
+      <button type="button" class="wa-support-btn" onclick="openSupportMsg()" data-i18n="support_btn">✉️ Message to Rydanu Support</button>
       <button type="button" class="wa-support-btn" onclick="openQrModal()" data-i18n="dp_qr_dash_btn">📱 Your Rydanu QR code</button>
       <button type="button" class="wa-support-btn" onclick="handleDriverLogout()" style="background:#F7EAEA; color:#B03A3A;">🚪 Abmelden</button>
     </div>
@@ -7691,10 +7691,19 @@ function showDashSection(name){
 // Neuer Guthaben-Knopf im Hauptmenue (28.8., auf Jörgs Wunsch: "nicht zu versteckt") -- springt
 // direkt zur Gebuehren-Seite und scrollt zur Guthaben-Karte, damit der Fahrer sie sofort sieht,
 // egal ob sie oben oder weiter unten auf der Seite steht.
-function jumpToTopup(){
+// Bugfix (29.8.): renderFeeStatements() laedt Daten NACH und aendert dabei die Seitenhoehe
+// (z.B. Ladeplatzhalter -> kuerzerer Inhalt) -- wurde vorher zu frueh gescrollt, ist die Seite
+// danach "geschrumpft" und der Sprung landete zu weit unten. Jetzt: erst das Laden abwarten,
+// dann erst per Doppel-Animationsframe (Layout ist sicher fertig) scrollen.
+async function jumpToTopup(){
   showDashSection('subscription');
-  const card = document.getElementById('balance-topup-card');
-  if(card) setTimeout(()=> card.scrollIntoView({ behavior:'smooth', block:'start' }), 50);
+  if(typeof renderFeeStatements === 'function'){
+    try{ await renderFeeStatements(); } catch(e){ console.error('renderFeeStatements beim Guthaben-Sprung fehlgeschlagen:', e); }
+  }
+  requestAnimationFrame(()=> requestAnimationFrame(()=>{
+    const card = document.getElementById('balance-topup-card');
+    if(card) card.scrollIntoView({ behavior:'smooth', block:'start' });
+  }));
 }
 // Gebührenbelege (14. August, auf Jörgs Wunsch): kein Mail-Versand mehr behauptet — stattdessen
 // echte Belege (driver_messages vom Typ 'fee_receipt', z.B. aus adminCollectFeesNow) mit denselben
@@ -17118,7 +17127,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v362</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v363</div>
 
 </body>
 </html>
