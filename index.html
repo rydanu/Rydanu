@@ -3946,7 +3946,7 @@
         <button type="button" class="link-btn" onclick="addSpecialRateRow('el')" data-i18n="nl_special_rates_add">+ Add destination</button>
       </div>
       <p class="form-error" id="el-error"></p>
-      <button class="book-btn" onclick="saveEditListing()" data-i18n="el_save_btn">Save changes</button>
+      <button class="book-btn" id="el-save-btn" onclick="saveEditListing()" data-i18n="el_save_btn">Save changes</button>
       <button type="button" class="link-btn" id="el-delete-btn" style="color:#B03A3A; margin-top:10px;" onclick="deleteListingConfirm()" data-i18n="el_delete_btn">🗑️ Delete this listing</button>
     </div>
   </div>
@@ -7135,17 +7135,17 @@ async function renderRealOverviewStats(){
   // Baustein "Offener Betrag aufschluesseln" (13. August): echte Zahlung ist zwar weiterhin nicht
   // angebunden (kein Zahlungsanbieter), aber jetzt kann der Fahrer wenigstens sehen, WELCHE Touren
   // hinter dem offenen Betrag stecken (nutzt die neue fee_settled-Spalte, siehe openFeeBreakdown()).
+  // Bugfix (29.8.): seit dem neuen Guthaben-Modell (Sofort-Abzug fuer ALLE Fahrer) bleibt
+  // fees_due_idr dauerhaft bei 0 -- die alte "Aufschluesseln beim Antippen"-Funktion
+  // (openFeeBreakdown) haengte sich an diesem Wert auf und wurde dadurch fuer niemanden mehr
+  // erreichbar ("keine Einsicht", von Joerg gemeldet). Kachel fuehrt jetzt immer zur
+  // Gebuehren-&-Guthaben-Seite, wo der aktuelle Kontostand + Verlauf sichtbar ist.
   if(feesCard){
-    if(feesDue > 0){
-      feesCard.onclick = openFeeBreakdown;
-      feesCard.classList.add('stat-card-clickable');
-    } else {
-      feesCard.onclick = null;
-      feesCard.classList.remove('stat-card-clickable');
-    }
+    feesCard.onclick = () => showDashSection('subscription');
+    feesCard.classList.add('stat-card-clickable');
   }
   const feesHint = document.getElementById('pay-fees-hint');
-  if(feesHint) feesHint.textContent = feesDue > 0 ? t('fee_breakdown_tap_hint') : ('✓ ' + t('st_paid'));
+  if(feesHint) feesHint.textContent = t('fee_tile_tap_hint');
   const cancelFeeRow = document.getElementById('cancellation-fee-row');
   if(cancelFeeRow) cancelFeeRow.style.display = 'none';
 
@@ -7734,8 +7734,10 @@ function confirmCancellation(i){
 async function acceptBooking(i){
   const b = driverBookings[i];
   if(realDriverProfile && b.dbId){
-    const timeInput = prompt(t('prompt_pickup_time_msg'), b.pickupTime || '');
-    const pickupTimeVal = (timeInput && timeInput.trim()) ? timeInput.trim() : null;
+    // Auf Joerg-Wunsch (29.8.) entfernt: der Abholzeit-Dialog beim Annehmen war ein unnoetiger
+    // Extra-Schritt und der native Browser-prompt() sorgte fuer einen haesslichen Sprung/Bruch im
+    // Ablauf. Die Abholzeit kann weiterhin spaeter im Buchungsdetail ergaenzt werden, falls noetig.
+    const pickupTimeVal = null;
     // Wichtig (29.8.): "Buchung annehmen" laeuft jetzt ueber die accept-booking Edge Function statt
     // einem direkten Table-Update. Grund: bei VIP-Fahrern mit zu wenig Guthaben muss VORHER
     // versucht werden, automatisch bei Xendit nachzuladen -- das kann eine reine DB-Regel nicht
@@ -8527,7 +8529,8 @@ function openEditListing(i){
   document.getElementById('edit-listing-modal-bg').classList.add('active');
 }
 function closeEditListing(){ document.getElementById('edit-listing-modal-bg').classList.remove('active'); }
-function saveEditListing(){
+async function saveEditListing(){
+  try{
   if(editingListingIndex === null) return;
   const l = driverListings[editingListingIndex];
   const name = document.getElementById('el-name').value.trim();
@@ -8592,69 +8595,84 @@ function saveEditListing(){
 
   const oldName = l.name;
   const duration = spots.includes('Fixed rate') ? 'Fixed rate' : (spots.find(s => s !== 'Fixed rate') || l.duration || 'Full day');
-  l.name = name;
-  l.price = price;
-  l.duration = duration;
-  l.spots = spots;
+  const newName = name, newPrice = price, newDuration = duration;
   const services = [];
   if(document.getElementById('el-photo').checked) services.push('Photo');
   if(document.getElementById('el-drone').checked) services.push('Drone');
   if(document.getElementById('el-boat').checked) services.push('Boat');
-  l.services = services;
-  l.extras = [...elSelectedExtras];
-  l.serviceRegions = serviceRegions;
-  l.airportRegions = airportRegions;
-  l.transferRegions = transferRegions;
-  l.pickupRegionPrices = pickupRegionPrices;
-  l.tourSpecialRates = collectSpecialRates('el');
+  const extras = [...elSelectedExtras];
+  const tourSpecialRates = collectSpecialRates('el');
   // Nur abrechnen, wenn Featured Placement gerade NEU aktiviert wird (war vorher aus, ist jetzt an) --
   // nicht bei jedem Speichern des Angebots erneut, sonst wuerde jede Bearbeitung nochmal kassieren.
   const wasFeatured = !!l.featured;
   const nowFeatured = document.getElementById('el-featured').checked;
   const featuredJustActivated = !wasFeatured && nowFeatured;
-  l.featured = nowFeatured;
-  l.fee = feeForPrice(price, l.spots);
-  // sync the public traveler card
+  const fee = feeForPrice(price, spots);
+
+  // Bugfix (29.8., mit Screen-Recording gefunden): das Fenster schloss sich bisher SOFORT nach dem
+  // Klick, noch bevor der Server ueberhaupt bestaetigt hatte, dass die Aenderung angekommen ist
+  // (die Datenbank hat updated_at nie veraendert -- der Speichervorgang lief also entweder gar
+  // nicht durch oder scheiterte lautlos im Hintergrund, ohne dass es sichtbar war). Jetzt: Knopf
+  // zeigt "Speichert...", das Fenster bleibt offen bis der Server wirklich geantwortet hat, und es
+  // gibt IMMER eine sichtbare Rueckmeldung -- Erfolg oder Fehler, nie stumm.
+  const btn = document.getElementById('el-save-btn');
+  const originalBtnText = btn ? btn.textContent : '';
+  if(btn){ btn.disabled = true; btn.textContent = t('topup_loading'); }
+
+  if(l.dbId){
+    const { error } = await supabaseClient.from('listings').update({
+      title: newName,
+      price_idr: parseIDR(newPrice) || 0,
+      price_display: newPrice,
+      duration: newDuration,
+      details: { services, spots, extras, serviceRegions, featured: nowFeatured, airportRegions, transferRegions, pickupRegionPrices, tourSpecialRates }
+    }).eq('id', l.dbId);
+
+    if(error){
+      console.error('Änderung konnte nicht gespeichert werden:', error);
+      document.getElementById('el-error').textContent = t('el_save_failed');
+      document.querySelector('#edit-listing-modal-bg .modal-body').scrollTo({ top: 0, behavior: 'smooth' });
+      if(btn){ btn.disabled = false; btn.textContent = originalBtnText; }
+      return; // Fenster bleibt bewusst offen, nichts wird lokal uebernommen, bis der Server bestaetigt.
+    }
+    if(featuredJustActivated){
+      supabaseClient.rpc('activate_featured_placement', { p_listing_id: l.dbId }).then(({error: featErr})=>{
+        if(featErr) console.error('Featured Placement konnte nicht aktiviert werden:', featErr);
+      });
+    }
+  }
+
+  // Erst NACH bestaetigtem Server-Erfolg (oder wenn es ohnehin nur ein lokaler Demo-Eintrag ohne
+  // dbId ist) die lokalen Werte uebernehmen und die Ansicht aktualisieren.
+  l.name = newName; l.price = newPrice; l.duration = newDuration; l.spots = spots;
+  l.services = services; l.extras = extras; l.serviceRegions = serviceRegions;
+  l.airportRegions = airportRegions; l.transferRegions = transferRegions; l.pickupRegionPrices = pickupRegionPrices;
+  l.tourSpecialRates = tourSpecialRates; l.featured = nowFeatured; l.fee = fee;
+
   const pub = drivers.find(d => d.ownerId===currentDriverId && d.tour===oldName)
            || drivers.find(d => d.tour===oldName && d.name===driverProfiles[currentDriverId].fullName);
   if(pub){
-    pub.tour = name;
-    pub.price = price;
-    pub.duration = l.duration;
-    pub.services = services;
-    pub.spots = spots;
-    pub.extras = l.extras;
-    pub.serviceRegions = l.serviceRegions;
-    pub.airportRegions = airportRegions;
-    pub.transferRegions = transferRegions;
-    pub.pickupRegionPrices = pickupRegionPrices;
-    pub.tourSpecialRates = l.tourSpecialRates;
-    pub.featured = l.featured;
-    if(l.featured) pub.badge = '⭐ Top offer';
+    pub.tour = newName; pub.price = newPrice; pub.duration = newDuration; pub.services = services;
+    pub.spots = spots; pub.extras = extras; pub.serviceRegions = serviceRegions;
+    pub.airportRegions = airportRegions; pub.transferRegions = transferRegions; pub.pickupRegionPrices = pickupRegionPrices;
+    pub.tourSpecialRates = tourSpecialRates; pub.featured = nowFeatured;
+    if(nowFeatured) pub.badge = '⭐ Top offer';
   }
   renderListings();
   renderDriverGrid(visibleDrivers());
   saveState();
-  if(l.dbId){
-    supabaseClient.from('listings').update({
-      title: l.name,
-      price_idr: parseIDR(l.price) || 0,
-      price_display: l.price,
-      duration: l.duration,
-      details: { services: l.services, spots: l.spots, extras: l.extras, serviceRegions: l.serviceRegions, featured: l.featured, airportRegions: l.airportRegions, transferRegions: l.transferRegions, pickupRegionPrices: l.pickupRegionPrices, tourSpecialRates: l.tourSpecialRates }
-    }).eq('id', l.dbId).then(({error})=>{
-      if(error){ console.error('Änderung konnte nicht gespeichert werden:', error); alert('Die Änderung konnte nicht gespeichert werden. Bitte nochmal versuchen.'); }
-      else {
-        loadRealPublicListings();
-        if(featuredJustActivated){
-          supabaseClient.rpc('activate_featured_placement', { p_listing_id: l.dbId }).then(({error: featErr})=>{
-            if(featErr) console.error('Featured Placement konnte nicht aktiviert werden:', featErr);
-          });
-        }
-      }
-    });
-  }
+  if(l.dbId) loadRealPublicListings();
+  if(btn){ btn.disabled = false; btn.textContent = originalBtnText; }
   closeEditListing();
+  } catch(e){
+    // Bugfix (29.8.): jeder unerwartete JS-Fehler wurde bisher stumm verschluckt (kein Alert, kein
+    // Log sichtbar fuer Joerg) -- das Fenster blieb dann einfach reglos offen. Jetzt gibt es
+    // garantiert eine sichtbare Meldung, egal was schiefgeht.
+    console.error('saveEditListing unerwarteter Fehler:', e);
+    alert(t('el_save_failed'));
+    const btn = document.getElementById('el-save-btn');
+    if(btn){ btn.disabled = false; btn.textContent = t('el_save_btn'); }
+  }
 }
 function deleteListingConfirm(){
   if(editingListingIndex === null) return;
@@ -11036,7 +11054,7 @@ const translations = {
     nav_listings: "My listings",
     nav_bookings: "Bookings", booking_history_title: "Booking history",
     bd_title: "Booking details", bd_email: "Email", bd_phone: "WhatsApp", bd_ref: "Reference", bd_status: "Status",
-    rcpt_title: "Receipt", rcpt_no: "Receipt no.", rcpt_item: "Booking fees", rcpt_total: "Total paid", rcpt_note: "This receipt was also sent to your email address. Payment method: your saved payment method (Stripe).", el_eyebrow: "My listings", el_title: "Edit listing", el_name_label: "Tour name *", el_price_label: "Price *", el_duration_label: "Duration", el_save_btn: "Save changes", el_error: "Please fill the highlighted fields.", el_delete_btn: "🗑️ Delete this listing", el_delete_confirm: "Really delete \"{name}\"? This cannot be undone.", nl_pickup_prices_title: "Different price per pickup region? (optional — leave empty to use the same price everywhere)", nl_special_rates_title: "Special destinations (optional) — free text, info only, not auto-matched", nl_special_rates_add: "+ Add destination", rcpt_credit_applied: "Referral credit applied", rcpt_pdf_open_btn: "🧾 Open as PDF", rcpt_pdf_download_btn: "⬇ Download", rcpt_pdf_receipt_no: "Receipt no.", rcpt_pdf_date: "Date", rcpt_pdf_driver: "Driver", rcpt_pdf_rydanu_no: "Rydanu no.", rcpt_pdf_item: "Trip", rcpt_pdf_amount: "Amount", rcpt_pdf_total: "Total settled", rcpt_pdf_footer: "This receipt was generated automatically by Rydanu and lists the trip fees included in this settlement.", rcpt_pdf_filename_prefix: "Rydanu-Beleg",
+    rcpt_title: "Receipt", rcpt_no: "Receipt no.", rcpt_item: "Booking fees", rcpt_total: "Total paid", rcpt_note: "This receipt was also sent to your email address. Payment method: your saved payment method (Stripe).", el_eyebrow: "My listings", el_title: "Edit listing", el_name_label: "Tour name *", el_price_label: "Price *", el_duration_label: "Duration", el_save_btn: "Save changes", el_error: "Please fill the highlighted fields.", el_save_failed: "Couldn't save your changes — please check your connection and try again.", el_delete_btn: "🗑️ Delete this listing", el_delete_confirm: "Really delete \"{name}\"? This cannot be undone.", nl_pickup_prices_title: "Different price per pickup region? (optional — leave empty to use the same price everywhere)", nl_special_rates_title: "Special destinations (optional) — free text, info only, not auto-matched", nl_special_rates_add: "+ Add destination", rcpt_credit_applied: "Referral credit applied", rcpt_pdf_open_btn: "🧾 Open as PDF", rcpt_pdf_download_btn: "⬇ Download", rcpt_pdf_receipt_no: "Receipt no.", rcpt_pdf_date: "Date", rcpt_pdf_driver: "Driver", rcpt_pdf_rydanu_no: "Rydanu no.", rcpt_pdf_item: "Trip", rcpt_pdf_amount: "Amount", rcpt_pdf_total: "Total settled", rcpt_pdf_footer: "This receipt was generated automatically by Rydanu and lists the trip fees included in this settlement.", rcpt_pdf_filename_prefix: "Rydanu-Beleg",
     admin_openpay_title: "Open payments", admin_openpay_sub: "Drivers whose automatic month-end fee payment failed. They have 5 days to settle before their account is automatically suspended.",
     admin_run_settlement_btn: "Run month-end settlement now (test)", admin_settlement_real_note: "Real fee billing already runs automatically every day (daily cron job) — there's no manual trigger for real drivers, and this button only affects demo data.", admin_openpay_empty: "No open payments right now — everyone is settled.",
     admin_openpay_amount: "Amount due", admin_openpay_due: "Due date", admin_openpay_suspended: "🚫 Suspended", admin_openpay_overdue: "Overdue",
@@ -11067,7 +11085,7 @@ const translations = {
     stat_views: "Profile views",
     stat_requests: "Booking requests",
     stat_rating: "Avg. rating",
-    stat_fees: "Fees this month", loading_generic: "Loading…",
+    stat_fees: "Fees this month", loading_generic: "Loading…", fee_tile_tap_hint: "Tap for details",
     fee_breakdown_eyebrow: "Fees this month", fee_breakdown_title: "What's in your open balance", fee_breakdown_total_label: "Total open", fee_receipt_breakdown_eyebrow: "Receipt", fee_receipt_breakdown_title: "What this receipt covers", fee_receipt_breakdown_total_label: "Total settled", fee_receipt_no_breakdown: "No trip breakdown available for this receipt.", fee_breakdown_go_to_fees_btn: "Go to Fees & billing", fee_breakdown_tap_hint: "Tap to see what's included", fee_breakdown_empty: "Nothing open right now.", fee_breakdown_load_err: "Couldn't load this — please try again.",
     upcoming_bookings: "Upcoming bookings",
     view_calendar_btn: "View calendar",
@@ -11399,7 +11417,7 @@ const translations = {
     nav_listings: "Meine Angebote",
     nav_bookings: "Buchungen", booking_history_title: "Buchungsverlauf",
     bd_title: "Buchungsdetails", bd_email: "E-Mail", bd_phone: "WhatsApp", bd_ref: "Referenz", bd_status: "Status",
-    rcpt_title: "Beleg", rcpt_no: "Beleg-Nr.", rcpt_item: "Buchungsgebühren", rcpt_total: "Gesamt bezahlt", rcpt_note: "Dieser Beleg wurde zusätzlich an deine E-Mail-Adresse gesendet. Zahlungsmethode: deine hinterlegte Zahlungsmethode (Stripe).", el_eyebrow: "Meine Angebote", el_title: "Angebot bearbeiten", el_name_label: "Tour-Name *", el_price_label: "Preis *", el_duration_label: "Dauer", el_save_btn: "Änderungen speichern", el_error: "Bitte fülle die markierten Felder aus.", el_delete_btn: "🗑️ Angebot löschen", el_delete_confirm: "\"{name}\" wirklich löschen? Das kann nicht rückgängig gemacht werden.", nl_pickup_prices_title: "Unterschiedlicher Preis je Abholregion? (optional — leer lassen für überall denselben Preis)", nl_special_rates_title: "Spezialziele (optional) — Freitext, nur Info, kein automatisches Matching", nl_special_rates_add: "+ Ziel hinzufügen", rcpt_credit_applied: "Empfehlungs-Gutschrift angerechnet", rcpt_pdf_open_btn: "🧾 Als PDF öffnen", rcpt_pdf_download_btn: "⬇ Herunterladen", rcpt_pdf_receipt_no: "Beleg-Nr.", rcpt_pdf_date: "Datum", rcpt_pdf_driver: "Fahrer", rcpt_pdf_rydanu_no: "Rydanu-Nr.", rcpt_pdf_item: "Fahrt", rcpt_pdf_amount: "Betrag", rcpt_pdf_total: "Gesamt beglichen", rcpt_pdf_footer: "Dieser Beleg wurde automatisch von Rydanu erstellt und listet die Fahrtgebühren dieses Einzugs auf.", rcpt_pdf_filename_prefix: "Rydanu-Beleg",
+    rcpt_title: "Beleg", rcpt_no: "Beleg-Nr.", rcpt_item: "Buchungsgebühren", rcpt_total: "Gesamt bezahlt", rcpt_note: "Dieser Beleg wurde zusätzlich an deine E-Mail-Adresse gesendet. Zahlungsmethode: deine hinterlegte Zahlungsmethode (Stripe).", el_eyebrow: "Meine Angebote", el_title: "Angebot bearbeiten", el_name_label: "Tour-Name *", el_price_label: "Preis *", el_duration_label: "Dauer", el_save_btn: "Änderungen speichern", el_error: "Bitte fülle die markierten Felder aus.", el_save_failed: "Konnte nicht gespeichert werden — bitte Verbindung prüfen und nochmal versuchen.", el_delete_btn: "🗑️ Angebot löschen", el_delete_confirm: "\"{name}\" wirklich löschen? Das kann nicht rückgängig gemacht werden.", nl_pickup_prices_title: "Unterschiedlicher Preis je Abholregion? (optional — leer lassen für überall denselben Preis)", nl_special_rates_title: "Spezialziele (optional) — Freitext, nur Info, kein automatisches Matching", nl_special_rates_add: "+ Ziel hinzufügen", rcpt_credit_applied: "Empfehlungs-Gutschrift angerechnet", rcpt_pdf_open_btn: "🧾 Als PDF öffnen", rcpt_pdf_download_btn: "⬇ Herunterladen", rcpt_pdf_receipt_no: "Beleg-Nr.", rcpt_pdf_date: "Datum", rcpt_pdf_driver: "Fahrer", rcpt_pdf_rydanu_no: "Rydanu-Nr.", rcpt_pdf_item: "Fahrt", rcpt_pdf_amount: "Betrag", rcpt_pdf_total: "Gesamt beglichen", rcpt_pdf_footer: "Dieser Beleg wurde automatisch von Rydanu erstellt und listet die Fahrtgebühren dieses Einzugs auf.", rcpt_pdf_filename_prefix: "Rydanu-Beleg",
     admin_openpay_title: "Offene Zahlungen", admin_openpay_sub: "Fahrer, deren automatische Monatsend-Gebührenzahlung fehlgeschlagen ist. Sie haben 5 Tage Zeit zu zahlen, bevor ihr Konto automatisch gesperrt wird.",
     admin_run_settlement_btn: "Monatsabrechnung jetzt ausführen (Test)", admin_settlement_real_note: "Die echte Gebührenabrechnung läuft schon automatisch jeden Tag (täglicher Cronjob) — dafür gibt es keinen manuellen Auslöser für echte Fahrer, dieser Button betrifft nur Demo-Daten.", admin_openpay_empty: "Aktuell keine offenen Zahlungen — alles beglichen.",
     admin_openpay_amount: "Fälliger Betrag", admin_openpay_due: "Fällig am", admin_openpay_suspended: "🚫 Gesperrt", admin_openpay_overdue: "Überfällig",
@@ -11430,7 +11448,7 @@ const translations = {
     stat_views: "Profilaufrufe",
     stat_requests: "Buchungsanfragen",
     stat_rating: "Ø Bewertung",
-    stat_fees: "Gebühren diesen Monat", loading_generic: "Wird geladen…",
+    stat_fees: "Gebühren diesen Monat", loading_generic: "Wird geladen…", fee_tile_tap_hint: "Antippen für Details",
     fee_breakdown_eyebrow: "Gebühren diesen Monat", fee_breakdown_title: "Das steckt in deinem offenen Betrag", fee_breakdown_total_label: "Gesamt offen", fee_receipt_breakdown_eyebrow: "Beleg", fee_receipt_breakdown_title: "Das steckt in diesem Beleg", fee_receipt_breakdown_total_label: "Gesamt beglichen", fee_receipt_no_breakdown: "Für diesen Beleg ist keine Touren-Aufschlüsselung verfügbar.", fee_breakdown_go_to_fees_btn: "Zu Gebühren & Abrechnung", fee_breakdown_tap_hint: "Antippen für Details", fee_breakdown_empty: "Aktuell nichts offen.", fee_breakdown_load_err: "Konnte nicht geladen werden — bitte nochmal versuchen.",
     upcoming_bookings: "Anstehende Buchungen",
     view_calendar_btn: "Kalender ansehen",
@@ -11762,7 +11780,7 @@ const translations = {
     nav_listings: "Tur saya",
     nav_bookings: "Pemesanan", booking_history_title: "Riwayat pemesanan",
     bd_title: "Detail pemesanan", bd_email: "Email", bd_phone: "WhatsApp", bd_ref: "Referensi", bd_status: "Status",
-    rcpt_title: "Kuitansi", rcpt_no: "No. kuitansi", rcpt_item: "Biaya pemesanan", rcpt_total: "Total dibayar", rcpt_note: "Kuitansi ini juga dikirim ke alamat email Anda. Metode pembayaran: metode pembayaran tersimpan Anda (Stripe).", el_eyebrow: "Tur saya", el_title: "Edit tur", el_name_label: "Nama tur *", el_price_label: "Harga *", el_duration_label: "Durasi", el_save_btn: "Simpan perubahan", el_error: "Mohon isi kolom yang ditandai.", el_delete_btn: "🗑️ Hapus tur ini", el_delete_confirm: "Yakin ingin menghapus \"{name}\"? Tindakan ini tidak dapat dibatalkan.", nl_pickup_prices_title: "Harga berbeda per wilayah penjemputan? (opsional — kosongkan untuk harga yang sama di mana saja)", nl_special_rates_title: "Tujuan khusus (opsional) — teks bebas, hanya info, tidak dicocokkan otomatis", nl_special_rates_add: "+ Tambah tujuan", rcpt_credit_applied: "Kredit referral diterapkan", rcpt_pdf_open_btn: "🧾 Buka sebagai PDF", rcpt_pdf_download_btn: "⬇ Unduh", rcpt_pdf_receipt_no: "No. kuitansi", rcpt_pdf_date: "Tanggal", rcpt_pdf_driver: "Pengemudi", rcpt_pdf_rydanu_no: "No. Rydanu", rcpt_pdf_item: "Perjalanan", rcpt_pdf_amount: "Jumlah", rcpt_pdf_total: "Total diselesaikan", rcpt_pdf_footer: "Kuitansi ini dibuat otomatis oleh Rydanu dan mencantumkan biaya perjalanan dalam penyelesaian ini.", rcpt_pdf_filename_prefix: "Rydanu-Kuitansi",
+    rcpt_title: "Kuitansi", rcpt_no: "No. kuitansi", rcpt_item: "Biaya pemesanan", rcpt_total: "Total dibayar", rcpt_note: "Kuitansi ini juga dikirim ke alamat email Anda. Metode pembayaran: metode pembayaran tersimpan Anda (Stripe).", el_eyebrow: "Tur saya", el_title: "Edit tur", el_name_label: "Nama tur *", el_price_label: "Harga *", el_duration_label: "Durasi", el_save_btn: "Simpan perubahan", el_error: "Mohon isi kolom yang ditandai.", el_save_failed: "Tidak dapat menyimpan — silakan periksa koneksi Anda dan coba lagi.", el_delete_btn: "🗑️ Hapus tur ini", el_delete_confirm: "Yakin ingin menghapus \"{name}\"? Tindakan ini tidak dapat dibatalkan.", nl_pickup_prices_title: "Harga berbeda per wilayah penjemputan? (opsional — kosongkan untuk harga yang sama di mana saja)", nl_special_rates_title: "Tujuan khusus (opsional) — teks bebas, hanya info, tidak dicocokkan otomatis", nl_special_rates_add: "+ Tambah tujuan", rcpt_credit_applied: "Kredit referral diterapkan", rcpt_pdf_open_btn: "🧾 Buka sebagai PDF", rcpt_pdf_download_btn: "⬇ Unduh", rcpt_pdf_receipt_no: "No. kuitansi", rcpt_pdf_date: "Tanggal", rcpt_pdf_driver: "Pengemudi", rcpt_pdf_rydanu_no: "No. Rydanu", rcpt_pdf_item: "Perjalanan", rcpt_pdf_amount: "Jumlah", rcpt_pdf_total: "Total diselesaikan", rcpt_pdf_footer: "Kuitansi ini dibuat otomatis oleh Rydanu dan mencantumkan biaya perjalanan dalam penyelesaian ini.", rcpt_pdf_filename_prefix: "Rydanu-Kuitansi",
     admin_openpay_title: "Pembayaran terbuka", admin_openpay_sub: "Sopir yang pembayaran biaya akhir bulan otomatisnya gagal. Mereka punya 5 hari untuk melunasi sebelum akun mereka otomatis ditangguhkan.",
     admin_run_settlement_btn: "Jalankan penyelesaian akhir bulan sekarang (uji)", admin_settlement_real_note: "Penagihan biaya sesungguhnya sudah berjalan otomatis setiap hari (cron job harian) — tidak ada pemicu manual untuk sopir sungguhan, tombol ini hanya memengaruhi data demo.", admin_openpay_empty: "Tidak ada pembayaran terbuka saat ini — semua sudah lunas.",
     admin_openpay_amount: "Jumlah jatuh tempo", admin_openpay_due: "Tanggal jatuh tempo", admin_openpay_suspended: "🚫 Ditangguhkan", admin_openpay_overdue: "Terlambat",
@@ -11793,7 +11811,7 @@ const translations = {
     stat_views: "Kunjungan profil",
     stat_requests: "Permintaan pemesanan",
     stat_rating: "Rating rata-rata",
-    stat_fees: "Biaya bulan ini", loading_generic: "Memuat…",
+    stat_fees: "Biaya bulan ini", loading_generic: "Memuat…", fee_tile_tap_hint: "Ketuk untuk detail",
     fee_breakdown_eyebrow: "Biaya bulan ini", fee_breakdown_title: "Rincian saldo terbuka Anda", fee_breakdown_total_label: "Total terbuka", fee_receipt_breakdown_eyebrow: "Kwitansi", fee_receipt_breakdown_title: "Rincian kwitansi ini", fee_receipt_breakdown_total_label: "Total diselesaikan", fee_receipt_no_breakdown: "Rincian perjalanan tidak tersedia untuk kwitansi ini.", fee_breakdown_go_to_fees_btn: "Ke Biaya & tagihan", fee_breakdown_tap_hint: "Ketuk untuk rincian", fee_breakdown_empty: "Tidak ada yang terbuka saat ini.", fee_breakdown_load_err: "Gagal memuat — silakan coba lagi.",
     upcoming_bookings: "Pemesanan mendatang",
     view_calendar_btn: "Lihat kalender",
@@ -13658,16 +13676,26 @@ function renderOtherTours(d){
   section.style.display = 'block';
   const selLabel = (translations[currentLang] && translations[currentLang].your_selection) || 'Your selection';
   list.innerHTML = sameDriver.map(x=>{
-    const isSel = x.tour === d.tour;
+    // Bugfix (29.8., Joerg gemeldet): Abgleich lief bisher rein ueber den Tour-NAMEN
+    // (x.tour === d.tour) -- bei zwei gleichnamigen Angeboten (z.B. zwei Test-Eintraegen
+    // "Test Zahlung") wurden dadurch BEIDE gleichzeitig als "Deine Auswahl" markiert. Jetzt
+    // Abgleich ueber die eindeutige dbListingId, mit Rueckfall auf den Namen nur fuer
+    // Demo-Eintraege ohne eigene ID.
+    const isSel = (x.dbListingId && d.dbListingId) ? x.dbListingId === d.dbListingId : x.tour === d.tour;
     return `
-    <div class="other-tour-row ${isSel?'selected':''}" ${isSel?'':`onclick="switchModalTour('${x.tour.replace(/'/g,"\\'")}','${(d.ownerId||d.name).replace(/'/g,"\\'")}')"`}>
+    <div class="other-tour-row ${isSel?'selected':''}" ${isSel?'':`onclick="switchModalTour('${x.tour.replace(/'/g,"\\'")}','${(d.ownerId||d.name).replace(/'/g,"\\'")}', '${x.dbListingId||''}')"`}>
       <div><div class="ot-name">${x.tour}</div><div class="ot-meta">${x.price} · ${spotLabel(x.duration)}</div></div>
       ${isSel ? `<span class="your-selection-tag">✓ ${selLabel}</span>` : ''}
     </div>`;
   }).join('');
 }
-function switchModalTour(tourName, ownerKey){
-  const target = visibleDrivers().find(x => x.tour===tourName && ((x.ownerId||x.name)===ownerKey));
+function switchModalTour(tourName, ownerKey, dbListingId){
+  // Bugfix (29.8.): falls eine eindeutige dbListingId vorhanden ist, darauf zurueckgreifen statt
+  // auf den (evtl. doppelt vorkommenden) Namen -- sonst koennte bei zwei gleichnamigen Angeboten
+  // immer nur das erste gefundene geoeffnet werden.
+  const target = dbListingId
+    ? visibleDrivers().find(x => x.dbListingId === dbListingId)
+    : visibleDrivers().find(x => x.tour===tourName && ((x.ownerId||x.name)===ownerKey));
   if(target) openModal(target);
 }
 
@@ -17253,7 +17281,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v367</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v368</div>
 
 </body>
 </html>
