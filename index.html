@@ -8582,6 +8582,10 @@ function saveEditListing(){
   document.getElementById('el-price').classList.toggle('field-error', priceMissing);
   if(!name || priceMissing){
     document.getElementById('el-error').textContent = t('el_error');
+    // Bugfix (29.8.): das Formular kann laenger sein als der sichtbare Bereich -- ohne dieses
+    // Hochscrollen blieb die Fehlermeldung oben unsichtbar, wenn man unten beim
+    // "Speichern"-Knopf stand. Wirkte dadurch wie "nichts passiert".
+    document.querySelector('#edit-listing-modal-bg .modal-body').scrollTo({ top: 0, behavior: 'smooth' });
     return;
   }
   document.getElementById('el-error').textContent = '';
@@ -17249,7 +17253,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v366</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v367</div>
 
 </body>
 </html>
