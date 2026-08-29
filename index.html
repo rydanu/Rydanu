@@ -3133,7 +3133,7 @@
         <label data-i18n="topup_custom_amount_label">Or enter your own amount (IDR)</label>
         <input type="number" id="topup-custom-amount" min="0" step="10000" placeholder="z.B. 150000" oninput="selectTopupAmount(null, null)">
       </div>
-      <button type="button" class="period-btn" style="width:100%; margin-top:10px; background:var(--gold); border-color:var(--gold); color:var(--ink); font-weight:700;" onclick="confirmTopupRequest()" data-i18n="autodebit_topup_btn">Top up</button>
+      <button type="button" class="period-btn" id="topup-confirm-btn" style="width:100%; margin-top:10px; background:var(--gold); border-color:var(--gold); color:var(--ink); font-weight:700;" onclick="confirmTopupRequest()" data-i18n="autodebit_topup_btn">Top up</button>
     </div>
   </div>
 </div>
@@ -7264,12 +7264,32 @@ function selectTopupAmount(amount, btnEl){
   document.querySelectorAll('.topup-amount-btn').forEach(b=>b.classList.remove('active'));
   if(btnEl) btnEl.classList.add('active');
 }
-function confirmTopupRequest(){
+// Guthaben aufladen -- ECHTE Anbindung (29.8., Xendit Sandbox/Development-Key auf Staging).
+// Ruft die Edge Function xendit-create-topup auf, die serverseitig (Secret Key bleibt dort!)
+// eine Xendit-Zahlungsseite erstellt (bietet automatisch QRIS + Virtual Account an). Der Fahrer
+// wird dorthin weitergeleitet, bezahlt, und die Gutschrift passiert automatisch per Webhook,
+// sobald Xendit die Zahlung bestaetigt -- nicht schon hier beim Klick.
+async function confirmTopupRequest(){
   const customVal = Number(document.getElementById('topup-custom-amount').value);
   const amount = selectedTopupAmount || (customVal > 0 ? customVal : 0);
   if(amount <= 0){ alert(t('topup_pick_amount_first')); return; }
-  closeTopupRequestModal();
-  alert(t('topup_not_yet_connected'));
+  const btn = document.getElementById('topup-confirm-btn');
+  if(btn){ btn.disabled = true; btn.textContent = t('topup_loading'); }
+  try{
+    const { data, error } = await supabaseClient.functions.invoke('xendit-create-topup', { body: { amount } });
+    if(error || !data || data.error || !data.invoice_url){
+      console.error('xendit-create-topup Fehler:', error || (data && data.error));
+      alert(t('topup_error_generic'));
+      return;
+    }
+    closeTopupRequestModal();
+    window.location.href = data.invoice_url;
+  } catch(e){
+    console.error('confirmTopupRequest Fehler:', e);
+    alert(t('topup_error_generic'));
+  } finally {
+    if(btn){ btn.disabled = false; btn.textContent = t('autodebit_topup_btn'); }
+  }
 }
 async function renderAdminOpenPayments(){
   const el = document.getElementById('admin-openpayments-list');
@@ -10997,7 +11017,7 @@ const translations = {
     admin_autodebit_title: "👑 VIP Auto-Debit", admin_autodebit_sub: "Selected drivers pay automatically instead of manually — only you can unlock this here, the driver never sees this option.", admin_autodebit_enable_btn: "Enable", admin_autodebit_disable_btn: "Disable", admin_autodebit_status_on: "Auto-debit is ON for this driver.", admin_autodebit_status_off: "Auto-debit is OFF for this driver.", admin_autodebit_enabled_msg: "✓ Auto-debit enabled.", admin_autodebit_disabled_msg: "✓ Auto-debit disabled.", admin_autodebit_list_title: "👑 Drivers with auto-debit", admin_autodebit_list_sub: "Currently unlocked drivers — the actual automatic charge only starts once a payment provider is connected.", admin_autodebit_list_empty: "No driver enabled yet.", admin_autodebit_old_fees_unpaid: "This driver still has open fees — please collect them first (button above), then enable auto-debit.",
     alert_autodebit_low_balance: "Your balance is too low to accept this booking right now (VIP auto-debit). Please top up your balance first.", alert_generic_error: "Something went wrong — please try again in a moment.", autodebit_driver_note: "Your fees are deducted directly from your balance.",
     autodebit_balance_title: "💰 Your balance", autodebit_balance_desc: "Automatically applied against your Rydanu fees", autodebit_topup_title: "Top up balance", autodebit_topup_desc: "Choose an amount or enter your own", autodebit_topup_btn: "Top up",
-    topup_modal_title: "Choose an amount", topup_custom_amount_label: "Or enter your own amount (IDR)", topup_pick_amount_first: "Please choose or enter an amount first.", topup_not_yet_connected: "Online top-up isn't connected yet — a payment provider is coming before launch. Please message Rydanu support for now and we'll top up your balance manually.",
+    topup_modal_title: "Choose an amount", topup_custom_amount_label: "Or enter your own amount (IDR)", topup_pick_amount_first: "Please choose or enter an amount first.", topup_not_yet_connected: "Online top-up isn't connected yet — a payment provider is coming before launch. Please message Rydanu support for now and we'll top up your balance manually.", topup_loading: "One moment…", topup_error_generic: "Couldn't open the payment page right now. Please try again in a moment.", topup_return_success: "Thanks! We've received your payment confirmation — your balance will update in a moment.", topup_return_failed: "The payment didn't go through. You can try again anytime from Fees & billing.",
     admin_locked_alert: "Driver locked ✓", admin_unlocked_alert: "Driver unlocked ✓",
     lock_notice_title: "Your account has been locked 🚫", lock_notice_body: "Your account was locked by Rydanu — your listings are hidden from travelers and you can't receive new bookings until it's unlocked again. Contact support if you have questions.",
     unlock_notice_title: "Your account is active again ✓", unlock_notice_body: "Good news — your account has been unlocked. Your listings are visible again and you can receive new bookings.",
@@ -11359,7 +11379,7 @@ const translations = {
     admin_autodebit_title: "👑 VIP Auto-Einzug", admin_autodebit_sub: "Ausgewählte Fahrer zahlen künftig automatisch statt manuell — nur du kannst das hier freischalten, der Fahrer sieht diese Option nirgends.", admin_autodebit_enable_btn: "Aktivieren", admin_autodebit_disable_btn: "Deaktivieren", admin_autodebit_status_on: "Auto-Einzug ist AN für diesen Fahrer.", admin_autodebit_status_off: "Auto-Einzug ist AUS für diesen Fahrer.", admin_autodebit_enabled_msg: "✓ Auto-Einzug aktiviert.", admin_autodebit_disabled_msg: "✓ Auto-Einzug deaktiviert.", admin_autodebit_list_title: "👑 Fahrer mit Auto-Einzug", admin_autodebit_list_sub: "Aktuell freigeschaltete Fahrer — der eigentliche automatische Einzug startet erst, sobald ein Zahlungsanbieter angebunden ist.", admin_autodebit_list_empty: "Noch kein Fahrer freigeschaltet.", admin_autodebit_old_fees_unpaid: "Dieser Fahrer hat noch offene Gebühren — bitte zuerst einziehen (Knopf oben), dann Auto-Einzug aktivieren.",
     alert_autodebit_low_balance: "Dein Guthaben reicht gerade nicht aus, um diese Buchung anzunehmen (VIP Auto-Einzug). Bitte lade zuerst dein Guthaben auf.", alert_generic_error: "Da ist etwas schiefgelaufen — bitte versuch es gleich nochmal.", autodebit_driver_note: "Deine Gebühren werden direkt von deinem Guthaben abgezogen.",
     autodebit_balance_title: "💰 Dein Guthaben", autodebit_balance_desc: "Wird automatisch mit deinen Rydanu-Gebühren verrechnet", autodebit_topup_title: "Guthaben aufladen", autodebit_topup_desc: "Wähle einen Betrag oder gib einen eigenen ein", autodebit_topup_btn: "Aufladen",
-    topup_modal_title: "Betrag wählen", topup_custom_amount_label: "Oder eigenen Betrag eingeben (IDR)", topup_pick_amount_first: "Bitte zuerst einen Betrag wählen oder eingeben.", topup_not_yet_connected: "Die Online-Aufladung ist noch nicht angebunden — ein Zahlungsanbieter kommt vor dem Start. Schick uns bis dahin bitte eine Nachricht an den Rydanu-Support, dann laden wir dein Guthaben manuell auf.",
+    topup_modal_title: "Betrag wählen", topup_custom_amount_label: "Oder eigenen Betrag eingeben (IDR)", topup_pick_amount_first: "Bitte zuerst einen Betrag wählen oder eingeben.", topup_not_yet_connected: "Die Online-Aufladung ist noch nicht angebunden — ein Zahlungsanbieter kommt vor dem Start. Schick uns bis dahin bitte eine Nachricht an den Rydanu-Support, dann laden wir dein Guthaben manuell auf.", topup_loading: "Einen Moment…", topup_error_generic: "Die Zahlungsseite konnte gerade nicht geöffnet werden. Bitte versuch es gleich nochmal.", topup_return_success: "Danke! Wir haben deine Zahlungsbestätigung erhalten — dein Guthaben wird gleich aktualisiert.", topup_return_failed: "Die Zahlung hat nicht geklappt. Du kannst es jederzeit über 'Gebühren & Abrechnung' erneut versuchen.",
     admin_locked_alert: "Fahrer gesperrt ✓", admin_unlocked_alert: "Fahrer entsperrt ✓",
     lock_notice_title: "Dein Konto wurde gesperrt 🚫", lock_notice_body: "Dein Konto wurde von Rydanu gesperrt — deine Angebote sind für Reisende nicht sichtbar und du kannst keine neuen Buchungen mehr erhalten, bis es wieder entsperrt wird. Kontaktiere den Support bei Fragen.",
     unlock_notice_title: "Dein Konto ist wieder aktiv ✓", unlock_notice_body: "Gute Nachricht — dein Konto wurde entsperrt. Deine Angebote sind wieder sichtbar und du kannst neue Buchungen erhalten.",
@@ -11721,7 +11741,7 @@ const translations = {
     admin_autodebit_title: "👑 Auto-Debit VIP", admin_autodebit_sub: "Sopir terpilih akan membayar otomatis, bukan manual — hanya Anda yang bisa mengaktifkan ini, sopir tidak pernah melihat opsi ini.", admin_autodebit_enable_btn: "Aktifkan", admin_autodebit_disable_btn: "Nonaktifkan", admin_autodebit_status_on: "Auto-debit AKTIF untuk sopir ini.", admin_autodebit_status_off: "Auto-debit NONAKTIF untuk sopir ini.", admin_autodebit_enabled_msg: "✓ Auto-debit diaktifkan.", admin_autodebit_disabled_msg: "✓ Auto-debit dinonaktifkan.", admin_autodebit_list_title: "👑 Sopir dengan auto-debit", admin_autodebit_list_sub: "Sopir yang saat ini diaktifkan — penagihan otomatis sebenarnya baru berjalan setelah penyedia pembayaran terhubung.", admin_autodebit_list_empty: "Belum ada sopir yang diaktifkan.", admin_autodebit_old_fees_unpaid: "Sopir ini masih memiliki biaya terbuka — silakan tagih dulu (tombol di atas), lalu aktifkan auto-debit.",
     alert_autodebit_low_balance: "Saldo Anda saat ini tidak cukup untuk menerima pesanan ini (VIP auto-debit). Silakan isi ulang saldo Anda terlebih dahulu.", alert_generic_error: "Ada yang tidak beres — silakan coba lagi sebentar lagi.", autodebit_driver_note: "Biaya Anda langsung dipotong dari saldo Anda.",
     autodebit_balance_title: "💰 Saldo Anda", autodebit_balance_desc: "Otomatis diperhitungkan dengan biaya Rydanu Anda", autodebit_topup_title: "Isi ulang saldo", autodebit_topup_desc: "Pilih jumlah atau masukkan sendiri", autodebit_topup_btn: "Isi ulang",
-    topup_modal_title: "Pilih jumlah", topup_custom_amount_label: "Atau masukkan jumlah Anda sendiri (IDR)", topup_pick_amount_first: "Silakan pilih atau masukkan jumlah terlebih dahulu.", topup_not_yet_connected: "Isi ulang online belum terhubung — penyedia pembayaran akan hadir sebelum peluncuran. Silakan kirim pesan ke dukungan Rydanu untuk saat ini, kami akan mengisi ulang saldo Anda secara manual.",
+    topup_modal_title: "Pilih jumlah", topup_custom_amount_label: "Atau masukkan jumlah Anda sendiri (IDR)", topup_pick_amount_first: "Silakan pilih atau masukkan jumlah terlebih dahulu.", topup_not_yet_connected: "Isi ulang online belum terhubung — penyedia pembayaran akan hadir sebelum peluncuran. Silakan kirim pesan ke dukungan Rydanu untuk saat ini, kami akan mengisi ulang saldo Anda secara manual.", topup_loading: "Sebentar…", topup_error_generic: "Halaman pembayaran tidak dapat dibuka saat ini. Silakan coba lagi sebentar lagi.", topup_return_success: "Terima kasih! Kami telah menerima konfirmasi pembayaran Anda — saldo Anda akan segera diperbarui.", topup_return_failed: "Pembayaran tidak berhasil. Anda dapat mencoba lagi kapan saja melalui 'Biaya & tagihan'.",
     admin_locked_alert: "Sopir diblokir ✓", admin_unlocked_alert: "Sopir dibuka blokirnya ✓",
     lock_notice_title: "Akun Anda telah diblokir 🚫", lock_notice_body: "Akun Anda telah diblokir oleh Rydanu — tur Anda tidak terlihat oleh wisatawan dan Anda tidak dapat menerima pemesanan baru sampai dibuka kembali. Hubungi dukungan jika ada pertanyaan.",
     unlock_notice_title: "Akun Anda aktif kembali ✓", unlock_notice_body: "Kabar baik — akun Anda telah dibuka blokirnya. Tur Anda terlihat kembali dan Anda dapat menerima pemesanan baru.",
@@ -14912,6 +14932,11 @@ const _pageMsgToken = new URLSearchParams(location.search).get('msg');
 const _docUploadToken = new URLSearchParams(location.search).get('docupload');
 const _wantsRatingsPage = new URLSearchParams(location.search).get('ratings') === '1';
 const _prBookingFromLink = new URLSearchParams(location.search).get('prBooking');
+// Guthaben aufladen (29.8.): Xendit leitet nach der Zahlung mit ?topup=success/failed zurueck.
+// Die eigentliche Gutschrift passiert serverseitig per Webhook (kann ein paar Sekunden dauern),
+// hier nur eine ehrliche Rueckmeldung -- kein "sofort gebucht"-Versprechen, da wir den Webhook
+// vom Client aus nicht abwarten koennen.
+const _topupResult = new URLSearchParams(location.search).get('topup');
 // Villa Partner Phase 1: Slug entweder aus schoenem Pfad rydanu.com/v/<slug> (Vercel-Rewrite liefert
 // hier weiterhin index.html aus, der Browser-Pfad bleibt aber /v/<slug> erhalten) oder als Fallback
 // aus ?villa=<slug>, falls das Rewrite (noch) nicht greift.
@@ -15000,6 +15025,22 @@ if(_villaSlug){
         if(typeof updateAllFilterVisibility === 'function') updateAllFilterVisibility();
         if(typeof updateFilterCount === 'function') updateFilterCount();
       }
+    }, 300);
+  }
+  // Guthaben aufladen (29.8.): Rueckmeldung nach Rueckkehr von der Xendit-Zahlungsseite. Die
+  // eigentliche Gutschrift laeuft ueber den Webhook (kann ein paar Sekunden dauern) -- deshalb
+  // hier bewusst kein "erledigt", sondern eine ehrliche Zwischenmeldung, und danach der
+  // Fahrer-Kontostand neu geladen, falls der Webhook inzwischen schon durch ist.
+  if(_topupResult){
+    setTimeout(()=>{
+      if(_topupResult === 'success'){
+        alert(t('topup_return_success'));
+      } else if(_topupResult === 'failed'){
+        alert(t('topup_return_failed'));
+      }
+      const cleanUrl = location.pathname; // ?topup=... aus der Adresszeile entfernen, kein erneutes Popup bei Reload
+      history.replaceState(null, '', cleanUrl);
+      if(realDriverProfile) renderRealOverviewStats();
     }, 300);
   }
 }
@@ -17077,7 +17118,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v361</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v362</div>
 
 </body>
 </html>
