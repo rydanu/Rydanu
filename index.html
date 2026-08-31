@@ -13709,16 +13709,23 @@ function renderOtherTours(d){
   section.style.display = 'block';
   const selLabel = (translations[currentLang] && translations[currentLang].your_selection) || 'Your selection';
   list.innerHTML = sameDriver.map(x=>{
-    const isSel = x.tour === d.tour;
+    // Bugfix (31.8., Joerg gemeldet): Abgleich ueber die eindeutige dbListingId statt ueber den
+    // Tour-NAMEN, sofern vorhanden -- bei zwei gleichnamigen Angeboten (z.B. zwei "Test Zahlung")
+    // wurden bisher faelschlich BEIDE gleichzeitig als "Deine Auswahl" markiert, und ein Klick
+    // landete immer beim ERSTEN Namens-Treffer statt beim wirklich angeklickten. Fuer echte
+    // Angebote ist dbListingId garantiert eindeutig; Demo-Angebote (ohne dbListingId) verhalten
+    // sich unveraendert wie bisher ueber den Namen.
+    const isSel = (d.dbListingId && x.dbListingId) ? (x.dbListingId === d.dbListingId) : (x.tour === d.tour);
+    const switchKey = x.dbListingId ? String(x.dbListingId) : x.tour.replace(/'/g,"\\'");
     return `
-    <div class="other-tour-row ${isSel?'selected':''}" ${isSel?'':`onclick="switchModalTour('${x.tour.replace(/'/g,"\\'")}','${(d.ownerId||d.name).replace(/'/g,"\\'")}')"`}>
+    <div class="other-tour-row ${isSel?'selected':''}" ${isSel?'':`onclick="switchModalTour('${switchKey}','${(d.ownerId||d.name).replace(/'/g,"\\'")}')"`}>
       <div><div class="ot-name">${x.tour}</div><div class="ot-meta">${x.price} · ${spotLabel(x.duration)}</div></div>
       ${isSel ? `<span class="your-selection-tag">✓ ${selLabel}</span>` : ''}
     </div>`;
   }).join('');
 }
-function switchModalTour(tourName, ownerKey){
-  const target = visibleDrivers().find(x => x.tour===tourName && ((x.ownerId||x.name)===ownerKey));
+function switchModalTour(tourKey, ownerKey){
+  const target = visibleDrivers().find(x => ((x.ownerId||x.name)===ownerKey) && (x.dbListingId ? String(x.dbListingId)===tourKey : x.tour===tourKey));
   if(target) openModal(target);
 }
 
@@ -17261,7 +17268,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v379</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v380</div>
 
 <!-- Etappe 4: Lade-Overlay waehrend "Buchung annehmen" im Hintergrund laeuft (kann bei VIP-Fahrern
      mit Auto-Einzug ein paar Sekunden dauern, da erst mit Xendit gesprochen wird, bevor die
