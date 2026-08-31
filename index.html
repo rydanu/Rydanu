@@ -2601,7 +2601,7 @@
         <span class="at-title">Nachrichten</span>
         <span class="at-sub">Nachrichten von Fahrern lesen &amp; beantworten</span>
       </button>
-      <button type="button" class="admin-tile" onclick="showAdminSection('block')">
+      <button type="button" class="admin-tile" id="admin-tile-block" onclick="showAdminSection('block')">
         <span class="at-icon">🔒</span>
         <span class="at-title">Fahrer verwalten</span>
         <span class="at-sub">Sperren, entsperren oder löschen</span>
@@ -8276,6 +8276,7 @@ function updateAdminMailBadge(){
 let adminOpenPaymentCount = 0;
 let realDocsResubmittedCount = 0;
 let realVillaApplicationsPendingCount = 0;
+let realLockedDriverCount = 0;
 function updateAdminTileAlerts(){
   const pendingTile = document.getElementById('admin-tile-pending');
   if(pendingTile) pendingTile.classList.toggle('has-alert', realPendingDriverCount > 0);
@@ -8294,6 +8295,18 @@ function updateAdminTileAlerts(){
   if(documentsTile) documentsTile.classList.toggle('has-alert', realDocsResubmittedCount > 0);
   const villaTile = document.getElementById('admin-tile-villa');
   if(villaTile) villaTile.classList.toggle('has-alert', realVillaApplicationsPendingCount > 0);
+  // Etappe 4 (31.8., Joerg-Wunsch): "Fahrer verwalten" wird rot, solange mindestens ein Fahrer
+  // gesperrt ist (egal ob manuell vom Admin oder automatisch nach fehlgeschlagenem Auto-Einzug) --
+  // damit sofort auffaellt, wo noch was zu klaeren ist, ohne extra reinklicken zu muessen.
+  const blockTile = document.getElementById('admin-tile-block');
+  if(blockTile) blockTile.classList.toggle('has-alert', realLockedDriverCount > 0);
+}
+// Zaehlt, wie viele Fahrer aktuell gesperrt sind (is_locked=true) -- egal aus welchem Grund.
+async function loadAdminLockedDriverCount(){
+  const { data, error } = await supabaseClient.from('drivers').select('id').eq('is_locked', true);
+  if(error){ console.error('Gesperrte Fahrer konnten nicht gezaehlt werden:', error); return; }
+  realLockedDriverCount = (data || []).length;
+  updateAdminTileAlerts();
 }
 // Zaehlt, bei wie vielen Fahrern gerade ein frisch hochgeladenes Dokument auf Ansicht wartet.
 async function loadAdminDocsResubmittedCount(){
@@ -15748,7 +15761,7 @@ function switchView(view){
   // Ohne diesen Reset blieb das Signup-Formular beim Tab-Wechsel einfach stehen.
   if(view==='driver'){ toggleAuthForm('login'); }
   if(view==='driver'){ checkDriverAuthState(true); }
-  if(view==='admin'){ updateIsAdminSession().then(()=>{ applyRoleBasedMenuVisibility(); renderAdminList(); loadAdminPendingDrivers(); loadRealAdminMessages(); loadAdminDocsResubmittedCount(); renderAdminOpenPayments(); loadVillaApplicationsCount(); }); }
+  if(view==='admin'){ updateIsAdminSession().then(()=>{ applyRoleBasedMenuVisibility(); renderAdminList(); loadAdminPendingDrivers(); loadRealAdminMessages(); loadAdminDocsResubmittedCount(); renderAdminOpenPayments(); loadVillaApplicationsCount(); loadAdminLockedDriverCount(); }); }
 }
 function switchViewProgrammatic(view){
   if(view!=='customer') closeSeoMenu();
@@ -15764,7 +15777,7 @@ function switchViewProgrammatic(view){
   if(regBtn2) regBtn2.classList.remove('active');
   if(view==='driver'){ toggleAuthForm('login'); }
   if(view==='driver'){ checkDriverAuthState(true); }
-  if(view==='admin'){ updateIsAdminSession().then(()=>{ applyRoleBasedMenuVisibility(); renderAdminList(); loadAdminPendingDrivers(); loadRealAdminMessages(); loadAdminDocsResubmittedCount(); renderAdminOpenPayments(); loadVillaApplicationsCount(); }); }
+  if(view==='admin'){ updateIsAdminSession().then(()=>{ applyRoleBasedMenuVisibility(); renderAdminList(); loadAdminPendingDrivers(); loadRealAdminMessages(); loadAdminDocsResubmittedCount(); renderAdminOpenPayments(); loadVillaApplicationsCount(); loadAdminLockedDriverCount(); }); }
 }
 // ---- admin: approve pending drivers ----
 let adminPeriod = 'month';
@@ -16382,6 +16395,7 @@ async function toggleRealDriverLock(id, isLocked, name){
   });
   await renderRealAdminBlockList();
   loadRealPublicListings(); // gesperrter Fahrer sofort aus der Kundensuche entfernen (bzw. entsperrten wieder rein)
+  loadAdminLockedDriverCount(); // "Fahrer verwalten"-Kachel sofort rot/weiss aktualisieren
   alert(newLocked ? t('admin_locked_alert') : t('admin_unlocked_alert'));
 }
 // Etappe 3: VIP-Auto-Einzug -- VERSTECKTE Admin-Funktion, ausschliesslich hier umschaltbar.
@@ -17247,7 +17261,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v378</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v379</div>
 
 <!-- Etappe 4: Lade-Overlay waehrend "Buchung annehmen" im Hintergrund laeuft (kann bei VIP-Fahrern
      mit Auto-Einzug ein paar Sekunden dauern, da erst mit Xendit gesprochen wird, bevor die
