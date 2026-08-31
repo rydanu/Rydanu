@@ -8597,23 +8597,35 @@ function saveEditListing(){
   const featuredJustActivated = !wasFeatured && nowFeatured;
   l.featured = nowFeatured;
   l.fee = feeForPrice(price, l.spots);
-  // sync the public traveler card
-  const pub = drivers.find(d => d.ownerId===currentDriverId && d.tour===oldName)
-           || drivers.find(d => d.tour===oldName && d.name===driverProfiles[currentDriverId].fullName);
-  if(pub){
-    pub.tour = name;
-    pub.price = price;
-    pub.duration = l.duration;
-    pub.services = services;
-    pub.spots = spots;
-    pub.extras = l.extras;
-    pub.serviceRegions = l.serviceRegions;
-    pub.airportRegions = airportRegions;
-    pub.transferRegions = transferRegions;
-    pub.pickupRegionPrices = pickupRegionPrices;
-    pub.tourSpecialRates = l.tourSpecialRates;
-    pub.featured = l.featured;
-    if(l.featured) pub.badge = '⭐ Top offer';
+  // Kritischer Bugfix (31.8., Joerg gemeldet -- "Preis ändert sich nicht, kein Fehler, Fenster
+  // bleibt offen"): dieser lokale "oeffentliche Karte synchronisieren"-Block glich Touren bisher
+  // ueber den TEXT-NAMEN ab statt ueber die eindeutige dbId. Gibt es irgendwo im System (auch bei
+  // einem ANDEREN Fahrer) eine zweite Tour mit demselben Namen (z.B. zwei "Test Zahlung"), griff
+  // der zweite Suchpfad (driverProfiles[currentDriverId].fullName) -- currentDriverId ist bei
+  // einem echten Fahrer aber immer null (das ist eine reine Demo-Variable), wodurch der Zugriff
+  // auf .fullName eine stille JS-Ausnahme warf UND DAMIT DEN GESAMTEN SPEICHERVORGANG DANACH
+  // ABBRACH (kein Fehlertext, Fenster blieb offen, DB-Update wurde nie erreicht).
+  // Fuer echte Fahrer ist dieser lokale Sync ohnehin ueberfluessig -- loadRealPublicListings()
+  // laedt gleich danach sowieso frisch aus der Datenbank nach. Deshalb hier komplett uebersprungen.
+  if(!realDriverProfile){
+    // sync the public traveler card (nur noch im alten Demo-Modus relevant)
+    const pub = drivers.find(d => d.ownerId===currentDriverId && d.tour===oldName)
+             || drivers.find(d => d.tour===oldName && d.name===driverProfiles[currentDriverId].fullName);
+    if(pub){
+      pub.tour = name;
+      pub.price = price;
+      pub.duration = l.duration;
+      pub.services = services;
+      pub.spots = spots;
+      pub.extras = l.extras;
+      pub.serviceRegions = l.serviceRegions;
+      pub.airportRegions = airportRegions;
+      pub.transferRegions = transferRegions;
+      pub.pickupRegionPrices = pickupRegionPrices;
+      pub.tourSpecialRates = l.tourSpecialRates;
+      pub.featured = l.featured;
+      if(l.featured) pub.badge = '⭐ Top offer';
+    }
   }
   renderListings();
   renderDriverGrid(visibleDrivers());
@@ -17216,7 +17228,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v375</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v376</div>
 
 </body>
 </html>
