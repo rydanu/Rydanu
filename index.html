@@ -1468,9 +1468,16 @@
 
   @media (max-width:800px){
     .dash-wrap{ grid-template-columns:1fr; min-width:0; }
-    .dash-nav{ display:flex; flex-wrap:wrap; overflow-x:auto; border-right:none; border-bottom:1px solid var(--line); padding:14px 16px; gap:8px; min-width:0; }
-    .dash-nav .profile-chip{ margin-bottom:10px; width:100%; }
-    .dash-nav .demo-switcher{ width:100%; flex-basis:100%; box-sizing:border-box; margin:4px 0 10px; }
+    /* Bugfix (31.8., Joerg gemeldet per Screenshot): die Nav-Kacheln (Uebersicht/Meine Angebote/...)
+       lagen bisher in einer flex-wrap-Reihe -- jede Kachel war so breit wie ihr eigener Text, dadurch
+       hat der Browser unterschiedlich viele Kacheln pro Zeile reingepackt (3/3/2), was schief/
+       ungleichmaessig aussah. Jetzt festes 2-Spalten-Raster: jede Kachel ist exakt gleich breit,
+       die letzten beiden (Gebuehren & Abrechnung / Posteingang) stehen jetzt sauber nebeneinander
+       statt allein in einer kurzen dritten Zeile. */
+    .dash-nav{ display:grid; grid-template-columns:repeat(2,1fr); border-right:none; border-bottom:1px solid var(--line); padding:14px 16px; gap:8px; min-width:0; }
+    .dash-nav .profile-chip{ margin-bottom:10px; grid-column:1 / -1; }
+    .dash-nav .demo-switcher{ grid-column:1 / -1; box-sizing:border-box; margin:4px 0 10px; }
+    .dash-nav-item{ min-width:0; }
     /* Bugfix (20.8., Joerg gemeldet per Screenrecording + Pixel-Messung): Grid-Kinder haben per
        CSS-Voreinstellung min-width:auto -- das heisst, die Breite der Grid-Spalte richtet sich
        nach dem UNGEWRAPPTEN Inhalt (z.B. lange Buchungstexte/Status-Buttons in "Übersicht" und
@@ -2479,12 +2486,16 @@
           </div>
         </div>
 
-        <div class="dash-head" style="margin-top:26px;"><div><h3 data-i18n="fees_overview_new_title" style="margin:0;">Fees this month</h3></div></div>
-        <div class="panel">
-          <div class="booking-row"><div><div class="who" data-i18n="fees_open_fees_title">Open fees this month</div><div class="when" data-i18n="fees_open_fees_desc">Pay your accumulated booking fees</div></div><button class="book-btn" style="width:auto; padding:9px 18px; margin:0;" onclick="payFees()" data-i18n="btn_pay_now">Pay now</button></div>
-          <div class="booking-row" id="cancellation-fee-row" style="display:none;"><div><div class="who" data-i18n="fees_cancellation_title">Includes a cancellation fee</div><div class="when" data-i18n="fees_cancellation_desc">For tours you cancelled yourself — see Bookings for details</div></div><span class="mono" style="font-weight:600; color:var(--danger);" id="cancellation-fee-amount">IDR 0</span></div>
-          <p class="tier-footnote" data-i18n="fees_charged_when_note">ⓘ Fees are only actually charged when you tap "Pay now", or automatically on the last day of the month. Any referral credit is applied at that moment, not before.</p>
-        </div>
+        <!-- Entfernt (31.8., Joerg-Wunsch): die alte "Gebuehren diesen Monat / Jetzt bezahlen"-Karte
+             stammte aus der Zeit VOR dem Guthaben-System -- damals sammelten sich Gebuehren ueber den
+             Monat in fees_due_idr an und wurden am Monatsende manuell/per Klick beglichen. Mit dem
+             neuen System (Etappe 2, 31.8.) wird die Gebuehr sofort bei Buchungsbestaetigung vom
+             Guthaben abgezogen, es sammelt sich also nichts mehr an, das man "bezahlen" muesste. Der
+             "Jetzt bezahlen"-Knopf hat ohnehin nie etwas Echtes getan (payFees() zeigte nur einen
+             Hinweis "geht noch nicht" -- nie an Supabase angebunden). Die cancellation-fee-row war
+             zusaetzlich bereits seit Langem tot: renderRealOverviewStats() setzt sie hart auf
+             display:none, sie wurde also nie angezeigt. payFees() bleibt im Code stehen (siehe
+             fees-stat-card in der Uebersicht, nutzt es als Fallback-Klick vor dem ersten Render). -->
 
         <div class="dash-head" style="margin-top:26px;"><div><h3 data-i18n="fees_how_it_works_title" style="margin:0;">How fees work</h3></div></div>
 
@@ -17268,7 +17279,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v380</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v381</div>
 
 <!-- Etappe 4: Lade-Overlay waehrend "Buchung annehmen" im Hintergrund laeuft (kann bei VIP-Fahrern
      mit Auto-Einzug ein paar Sekunden dauern, da erst mit Xendit gesprochen wird, bevor die
