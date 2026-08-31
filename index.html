@@ -2441,6 +2441,43 @@
           <p class="tier-footnote" data-i18n="topup_redirect_note">ⓘ You'll be redirected to a secure payment page (QRIS, bank transfer, or e-wallet). Your balance updates automatically once payment is confirmed — this can take up to a minute.</p>
         </div>
 
+        <!-- Etappe 3: VIP-Auto-Einzug -- nur sichtbar, wenn der Admin diesen Fahrer freigeschaltet
+             hat (drivers.auto_debit_enabled). Zeigt je nach Verknuepfungs-Status ein anderes Panel. -->
+        <div id="sec-autodebit" style="display:none;">
+          <div class="dash-head" style="margin-top:26px;"><div><h3 style="margin:0;">⭐ <span data-i18n="autodebit_section_title">VIP: Automatic top-up</span></h3></div></div>
+
+          <div class="panel" id="autodebit-panel-setup" style="padding:20px; display:none;">
+            <p class="note" style="margin-top:0;" data-i18n="autodebit_setup_intro">You're eligible for automatic top-up: if your balance ever runs low, we can top it up automatically from a linked payment method — no manual top-up needed. Link it once below.</p>
+            <div style="display:flex; flex-direction:column; gap:10px;">
+              <input type="tel" id="autodebit-mobile" class="form-field" placeholder="Mobile number (e.g. 818555988)" data-i18n-placeholder="autodebit_mobile_placeholder">
+              <input type="text" id="autodebit-card-last4" class="form-field" placeholder="Card last 4 digits" data-i18n-placeholder="autodebit_card_last4_placeholder" maxlength="4">
+              <input type="text" id="autodebit-card-expiry" class="form-field" placeholder="Card expiry (MM/YY)" data-i18n-placeholder="autodebit_card_expiry_placeholder" maxlength="5">
+              <input type="email" id="autodebit-email" class="form-field" placeholder="Email" data-i18n-placeholder="autodebit_email_placeholder">
+            </div>
+            <button type="button" class="book-btn" style="width:100%; margin-top:10px;" id="autodebit-link-btn" onclick="startAutoDebitLink()" data-i18n="autodebit_link_btn">Link payment method</button>
+          </div>
+
+          <div class="panel" id="autodebit-panel-otp" style="padding:20px; display:none;">
+            <p class="note" style="margin-top:0;" data-i18n="autodebit_otp_intro">Enter the SMS code you just received to confirm the link.</p>
+            <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+              <input type="text" id="autodebit-otp-code" class="form-field" style="max-width:160px; margin:0;" placeholder="SMS code" data-i18n-placeholder="autodebit_otp_placeholder" maxlength="8">
+              <button type="button" class="book-btn" style="width:auto; padding:9px 18px; margin:0;" id="autodebit-otp-btn" onclick="confirmAutoDebitOtp()" data-i18n="autodebit_otp_btn">Confirm code</button>
+            </div>
+          </div>
+
+          <div class="panel" id="autodebit-panel-active" style="padding:20px; display:none; background:var(--teal-soft); border-color:var(--teal);">
+            <div style="font-weight:800; color:var(--ink);">✓ <span data-i18n="autodebit_active_title">Payment method linked</span></div>
+            <p class="note" style="margin:6px 0 12px;" data-i18n="autodebit_active_body">Automatic top-up is ready. You can still top up manually anytime above.</p>
+            <button type="button" class="cancel-btn" style="padding:8px 16px; font-size:0.85rem;" onclick="showAutoDebitSetupForm()" data-i18n="autodebit_relink_btn">Link a different method</button>
+          </div>
+
+          <div class="panel" id="autodebit-panel-failed" style="padding:20px; display:none; background:#FBEAEA; border-color:var(--danger);">
+            <div style="font-weight:800; color:var(--danger);">⚠️ <span data-i18n="autodebit_failed_title">Linking failed</span></div>
+            <p class="note" id="autodebit-failed-reason" style="margin:6px 0 12px;"></p>
+            <button type="button" class="cancel-btn" style="padding:8px 16px; font-size:0.85rem;" onclick="showAutoDebitSetupForm()" data-i18n="autodebit_retry_btn">Try again</button>
+          </div>
+        </div>
+
         <div class="dash-head" style="margin-top:26px;"><div><h3 data-i18n="fees_overview_new_title" style="margin:0;">Fees this month</h3></div></div>
         <div class="panel">
           <div class="booking-row"><div><div class="who" data-i18n="fees_open_fees_title">Open fees this month</div><div class="when" data-i18n="fees_open_fees_desc">Pay your accumulated booking fees</div></div><button class="book-btn" style="width:auto; padding:9px 18px; margin:0;" onclick="payFees()" data-i18n="btn_pay_now">Pay now</button></div>
@@ -7112,6 +7149,7 @@ async function renderRealOverviewStats(){
     balanceRow.style.display = 'flex';
   }
   renderTopupBalanceDisplay(balance);
+  renderAutoDebitSection();
 
   // Gutschriften (Empfehlung / Admin+VIP) aus fee_credits, nur die noch nicht verrechneten
   let referralCredit = 0, adminCredit = 0;
@@ -7269,6 +7307,101 @@ function renderTopupBalanceDisplay(balance){
   if(el) el.textContent = formatIDR(balance || 0);
   const modalEl = document.getElementById('topup-modal-balance-display');
   if(modalEl) modalEl.textContent = formatIDR(balance || 0);
+}
+
+// ---- Etappe 3: VIP-Auto-Einzug (Xendit Linked Account / Direct Debit) ----
+// Nur sichtbar, wenn der Admin diesen Fahrer ueber drivers.auto_debit_enabled freigeschaltet hat
+// (siehe protect_driver_columns-Trigger -- der Fahrer kann das selbst nicht umschalten).
+async function renderAutoDebitSection(){
+  const sec = document.getElementById('sec-autodebit');
+  if(!sec) return;
+  if(!realDriverProfile || !realDriverProfile.auto_debit_enabled){
+    sec.style.display = 'none';
+    return;
+  }
+  sec.style.display = 'block';
+  const { data: pm, error } = await supabaseClient.from('driver_payment_methods')
+    .select('status, last_error').eq('driver_id', realDriverProfile.id).maybeSingle();
+  if(error){ console.error('VIP-Zahlungsmethode konnte nicht geladen werden:', error); }
+  ['autodebit-panel-setup','autodebit-panel-otp','autodebit-panel-active','autodebit-panel-failed'].forEach(id=>{
+    document.getElementById(id).style.display = 'none';
+  });
+  if(!pm){
+    document.getElementById('autodebit-panel-setup').style.display = 'block';
+  } else if(pm.status === 'pending_otp'){
+    document.getElementById('autodebit-panel-otp').style.display = 'block';
+  } else if(pm.status === 'active'){
+    document.getElementById('autodebit-panel-active').style.display = 'block';
+  } else if(pm.status === 'failed'){
+    document.getElementById('autodebit-panel-failed').style.display = 'block';
+    const reasonEl = document.getElementById('autodebit-failed-reason');
+    if(reasonEl) reasonEl.textContent = pm.last_error || '';
+  }
+}
+function showAutoDebitSetupForm(){
+  ['autodebit-panel-setup','autodebit-panel-otp','autodebit-panel-active','autodebit-panel-failed'].forEach(id=>{
+    document.getElementById(id).style.display = 'none';
+  });
+  document.getElementById('autodebit-panel-setup').style.display = 'block';
+}
+async function startAutoDebitLink(){
+  const mobileRaw = document.getElementById('autodebit-mobile').value.trim();
+  const cardLast4 = document.getElementById('autodebit-card-last4').value.trim();
+  const cardExpiry = document.getElementById('autodebit-card-expiry').value.trim();
+  const email = document.getElementById('autodebit-email').value.trim();
+  if(!mobileRaw || !/^\d{4}$/.test(cardLast4) || !/^\d{2}\/\d{2}$/.test(cardExpiry) || !email){
+    alert(t('autodebit_err_fields'));
+    return;
+  }
+  // Handynummer immer im Format +62... an Xendit schicken, egal ob der Fahrer mit oder ohne
+  // Vorwahl eingetippt hat -- gleiche Idee wie an anderen Stellen der App.
+  const mobileNumber = mobileRaw.startsWith('+') ? mobileRaw : ('+62' + mobileRaw.replace(/^0+/, ''));
+  const btn = document.getElementById('autodebit-link-btn');
+  const originalLabel = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = t('topup_loading');
+  try {
+    const { data, error } = await supabaseClient.functions.invoke('xendit-link-init', {
+      body: { mobile_number: mobileNumber, card_last_four: cardLast4, card_expiry: cardExpiry, email }
+    });
+    if(error || !data || data.error){
+      console.error('xendit-link-init Fehler:', error, data);
+      alert((data && data.error) ? data.error : t('autodebit_err_generic'));
+      return;
+    }
+    document.getElementById('autodebit-panel-setup').style.display = 'none';
+    document.getElementById('autodebit-panel-otp').style.display = 'block';
+  } catch(e){
+    console.error('startAutoDebitLink Fehler:', e);
+    alert(t('autodebit_err_generic'));
+  } finally {
+    btn.disabled = false;
+    btn.textContent = originalLabel;
+  }
+}
+async function confirmAutoDebitOtp(){
+  const otpCode = document.getElementById('autodebit-otp-code').value.trim();
+  if(!otpCode){ alert(t('autodebit_err_otp_empty')); return; }
+  const btn = document.getElementById('autodebit-otp-btn');
+  const originalLabel = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = t('topup_loading');
+  try {
+    const { data, error } = await supabaseClient.functions.invoke('xendit-link-verify-otp', { body: { otp_code: otpCode } });
+    if(error || !data || data.error){
+      console.error('xendit-link-verify-otp Fehler:', error, data);
+      alert((data && data.error) ? data.error : t('autodebit_err_generic'));
+      await renderAutoDebitSection(); // zeigt "failed"-Panel mit Grund, falls die Funktion das serverseitig so markiert hat
+      return;
+    }
+    await renderAutoDebitSection();
+  } catch(e){
+    console.error('confirmAutoDebitOtp Fehler:', e);
+    alert(t('autodebit_err_generic'));
+  } finally {
+    btn.disabled = false;
+    btn.textContent = originalLabel;
+  }
 }
 // Rueckkehr von der Xendit-Zahlungsseite erkennen (success_redirect_url / failure_redirect_url).
 // Der Webhook schreibt das Guthaben serverseitig gut -- kann ein paar Sekunden dauern, deshalb
@@ -10706,6 +10839,12 @@ const translations = {
     tours_heading: "Available tours this week", order_toggle_drivers: "Drivers first", order_toggle_tours: "Tours first", reset_filters_link: "Reset filters", soft_filter_notice: "Not all filters could be matched — showing the closest results.",
     plan_with_driver: "ⓘ The exact attractions and what's included you plan directly with your driver.",
     topup_banner_btn: "💰 Top up your balance",
+    autodebit_section_title: "VIP: Automatic top-up", autodebit_setup_intro: "You're eligible for automatic top-up: if your balance ever runs low, we can top it up automatically from a linked payment method — no manual top-up needed. Link it once below.",
+    autodebit_mobile_placeholder: "Mobile number (e.g. 818555988)", autodebit_card_last4_placeholder: "Card last 4 digits", autodebit_card_expiry_placeholder: "Card expiry (MM/YY)", autodebit_email_placeholder: "Email",
+    autodebit_link_btn: "Link payment method", autodebit_otp_intro: "Enter the SMS code you just received to confirm the link.", autodebit_otp_placeholder: "SMS code", autodebit_otp_btn: "Confirm code",
+    autodebit_active_title: "Payment method linked", autodebit_active_body: "Automatic top-up is ready. You can still top up manually anytime above.", autodebit_relink_btn: "Link a different method",
+    autodebit_failed_title: "Linking failed", autodebit_retry_btn: "Try again",
+    autodebit_err_fields: "Please fill in all fields correctly (card: 4 digits, expiry: MM/YY).", autodebit_err_generic: "Something went wrong — please try again in a moment.", autodebit_err_otp_empty: "Please enter the SMS code.",
     support_btn: "✉️ Message to Rydanu Support", dp_qr_dash_btn: "📱 Your Rydanu QR code",
     support_modal_title: "Message to Rydanu Support",
     support_subject_label: "Subject", support_msg_label: "Your message", support_send_btn: "Send message",
@@ -11071,6 +11210,12 @@ const translations = {
     tours_heading: "Verfügbare Touren diese Woche", order_toggle_drivers: "Fahrer zuerst", order_toggle_tours: "Touren zuerst", reset_filters_link: "Filter zurücksetzen", soft_filter_notice: "Nicht alle Filter konnten berücksichtigt werden — hier die besten Treffer.",
     plan_with_driver: "ⓘ Die genauen Attraktionen und was enthalten ist, planst du direkt mit deinem Fahrer.",
     topup_banner_btn: "💰 Guthaben aufladen",
+    autodebit_section_title: "VIP: Automatischer Einzug", autodebit_setup_intro: "Du bist für automatischen Einzug freigeschaltet: Wird dein Guthaben knapp, können wir es automatisch über eine hinterlegte Zahlungsmethode aufladen — kein manuelles Aufladen mehr nötig. Einmalig unten verknüpfen.",
+    autodebit_mobile_placeholder: "Handynummer (z.B. 818555988)", autodebit_card_last4_placeholder: "Letzte 4 Ziffern der Karte", autodebit_card_expiry_placeholder: "Ablaufdatum Karte (MM/JJ)", autodebit_email_placeholder: "E-Mail",
+    autodebit_link_btn: "Zahlungsmethode verknüpfen", autodebit_otp_intro: "Gib den gerade erhaltenen SMS-Code ein, um die Verknüpfung zu bestätigen.", autodebit_otp_placeholder: "SMS-Code", autodebit_otp_btn: "Code bestätigen",
+    autodebit_active_title: "Zahlungsmethode verknüpft", autodebit_active_body: "Automatischer Einzug ist bereit. Du kannst weiterhin jederzeit oben manuell aufladen.", autodebit_relink_btn: "Andere Methode verknüpfen",
+    autodebit_failed_title: "Verknüpfung fehlgeschlagen", autodebit_retry_btn: "Nochmal versuchen",
+    autodebit_err_fields: "Bitte alle Felder korrekt ausfüllen (Karte: 4 Ziffern, Ablauf: MM/JJ).", autodebit_err_generic: "Etwas ist schiefgelaufen — bitte gleich nochmal versuchen.", autodebit_err_otp_empty: "Bitte den SMS-Code eingeben.",
     support_btn: "✉️ Nachricht an Rydanu Support", dp_qr_dash_btn: "📱 Dein Rydanu QR-Code",
     support_modal_title: "Nachricht an Rydanu Support",
     support_subject_label: "Betreff", support_msg_label: "Deine Nachricht", support_send_btn: "Nachricht senden",
@@ -11436,6 +11581,12 @@ const translations = {
     tours_heading: "Tur tersedia minggu ini", order_toggle_drivers: "Sopir dulu", order_toggle_tours: "Tur dulu", reset_filters_link: "Setel ulang filter", soft_filter_notice: "Tidak semua filter dapat diterapkan — menampilkan hasil terdekat.",
     plan_with_driver: "ⓘ Atraksi yang tepat dan apa saja yang termasuk Anda rencanakan langsung dengan sopir Anda.",
     topup_banner_btn: "💰 Isi ulang saldo Anda",
+    autodebit_section_title: "VIP: Isi ulang otomatis", autodebit_setup_intro: "Anda memenuhi syarat untuk isi ulang otomatis: jika saldo Anda menipis, kami dapat mengisinya secara otomatis dari metode pembayaran yang tertaut — tidak perlu isi ulang manual. Tautkan sekali di bawah ini.",
+    autodebit_mobile_placeholder: "Nomor HP (mis. 818555988)", autodebit_card_last4_placeholder: "4 digit terakhir kartu", autodebit_card_expiry_placeholder: "Masa berlaku kartu (BB/TT)", autodebit_email_placeholder: "Email",
+    autodebit_link_btn: "Tautkan metode pembayaran", autodebit_otp_intro: "Masukkan kode SMS yang baru saja Anda terima untuk mengonfirmasi tautan.", autodebit_otp_placeholder: "Kode SMS", autodebit_otp_btn: "Konfirmasi kode",
+    autodebit_active_title: "Metode pembayaran tertaut", autodebit_active_body: "Isi ulang otomatis sudah siap. Anda tetap bisa isi ulang manual kapan saja di atas.", autodebit_relink_btn: "Tautkan metode lain",
+    autodebit_failed_title: "Penautan gagal", autodebit_retry_btn: "Coba lagi",
+    autodebit_err_fields: "Silakan isi semua kolom dengan benar (kartu: 4 digit, masa berlaku: BB/TT).", autodebit_err_generic: "Terjadi kesalahan — silakan coba lagi sebentar.", autodebit_err_otp_empty: "Silakan masukkan kode SMS.",
     support_btn: "✉️ Pesan ke Dukungan Rydanu", dp_qr_dash_btn: "📱 Kode QR Rydanu Anda",
     support_modal_title: "Pesan ke Dukungan Rydanu",
     support_subject_label: "Subjek", support_msg_label: "Pesan Anda", support_send_btn: "Kirim pesan",
@@ -16116,7 +16267,7 @@ function closeFeeChargesModal(){ document.getElementById('fee-charges-modal-bg')
 let realAllDriversCache = [];
 async function loadRealAllDriversCache(){
   const { data, error } = await supabaseClient.from('drivers')
-    .select('id, name, lw_number, region, is_locked, locked_since, fees_due_idr, balance_idr, phone')
+    .select('id, name, lw_number, region, is_locked, locked_since, fees_due_idr, balance_idr, phone, auto_debit_enabled')
     .eq('status', 'approved')
     .order('name');
   if(error){ console.error('Fahrerliste konnte nicht geladen werden (evtl. nicht als Admin eingeloggt):', error); realAllDriversCache = []; return; }
@@ -16167,6 +16318,7 @@ async function renderRealAdminBlockList(){
         <div class="who">${escapeHtml(d.name)}</div><div class="when">${d.region==='lombok'?'Lombok':'Bali'} · ${t('admin_stat_fees')||'Gebühren'}: ${formatIDR(d.fees_due_idr||0)}${d.declinedCount ? ` · ⚠️ ${d.declinedCount} ${t('admin_declined_count_label')}` : ''}</div>
       </div>
       <span class="status-pill ${d.is_locked?'pending':'confirmed'}">${d.is_locked ? t('admin_status_blocked') : t('admin_status_active')}</span>
+      <button type="button" class="${d.auto_debit_enabled ? 'accept-btn' : 'lock-btn'}" style="margin-left:8px; white-space:nowrap;" onclick="event.stopPropagation(); toggleAutoDebit('${d.id}', ${d.auto_debit_enabled ? 'true':'false'}, '${safeName}')">${d.auto_debit_enabled ? '⭐ VIP aktiv' : '☆ VIP Auto-Einzug'}</button>
       <button type="button" class="${d.is_locked ? 'accept-btn' : 'lock-btn'}" style="margin-left:8px; white-space:nowrap;" onclick="event.stopPropagation(); toggleRealDriverLock('${d.id}', ${d.is_locked ? 'true':'false'}, '${safeName}')">${d.is_locked ? '🔓 ' + t('admin_unlock_btn') : '🔒 ' + t('admin_lock_btn')}</button>
       <button type="button" class="cancel-btn" style="margin-left:8px; padding:6px 10px; border-radius:5px; white-space:nowrap;" onclick="event.stopPropagation(); deleteRealDriver('${d.id}', '${safeName}')">🗑️ Löschen</button>
     </div>`;
@@ -16200,6 +16352,28 @@ async function toggleRealDriverLock(id, isLocked, name){
   await renderRealAdminBlockList();
   loadRealPublicListings(); // gesperrter Fahrer sofort aus der Kundensuche entfernen (bzw. entsperrten wieder rein)
   alert(newLocked ? t('admin_locked_alert') : t('admin_unlocked_alert'));
+}
+// Etappe 3: VIP-Auto-Einzug -- VERSTECKTE Admin-Funktion, ausschliesslich hier umschaltbar.
+// Der Fahrer selbst hat in seinem eigenen Dashboard keinen Zugriff auf diesen Schalter (siehe
+// protect_driver_columns-Trigger in der Datenbank, der genau das serverseitig absichert).
+async function toggleAutoDebit(id, isEnabled, name){
+  const newVal = !isEnabled;
+  const msg = newVal
+    ? `VIP-Auto-Einzug für ${name} freischalten? Der Fahrer kann danach eine Zahlungsmethode bei Xendit hinterlegen.`
+    : `VIP-Auto-Einzug für ${name} wieder deaktivieren?`;
+  if(!confirm(msg)) return;
+  const { error } = await supabaseClient.from('drivers').update({ auto_debit_enabled: newVal }).eq('id', id);
+  if(error){ alert('Umschalten fehlgeschlagen: ' + error.message); console.error(error); return; }
+  await supabaseClient.from('driver_messages').insert({
+    driver_id: id,
+    type: 'system',
+    subject: newVal ? '⭐ VIP-Auto-Einzug freigeschaltet' : 'VIP-Auto-Einzug deaktiviert',
+    body: newVal
+      ? 'Du kannst jetzt optional eine Zahlungsmethode für automatischen Einzug hinterlegen, siehe Gebühren & Abrechnung.'
+      : 'Dein automatischer Einzug wurde deaktiviert.'
+  });
+  await renderRealAdminBlockList();
+  alert(newVal ? `VIP-Auto-Einzug für ${name} freigeschaltet ✓` : `VIP-Auto-Einzug für ${name} deaktiviert.`);
 }
 
 // -- Sonderkonditionen (fee_overrides), echt --
@@ -17042,7 +17216,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v374</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v375</div>
 
 </body>
 </html>
