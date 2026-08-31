@@ -2419,7 +2419,28 @@
         <!-- Neu strukturiert: "Diesen Monat" (was jetzt zu zahlen ist) klar getrennt von
              "So funktionieren Gebühren" (Nachschlagewerk/Tabelle) -- vorher war alles in einem
              einzigen langen Panel vermischt, laut Jörg unübersichtlich. -->
-        <div class="dash-head" style="margin-top:4px;"><div><h3 data-i18n="fees_overview_new_title" style="margin:0;">Fees this month</h3></div></div>
+        <div class="dash-head" style="margin-top:4px;"><div><h3 data-i18n="topup_section_title" style="margin:0;">Your balance</h3></div></div>
+        <div class="panel" style="padding:20px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:16px;">
+            <div>
+              <div class="when" data-i18n="topup_current_balance_lbl">Current balance</div>
+              <div class="mono" id="topup-balance-display" style="font-weight:800; font-size:1.6rem; color:var(--teal);">IDR 0</div>
+            </div>
+          </div>
+          <div class="filter-group-title" style="margin-bottom:8px;" data-i18n="topup_choose_amount">Choose an amount to top up</div>
+          <div id="topup-amount-buttons" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px;">
+            <button type="button" class="period-btn" onclick="selectTopupAmount(50000)" data-amount="50000">IDR 50,000</button>
+            <button type="button" class="period-btn" onclick="selectTopupAmount(100000)" data-amount="100000">IDR 100,000</button>
+            <button type="button" class="period-btn" onclick="selectTopupAmount(200000)" data-amount="200000">IDR 200,000</button>
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+            <input type="number" id="topup-custom-amount" class="form-field" style="max-width:200px; margin:0;" placeholder="Other amount (IDR)" data-i18n-placeholder="topup_custom_placeholder" min="10000" step="1000">
+            <button type="button" class="book-btn" style="width:auto; padding:9px 18px; margin:0;" id="topup-submit-btn" onclick="startTopup()" data-i18n="topup_submit_btn">Top up</button>
+          </div>
+          <p class="tier-footnote" data-i18n="topup_redirect_note">ⓘ You'll be redirected to a secure payment page (QRIS, bank transfer, or e-wallet). Your balance updates automatically once payment is confirmed — this can take up to a minute.</p>
+        </div>
+
+        <div class="dash-head" style="margin-top:26px;"><div><h3 data-i18n="fees_overview_new_title" style="margin:0;">Fees this month</h3></div></div>
         <div class="panel">
           <div class="booking-row"><div><div class="who" data-i18n="fees_open_fees_title">Open fees this month</div><div class="when" data-i18n="fees_open_fees_desc">Pay your accumulated booking fees</div></div><button class="book-btn" style="width:auto; padding:9px 18px; margin:0;" onclick="payFees()" data-i18n="btn_pay_now">Pay now</button></div>
           <div class="booking-row" id="cancellation-fee-row" style="display:none;"><div><div class="who" data-i18n="fees_cancellation_title">Includes a cancellation fee</div><div class="when" data-i18n="fees_cancellation_desc">For tours you cancelled yourself — see Bookings for details</div></div><span class="mono" style="font-weight:600; color:var(--danger);" id="cancellation-fee-amount">IDR 0</span></div>
@@ -7060,6 +7081,7 @@ async function renderRealOverviewStats(){
     balanceAmount.textContent = formatIDR(balance);
     balanceRow.style.display = 'flex';
   }
+  renderTopupBalanceDisplay(balance);
 
   // Gutschriften (Empfehlung / Admin+VIP) aus fee_credits, nur die noch nicht verrechneten
   let referralCredit = 0, adminCredit = 0;
@@ -7155,6 +7177,68 @@ function hasValidPaymentMethod(profile){
 // Trigger vorhanden oder noetig.
 function payFees(){
   alert(t('real_pay_not_yet'));
+}
+
+// ---- Etappe 1: Guthaben manuell aufladen (echtes Xendit, Sandbox) ----
+let selectedTopupAmount = null;
+function selectTopupAmount(amount){
+  selectedTopupAmount = amount;
+  document.getElementById('topup-custom-amount').value = '';
+  document.querySelectorAll('#topup-amount-buttons .period-btn').forEach(btn=>{
+    btn.classList.toggle('active', Number(btn.dataset.amount) === amount);
+  });
+}
+async function startTopup(){
+  const customVal = Number(document.getElementById('topup-custom-amount').value);
+  const amount = customVal > 0 ? Math.round(customVal) : selectedTopupAmount;
+  if(!amount || amount < 10000){
+    alert(t('topup_err_min_amount'));
+    return;
+  }
+  if(!realDriverProfile){ return; }
+  const btn = document.getElementById('topup-submit-btn');
+  const originalLabel = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = t('topup_loading');
+  try {
+    const { data, error } = await supabaseClient.functions.invoke('xendit-create-topup', { body: { amount } });
+    if(error || !data || !data.invoice_url){
+      console.error('xendit-create-topup Fehler:', error, data);
+      alert(t('topup_err_generic'));
+      return;
+    }
+    // Weiterleitung im selben Tab -- zuverlaessiger auf iOS Safari als ein Popup-Fenster,
+    // das vom Browser leicht blockiert werden kann.
+    window.location.href = data.invoice_url;
+  } catch(e){
+    console.error('startTopup Fehler:', e);
+    alert(t('topup_err_generic'));
+  } finally {
+    btn.disabled = false;
+    btn.textContent = originalLabel;
+  }
+}
+function renderTopupBalanceDisplay(balance){
+  const el = document.getElementById('topup-balance-display');
+  if(el) el.textContent = formatIDR(balance || 0);
+}
+// Rueckkehr von der Xendit-Zahlungsseite erkennen (success_redirect_url / failure_redirect_url).
+// Der Webhook schreibt das Guthaben serverseitig gut -- kann ein paar Sekunden dauern, deshalb
+// hier zweimal mit kurzer Verzoegerung neu laden, statt dem Fahrer eine falsche Sofort-Bestaetigung
+// vorzugaukeln.
+function checkTopupRedirectResult(){
+  const topupResult = new URLSearchParams(location.search).get('topup');
+  if(topupResult === 'success'){
+    alert(t('topup_redirect_success'));
+    setTimeout(()=>{ if(realDriverProfile) renderRealOverviewStats(); }, 3000);
+    setTimeout(()=>{ if(realDriverProfile) renderRealOverviewStats(); }, 8000);
+  } else if(topupResult === 'failed'){
+    alert(t('topup_redirect_failed'));
+  }
+  if(topupResult){
+    const cleanUrl = location.origin + location.pathname;
+    window.history.replaceState({}, '', cleanUrl);
+  }
 }
 async function renderAdminOpenPayments(){
   const el = document.getElementById('admin-openpayments-list');
@@ -10627,6 +10711,12 @@ const translations = {
  fees_listing_profile: "Set up tours & driver profile", fees_hero_free_label: "always free", fees_listing_desc: "Create unlimited listings, no cost while you have zero bookings",
     fees_conditions_apply: "Conditions apply", fees_see_full_terms: "see full terms", fees_th_booking_value: "Booking value", fees_th_fee_charged: "Fee charged to driver", fees_row_any_booking: "Any confirmed booking", fees_row_any_booking_val: "10% of tour price", fees_villa_rate_val: "20% of tour price", fees_conditions_apply_booking: "Conditions apply to every booking", fees_zero_bookings_note: "A driver with zero bookings this month pays nothing at all — the fee only appears once a guest actually confirms a paid trip.",
     fees_featured_placement: "Featured placement", fees_featured_desc: "Higher spot in search results — auto-expires after 1 month", fees_featured_price: "IDR 100,000 / month",
+    topup_section_title: "Your balance", topup_current_balance_lbl: "Current balance", topup_choose_amount: "Choose an amount to top up",
+    topup_custom_placeholder: "Other amount (IDR)", topup_submit_btn: "Top up", topup_loading: "Redirecting…",
+    topup_redirect_note: "ⓘ You'll be redirected to a secure payment page (QRIS, bank transfer, or e-wallet). Your balance updates automatically once payment is confirmed — this can take up to a minute.",
+    topup_err_min_amount: "Please choose or enter an amount of at least IDR 10,000.", topup_err_generic: "Something went wrong — please try again in a moment.",
+    topup_redirect_success: "Thanks! We're confirming your payment — your balance will update in a few seconds. Feel free to reopen this page shortly.",
+    topup_redirect_failed: "The payment wasn't completed. You can try again anytime.",
     fees_open_fees_title: "Open fees this month", fees_open_fees_desc: "Pay your accumulated booking fees",
     fees_cancellation_title: "Includes a cancellation fee", fees_cancellation_desc: "For tours you cancelled yourself — see Bookings for details",
     cancel_outcome_customer_1: "Cancelled —", cancel_outcome_customer_2: "Since the customer didn't show up, the platform fee already charged for this booking has been refunded to you. The customer has been informed by email.",
@@ -10985,6 +11075,12 @@ const translations = {
  fees_listing_profile: "Touren einstellen & Fahrerprofil", fees_hero_free_label: "immer kostenlos", fees_listing_desc: "Erstelle unbegrenzt viele Angebote, keine Kosten solange du keine Buchungen hast",
     fees_conditions_apply: "Bedingungen gelten", fees_see_full_terms: "vollständige Bedingungen ansehen", fees_th_booking_value: "Buchungswert", fees_th_fee_charged: "Gebühr für Fahrer", fees_row_any_booking: "Jede bestätigte Buchung", fees_row_any_booking_val: "10% des Tourpreises", fees_villa_rate_val: "20% des Tourpreises", fees_conditions_apply_booking: "Bedingungen gelten für jede Buchung", fees_zero_bookings_note: "Ein Fahrer ohne Buchungen in diesem Monat zahlt gar nichts — die Gebühr entsteht erst, sobald ein Gast tatsächlich eine bezahlte Tour bestätigt.",
     fees_featured_placement: "Featured Placement", fees_featured_desc: "Höhere Platzierung in den Suchergebnissen — läuft automatisch nach 1 Monat aus", fees_featured_price: "IDR 100.000 / Monat",
+    topup_section_title: "Dein Guthaben", topup_current_balance_lbl: "Aktuelles Guthaben", topup_choose_amount: "Betrag zum Aufladen wählen",
+    topup_custom_placeholder: "Anderer Betrag (IDR)", topup_submit_btn: "Aufladen", topup_loading: "Weiterleitung…",
+    topup_redirect_note: "ⓘ Du wirst zu einer sicheren Zahlungsseite weitergeleitet (QRIS, Banküberweisung oder E-Wallet). Dein Guthaben aktualisiert sich automatisch, sobald die Zahlung bestätigt ist — das kann bis zu einer Minute dauern.",
+    topup_err_min_amount: "Bitte einen Betrag von mindestens IDR 10.000 wählen oder eingeben.", topup_err_generic: "Etwas ist schiefgelaufen — bitte gleich nochmal versuchen.",
+    topup_redirect_success: "Danke! Wir bestätigen gerade deine Zahlung — dein Guthaben aktualisiert sich in ein paar Sekunden. Schau gleich nochmal auf dieser Seite vorbei.",
+    topup_redirect_failed: "Die Zahlung wurde nicht abgeschlossen. Du kannst es jederzeit erneut versuchen.",
     fees_open_fees_title: "Offene Gebühren diesen Monat", fees_open_fees_desc: "Bezahle deine angesammelten Buchungsgebühren — eine Rechnung wird dir automatisch per E-Mail zugesendet",
     fees_cancellation_title: "Enthält eine Stornogebühr", fees_cancellation_desc: "Für Touren, die du selbst storniert hast — Details unter Buchungen",
     cancel_outcome_customer_1: "Storniert —", cancel_outcome_customer_2: "Da der Kunde nicht erschienen ist, wurde dir die bereits belastete Plattformgebühr für diese Buchung zurückerstattet. Der Kunde wurde per E-Mail informiert.",
@@ -11343,6 +11439,12 @@ const translations = {
  fees_listing_profile: "Atur tur & profil sopir", fees_hero_free_label: "selalu gratis", fees_listing_desc: "Buat tur aktif tanpa batas, tanpa biaya selama Anda belum memiliki pemesanan",
     fees_conditions_apply: "Ketentuan berlaku", fees_see_full_terms: "lihat ketentuan lengkap", fees_th_booking_value: "Nilai pemesanan", fees_th_fee_charged: "Biaya yang dibebankan ke sopir", fees_row_any_booking: "Setiap pemesanan terkonfirmasi", fees_row_any_booking_val: "10% dari harga tur", fees_villa_rate_val: "20% dari harga tur", fees_conditions_apply_booking: "Ketentuan berlaku untuk setiap pemesanan", fees_zero_bookings_note: "Sopir tanpa pemesanan bulan ini tidak membayar apa pun — biaya baru muncul setelah tamu benar-benar mengonfirmasi perjalanan berbayar.",
     fees_featured_placement: "Featured placement", fees_featured_desc: "Posisi lebih tinggi di hasil pencarian — otomatis berakhir setelah 1 bulan", fees_featured_price: "IDR 100.000 / bulan",
+    topup_section_title: "Saldo Anda", topup_current_balance_lbl: "Saldo saat ini", topup_choose_amount: "Pilih jumlah untuk top up",
+    topup_custom_placeholder: "Jumlah lain (IDR)", topup_submit_btn: "Top up", topup_loading: "Mengalihkan…",
+    topup_redirect_note: "ⓘ Anda akan diarahkan ke halaman pembayaran aman (QRIS, transfer bank, atau e-wallet). Saldo Anda otomatis diperbarui setelah pembayaran dikonfirmasi — bisa memakan waktu hingga satu menit.",
+    topup_err_min_amount: "Silakan pilih atau masukkan jumlah minimal IDR 10.000.", topup_err_generic: "Terjadi kesalahan — silakan coba lagi sebentar.",
+    topup_redirect_success: "Terima kasih! Kami sedang mengonfirmasi pembayaran Anda — saldo akan diperbarui dalam beberapa detik. Silakan buka kembali halaman ini sebentar lagi.",
+    topup_redirect_failed: "Pembayaran belum selesai. Anda bisa mencoba lagi kapan saja.",
     fees_open_fees_title: "Biaya terbuka bulan ini", fees_open_fees_desc: "Bayar biaya pemesanan terkumpul Anda — faktur dikirim otomatis melalui email",
     fees_cancellation_title: "Termasuk biaya pembatalan", fees_cancellation_desc: "Untuk tur yang Anda batalkan sendiri — lihat Pemesanan untuk detail",
     cancel_outcome_customer_1: "Dibatalkan —", cancel_outcome_customer_2: "Karena pelanggan tidak datang, biaya platform yang sudah dibebankan untuk pemesanan ini telah dikembalikan kepada Anda. Pelanggan telah diberi tahu melalui email.",
@@ -15309,6 +15411,7 @@ async function checkDriverAuthState(silent){
   if(driverRow.status === 'approved' && 'Notification' in window && Notification.permission === 'default'){
     setTimeout(()=>{ enableVillaPush(true); }, 800);
   }
+  checkTopupRedirectResult();
 }
 // Fragt den Fahrer-Status automatisch neu ab, wenn die Seite wieder aktiv wird (z.B. nach
 // Tab-Wechsel) - so verschwindet der "wartet auf Freischaltung"-Hinweis von selbst, sobald
@@ -16869,7 +16972,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v370</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v371</div>
 
 </body>
 </html>
