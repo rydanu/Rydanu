@@ -2210,7 +2210,7 @@
       <div class="dash-nav-item" id="nav-calendar-item" data-i18n="nav_calendar" onclick="openCalendar()">Calendar</div>
       <div class="dash-nav-item" data-section="subscription" data-i18n="nav_subscription" onclick="showDashSection('subscription')">Fees &amp; billing</div>
       <div class="dash-nav-item" data-section="inbox" onclick="showDashSection('inbox')"><span data-i18n="nav_inbox">Inbox</span> <span class="inbox-dot" id="inbox-dot" style="display:none;"></span></div>
-      <button type="button" class="wa-support-btn" onclick="showDashSection('subscription')" data-i18n="topup_banner_btn">💰 Top up your balance</button>
+      <button type="button" class="wa-support-btn" onclick="openTopupModal()" data-i18n="topup_banner_btn">💰 Top up your balance</button>
       <button type="button" class="wa-support-btn" onclick="openSupportMsg()" data-i18n="support_btn">✉️ Message to Rydanu Support</button>
       <button type="button" class="wa-support-btn" onclick="openQrModal()" data-i18n="dp_qr_dash_btn">📱 Your Rydanu QR code</button>
       <button type="button" class="wa-support-btn" onclick="handleDriverLogout()" style="background:#F7EAEA; color:#B03A3A;">🚪 Abmelden</button>
@@ -2436,7 +2436,7 @@
           </div>
           <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
             <input type="number" id="topup-custom-amount" class="form-field" style="max-width:200px; margin:0;" placeholder="Other amount (IDR)" data-i18n-placeholder="topup_custom_placeholder" min="10000" step="1000">
-            <button type="button" class="book-btn" style="width:auto; padding:9px 18px; margin:0;" id="topup-submit-btn" onclick="startTopup()" data-i18n="topup_submit_btn">Top up</button>
+            <button type="button" class="book-btn" style="width:auto; padding:9px 18px; margin:0;" id="topup-submit-btn" onclick="startTopup('page')" data-i18n="topup_submit_btn">Top up</button>
           </div>
           <p class="tier-footnote" data-i18n="topup_redirect_note">ⓘ You'll be redirected to a secure payment page (QRIS, bank transfer, or e-wallet). Your balance updates automatically once payment is confirmed — this can take up to a minute.</p>
         </div>
@@ -4048,6 +4048,35 @@
     </div>
   </div>
 </div>
+
+<!-- Guthaben aufladen -- Popup statt Wegklicken zur Gebühren-Seite (Jörgs Wunsch, weniger Scrollen) -->
+<div class="modal-bg" id="topup-modal-bg">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-header">
+      <button class="modal-close" onclick="closeTopupModal()">✕</button>
+      <span class="eyebrow">Rydanu</span>
+      <h2 data-i18n="topup_section_title">Your balance</h2>
+    </div>
+    <div class="modal-body">
+      <div style="margin-bottom:16px;">
+        <div class="when" data-i18n="topup_current_balance_lbl">Current balance</div>
+        <div class="mono" id="topup-modal-balance-display" style="font-weight:800; font-size:1.6rem; color:var(--teal);">IDR 0</div>
+      </div>
+      <div class="filter-group-title" style="margin-bottom:8px;" data-i18n="topup_choose_amount">Choose an amount to top up</div>
+      <div id="topup-modal-amount-buttons" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px;">
+        <button type="button" class="period-btn" onclick="selectTopupAmount(50000)" data-amount="50000">IDR 50,000</button>
+        <button type="button" class="period-btn" onclick="selectTopupAmount(100000)" data-amount="100000">IDR 100,000</button>
+        <button type="button" class="period-btn" onclick="selectTopupAmount(200000)" data-amount="200000">IDR 200,000</button>
+      </div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:14px;">
+        <input type="number" id="topup-modal-custom-amount" class="form-field" style="max-width:200px; margin:0;" placeholder="Other amount (IDR)" data-i18n-placeholder="topup_custom_placeholder" min="10000" step="1000">
+      </div>
+      <button type="button" class="book-btn" style="width:100%; margin:0;" id="topup-modal-submit-btn" onclick="startTopup('modal')" data-i18n="topup_submit_btn">Top up</button>
+      <p class="tier-footnote" data-i18n="topup_redirect_note">ⓘ You'll be redirected to a secure payment page (QRIS, bank transfer, or e-wallet). Your balance updates automatically once payment is confirmed — this can take up to a minute.</p>
+    </div>
+  </div>
+</div>
+
 
 <!-- tour request detail modal -->
 <div class="modal-bg" id="request-detail-modal-bg">
@@ -7184,20 +7213,36 @@ function payFees(){
 let selectedTopupAmount = null;
 function selectTopupAmount(amount){
   selectedTopupAmount = amount;
-  document.getElementById('topup-custom-amount').value = '';
-  document.querySelectorAll('#topup-amount-buttons .period-btn').forEach(btn=>{
+  const pageCustom = document.getElementById('topup-custom-amount');
+  const modalCustom = document.getElementById('topup-modal-custom-amount');
+  if(pageCustom) pageCustom.value = '';
+  if(modalCustom) modalCustom.value = '';
+  document.querySelectorAll('#topup-amount-buttons .period-btn, #topup-modal-amount-buttons .period-btn').forEach(btn=>{
     btn.classList.toggle('active', Number(btn.dataset.amount) === amount);
   });
 }
-async function startTopup(){
-  const customVal = Number(document.getElementById('topup-custom-amount').value);
+function openTopupModal(){
+  renderTopupBalanceDisplay(realDriverProfile ? realDriverProfile.balance_idr : 0);
+  document.getElementById('topup-modal-bg').classList.add('active');
+}
+function closeTopupModal(){ document.getElementById('topup-modal-bg').classList.remove('active'); }
+document.addEventListener('DOMContentLoaded', ()=>{
+  const bg = document.getElementById('topup-modal-bg');
+  if(bg) bg.addEventListener('click', e=>{ if(e.target.id==='topup-modal-bg') closeTopupModal(); });
+});
+// context: 'page' (Karte auf der Gebühren-Seite) oder 'modal' (Popup vom Banner) --
+// beide teilen sich dieselbe Logik, nur das jeweils sichtbare Eingabefeld/Button wird verwendet.
+async function startTopup(context){
+  const isModal = context === 'modal';
+  const customEl = document.getElementById(isModal ? 'topup-modal-custom-amount' : 'topup-custom-amount');
+  const btn = document.getElementById(isModal ? 'topup-modal-submit-btn' : 'topup-submit-btn');
+  const customVal = Number(customEl.value);
   const amount = customVal > 0 ? Math.round(customVal) : selectedTopupAmount;
   if(!amount || amount < 10000){
     alert(t('topup_err_min_amount'));
     return;
   }
   if(!realDriverProfile){ return; }
-  const btn = document.getElementById('topup-submit-btn');
   const originalLabel = btn.textContent;
   btn.disabled = true;
   btn.textContent = t('topup_loading');
@@ -7222,6 +7267,8 @@ async function startTopup(){
 function renderTopupBalanceDisplay(balance){
   const el = document.getElementById('topup-balance-display');
   if(el) el.textContent = formatIDR(balance || 0);
+  const modalEl = document.getElementById('topup-modal-balance-display');
+  if(modalEl) modalEl.textContent = formatIDR(balance || 0);
 }
 // Rueckkehr von der Xendit-Zahlungsseite erkennen (success_redirect_url / failure_redirect_url).
 // Der Webhook schreibt das Guthaben serverseitig gut -- kann ein paar Sekunden dauern, deshalb
@@ -16976,7 +17023,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v372</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v373</div>
 
 </body>
 </html>
