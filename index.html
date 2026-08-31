@@ -2210,6 +2210,7 @@
       <div class="dash-nav-item" id="nav-calendar-item" data-i18n="nav_calendar" onclick="openCalendar()">Calendar</div>
       <div class="dash-nav-item" data-section="subscription" data-i18n="nav_subscription" onclick="showDashSection('subscription')">Fees &amp; billing</div>
       <div class="dash-nav-item" data-section="inbox" onclick="showDashSection('inbox')"><span data-i18n="nav_inbox">Inbox</span> <span class="inbox-dot" id="inbox-dot" style="display:none;"></span></div>
+      <button type="button" class="wa-support-btn" onclick="showDashSection('subscription')" data-i18n="topup_banner_btn">💰 Top up your balance</button>
       <button type="button" class="wa-support-btn" onclick="openSupportMsg()" data-i18n="support_btn">✉️ Message to Rydanu Support</button>
       <button type="button" class="wa-support-btn" onclick="openQrModal()" data-i18n="dp_qr_dash_btn">📱 Your Rydanu QR code</button>
       <button type="button" class="wa-support-btn" onclick="handleDriverLogout()" style="background:#F7EAEA; color:#B03A3A;">🚪 Abmelden</button>
@@ -10646,6 +10647,7 @@ const translations = {
     results_heading: "Available drivers this week", search_results_in_prefix: "Drivers in",
     tours_heading: "Available tours this week", order_toggle_drivers: "Drivers first", order_toggle_tours: "Tours first", reset_filters_link: "Reset filters", soft_filter_notice: "Not all filters could be matched — showing the closest results.",
     plan_with_driver: "ⓘ The exact attractions and what's included you plan directly with your driver.",
+    topup_banner_btn: "💰 Top up your balance",
     support_btn: "✉️ Message to Rydanu Support", dp_qr_dash_btn: "📱 Your Rydanu QR code",
     support_modal_title: "Message to Rydanu Support",
     support_subject_label: "Subject", support_msg_label: "Your message", support_send_btn: "Send message",
@@ -11010,6 +11012,7 @@ const translations = {
     results_heading: "Verfügbare Fahrer diese Woche", search_results_in_prefix: "Fahrer in",
     tours_heading: "Verfügbare Touren diese Woche", order_toggle_drivers: "Fahrer zuerst", order_toggle_tours: "Touren zuerst", reset_filters_link: "Filter zurücksetzen", soft_filter_notice: "Nicht alle Filter konnten berücksichtigt werden — hier die besten Treffer.",
     plan_with_driver: "ⓘ Die genauen Attraktionen und was enthalten ist, planst du direkt mit deinem Fahrer.",
+    topup_banner_btn: "💰 Guthaben aufladen",
     support_btn: "✉️ Nachricht an Rydanu Support", dp_qr_dash_btn: "📱 Dein Rydanu QR-Code",
     support_modal_title: "Nachricht an Rydanu Support",
     support_subject_label: "Betreff", support_msg_label: "Deine Nachricht", support_send_btn: "Nachricht senden",
@@ -11374,6 +11377,7 @@ const translations = {
     results_heading: "Sopir tersedia minggu ini", search_results_in_prefix: "Sopir di",
     tours_heading: "Tur tersedia minggu ini", order_toggle_drivers: "Sopir dulu", order_toggle_tours: "Tur dulu", reset_filters_link: "Setel ulang filter", soft_filter_notice: "Tidak semua filter dapat diterapkan — menampilkan hasil terdekat.",
     plan_with_driver: "ⓘ Atraksi yang tepat dan apa saja yang termasuk Anda rencanakan langsung dengan sopir Anda.",
+    topup_banner_btn: "💰 Isi ulang saldo Anda",
     support_btn: "✉️ Pesan ke Dukungan Rydanu", dp_qr_dash_btn: "📱 Kode QR Rydanu Anda",
     support_modal_title: "Pesan ke Dukungan Rydanu",
     support_subject_label: "Subjek", support_msg_label: "Pesan Anda", support_send_btn: "Kirim pesan",
@@ -16972,7 +16976,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v371</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v372</div>
 
 </body>
 </html>
