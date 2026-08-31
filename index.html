@@ -7111,7 +7111,7 @@ async function renderRealOverviewStats(){
   if(!realDriverProfile) return;
   const today = new Date().toISOString().slice(0,10);
   const [{ data: freshDriver }, { data: reviews, error: revErr }, { data: overrides }, { data: credits }] = await Promise.all([
-    supabaseClient.from('drivers').select('rank_points, fees_due_idr, balance_idr, is_locked, profile_views').eq('id', realDriverProfile.id).single(),
+    supabaseClient.from('drivers').select('rank_points, fees_due_idr, balance_idr, is_locked, lock_reason, profile_views').eq('id', realDriverProfile.id).single(),
     supabaseClient.from('reviews').select('stars, comment, created_at').eq('driver_id', realDriverProfile.id).order('created_at', { ascending:false }),
     supabaseClient.from('fee_overrides').select('*').eq('driver_id', realDriverProfile.id).lte('starts_at', today).or(`ends_at.is.null,ends_at.gte.${today}`).order('created_at', { ascending:false }).limit(1),
     supabaseClient.from('fee_credits').select('amount_idr, source').eq('driver_id', realDriverProfile.id).eq('applied', false)
@@ -7120,6 +7120,7 @@ async function renderRealOverviewStats(){
   const feesDue = (freshDriver && typeof freshDriver.fees_due_idr === 'number') ? freshDriver.fees_due_idr : 0;
   const balance = (freshDriver && typeof freshDriver.balance_idr === 'number') ? freshDriver.balance_idr : 0;
   const isLocked = !!(freshDriver && freshDriver.is_locked);
+  const lockReason = (freshDriver && freshDriver.lock_reason) || null;
   realDriverProfile.rank_points = points;
   const revs = revErr ? [] : (reviews || []);
   const avg = revs.length ? (revs.reduce((s,r)=>s+r.stars,0) / revs.length) : null;
@@ -7180,13 +7181,19 @@ async function renderRealOverviewStats(){
     if(adminCredit > 0) document.getElementById('admin-credit-amount').textContent = formatIDR(adminCredit) + ' ' + t('referral_credit_pending_note');
   }
 
-  // Gesperrt-Banner (echtes Konto) — dasselbe Banner-Element wie im Demo-Modus, hier ohne "Jetzt zahlen"-Knopf
+  // Gesperrt-Banner (echtes Konto) — dasselbe Banner-Element wie im Demo-Modus, hier ohne "Jetzt zahlen"-Knopf.
+  // Zwei Texte je nach Sperrgrund: 'fees' (alte Gebuehren-Sperre) behaelt den bisherigen,
+  // konkreten Gebuehren-Text. Alles andere (manuell vom Admin gesperrt, Auto-Einzug
+  // fehlgeschlagen, oder unbekannt/Altdaten ohne Grund) zeigt den neuen, allgemeineren
+  // Text ohne Gebuehren-Erwaehnung, der stattdessen auf den Support verweist.
   const banner = document.getElementById('pending-banner');
   if(banner){
     if(isLocked){
       banner.style.display = 'block';
       banner.classList.add('rejected');
-      banner.innerHTML = '🚫 ' + t('payment_suspended_banner').replace('{amount}', formatIDR(feesDue));
+      banner.innerHTML = '🚫 ' + (lockReason === 'fees'
+        ? t('payment_suspended_banner').replace('{amount}', formatIDR(feesDue))
+        : t('payment_suspended_banner_other'));
     } else {
       banner.style.display = 'none';
       banner.classList.remove('rejected');
@@ -11097,6 +11104,7 @@ const translations = {
     admin_openpay_days_left: "{n} days left", admin_confirm_run_settlement: "Run the automatic month-end fee settlement for all drivers now? This charges everyone with open fees and a valid payment method, and starts the 5-day countdown for anyone without one.",
     admin_settlement_done: "Settlement run complete. Check the lists below for results.",
     payment_suspended_banner: "Your account is suspended because your Rydanu fees ({amount}) weren't settled in time. Your tours are hidden from travelers. Pay now to be reinstated automatically.",
+    payment_suspended_banner_other: "Your account has been suspended. Your tours are hidden from travelers. Please contact Rydanu Support to sort this out.",
     auto_payment_success_title: "✓ Automatic fee payment successful", auto_payment_success_body: "We automatically charged your saved payment method {amount} for this month's Rydanu fees (receipt {ref}). Available under \"Fees & billing\".",
     payment_failed_title: "⚠️ Automatic fee payment failed", payment_failed_body: "We couldn't charge your saved payment method for this month's fees ({amount}) — please add a valid payment method and pay by {date}, or your account will be automatically suspended.",
     suspended_inbox_title: "🚫 Account suspended — unpaid fees", suspended_inbox_body: "Your account has been automatically suspended because {amount} in Rydanu fees wasn't paid within 5 days. Your tours are now hidden from travelers. Pay your open fees anytime to be reinstated automatically — you can still access your profile and messages.",
@@ -11224,7 +11232,7 @@ const translations = {
     admin_fch_confirm_delete: "Delete this charge entry? This does not reverse the amount already applied.",
     admin_fc_confirm_delete: "Really delete this credit? The already-credited amount will be deducted from the driver again, if not yet used.",
     admin_fc_empty_default: "No credits created yet.", admin_fc_empty_filtered: "No credits created for this driver yet.",
-    admin_all_drivers_option: "All drivers", admin_drivers_search_placeholder: "Search driver…", admin_delete_btn: "✕ Delete", admin_status_suspended: "🚫 Suspended (unpaid fees)", admin_status_blocked: "🚫 Blocked", admin_status_active: "Active", admin_lock_btn: "Block", admin_unlock_btn: "Unblock", payment_received_title: "Payment received — receipt {ref}", payment_received_body_credit: "We received your fee payment of {amount} (an {credit} referral credit was applied). The receipt is available under \"Fees & billing\".", payment_received_body_plain: "We received your fee payment of {amount}. The receipt is available under \"Fees & billing\".", welcome_inbox_title: "Welcome to Rydanu! 🌴", welcome_inbox_body: "Your registration was received and is under review. Your Rydanu number is {number} — keep it handy for all support requests.", approved_inbox_title: "Your account is approved ✓", approved_inbox_body: "Congratulations! Your profile and all your tours are now live and bookable for travelers.", approved_alert: "{name} has been approved and is now live on Rydanu.", rejected_inbox_title: "Your registration was rejected", rejected_inbox_body: "Reason: {reason} — you can register again with corrected documents or contact support.", rejected_alert: "{name} has been rejected and notified with your reason.", account_blocked_banner: "🚫 Your account has been blocked by Rydanu. Your tours are not visible to travelers. Please contact support via the WhatsApp button below.", rejected_banner: "✕ Your registration was rejected. Reason: {reason}<br>Please contact Rydanu support or register again with corrected documents.",
+    admin_all_drivers_option: "All drivers", admin_drivers_search_placeholder: "Search driver…", admin_delete_btn: "✕ Delete", admin_status_suspended: "🚫 Suspended (unpaid fees)", admin_status_blocked: "🚫 Blocked", admin_status_active: "Active", admin_lock_reason_fees: "fees", admin_lock_reason_autodebit: "auto top-up failed", admin_lock_reason_manual: "manual", admin_lock_btn: "Block", admin_unlock_btn: "Unblock", payment_received_title: "Payment received — receipt {ref}", payment_received_body_credit: "We received your fee payment of {amount} (an {credit} referral credit was applied). The receipt is available under \"Fees & billing\".", payment_received_body_plain: "We received your fee payment of {amount}. The receipt is available under \"Fees & billing\".", welcome_inbox_title: "Welcome to Rydanu! 🌴", welcome_inbox_body: "Your registration was received and is under review. Your Rydanu number is {number} — keep it handy for all support requests.", approved_inbox_title: "Your account is approved ✓", approved_inbox_body: "Congratulations! Your profile and all your tours are now live and bookable for travelers.", approved_alert: "{name} has been approved and is now live on Rydanu.", rejected_inbox_title: "Your registration was rejected", rejected_inbox_body: "Reason: {reason} — you can register again with corrected documents or contact support.", rejected_alert: "{name} has been rejected and notified with your reason.", account_blocked_banner: "🚫 Your account has been blocked by Rydanu. Your tours are not visible to travelers. Please contact support via the WhatsApp button below.", rejected_banner: "✕ Your registration was rejected. Reason: {reason}<br>Please contact Rydanu support or register again with corrected documents.",
     modal_services_label: "Service (on request)",
     modal_start_label: "Start of tour",
     surcharge_note: "against surcharge",
@@ -11468,6 +11476,7 @@ const translations = {
     admin_openpay_days_left: "noch {n} Tage", admin_confirm_run_settlement: "Jetzt die automatische Monatsend-Gebührenabrechnung für alle Fahrer ausführen? Das belastet alle mit offenen Gebühren und gültiger Zahlungsmethode und startet die 5-Tage-Frist für alle ohne.",
     admin_settlement_done: "Abrechnungslauf abgeschlossen. Ergebnisse unten prüfen.",
     payment_suspended_banner: "Dein Konto ist gesperrt, weil deine Rydanu-Gebühren ({amount}) nicht rechtzeitig beglichen wurden. Deine Touren sind für Reisende ausgeblendet. Jetzt bezahlen, um automatisch wieder freigeschaltet zu werden.",
+    payment_suspended_banner_other: "Dein Konto wurde gesperrt. Deine Touren sind für Reisende ausgeblendet. Bitte wende dich an den Rydanu-Support, um das zu klären.",
     auto_payment_success_title: "✓ Automatische Gebührenzahlung erfolgreich", auto_payment_success_body: "Wir haben deiner hinterlegten Zahlungsmethode automatisch {amount} für die Rydanu-Gebühren diesen Monats belastet (Beleg {ref}). Verfügbar unter \"Gebühren & Abrechnung\".",
     payment_failed_title: "⚠️ Automatische Gebührenzahlung fehlgeschlagen", payment_failed_body: "Wir konnten deine hinterlegte Zahlungsmethode nicht mit den Gebühren diesen Monats ({amount}) belasten — bitte hinterlege eine gültige Zahlungsmethode und zahle bis {date}, sonst wird dein Konto automatisch gesperrt.",
     suspended_inbox_title: "🚫 Konto gesperrt — unbezahlte Gebühren", suspended_inbox_body: "Dein Konto wurde automatisch gesperrt, weil {amount} an Rydanu-Gebühren nicht innerhalb von 5 Tagen bezahlt wurden. Deine Touren sind jetzt für Reisende ausgeblendet. Bezahle deine offenen Gebühren jederzeit, um automatisch wieder freigeschaltet zu werden — Profil und Nachrichten kannst du weiterhin nutzen.",
@@ -11595,7 +11604,7 @@ const translations = {
     admin_fch_confirm_delete: "Diesen Belastungs-Eintrag löschen? Der bereits verrechnete Betrag wird dadurch nicht rückgängig gemacht.",
     admin_fc_confirm_delete: "Diese Gutschrift wirklich löschen? Der bereits gutgeschriebene Betrag wird dem Fahrer wieder abgezogen, sofern er noch nicht verbraucht wurde.",
     admin_fc_empty_default: "Noch keine Gutschriften erstellt.", admin_fc_empty_filtered: "Für diesen Fahrer wurden noch keine Gutschriften erstellt.",
-    admin_all_drivers_option: "Alle Fahrer", admin_drivers_search_placeholder: "Fahrer suchen…", admin_delete_btn: "✕ Löschen", admin_status_suspended: "🚫 Gesperrt (unbezahlte Gebühren)", admin_status_blocked: "🚫 Gesperrt", admin_status_active: "Aktiv", admin_lock_btn: "Sperren", admin_unlock_btn: "Entsperren", payment_received_title: "Zahlung erhalten — Beleg {ref}", payment_received_body_credit: "Wir haben deine Gebührenzahlung von {amount} erhalten (eine Empfehlungs-Gutschrift von {credit} wurde angerechnet). Der Beleg ist unter \"Gebühren & Abrechnung\" verfügbar.", payment_received_body_plain: "Wir haben deine Gebührenzahlung von {amount} erhalten. Der Beleg ist unter \"Gebühren & Abrechnung\" verfügbar.", welcome_inbox_title: "Willkommen bei Rydanu! 🌴", welcome_inbox_body: "Deine Registrierung ist eingegangen und wird geprüft. Deine Rydanu-Nummer ist {number} — halte sie für alle Support-Anfragen bereit.", approved_inbox_title: "Dein Konto ist freigeschaltet ✓", approved_inbox_body: "Glückwunsch! Dein Profil und alle deine Touren sind jetzt live und für Reisende buchbar.", approved_alert: "{name} wurde freigeschaltet und ist jetzt live auf Rydanu.", rejected_inbox_title: "Deine Registrierung wurde abgelehnt", rejected_inbox_body: "Grund: {reason} — du kannst dich mit korrigierten Dokumenten erneut registrieren oder den Support kontaktieren.", rejected_alert: "{name} wurde abgelehnt und über deinen Grund benachrichtigt.", account_blocked_banner: "🚫 Dein Konto wurde von Rydanu gesperrt. Deine Touren sind für Reisende nicht sichtbar. Bitte kontaktiere den Support über den WhatsApp-Button unten.", rejected_banner: "✕ Deine Registrierung wurde abgelehnt. Grund: {reason}<br>Bitte kontaktiere den Rydanu-Support oder registriere dich mit korrigierten Dokumenten erneut.",
+    admin_all_drivers_option: "Alle Fahrer", admin_drivers_search_placeholder: "Fahrer suchen…", admin_delete_btn: "✕ Löschen", admin_status_suspended: "🚫 Gesperrt (unbezahlte Gebühren)", admin_status_blocked: "🚫 Gesperrt", admin_status_active: "Aktiv", admin_lock_reason_fees: "Gebühren", admin_lock_reason_autodebit: "Auto-Einzug fehlgeschlagen", admin_lock_reason_manual: "manuell", admin_lock_btn: "Sperren", admin_unlock_btn: "Entsperren", payment_received_title: "Zahlung erhalten — Beleg {ref}", payment_received_body_credit: "Wir haben deine Gebührenzahlung von {amount} erhalten (eine Empfehlungs-Gutschrift von {credit} wurde angerechnet). Der Beleg ist unter \"Gebühren & Abrechnung\" verfügbar.", payment_received_body_plain: "Wir haben deine Gebührenzahlung von {amount} erhalten. Der Beleg ist unter \"Gebühren & Abrechnung\" verfügbar.", welcome_inbox_title: "Willkommen bei Rydanu! 🌴", welcome_inbox_body: "Deine Registrierung ist eingegangen und wird geprüft. Deine Rydanu-Nummer ist {number} — halte sie für alle Support-Anfragen bereit.", approved_inbox_title: "Dein Konto ist freigeschaltet ✓", approved_inbox_body: "Glückwunsch! Dein Profil und alle deine Touren sind jetzt live und für Reisende buchbar.", approved_alert: "{name} wurde freigeschaltet und ist jetzt live auf Rydanu.", rejected_inbox_title: "Deine Registrierung wurde abgelehnt", rejected_inbox_body: "Grund: {reason} — du kannst dich mit korrigierten Dokumenten erneut registrieren oder den Support kontaktieren.", rejected_alert: "{name} wurde abgelehnt und über deinen Grund benachrichtigt.", account_blocked_banner: "🚫 Dein Konto wurde von Rydanu gesperrt. Deine Touren sind für Reisende nicht sichtbar. Bitte kontaktiere den Support über den WhatsApp-Button unten.", rejected_banner: "✕ Deine Registrierung wurde abgelehnt. Grund: {reason}<br>Bitte kontaktiere den Rydanu-Support oder registriere dich mit korrigierten Dokumenten erneut.",
     modal_services_label: "Service (auf Anfrage)",
     modal_start_label: "Start der Tour",
     surcharge_note: "gegen Aufpreis",
@@ -11839,6 +11848,7 @@ const translations = {
     admin_openpay_days_left: "{n} hari lagi", admin_confirm_run_settlement: "Jalankan penyelesaian biaya akhir bulan otomatis untuk semua sopir sekarang? Ini akan menagih semua yang memiliki biaya terbuka dan metode pembayaran valid, dan memulai hitung mundur 5 hari untuk yang tidak punya.",
     admin_settlement_done: "Penyelesaian selesai. Periksa daftar di bawah untuk hasilnya.",
     payment_suspended_banner: "Akun Anda ditangguhkan karena biaya Rydanu Anda ({amount}) tidak dilunasi tepat waktu. Tur Anda disembunyikan dari wisatawan. Bayar sekarang untuk diaktifkan kembali secara otomatis.",
+    payment_suspended_banner_other: "Akun Anda telah ditangguhkan. Tur Anda disembunyikan dari wisatawan. Silakan hubungi Rydanu Support untuk menyelesaikannya.",
     auto_payment_success_title: "✓ Pembayaran biaya otomatis berhasil", auto_payment_success_body: "Kami secara otomatis menagih metode pembayaran tersimpan Anda sebesar {amount} untuk biaya Rydanu bulan ini (kuitansi {ref}). Tersedia di bawah \"Biaya & tagihan\".",
     payment_failed_title: "⚠️ Pembayaran biaya otomatis gagal", payment_failed_body: "Kami tidak dapat menagih metode pembayaran tersimpan Anda untuk biaya bulan ini ({amount}) — mohon tambahkan metode pembayaran yang valid dan bayar sebelum {date}, atau akun Anda akan ditangguhkan otomatis.",
     suspended_inbox_title: "🚫 Akun ditangguhkan — biaya belum dibayar", suspended_inbox_body: "Akun Anda telah ditangguhkan secara otomatis karena {amount} biaya Rydanu tidak dibayar dalam 5 hari. Tur Anda kini disembunyikan dari wisatawan. Bayar biaya terbuka Anda kapan saja untuk diaktifkan kembali secara otomatis — Anda masih dapat mengakses profil dan pesan Anda.",
@@ -11966,7 +11976,7 @@ const translations = {
     admin_fch_confirm_delete: "Hapus entri pembebanan ini? Jumlah yang sudah diterapkan tidak akan dibatalkan.",
     admin_fc_confirm_delete: "Yakin ingin menghapus kredit ini? Jumlah yang sudah dikreditkan akan dikurangi kembali dari sopir, jika belum digunakan.",
     admin_fc_empty_default: "Belum ada kredit yang dibuat.", admin_fc_empty_filtered: "Belum ada kredit yang dibuat untuk sopir ini.",
-    admin_all_drivers_option: "Semua sopir", admin_drivers_search_placeholder: "Cari sopir…", admin_delete_btn: "✕ Hapus", admin_status_suspended: "🚫 Ditangguhkan (biaya belum dibayar)", admin_status_blocked: "🚫 Diblokir", admin_status_active: "Aktif", admin_lock_btn: "Blokir", admin_unlock_btn: "Buka blokir", payment_received_title: "Pembayaran diterima — kwitansi {ref}", payment_received_body_credit: "Kami telah menerima pembayaran biaya Anda sebesar {amount} (kredit referral sebesar {credit} telah diterapkan). Kwitansi tersedia di \"Biaya & tagihan\".", payment_received_body_plain: "Kami telah menerima pembayaran biaya Anda sebesar {amount}. Kwitansi tersedia di \"Biaya & tagihan\".", welcome_inbox_title: "Selamat datang di Rydanu! 🌴", welcome_inbox_body: "Pendaftaran Anda telah diterima dan sedang ditinjau. Nomor Rydanu Anda adalah {number} — simpan baik-baik untuk semua permintaan dukungan.", approved_inbox_title: "Akun Anda telah disetujui ✓", approved_inbox_body: "Selamat! Profil dan semua tur Anda sekarang aktif dan dapat dipesan oleh wisatawan.", approved_alert: "{name} telah disetujui dan sekarang aktif di Rydanu.", rejected_inbox_title: "Pendaftaran Anda ditolak", rejected_inbox_body: "Alasan: {reason} — Anda dapat mendaftar lagi dengan dokumen yang telah diperbaiki atau menghubungi dukungan.", rejected_alert: "{name} telah ditolak dan diberi tahu dengan alasan Anda.", account_blocked_banner: "🚫 Akun Anda telah diblokir oleh Rydanu. Tur Anda tidak terlihat oleh wisatawan. Silakan hubungi dukungan melalui tombol WhatsApp di bawah.", rejected_banner: "✕ Pendaftaran Anda ditolak. Alasan: {reason}<br>Silakan hubungi dukungan Rydanu atau daftar lagi dengan dokumen yang telah diperbaiki.",
+    admin_all_drivers_option: "Semua sopir", admin_drivers_search_placeholder: "Cari sopir…", admin_delete_btn: "✕ Hapus", admin_status_suspended: "🚫 Ditangguhkan (biaya belum dibayar)", admin_status_blocked: "🚫 Diblokir", admin_status_active: "Aktif", admin_lock_reason_fees: "biaya", admin_lock_reason_autodebit: "auto top-up gagal", admin_lock_reason_manual: "manual", admin_lock_btn: "Blokir", admin_unlock_btn: "Buka blokir", payment_received_title: "Pembayaran diterima — kwitansi {ref}", payment_received_body_credit: "Kami telah menerima pembayaran biaya Anda sebesar {amount} (kredit referral sebesar {credit} telah diterapkan). Kwitansi tersedia di \"Biaya & tagihan\".", payment_received_body_plain: "Kami telah menerima pembayaran biaya Anda sebesar {amount}. Kwitansi tersedia di \"Biaya & tagihan\".", welcome_inbox_title: "Selamat datang di Rydanu! 🌴", welcome_inbox_body: "Pendaftaran Anda telah diterima dan sedang ditinjau. Nomor Rydanu Anda adalah {number} — simpan baik-baik untuk semua permintaan dukungan.", approved_inbox_title: "Akun Anda telah disetujui ✓", approved_inbox_body: "Selamat! Profil dan semua tur Anda sekarang aktif dan dapat dipesan oleh wisatawan.", approved_alert: "{name} telah disetujui dan sekarang aktif di Rydanu.", rejected_inbox_title: "Pendaftaran Anda ditolak", rejected_inbox_body: "Alasan: {reason} — Anda dapat mendaftar lagi dengan dokumen yang telah diperbaiki atau menghubungi dukungan.", rejected_alert: "{name} telah ditolak dan diberi tahu dengan alasan Anda.", account_blocked_banner: "🚫 Akun Anda telah diblokir oleh Rydanu. Tur Anda tidak terlihat oleh wisatawan. Silakan hubungi dukungan melalui tombol WhatsApp di bawah.", rejected_banner: "✕ Pendaftaran Anda ditolak. Alasan: {reason}<br>Silakan hubungi dukungan Rydanu atau daftar lagi dengan dokumen yang telah diperbaiki.",
     modal_services_label: "Layanan (atas permintaan)",
     modal_start_label: "Awal tur",
     surcharge_note: "dengan biaya tambahan",
@@ -16329,7 +16339,7 @@ function closeFeeChargesModal(){ document.getElementById('fee-charges-modal-bg')
 let realAllDriversCache = [];
 async function loadRealAllDriversCache(){
   const { data, error } = await supabaseClient.from('drivers')
-    .select('id, name, lw_number, region, is_locked, locked_since, fees_due_idr, balance_idr, phone, auto_debit_enabled')
+    .select('id, name, lw_number, region, is_locked, locked_since, lock_reason, fees_due_idr, balance_idr, phone, auto_debit_enabled')
     .eq('status', 'approved')
     .order('name');
   if(error){ console.error('Fahrerliste konnte nicht geladen werden (evtl. nicht als Admin eingeloggt):', error); realAllDriversCache = []; return; }
@@ -16374,12 +16384,20 @@ async function renderRealAdminBlockList(){
   }
   el.innerHTML = list.map(d=>{
     const safeName = escapeHtml(d.name).replace(/'/g, "\\'");
+    // Sperrgrund als kurzer Zusatz neben dem Status-Badge (31.8.): faellt sofort auf, WARUM
+    // ein Fahrer gesperrt ist, ohne extra nachschauen zu muessen. Unbekannt/Altdaten (null)
+    // fallen bewusst auf "Manuell" zurueck -- konservativste Annahme, kein falsches "Gebuehren".
+    const lockReasonLabel = d.is_locked
+      ? ' · ' + (d.lock_reason === 'fees' ? t('admin_lock_reason_fees')
+        : d.lock_reason === 'autodebit_failed' ? t('admin_lock_reason_autodebit')
+        : t('admin_lock_reason_manual'))
+      : '';
     return `
     <div class="booking-row admin-driver-row ${d.is_locked?'blocked-row':''}">
       <div style="flex:1;">
         <div class="who">${escapeHtml(d.name)}</div><div class="when">${d.region==='lombok'?'Lombok':'Bali'} · ${t('admin_stat_fees')||'Gebühren'}: ${formatIDR(d.fees_due_idr||0)}${d.declinedCount ? ` · ⚠️ ${d.declinedCount} ${t('admin_declined_count_label')}` : ''}</div>
       </div>
-      <span class="status-pill ${d.is_locked?'pending':'confirmed'}">${d.is_locked ? t('admin_status_blocked') : t('admin_status_active')}</span>
+      <span class="status-pill ${d.is_locked?'pending':'confirmed'}">${d.is_locked ? t('admin_status_blocked') : t('admin_status_active')}${lockReasonLabel}</span>
       <button type="button" class="${d.auto_debit_enabled ? 'accept-btn' : 'lock-btn'}" style="margin-left:8px; white-space:nowrap;" onclick="event.stopPropagation(); toggleAutoDebit('${d.id}', ${d.auto_debit_enabled ? 'true':'false'}, '${safeName}')">${d.auto_debit_enabled ? '⭐ VIP aktiv' : '☆ VIP Auto-Einzug'}</button>
       <button type="button" class="${d.is_locked ? 'accept-btn' : 'lock-btn'}" style="margin-left:8px; white-space:nowrap;" onclick="event.stopPropagation(); toggleRealDriverLock('${d.id}', ${d.is_locked ? 'true':'false'}, '${safeName}')">${d.is_locked ? '🔓 ' + t('admin_unlock_btn') : '🔒 ' + t('admin_lock_btn')}</button>
       <button type="button" class="cancel-btn" style="margin-left:8px; padding:6px 10px; border-radius:5px; white-space:nowrap;" onclick="event.stopPropagation(); deleteRealDriver('${d.id}', '${safeName}')">🗑️ Löschen</button>
@@ -16402,7 +16420,8 @@ async function toggleRealDriverLock(id, isLocked, name){
   const newLocked = !isLocked;
   const { error } = await supabaseClient.from('drivers').update({
     is_locked: newLocked,
-    locked_since: newLocked ? new Date().toISOString() : null
+    locked_since: newLocked ? new Date().toISOString() : null,
+    lock_reason: newLocked ? 'manual' : null
   }).eq('id', id);
   if(error){ alert('Sperren/Entsperren fehlgeschlagen: ' + error.message); console.error(error); return; }
   await supabaseClient.from('driver_messages').insert({
@@ -17279,7 +17298,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v381</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v382</div>
 
 <!-- Etappe 4: Lade-Overlay waehrend "Buchung annehmen" im Hintergrund laeuft (kann bei VIP-Fahrern
      mit Auto-Einzug ein paar Sekunden dauern, da erst mit Xendit gesprochen wird, bevor die
