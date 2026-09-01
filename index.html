@@ -3217,155 +3217,6 @@
 </div>
 
 <!-- register new driver modal -->
-<div class="modal-bg" id="register-modal-bg">
-  <div class="modal">
-    <div class="modal-header">
-      <button class="modal-close" onclick="closeRegisterDriver()">✕</button>
-      <span class="eyebrow" id="register-modal-eyebrow" data-i18n="join_rydanu_eyebrow">Join Rydanu</span>
-      <h2 id="register-modal-title" data-i18n="register_driver_modal_title">Register as new driver</h2>
-    </div>
-
-    <div class="modal-body" id="register-step-form">
-      <div class="form-field">
-        <label data-i18n="rd_name_label">Full name</label>
-        <input type="text" id="rd-name" placeholder="e.g. Made Suarsana">
-      </div>
-      <div class="form-field">
-        <label data-i18n="rd_homeregion_label">Home region</label>
-        <select id="rd-region">
-          <option value="Kuta">Kuta</option>
-          <option value="Uluwatu">Uluwatu</option>
-          <option value="Lovina">Lovina</option>
-          <option value="Sidemen">Sidemen</option>
-          <option value="Ubud">Ubud</option>
-          <option value="Amed">Amed</option>
-        </select>
-      </div>
-      <div class="form-field">
-        <label data-i18n="rd_lang_label">Languages spoken</label>
-        <div class="chip-row" data-group="rd-lang">
-          <button type="button" class="chip" data-value="EN" data-i18n="lang_en">Englisch</button>
-          <button type="button" class="chip" data-value="DE" data-i18n="lang_de">Deutsch</button>
-          <button type="button" class="chip" data-value="ID" data-i18n="lang_id">Indonesisch</button>
-          <button type="button" class="chip" data-value="FR" data-i18n="lang_fr">Französisch</button>
-          <button type="button" class="chip" data-value="ZH" data-i18n="lang_zh">Chinesisch (Mandarin)</button>
-          <button type="button" class="chip" data-value="RU" data-i18n="lang_ru">Russisch</button>
-        </div>
-      </div>
-      <div class="form-field">
-        <label data-i18n="trust_badges_label">Trust badges (shown on your profile)</label>
-        <label class="nl-service-check"><input type="checkbox" id="rd-female"> <span data-i18n="badge_female">👩 Female driver</span></label>
-        <label class="nl-service-check"><input type="checkbox" id="rd-childfriendly"> <span data-i18n="badge_child">👶 Child-friendly</span></label>
-        <label class="nl-service-check"><input type="checkbox" id="rd-guidecert"> <span data-i18n="badge_guide">🎓 Tour guide certified</span></label>
-        <label class="nl-service-check" style="margin-bottom:12px;"><input type="checkbox" id="rd-firstaid"> <span data-i18n="badge_firstaid">🩹 First aid trained</span></label>
-      </div>
-      <div class="form-field">
-        <label data-i18n="rd_referral_label">Referral code <span class="optional" data-i18n="lbl_optional_inline">(optional)</span></label>
-        <input type="text" id="rd-referral" data-i18n-placeholder="rd_referral_ph" placeholder="e.g. RY-104 — the Rydanu number of the driver who invited you">
-        <p class="note" style="margin-top:6px;" data-i18n="rd_referral_hint">Were you invited by another driver? Enter their Rydanu number — they'll receive an IDR 100,000 fee credit once your account is approved and you complete your first booking.</p>
-      </div>
-      <div class="form-field">
-        <label data-i18n="rd_vtype_label">Vehicle type *</label>
-        <select id="rd-vtype">
-          <option value="Standard Car" data-i18n="vt_standard">Standard Car</option>
-          <option value="Family Car" data-i18n="vt_family">Family Car</option>
-          <option value="Minivan" data-i18n="vt_minivan">Minivan</option>
-          <option value="Luxury Car" data-i18n="vt_luxury">Luxury Car</option>
-          <option value="Large Vehicle" data-i18n="vt_large">More than 5 seats</option>
-        </select>
-      </div>
-      <div class="form-field">
-        <label data-i18n="rd_seats_label">Number of seats</label>
-        <input type="text" id="rd-seats" inputmode="numeric" placeholder="e.g. 4">
-      </div>
-      <div class="form-field">
-        <label data-i18n="rd_car_label">Model</label>
-        <input type="text" id="rd-car" placeholder="e.g. Toyota Avanza">
-      </div>
-      <div class="form-row">
-        <div class="form-field">
-          <label data-i18n="rd_plate_label">License plate *</label>
-          <input type="text" id="rd-plate" placeholder="e.g. DK 1234 AB">
-        </div>
-        <div class="form-field">
-          <label data-i18n="rd_color_label">Car color *</label>
-          <input type="text" id="rd-color" placeholder="e.g. Silver">
-        </div>
-      </div>
-      <div class="form-field">
-        <label data-i18n="rd_paylink_label">Payment link for customers who prefer to pay digitally (Wise / Revolut / PayPal) — optional</label>
-        <input type="text" id="rd-paylink" placeholder="e.g. https://wise.com/pay/yourname">
-      </div>
-      <label class="nl-service-check" style="margin-bottom:12px;"><input type="checkbox" id="rd-qris" checked> <span data-i18n="rd_qris_label">I accept QRIS (GoPay / OVO / DANA)</span></label>
-
-      <div class="doc-upload-section">
-        <div class="filter-group-title" data-i18n="rd_docs_title">Upload your documents — all 4 are mandatory</div>
-        <div class="doc-upload-row">
-          <label class="doc-upload-item">
-            <input type="file" id="rd-doc-license" accept="image/*,.pdf" onchange="updateDocStatus()">
-            <span class="doc-icon">🪪</span>
-            <span data-i18n="rd_doc_license">Driver's license *</span>
-            <span class="doc-status" id="rd-doc-license-status">—</span>
-          </label>
-          <label class="doc-upload-item">
-            <input type="file" id="rd-doc-insurance" accept="image/*,.pdf" onchange="updateDocStatus()">
-            <span class="doc-icon">🛡️</span>
-            <span data-i18n="rd_doc_insurance">Car insurance *</span>
-            <span class="doc-status" id="rd-doc-insurance-status">—</span>
-          </label>
-          <label class="doc-upload-item">
-            <input type="file" id="rd-doc-papers" accept="image/*,.pdf" onchange="updateDocStatus()">
-            <span class="doc-icon">📄</span>
-            <span data-i18n="rd_doc_papers">Vehicle papers</span>
-            <span class="doc-status" id="rd-doc-papers-status">—</span>
-          </label>
-          <label class="doc-upload-item">
-            <input type="file" id="rd-doc-selfie" accept="image/*" onchange="updateDocStatus()">
-            <span class="doc-icon">🤳</span>
-            <span data-i18n="rd_doc_selfie">Selfie of you *</span>
-            <span class="doc-status" id="rd-doc-selfie-status">—</span>
-          </label>
-        </div>
-        <p class="doc-count-hint" id="doc-count-hint">0 / 4 uploaded</p>
-      </div>
-
-      <p class="form-error" id="rd-error"></p>
-      <p class="note" style="margin-top:0;" data-i18n="rd_note">You'll add your first tour afterwards from "My listings" in your dashboard — just like every other driver on Rydanu.</p>
-      <button class="book-btn" id="register-modal-submit" onclick="submitRegisterDriver()" data-i18n="rd_submit_btn">Create my profile</button>
-    </div>
-
-    <div class="modal-body" id="register-step-pending" style="display:none;">
-      <div class="confirm-check" style="background:var(--gold);">⏳</div>
-      <h3 class="confirm-title" data-i18n="rd_pending_title">Registration submitted</h3>
-      <p class="confirm-sub" data-i18n="rd_pending_sub">Your profile is now pending approval before it goes live.</p>
-
-      <div class="notify-panel">
-        <div class="notify-row">
-          <div class="notify-icon">✉️</div>
-          <div class="notify-text">
-            <div class="notify-title" data-i18n="rd_notify_admin_email">Email to Rydanu admin</div>
-            <div class="notify-status sent" id="rd-notify-admin-email-status">Sent ✓</div>
-          </div>
-        </div>
-        <div class="notify-row">
-          <div class="notify-icon">💬</div>
-          <div class="notify-text">
-            <div class="notify-title" data-i18n="rd_notify_admin_wa">WhatsApp to Rydanu admin</div>
-            <div class="notify-status sent" id="rd-notify-admin-wa-status">Sent ✓</div>
-          </div>
-        </div>
-        <div class="notify-row">
-          <div class="notify-icon">📲</div>
-          <div class="notify-text">
-            <div class="notify-title" data-i18n="rd_notify_driver">Email &amp; WhatsApp to you</div>
-            <div class="notify-status sent" id="rd-notify-driver-status">Sent ✓</div>
-          </div>
-        </div>
-      </div>
-      <button class="book-btn" onclick="closeRegisterAfterPending()" data-i18n="rd_pending_done_btn">Go to my dashboard</button>
-    </div>
-  </div>
-</div>
 
 <!-- edit profile modal -->
 <!-- Passwort vergessen -->
@@ -4261,30 +4112,6 @@
 </div>
 
 <!-- driver registration terms & conditions modal -->
-<div class="modal-bg" id="reg-terms-modal-bg">
-  <div class="modal" style="max-width:480px;">
-    <div class="modal-header">
-      <button class="modal-close" onclick="closeRegTermsModal()">✕</button>
-      <span class="eyebrow" data-i18n="reg_terms_eyebrow">Before you submit</span>
-      <h2 data-i18n="reg_terms_title">Driver terms &amp; conditions</h2>
-    </div>
-    <div class="modal-body">
-      <div style="max-height:320px; overflow-y:auto; padding:12px 14px; background:var(--paper-dim); border-radius:8px; font-family:'Public Sans'; font-size:0.85rem; line-height:1.6;" data-i18n-html="reg_terms_body">
-        <strong>1. Bookings only through Rydanu.</strong> If a traveler found you via Rydanu, the tour must be booked and paid through Rydanu. Arranging payment privately to bypass the platform is not allowed and can lead to account suspension.<br><br>
-        <strong>2. Fees.</strong> A small platform fee applies to every booking you accept, based on the tour price, and is charged to your balance immediately when you accept — see "Fees &amp; billing" in your dashboard.<br><br>
-        <strong>3. Cancellations.</strong> If a guest doesn't show up, the platform fee already charged for that booking is not refunded. If you cancel a confirmed tour yourself, a fixed cancellation fee of IDR 30,000 applies.<br><br>
-        <strong>4. Keep your profile accurate.</strong> Vehicle, documents, service regions and prices must reflect reality. Update your listing whenever your vehicle or availability changes.<br><br>
-        <strong>5. Conduct.</strong> Be respectful, punctual and safe. Repeated cancellations, poor reviews or safety issues can lead to suspension or removal from Rydanu.<br><br>
-        <strong>6. Payments.</strong> Rydanu never handles tour payments — guests pay you directly, in cash or via the payment details you provide (QRIS / payment link). Rydanu is not liable for errors in the details you submit.
-      </div>
-      <label class="nl-service-check" style="margin-top:14px;">
-        <input type="checkbox" id="reg-terms-checkbox">
-        <span data-i18n="reg_terms_checkbox_label">I have read and accept the Rydanu driver terms &amp; conditions.</span>
-      </label>
-      <button class="book-btn" id="reg-terms-submit-btn" disabled onclick="confirmRegTermsAndSubmit()" data-i18n="reg_terms_submit_btn">Accept &amp; submit registration</button>
-    </div>
-  </div>
-</div>
 
 <!-- calendar day detail modal: shows every tour on that day -->
 <div class="modal-bg" id="cal-day-modal-bg">
@@ -6505,23 +6332,7 @@ async function submitMyReview(){
     }
     document.getElementById('mb-review-section').style.display = 'none';
     document.getElementById('mb-review-done').style.display = 'block';
-    return;
   }
-
-  const b = driverDataStore[mbFound.driverId][mbFound.source][mbFound.index];
-  const store = driverDataStore[mbFound.driverId];
-  if(!Array.isArray(store.reviews)) store.reviews = [];
-  store.reviews.unshift({
-    name: b.who, stars: '★'.repeat(mbStarRating) + '☆'.repeat(5-mbStarRating), starsNum: mbStarRating,
-    text: text || '—', photo: mbReviewPhoto, date: todayMsgDate()
-  });
-  b.reviewed = true;
-  syncDriverRating(mbFound.driverId);
-  renderDriverGrid(visibleDrivers());
-  if(mbFound.driverId === currentDriverId) renderOverviewStats();
-  saveState();
-  document.getElementById('mb-review-section').style.display = 'none';
-  document.getElementById('mb-review-done').style.display = 'block';
 }
 async function cancelMyBooking(){
   if(!mbFound) return;
@@ -6538,21 +6349,7 @@ async function cancelMyBooking(){
     }
     closeMyBooking();
     alert(t('mb_cancel_requested_note'));
-    return;
   }
-  if(mbFound.source !== 'bookings') return;
-  const b = driverDataStore[mbFound.driverId].bookings[mbFound.index];
-  if(!b) return;
-  if(b.status === 'cancel_requested'){
-    alert(t('mb_cancel_already_requested'));
-    return;
-  }
-  if(!confirm(t('mb_cancel_confirm'))) return;
-  b.status = 'cancel_requested';
-  if(mbFound.driverId === currentDriverId){ renderDriverBookings(); renderOverviewStats(); renderAllBookings(); }
-  saveState();
-  closeMyBooking();
-  alert(t('mb_cancel_requested_note'));
 }
 let lastBookingRef = null;
 
@@ -6790,19 +6587,6 @@ function getDriverCreditBalance(driverId){
   return feeCredits.filter(c => c.driverId === driverId).reduce((sum,c) => sum + Number(c.amountIDR||0), 0);
 }
 
-function loadDriverContext(id){
-  currentDriverId = id;
-  const store = driverDataStore[id];
-  driverListings = store.listings;
-  driverBookings = store.bookings;
-  completedBookings = store.completed;
-  reviews = store.reviews;
-  renderProfileChip();
-  renderOverviewStats();
-  renderDriverBookings();
-  updateRequestsDot();
-  showDashSection('overview');
-}
 function renderProfileChip(){
   // echte Fahrer werden ausschliesslich ueber applyRealDriverProfileToUI() dargestellt
 }
@@ -10514,96 +10298,6 @@ function openRealRegisterDriver(){
   if(!realDriverProfile){ toggleAuthForm('signup'); }
   window.scrollTo({ top:0, behavior:'instant' });
 }
-// ================= LEGACY — nicht mehr erreichbar (seit Baustein 11) =================
-// Das folgende Demo-Registrierungsformular (Modal weiter unten im HTML: #register-modal-bg)
-// speichert nur lokal im Browser (driverProfiles) und legt NIE einen echten Datenbank-Eintrag an.
-// Es wird seit Baustein 11 nirgends mehr aufgerufen (der Nav-Button nutzt jetzt openRealRegisterDriver()).
-// Bewusst noch nicht gelöscht, um nichts an anderer Stelle zu riskieren — kann bei der
-// Endkontrolle (End-to-End-Check) komplett entfernt werden.
-function openRegisterDriver(){
-  document.getElementById('register-modal-bg').classList.add('active');
-}
-function closeRegisterDriver(){
-  document.getElementById('register-modal-bg').classList.remove('active');
-}
-document.getElementById('register-modal-bg').addEventListener('click', e=>{ if(e.target.id==='register-modal-bg') closeRegisterDriver(); });
-document.querySelectorAll('[data-group="rd-lang"] .chip').forEach(chip=>{
-  chip.addEventListener('click', ()=>{
-    const val = chip.dataset.value;
-    const idx = rdSelectedLangs.indexOf(val);
-    if(idx===-1){ rdSelectedLangs.push(val); chip.classList.add('chip-active'); }
-    else { rdSelectedLangs.splice(idx,1); chip.classList.remove('chip-active'); }
-  });
-});
-
-// ---- document upload status ----
-const docFields = ['license','insurance','papers','selfie'];
-function updateDocStatus(){
-  let count = 0;
-  docFields.forEach(f=>{
-    const input = document.getElementById('rd-doc-'+f);
-    const item = input.closest('.doc-upload-item');
-    const statusEl = document.getElementById('rd-doc-'+f+'-status');
-    const has = input.files && input.files.length > 0;
-    if(has) count++;
-    item.classList.toggle('uploaded', has);
-    statusEl.textContent = has ? '✓ ' + input.files[0].name.slice(0,14) : '—';
-  });
-  const hint = document.getElementById('doc-count-hint');
-  hint.textContent = count + ' / 4 uploaded' + (count===4 ? '' : ' — all 4 required');
-  hint.classList.toggle('enough', count===4);
-  return count;
-}
-
-// reads an uploaded doc: images become a small preview dataURL, PDFs keep their name only
-function readDocFile(input){
-  return new Promise(resolve=>{
-    if(!input.files || !input.files.length){ resolve(null); return; }
-    const file = input.files[0];
-    if(file.type.startsWith('image/')){
-      cropImageToSquare(file, 400, dataUrl => resolve({name:file.name, dataUrl}));
-    } else {
-      resolve({name:file.name, dataUrl:null});
-    }
-  });
-}
-async function submitRegisterDriver(){
-  const name = document.getElementById('rd-name').value.trim();
-  updateDocStatus();
-  const plate = document.getElementById('rd-plate').value.trim();
-  const color = document.getElementById('rd-color').value.trim();
-  const missingDocs = docFields.filter(f => document.getElementById('rd-doc-'+f).files.length === 0);
-
-  if(!name){
-    document.getElementById('rd-error').textContent = t('rd_err_name');
-    return;
-  }
-  if(!plate || !color){
-    document.getElementById('rd-error').textContent = t('rd_err_vehicle');
-    return;
-  }
-  if(missingDocs.length > 0){
-    document.getElementById('rd-error').textContent = t('rd_err_docs');
-    return;
-  }
-  const referralCode = document.getElementById('rd-referral').value.trim().toUpperCase();
-  if(referralCode){
-    const match = Object.values(driverProfiles).find(p => p.lwNumber && p.lwNumber.toUpperCase() === referralCode);
-    if(!match){
-      document.getElementById('rd-error').textContent = t('rd_err_referral');
-      return;
-    }
-  }
-  document.getElementById('rd-error').textContent = '';
-  openRegTermsModal();
-}
-function openRegTermsModal(){
-  document.getElementById('reg-terms-checkbox').checked = false;
-  document.getElementById('reg-terms-submit-btn').disabled = true;
-  document.getElementById('reg-terms-modal-bg').classList.add('active');
-}
-function closeRegTermsModal(){ document.getElementById('reg-terms-modal-bg').classList.remove('active'); }
-document.getElementById('reg-terms-modal-bg').addEventListener('click', e=>{ if(e.target.id==='reg-terms-modal-bg') closeRegTermsModal(); });
 function wireNameCounter(inputId, countId){
   const input = document.getElementById(inputId);
   const count = document.getElementById(countId);
@@ -10614,82 +10308,6 @@ function wireNameCounter(inputId, countId){
 }
 wireNameCounter('nl-name', 'nl-name-count');
 wireNameCounter('el-name', 'el-name-count');
-document.getElementById('reg-terms-checkbox').addEventListener('change', function(){
-  document.getElementById('reg-terms-submit-btn').disabled = !this.checked;
-});
-async function confirmRegTermsAndSubmit(){
-  if(!document.getElementById('reg-terms-checkbox').checked) return;
-  closeRegTermsModal();
-  await finalizeRegisterDriver();
-}
-async function finalizeRegisterDriver(){
-  const name = document.getElementById('rd-name').value.trim();
-  const region = document.getElementById('rd-region').value;
-  const vtype = document.getElementById('rd-vtype').value;
-  const car = document.getElementById('rd-car').value.trim();
-  const seats = document.getElementById('rd-seats').value.trim();
-  const plate = document.getElementById('rd-plate').value.trim();
-  const color = document.getElementById('rd-color').value.trim();
-
-  const langs = rdSelectedLangs.length ? [...rdSelectedLangs] : ['EN'];
-
-  const referralCode = document.getElementById('rd-referral').value.trim().toUpperCase();
-  let referredBy = null;
-  if(referralCode){
-    const match = Object.values(driverProfiles).find(p => p.lwNumber && p.lwNumber.toUpperCase() === referralCode);
-    if(match) referredBy = match.id;
-  }
-
-  const id = 'd_' + name.toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'') + '_' + Math.floor(Math.random()*1000);
-  const docs = {};
-  for(const f of docFields){
-    docs[f] = await readDocFile(document.getElementById('rd-doc-'+f));
-  }
-
-  const lwNumber = 'RY-' + Math.floor(100 + Math.random()*899);
-  const payment = { qris: document.getElementById('rd-qris').checked, link: document.getElementById('rd-paylink').value.trim() };
-  const femaleDriver = document.getElementById('rd-female').checked;
-  const childFriendly = document.getElementById('rd-childfriendly').checked;
-  const tourGuideCertified = document.getElementById('rd-guidecert').checked;
-  const firstAidTrained = document.getElementById('rd-firstaid').checked;
-  driverProfiles[id] = { id, name: name.split(' ')[0], fullName: name, lwNumber, region, langs, photo:null, status:"pending", joinedDate: new Date().toISOString().slice(0,10), docs, vehicle:{vtype, car, seats, plate, color}, payment, femaleDriver, childFriendly, tourGuideCertified, firstAidTrained, referredBy, referralBonusGranted:false, blockedReason:null };
-  driverDataStore[id] = { listings:[], bookings:[], completed:[], reviews:[], stats:{ views:0, rating:"New", referralCredit:0, adminCredit:0, feesPaid:false }, receipts:[], messages:[], tourRequests:[], openPayment:null };
-  pushInboxMessage(id, t('welcome_inbox_title'), t('welcome_inbox_body').replace('{number}', lwNumber));
-
-  // reset form
-  document.getElementById('rd-name').value='';
-  document.getElementById('rd-car').value='';
-  document.getElementById('rd-seats').value='';
-  document.getElementById('rd-plate').value='';
-  document.getElementById('rd-color').value='';
-  document.getElementById('rd-paylink').value='';
-  document.getElementById('rd-qris').checked=true;
-  rdSelectedLangs = [];
-  document.querySelectorAll('[data-group="rd-lang"] .chip').forEach(c=>c.classList.remove('chip-active'));
-  docFields.forEach(f=>{ document.getElementById('rd-doc-'+f).value=''; });
-  updateDocStatus();
-
-  saveState();
-  pendingRegisteredId = id;
-  document.getElementById('rd-notify-admin-email-status').closest('.notify-row').querySelector('.notify-title').textContent = `Email to Rydanu admin: new driver "${name}" awaiting review`;
-  document.getElementById('rd-notify-admin-wa-status').closest('.notify-row').querySelector('.notify-title').textContent = `WhatsApp to Rydanu admin: new driver "${name}" awaiting review`;
-  document.getElementById('rd-notify-driver-status').closest('.notify-row').querySelector('.notify-title').textContent = `Email & WhatsApp to ${name}: your account is under review`;
-  document.getElementById('register-step-form').style.display = 'none';
-  document.getElementById('register-step-pending').style.display = 'block';
-}
-let pendingRegisteredId = null;
-function closeRegisterAfterPending(){
-  const id = pendingRegisteredId;
-  document.getElementById('register-step-form').style.display = 'block';
-  document.getElementById('register-step-pending').style.display = 'none';
-  closeRegisterDriver();
-  if(id){
-    loadDriverContext(id);
-    switchViewProgrammatic('driver');
-    showDashSection('overview');
-  }
-}
-
 // ---- edit profile ----
 let epSelectedLangs = [];
 let epSelectedServiceRegions = [];
@@ -14194,24 +13812,8 @@ ${bpt('driverFeeLine')}</div>`;
         .catch(err=>console.error('Fahrer-Push (neue Buchung) fehlgeschlagen:', err));
     })();
     lastBookingRef = ref;
-    return;
   }
-
-  // push into the correct driver's booking list (their registered profile, if any)
-  const targetId = currentDriver.ownerId && driverDataStore[currentDriver.ownerId] ? currentDriver.ownerId : 'wayan';
-  driverDataStore[targetId].bookings.unshift({
-    who:name, tour:currentDriver.tour, when:date, status:'pending', isNew:true, driverSeen:false,
-    email, phone, pickup, price:currentDriver.price, balance:balanceStr,
-    vehicle:vehicleStr, ref, destination: currentDriver.airportDestination || currentDriver.transferDestination || null,
-    dateISO: document.getElementById('f-date').value || null
-  });
-  driverDataStore[targetId].stats.feesPaid = false;
-  lastBookingTargetId = targetId;
-  lastBookingRef = ref;
-  if(targetId === currentDriverId){ renderDriverBookings(); renderOverviewStats(); }
-  saveState();
 }
-let lastBookingTargetId = null;
 
 function togglePreview(type){
   const el = document.getElementById('preview-'+type);
@@ -14239,14 +13841,6 @@ function validateAndGoToPayment(){
   err.textContent = '';
   goToStep('payment');
 }
-function viewAsDriver(){
-  closeModal();
-  if(lastBookingTargetId && driverDataStore[lastBookingTargetId]){
-    loadDriverContext(lastBookingTargetId);
-  }
-  switchViewProgrammatic('driver');
-}
-
 function closeModal(){
   document.getElementById('modal-bg').classList.remove('active');
   ['f-name','f-email','f-phone','f-pickup','f-notes','f-time'].forEach(id=>{ document.getElementById(id).value=''; });
@@ -17298,7 +16892,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v382</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v383</div>
 
 <!-- Etappe 4: Lade-Overlay waehrend "Buchung annehmen" im Hintergrund laeuft (kann bei VIP-Fahrern
      mit Auto-Einzug ein paar Sekunden dauern, da erst mit Xendit gesprochen wird, bevor die
