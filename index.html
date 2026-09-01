@@ -6934,9 +6934,6 @@ async function renderRealOverviewStats(){
   }
   const feesHint = document.getElementById('pay-fees-hint');
   if(feesHint) feesHint.textContent = feesDue > 0 ? t('fee_breakdown_tap_hint') : ('✓ ' + t('st_paid'));
-  const cancelFeeRow = document.getElementById('cancellation-fee-row');
-  if(cancelFeeRow) cancelFeeRow.style.display = 'none';
-
   const balanceRow = document.getElementById('real-balance-row');
   const balanceLabel = document.getElementById('real-balance-label');
   const balanceAmount = document.getElementById('real-balance-amount');
@@ -7010,9 +7007,6 @@ async function renderRealOverviewStats(){
       rateEl.innerHTML = `<span class="fee-rate-badge-main">${t('fee_rate_current')} ${DEFAULT_FEE_PERCENT}% · ${t('fee_rate_standard')}</span>`;
     }
   }
-  const codeEl = document.getElementById('referral-code-display');
-  if(codeEl){ codeEl.textContent = realDriverProfile.lw_number || '—'; codeEl.dataset.rawNumber = realDriverProfile.lw_number || ''; }
-
   const rankEl = document.getElementById('rank-panel-body');
   if(rankEl){
     const rank = getDriverRank(points);
@@ -13494,19 +13488,6 @@ function openModal(d){
   document.getElementById('pay-tour').textContent = d.tour;
   document.getElementById('pay-total').innerHTML = priceBlockHTML(d.price);
 
-  // direct-to-driver payment options
-  document.getElementById('pay-direct-name').textContent = d.name;
-  const owner = d.ownerId ? driverProfiles[d.ownerId] : null;
-  const pay = (owner && owner.payment) ? owner.payment : {qris:true, link:''};
-  document.getElementById('pay-qris-box').style.display = (pay.qris !== false) ? 'block' : 'none';
-  const linkBtn = document.getElementById('pay-link-btn');
-  if(pay.link){
-    linkBtn.href = pay.link.startsWith('http') ? pay.link : 'https://' + pay.link;
-    try{ document.getElementById('pay-link-domain').textContent = '(' + new URL(linkBtn.href).hostname.replace('www.','') + ')'; }catch(e){ document.getElementById('pay-link-domain').textContent=''; }
-    linkBtn.style.display = 'inline-block';
-  } else {
-    linkBtn.style.display = 'none';
-  }
   document.getElementById('confirm-driver-name').textContent = d.name;
   } catch(err){ console.error('openModal render error:', err); }
 }
@@ -16892,7 +16873,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v383</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v384</div>
 
 <!-- Etappe 4: Lade-Overlay waehrend "Buchung annehmen" im Hintergrund laeuft (kann bei VIP-Fahrern
      mit Auto-Einzug ein paar Sekunden dauern, da erst mit Xendit gesprochen wird, bevor die
