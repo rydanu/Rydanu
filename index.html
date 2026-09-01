@@ -562,6 +562,7 @@
     text-align:center; cursor:pointer; animation: newBookingPulse 1.6s ease-in-out infinite;
   }
   @keyframes newBookingPulse{ 0%,100%{ opacity:1; } 50%{ opacity:0.82; } }
+  @keyframes hourglassTip{ 0%,45%{ transform:rotate(0deg); } 55%,95%{ transform:rotate(180deg); } 100%{ transform:rotate(180deg); } }
   .dash-nav{ border-right:1px solid var(--line); padding:32px 22px; }
   .dash-nav .profile-chip{
     display:flex; flex-direction:column; align-items:center; text-align:center;
@@ -1467,9 +1468,16 @@
 
   @media (max-width:800px){
     .dash-wrap{ grid-template-columns:1fr; min-width:0; }
-    .dash-nav{ display:flex; flex-wrap:wrap; overflow-x:auto; border-right:none; border-bottom:1px solid var(--line); padding:14px 16px; gap:8px; min-width:0; }
-    .dash-nav .profile-chip{ margin-bottom:10px; width:100%; }
-    .dash-nav .demo-switcher{ width:100%; flex-basis:100%; box-sizing:border-box; margin:4px 0 10px; }
+    /* Bugfix (31.8., Joerg gemeldet per Screenshot): die Nav-Kacheln (Uebersicht/Meine Angebote/...)
+       lagen bisher in einer flex-wrap-Reihe -- jede Kachel war so breit wie ihr eigener Text, dadurch
+       hat der Browser unterschiedlich viele Kacheln pro Zeile reingepackt (3/3/2), was schief/
+       ungleichmaessig aussah. Jetzt festes 2-Spalten-Raster: jede Kachel ist exakt gleich breit,
+       die letzten beiden (Gebuehren & Abrechnung / Posteingang) stehen jetzt sauber nebeneinander
+       statt allein in einer kurzen dritten Zeile. */
+    .dash-nav{ display:grid; grid-template-columns:repeat(2,1fr); border-right:none; border-bottom:1px solid var(--line); padding:14px 16px; gap:8px; min-width:0; }
+    .dash-nav .profile-chip{ margin-bottom:10px; grid-column:1 / -1; }
+    .dash-nav .demo-switcher{ grid-column:1 / -1; box-sizing:border-box; margin:4px 0 10px; }
+    .dash-nav-item{ min-width:0; }
     /* Bugfix (20.8., Joerg gemeldet per Screenrecording + Pixel-Messung): Grid-Kinder haben per
        CSS-Voreinstellung min-width:auto -- das heisst, die Breite der Grid-Spalte richtet sich
        nach dem UNGEWRAPPTEN Inhalt (z.B. lange Buchungstexte/Status-Buttons in "Übersicht" und
@@ -2210,6 +2218,7 @@
       <div class="dash-nav-item" id="nav-calendar-item" data-i18n="nav_calendar" onclick="openCalendar()">Calendar</div>
       <div class="dash-nav-item" data-section="subscription" data-i18n="nav_subscription" onclick="showDashSection('subscription')">Fees &amp; billing</div>
       <div class="dash-nav-item" data-section="inbox" onclick="showDashSection('inbox')"><span data-i18n="nav_inbox">Inbox</span> <span class="inbox-dot" id="inbox-dot" style="display:none;"></span></div>
+      <button type="button" class="wa-support-btn" onclick="openTopupModal()" data-i18n="topup_banner_btn">💰 Top up your balance</button>
       <button type="button" class="wa-support-btn" onclick="openSupportMsg()" data-i18n="support_btn">✉️ Message to Rydanu Support</button>
       <button type="button" class="wa-support-btn" onclick="openQrModal()" data-i18n="dp_qr_dash_btn">📱 Your Rydanu QR code</button>
       <button type="button" class="wa-support-btn" onclick="handleDriverLogout()" style="background:#F7EAEA; color:#B03A3A;">🚪 Abmelden</button>
@@ -2419,12 +2428,74 @@
         <!-- Neu strukturiert: "Diesen Monat" (was jetzt zu zahlen ist) klar getrennt von
              "So funktionieren Gebühren" (Nachschlagewerk/Tabelle) -- vorher war alles in einem
              einzigen langen Panel vermischt, laut Jörg unübersichtlich. -->
-        <div class="dash-head" style="margin-top:4px;"><div><h3 data-i18n="fees_overview_new_title" style="margin:0;">Fees this month</h3></div></div>
-        <div class="panel">
-          <div class="booking-row"><div><div class="who" data-i18n="fees_open_fees_title">Open fees this month</div><div class="when" data-i18n="fees_open_fees_desc">Pay your accumulated booking fees</div></div><button class="book-btn" style="width:auto; padding:9px 18px; margin:0;" onclick="payFees()" data-i18n="btn_pay_now">Pay now</button></div>
-          <div class="booking-row" id="cancellation-fee-row" style="display:none;"><div><div class="who" data-i18n="fees_cancellation_title">Includes a cancellation fee</div><div class="when" data-i18n="fees_cancellation_desc">For tours you cancelled yourself — see Bookings for details</div></div><span class="mono" style="font-weight:600; color:var(--danger);" id="cancellation-fee-amount">IDR 0</span></div>
-          <p class="tier-footnote" data-i18n="fees_charged_when_note">ⓘ Fees are only actually charged when you tap "Pay now", or automatically on the last day of the month. Any referral credit is applied at that moment, not before.</p>
+        <div class="dash-head" style="margin-top:4px;"><div><h3 data-i18n="topup_section_title" style="margin:0;">Your balance</h3></div></div>
+        <div class="panel" style="padding:20px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:16px;">
+            <div>
+              <div class="when" data-i18n="topup_current_balance_lbl">Current balance</div>
+              <div class="mono" id="topup-balance-display" style="font-weight:800; font-size:1.6rem; color:var(--teal);">IDR 0</div>
+            </div>
+          </div>
+          <div class="filter-group-title" style="margin-bottom:8px;" data-i18n="topup_choose_amount">Choose an amount to top up</div>
+          <div id="topup-amount-buttons" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px;">
+            <button type="button" class="period-btn" onclick="selectTopupAmount(50000)" data-amount="50000">IDR 50,000</button>
+            <button type="button" class="period-btn" onclick="selectTopupAmount(100000)" data-amount="100000">IDR 100,000</button>
+            <button type="button" class="period-btn" onclick="selectTopupAmount(200000)" data-amount="200000">IDR 200,000</button>
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+            <input type="number" id="topup-custom-amount" class="form-field" style="max-width:200px; margin:0;" placeholder="Other amount (IDR)" data-i18n-placeholder="topup_custom_placeholder" min="10000" step="1000">
+            <button type="button" class="book-btn" style="width:auto; padding:9px 18px; margin:0;" id="topup-submit-btn" onclick="startTopup('page')" data-i18n="topup_submit_btn">Top up</button>
+          </div>
+          <p class="tier-footnote" data-i18n="topup_redirect_note">ⓘ You'll be redirected to a secure payment page (QRIS, bank transfer, or e-wallet). Your balance updates automatically once payment is confirmed — this can take up to a minute.</p>
         </div>
+
+        <!-- Etappe 3: VIP-Auto-Einzug -- nur sichtbar, wenn der Admin diesen Fahrer freigeschaltet
+             hat (drivers.auto_debit_enabled). Zeigt je nach Verknuepfungs-Status ein anderes Panel. -->
+        <div id="sec-autodebit" style="display:none;">
+          <div class="dash-head" style="margin-top:26px;"><div><h3 style="margin:0;">⭐ <span data-i18n="autodebit_section_title">VIP: Automatic top-up</span></h3></div></div>
+
+          <div class="panel" id="autodebit-panel-setup" style="padding:20px; display:none;">
+            <p class="note" style="margin-top:0;" data-i18n="autodebit_setup_intro">You're eligible for automatic top-up: if your balance ever runs low, we can top it up automatically from a linked payment method — no manual top-up needed. Link it once below.</p>
+            <div style="display:flex; flex-direction:column; gap:10px;">
+              <input type="tel" id="autodebit-mobile" class="form-field" placeholder="Mobile number (e.g. 818555988)" data-i18n-placeholder="autodebit_mobile_placeholder">
+              <input type="text" id="autodebit-card-last4" class="form-field" placeholder="Card last 4 digits" data-i18n-placeholder="autodebit_card_last4_placeholder" maxlength="4">
+              <input type="text" id="autodebit-card-expiry" class="form-field" placeholder="Card expiry (MM/YY)" data-i18n-placeholder="autodebit_card_expiry_placeholder" maxlength="5">
+              <input type="email" id="autodebit-email" class="form-field" placeholder="Email" data-i18n-placeholder="autodebit_email_placeholder">
+            </div>
+            <button type="button" class="book-btn" style="width:100%; margin-top:10px;" id="autodebit-link-btn" onclick="startAutoDebitLink()" data-i18n="autodebit_link_btn">Link payment method</button>
+          </div>
+
+          <div class="panel" id="autodebit-panel-otp" style="padding:20px; display:none;">
+            <p class="note" style="margin-top:0;" data-i18n="autodebit_otp_intro">Enter the SMS code you just received to confirm the link.</p>
+            <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+              <input type="text" id="autodebit-otp-code" class="form-field" style="max-width:160px; margin:0;" placeholder="SMS code" data-i18n-placeholder="autodebit_otp_placeholder" maxlength="8">
+              <button type="button" class="book-btn" style="width:auto; padding:9px 18px; margin:0;" id="autodebit-otp-btn" onclick="confirmAutoDebitOtp()" data-i18n="autodebit_otp_btn">Confirm code</button>
+            </div>
+          </div>
+
+          <div class="panel" id="autodebit-panel-active" style="padding:20px; display:none; background:var(--teal-soft); border-color:var(--teal);">
+            <div style="font-weight:800; color:var(--ink);">✓ <span data-i18n="autodebit_active_title">Payment method linked</span></div>
+            <p class="note" style="margin:6px 0 12px;" data-i18n="autodebit_active_body">Automatic top-up is ready. You can still top up manually anytime above.</p>
+            <button type="button" class="cancel-btn" style="padding:8px 16px; font-size:0.85rem;" onclick="showAutoDebitSetupForm()" data-i18n="autodebit_relink_btn">Link a different method</button>
+          </div>
+
+          <div class="panel" id="autodebit-panel-failed" style="padding:20px; display:none; background:#FBEAEA; border-color:var(--danger);">
+            <div style="font-weight:800; color:var(--danger);">⚠️ <span data-i18n="autodebit_failed_title">Linking failed</span></div>
+            <p class="note" id="autodebit-failed-reason" style="margin:6px 0 12px;"></p>
+            <button type="button" class="cancel-btn" style="padding:8px 16px; font-size:0.85rem;" onclick="showAutoDebitSetupForm()" data-i18n="autodebit_retry_btn">Try again</button>
+          </div>
+        </div>
+
+        <!-- Entfernt (31.8., Joerg-Wunsch): die alte "Gebuehren diesen Monat / Jetzt bezahlen"-Karte
+             stammte aus der Zeit VOR dem Guthaben-System -- damals sammelten sich Gebuehren ueber den
+             Monat in fees_due_idr an und wurden am Monatsende manuell/per Klick beglichen. Mit dem
+             neuen System (Etappe 2, 31.8.) wird die Gebuehr sofort bei Buchungsbestaetigung vom
+             Guthaben abgezogen, es sammelt sich also nichts mehr an, das man "bezahlen" muesste. Der
+             "Jetzt bezahlen"-Knopf hat ohnehin nie etwas Echtes getan (payFees() zeigte nur einen
+             Hinweis "geht noch nicht" -- nie an Supabase angebunden). Die cancellation-fee-row war
+             zusaetzlich bereits seit Langem tot: renderRealOverviewStats() setzt sie hart auf
+             display:none, sie wurde also nie angezeigt. payFees() bleibt im Code stehen (siehe
+             fees-stat-card in der Uebersicht, nutzt es als Fallback-Klick vor dem ersten Render). -->
 
         <div class="dash-head" style="margin-top:26px;"><div><h3 data-i18n="fees_how_it_works_title" style="margin:0;">How fees work</h3></div></div>
 
@@ -2541,7 +2612,7 @@
         <span class="at-title">Nachrichten</span>
         <span class="at-sub">Nachrichten von Fahrern lesen &amp; beantworten</span>
       </button>
-      <button type="button" class="admin-tile" onclick="showAdminSection('block')">
+      <button type="button" class="admin-tile" id="admin-tile-block" onclick="showAdminSection('block')">
         <span class="at-icon">🔒</span>
         <span class="at-title">Fahrer verwalten</span>
         <span class="at-sub">Sperren, entsperren oder löschen</span>
@@ -4026,6 +4097,35 @@
     </div>
   </div>
 </div>
+
+<!-- Guthaben aufladen -- Popup statt Wegklicken zur Gebühren-Seite (Jörgs Wunsch, weniger Scrollen) -->
+<div class="modal-bg" id="topup-modal-bg">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-header">
+      <button class="modal-close" onclick="closeTopupModal()">✕</button>
+      <span class="eyebrow">Rydanu</span>
+      <h2 data-i18n="topup_section_title">Your balance</h2>
+    </div>
+    <div class="modal-body">
+      <div style="margin-bottom:16px;">
+        <div class="when" data-i18n="topup_current_balance_lbl">Current balance</div>
+        <div class="mono" id="topup-modal-balance-display" style="font-weight:800; font-size:1.6rem; color:var(--teal);">IDR 0</div>
+      </div>
+      <div class="filter-group-title" style="margin-bottom:8px;" data-i18n="topup_choose_amount">Choose an amount to top up</div>
+      <div id="topup-modal-amount-buttons" style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px;">
+        <button type="button" class="period-btn" onclick="selectTopupAmount(50000)" data-amount="50000">IDR 50,000</button>
+        <button type="button" class="period-btn" onclick="selectTopupAmount(100000)" data-amount="100000">IDR 100,000</button>
+        <button type="button" class="period-btn" onclick="selectTopupAmount(200000)" data-amount="200000">IDR 200,000</button>
+      </div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:14px;">
+        <input type="number" id="topup-modal-custom-amount" class="form-field" style="max-width:200px; margin:0;" placeholder="Other amount (IDR)" data-i18n-placeholder="topup_custom_placeholder" min="10000" step="1000">
+      </div>
+      <button type="button" class="book-btn" style="width:100%; margin:0;" id="topup-modal-submit-btn" onclick="startTopup('modal')" data-i18n="topup_submit_btn">Top up</button>
+      <p class="tier-footnote" data-i18n="topup_redirect_note">ⓘ You'll be redirected to a secure payment page (QRIS, bank transfer, or e-wallet). Your balance updates automatically once payment is confirmed — this can take up to a minute.</p>
+    </div>
+  </div>
+</div>
+
 
 <!-- tour request detail modal -->
 <div class="modal-bg" id="request-detail-modal-bg">
@@ -7011,7 +7111,7 @@ async function renderRealOverviewStats(){
   if(!realDriverProfile) return;
   const today = new Date().toISOString().slice(0,10);
   const [{ data: freshDriver }, { data: reviews, error: revErr }, { data: overrides }, { data: credits }] = await Promise.all([
-    supabaseClient.from('drivers').select('rank_points, fees_due_idr, balance_idr, is_locked, profile_views').eq('id', realDriverProfile.id).single(),
+    supabaseClient.from('drivers').select('rank_points, fees_due_idr, balance_idr, is_locked, lock_reason, profile_views').eq('id', realDriverProfile.id).single(),
     supabaseClient.from('reviews').select('stars, comment, created_at').eq('driver_id', realDriverProfile.id).order('created_at', { ascending:false }),
     supabaseClient.from('fee_overrides').select('*').eq('driver_id', realDriverProfile.id).lte('starts_at', today).or(`ends_at.is.null,ends_at.gte.${today}`).order('created_at', { ascending:false }).limit(1),
     supabaseClient.from('fee_credits').select('amount_idr, source').eq('driver_id', realDriverProfile.id).eq('applied', false)
@@ -7020,6 +7120,7 @@ async function renderRealOverviewStats(){
   const feesDue = (freshDriver && typeof freshDriver.fees_due_idr === 'number') ? freshDriver.fees_due_idr : 0;
   const balance = (freshDriver && typeof freshDriver.balance_idr === 'number') ? freshDriver.balance_idr : 0;
   const isLocked = !!(freshDriver && freshDriver.is_locked);
+  const lockReason = (freshDriver && freshDriver.lock_reason) || null;
   realDriverProfile.rank_points = points;
   const revs = revErr ? [] : (reviews || []);
   const avg = revs.length ? (revs.reduce((s,r)=>s+r.stars,0) / revs.length) : null;
@@ -7060,6 +7161,8 @@ async function renderRealOverviewStats(){
     balanceAmount.textContent = formatIDR(balance);
     balanceRow.style.display = 'flex';
   }
+  renderTopupBalanceDisplay(balance);
+  renderAutoDebitSection();
 
   // Gutschriften (Empfehlung / Admin+VIP) aus fee_credits, nur die noch nicht verrechneten
   let referralCredit = 0, adminCredit = 0;
@@ -7078,13 +7181,19 @@ async function renderRealOverviewStats(){
     if(adminCredit > 0) document.getElementById('admin-credit-amount').textContent = formatIDR(adminCredit) + ' ' + t('referral_credit_pending_note');
   }
 
-  // Gesperrt-Banner (echtes Konto) — dasselbe Banner-Element wie im Demo-Modus, hier ohne "Jetzt zahlen"-Knopf
+  // Gesperrt-Banner (echtes Konto) — dasselbe Banner-Element wie im Demo-Modus, hier ohne "Jetzt zahlen"-Knopf.
+  // Zwei Texte je nach Sperrgrund: 'fees' (alte Gebuehren-Sperre) behaelt den bisherigen,
+  // konkreten Gebuehren-Text. Alles andere (manuell vom Admin gesperrt, Auto-Einzug
+  // fehlgeschlagen, oder unbekannt/Altdaten ohne Grund) zeigt den neuen, allgemeineren
+  // Text ohne Gebuehren-Erwaehnung, der stattdessen auf den Support verweist.
   const banner = document.getElementById('pending-banner');
   if(banner){
     if(isLocked){
       banner.style.display = 'block';
       banner.classList.add('rejected');
-      banner.innerHTML = '🚫 ' + t('payment_suspended_banner').replace('{amount}', formatIDR(feesDue));
+      banner.innerHTML = '🚫 ' + (lockReason === 'fees'
+        ? t('payment_suspended_banner').replace('{amount}', formatIDR(feesDue))
+        : t('payment_suspended_banner_other'));
     } else {
       banner.style.display = 'none';
       banner.classList.remove('rejected');
@@ -7155,6 +7264,181 @@ function hasValidPaymentMethod(profile){
 // Trigger vorhanden oder noetig.
 function payFees(){
   alert(t('real_pay_not_yet'));
+}
+
+// ---- Etappe 1: Guthaben manuell aufladen (echtes Xendit, Sandbox) ----
+let selectedTopupAmount = null;
+function selectTopupAmount(amount){
+  selectedTopupAmount = amount;
+  const pageCustom = document.getElementById('topup-custom-amount');
+  const modalCustom = document.getElementById('topup-modal-custom-amount');
+  if(pageCustom) pageCustom.value = '';
+  if(modalCustom) modalCustom.value = '';
+  document.querySelectorAll('#topup-amount-buttons .period-btn, #topup-modal-amount-buttons .period-btn').forEach(btn=>{
+    btn.classList.toggle('active', Number(btn.dataset.amount) === amount);
+  });
+}
+function openTopupModal(){
+  renderTopupBalanceDisplay(realDriverProfile ? realDriverProfile.balance_idr : 0);
+  document.getElementById('topup-modal-bg').classList.add('active');
+}
+function closeTopupModal(){ document.getElementById('topup-modal-bg').classList.remove('active'); }
+document.addEventListener('DOMContentLoaded', ()=>{
+  const bg = document.getElementById('topup-modal-bg');
+  if(bg) bg.addEventListener('click', e=>{ if(e.target.id==='topup-modal-bg') closeTopupModal(); });
+});
+// context: 'page' (Karte auf der Gebühren-Seite) oder 'modal' (Popup vom Banner) --
+// beide teilen sich dieselbe Logik, nur das jeweils sichtbare Eingabefeld/Button wird verwendet.
+async function startTopup(context){
+  const isModal = context === 'modal';
+  const customEl = document.getElementById(isModal ? 'topup-modal-custom-amount' : 'topup-custom-amount');
+  const btn = document.getElementById(isModal ? 'topup-modal-submit-btn' : 'topup-submit-btn');
+  const customVal = Number(customEl.value);
+  const amount = customVal > 0 ? Math.round(customVal) : selectedTopupAmount;
+  if(!amount || amount < 10000){
+    alert(t('topup_err_min_amount'));
+    return;
+  }
+  if(!realDriverProfile){ return; }
+  const originalLabel = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = t('topup_loading');
+  try {
+    const { data, error } = await supabaseClient.functions.invoke('xendit-create-topup', { body: { amount } });
+    if(error || !data || !data.invoice_url){
+      console.error('xendit-create-topup Fehler:', error, data);
+      alert(t('topup_err_generic'));
+      return;
+    }
+    // Weiterleitung im selben Tab -- zuverlaessiger auf iOS Safari als ein Popup-Fenster,
+    // das vom Browser leicht blockiert werden kann.
+    window.location.href = data.invoice_url;
+  } catch(e){
+    console.error('startTopup Fehler:', e);
+    alert(t('topup_err_generic'));
+  } finally {
+    btn.disabled = false;
+    btn.textContent = originalLabel;
+  }
+}
+function renderTopupBalanceDisplay(balance){
+  const el = document.getElementById('topup-balance-display');
+  if(el) el.textContent = formatIDR(balance || 0);
+  const modalEl = document.getElementById('topup-modal-balance-display');
+  if(modalEl) modalEl.textContent = formatIDR(balance || 0);
+}
+
+// ---- Etappe 3: VIP-Auto-Einzug (Xendit Linked Account / Direct Debit) ----
+// Nur sichtbar, wenn der Admin diesen Fahrer ueber drivers.auto_debit_enabled freigeschaltet hat
+// (siehe protect_driver_columns-Trigger -- der Fahrer kann das selbst nicht umschalten).
+async function renderAutoDebitSection(){
+  const sec = document.getElementById('sec-autodebit');
+  if(!sec) return;
+  if(!realDriverProfile || !realDriverProfile.auto_debit_enabled){
+    sec.style.display = 'none';
+    return;
+  }
+  sec.style.display = 'block';
+  const { data: pm, error } = await supabaseClient.from('driver_payment_methods')
+    .select('status, last_error').eq('driver_id', realDriverProfile.id).maybeSingle();
+  if(error){ console.error('VIP-Zahlungsmethode konnte nicht geladen werden:', error); }
+  ['autodebit-panel-setup','autodebit-panel-otp','autodebit-panel-active','autodebit-panel-failed'].forEach(id=>{
+    document.getElementById(id).style.display = 'none';
+  });
+  if(!pm){
+    document.getElementById('autodebit-panel-setup').style.display = 'block';
+  } else if(pm.status === 'pending_otp'){
+    document.getElementById('autodebit-panel-otp').style.display = 'block';
+  } else if(pm.status === 'active'){
+    document.getElementById('autodebit-panel-active').style.display = 'block';
+  } else if(pm.status === 'failed'){
+    document.getElementById('autodebit-panel-failed').style.display = 'block';
+    const reasonEl = document.getElementById('autodebit-failed-reason');
+    if(reasonEl) reasonEl.textContent = pm.last_error || '';
+  }
+}
+function showAutoDebitSetupForm(){
+  ['autodebit-panel-setup','autodebit-panel-otp','autodebit-panel-active','autodebit-panel-failed'].forEach(id=>{
+    document.getElementById(id).style.display = 'none';
+  });
+  document.getElementById('autodebit-panel-setup').style.display = 'block';
+}
+async function startAutoDebitLink(){
+  const mobileRaw = document.getElementById('autodebit-mobile').value.trim();
+  const cardLast4 = document.getElementById('autodebit-card-last4').value.trim();
+  const cardExpiry = document.getElementById('autodebit-card-expiry').value.trim();
+  const email = document.getElementById('autodebit-email').value.trim();
+  if(!mobileRaw || !/^\d{4}$/.test(cardLast4) || !/^\d{2}\/\d{2}$/.test(cardExpiry) || !email){
+    alert(t('autodebit_err_fields'));
+    return;
+  }
+  // Handynummer immer im Format +62... an Xendit schicken, egal ob der Fahrer mit oder ohne
+  // Vorwahl eingetippt hat -- gleiche Idee wie an anderen Stellen der App.
+  const mobileNumber = mobileRaw.startsWith('+') ? mobileRaw : ('+62' + mobileRaw.replace(/^0+/, ''));
+  const btn = document.getElementById('autodebit-link-btn');
+  const originalLabel = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = t('topup_loading');
+  try {
+    const { data, error } = await supabaseClient.functions.invoke('xendit-link-init', {
+      body: { mobile_number: mobileNumber, card_last_four: cardLast4, card_expiry: cardExpiry, email }
+    });
+    if(error || !data || data.error){
+      console.error('xendit-link-init Fehler:', error, data);
+      alert((data && data.error) ? data.error : t('autodebit_err_generic'));
+      return;
+    }
+    document.getElementById('autodebit-panel-setup').style.display = 'none';
+    document.getElementById('autodebit-panel-otp').style.display = 'block';
+  } catch(e){
+    console.error('startAutoDebitLink Fehler:', e);
+    alert(t('autodebit_err_generic'));
+  } finally {
+    btn.disabled = false;
+    btn.textContent = originalLabel;
+  }
+}
+async function confirmAutoDebitOtp(){
+  const otpCode = document.getElementById('autodebit-otp-code').value.trim();
+  if(!otpCode){ alert(t('autodebit_err_otp_empty')); return; }
+  const btn = document.getElementById('autodebit-otp-btn');
+  const originalLabel = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = t('topup_loading');
+  try {
+    const { data, error } = await supabaseClient.functions.invoke('xendit-link-verify-otp', { body: { otp_code: otpCode } });
+    if(error || !data || data.error){
+      console.error('xendit-link-verify-otp Fehler:', error, data);
+      alert((data && data.error) ? data.error : t('autodebit_err_generic'));
+      await renderAutoDebitSection(); // zeigt "failed"-Panel mit Grund, falls die Funktion das serverseitig so markiert hat
+      return;
+    }
+    await renderAutoDebitSection();
+  } catch(e){
+    console.error('confirmAutoDebitOtp Fehler:', e);
+    alert(t('autodebit_err_generic'));
+  } finally {
+    btn.disabled = false;
+    btn.textContent = originalLabel;
+  }
+}
+// Rueckkehr von der Xendit-Zahlungsseite erkennen (success_redirect_url / failure_redirect_url).
+// Der Webhook schreibt das Guthaben serverseitig gut -- kann ein paar Sekunden dauern, deshalb
+// hier zweimal mit kurzer Verzoegerung neu laden, statt dem Fahrer eine falsche Sofort-Bestaetigung
+// vorzugaukeln.
+function checkTopupRedirectResult(){
+  const topupResult = new URLSearchParams(location.search).get('topup');
+  if(topupResult === 'success'){
+    alert(t('topup_redirect_success'));
+    setTimeout(()=>{ if(realDriverProfile) renderRealOverviewStats(); }, 3000);
+    setTimeout(()=>{ if(realDriverProfile) renderRealOverviewStats(); }, 8000);
+  } else if(topupResult === 'failed'){
+    alert(t('topup_redirect_failed'));
+  }
+  if(topupResult){
+    const cleanUrl = location.origin + location.pathname;
+    window.history.replaceState({}, '', cleanUrl);
+  }
 }
 async function renderAdminOpenPayments(){
   const el = document.getElementById('admin-openpayments-list');
@@ -7485,22 +7769,48 @@ function confirmCancellation(i){
     alert(t('cancel_outcome_customer_1') + ' ' + b.who + '.\n\n' + t('cancel_outcome_request_2'));
   }
 }
-function acceptBooking(i){
+function setPaymentProcessingOverlay(show){
+  const el = document.getElementById('payment-processing-overlay');
+  if(el) el.style.display = show ? 'flex' : 'none';
+}
+async function acceptBooking(i){
   const b = driverBookings[i];
-  if(realDriverProfile && b.dbId){
-    const timeInput = prompt(t('prompt_pickup_time_msg'), b.pickupTime || '');
-    const pickupTimeVal = (timeInput && timeInput.trim()) ? timeInput.trim() : null;
-    const updatePayload = { status: 'confirmed' };
-    if(pickupTimeVal) updatePayload.pickup_time = pickupTimeVal;
-    updateRealBookingLocally(i, 'confirmed', pickupTimeVal ? { pickupTime: pickupTimeVal } : {});
-    supabaseClient.from('bookings').update(updatePayload).eq('id', b.dbId).then(({error})=>{
-      if(error){ console.error('Konnte nicht bestätigt werden:', error); loadRealBookings(); return; }
-      loadRealBookings();
-      supabaseClient.functions.invoke('send-tour-offer-email', { body: { type: 'booking_confirmed', bookingId: b.dbId } })
-        .catch(err=>console.error('Bestaetigungs-Mail (Buchung bestaetigt) fehlgeschlagen:', err));
-    });
-    alert(t('alert_deposit_confirmed_1') + ' ' + b.who + ' ✓\n\n' + t('alert_deposit_confirmed_2'));
+  if(!(realDriverProfile && b.dbId)) return;
+  // Etappe 4: laeuft jetzt ueber die accept-booking Edge Function statt einem direkten
+  // Datenbank-Update. Grund: nur so kann bei VIP-Fahrern mit zu wenig Guthaben VOR der
+  // Bestaetigung automatisch bei Xendit nachgeladen werden (das kann ein reiner DB-Trigger
+  // nicht, da Postgres-Trigger keinen Internetzugriff haben).
+  // Bei VIP-Fahrern kann das ein paar Sekunden dauern (Xendit-Anfrage im Hintergrund) --
+  // deshalb waehrenddessen ein nicht schliessbares Lade-Overlay zeigen (Jörg-Wunsch, 31.8.).
+  setPaymentProcessingOverlay(true);
+  let data, error;
+  try {
+    ({ data, error } = await supabaseClient.functions.invoke('accept-booking', { body: { booking_id: b.dbId } }));
+  } finally {
+    setPaymentProcessingOverlay(false);
   }
+  if(error || !data || data.ok === false){
+    const errCode = (data && data.error) || '';
+    console.error('Konnte nicht bestätigt werden:', error, data);
+    if(errCode === 'AUTODEBIT_FAILED'){
+      alert(t('accept_err_autodebit_failed'));
+    } else if(errCode === 'ACCOUNT_LOCKED'){
+      alert(t('accept_err_account_locked'));
+    } else if(errCode === 'RYDANU_LOW_BALANCE'){
+      alert(t('accept_err_low_balance'));
+      supabaseClient.rpc('notify_driver_low_balance_block').catch(()=>{});
+    } else {
+      alert(t('accept_err_generic'));
+    }
+    loadRealBookings();
+    return;
+  }
+  updateRealBookingLocally(i, 'confirmed', {});
+  loadRealBookings();
+  renderOverviewStats(); // Guthaben-Anzeige aktualisieren, falls ein Auto-Einzug stattgefunden hat
+  supabaseClient.functions.invoke('send-tour-offer-email', { body: { type: 'booking_confirmed', bookingId: b.dbId } })
+    .catch(err=>console.error('Bestaetigungs-Mail (Buchung bestaetigt) fehlgeschlagen:', err));
+  alert(t('alert_deposit_confirmed_1') + ' ' + b.who + ' ✓\n\n' + t('alert_deposit_confirmed_2'));
 }
 // Punkt 2 (5. August): der Fahrer kann eine noch offene Anfrage komplett ablehnen (z.B. keine Zeit,
 // passt nicht). Anders als bei "Stornieren" gibt es dabei keine Gebuehr -- die Tour wurde ja nie
@@ -7984,6 +8294,7 @@ function updateAdminMailBadge(){
 let adminOpenPaymentCount = 0;
 let realDocsResubmittedCount = 0;
 let realVillaApplicationsPendingCount = 0;
+let realLockedDriverCount = 0;
 function updateAdminTileAlerts(){
   const pendingTile = document.getElementById('admin-tile-pending');
   if(pendingTile) pendingTile.classList.toggle('has-alert', realPendingDriverCount > 0);
@@ -8002,6 +8313,18 @@ function updateAdminTileAlerts(){
   if(documentsTile) documentsTile.classList.toggle('has-alert', realDocsResubmittedCount > 0);
   const villaTile = document.getElementById('admin-tile-villa');
   if(villaTile) villaTile.classList.toggle('has-alert', realVillaApplicationsPendingCount > 0);
+  // Etappe 4 (31.8., Joerg-Wunsch): "Fahrer verwalten" wird rot, solange mindestens ein Fahrer
+  // gesperrt ist (egal ob manuell vom Admin oder automatisch nach fehlgeschlagenem Auto-Einzug) --
+  // damit sofort auffaellt, wo noch was zu klaeren ist, ohne extra reinklicken zu muessen.
+  const blockTile = document.getElementById('admin-tile-block');
+  if(blockTile) blockTile.classList.toggle('has-alert', realLockedDriverCount > 0);
+}
+// Zaehlt, wie viele Fahrer aktuell gesperrt sind (is_locked=true) -- egal aus welchem Grund.
+async function loadAdminLockedDriverCount(){
+  const { data, error } = await supabaseClient.from('drivers').select('id').eq('is_locked', true);
+  if(error){ console.error('Gesperrte Fahrer konnten nicht gezaehlt werden:', error); return; }
+  realLockedDriverCount = (data || []).length;
+  updateAdminTileAlerts();
 }
 // Zaehlt, bei wie vielen Fahrern gerade ein frisch hochgeladenes Dokument auf Ansicht wartet.
 async function loadAdminDocsResubmittedCount(){
@@ -8324,23 +8647,35 @@ function saveEditListing(){
   const featuredJustActivated = !wasFeatured && nowFeatured;
   l.featured = nowFeatured;
   l.fee = feeForPrice(price, l.spots);
-  // sync the public traveler card
-  const pub = drivers.find(d => d.ownerId===currentDriverId && d.tour===oldName)
-           || drivers.find(d => d.tour===oldName && d.name===driverProfiles[currentDriverId].fullName);
-  if(pub){
-    pub.tour = name;
-    pub.price = price;
-    pub.duration = l.duration;
-    pub.services = services;
-    pub.spots = spots;
-    pub.extras = l.extras;
-    pub.serviceRegions = l.serviceRegions;
-    pub.airportRegions = airportRegions;
-    pub.transferRegions = transferRegions;
-    pub.pickupRegionPrices = pickupRegionPrices;
-    pub.tourSpecialRates = l.tourSpecialRates;
-    pub.featured = l.featured;
-    if(l.featured) pub.badge = '⭐ Top offer';
+  // Kritischer Bugfix (31.8., Joerg gemeldet -- "Preis ändert sich nicht, kein Fehler, Fenster
+  // bleibt offen"): dieser lokale "oeffentliche Karte synchronisieren"-Block glich Touren bisher
+  // ueber den TEXT-NAMEN ab statt ueber die eindeutige dbId. Gibt es irgendwo im System (auch bei
+  // einem ANDEREN Fahrer) eine zweite Tour mit demselben Namen (z.B. zwei "Test Zahlung"), griff
+  // der zweite Suchpfad (driverProfiles[currentDriverId].fullName) -- currentDriverId ist bei
+  // einem echten Fahrer aber immer null (das ist eine reine Demo-Variable), wodurch der Zugriff
+  // auf .fullName eine stille JS-Ausnahme warf UND DAMIT DEN GESAMTEN SPEICHERVORGANG DANACH
+  // ABBRACH (kein Fehlertext, Fenster blieb offen, DB-Update wurde nie erreicht).
+  // Fuer echte Fahrer ist dieser lokale Sync ohnehin ueberfluessig -- loadRealPublicListings()
+  // laedt gleich danach sowieso frisch aus der Datenbank nach. Deshalb hier komplett uebersprungen.
+  if(!realDriverProfile){
+    // sync the public traveler card (nur noch im alten Demo-Modus relevant)
+    const pub = drivers.find(d => d.ownerId===currentDriverId && d.tour===oldName)
+             || drivers.find(d => d.tour===oldName && d.name===driverProfiles[currentDriverId].fullName);
+    if(pub){
+      pub.tour = name;
+      pub.price = price;
+      pub.duration = l.duration;
+      pub.services = services;
+      pub.spots = spots;
+      pub.extras = l.extras;
+      pub.serviceRegions = l.serviceRegions;
+      pub.airportRegions = airportRegions;
+      pub.transferRegions = transferRegions;
+      pub.pickupRegionPrices = pickupRegionPrices;
+      pub.tourSpecialRates = l.tourSpecialRates;
+      pub.featured = l.featured;
+      if(l.featured) pub.badge = '⭐ Top offer';
+    }
   }
   renderListings();
   renderDriverGrid(visibleDrivers());
@@ -10565,6 +10900,13 @@ const translations = {
     results_heading: "Available drivers this week", search_results_in_prefix: "Drivers in",
     tours_heading: "Available tours this week", order_toggle_drivers: "Drivers first", order_toggle_tours: "Tours first", reset_filters_link: "Reset filters", soft_filter_notice: "Not all filters could be matched — showing the closest results.",
     plan_with_driver: "ⓘ The exact attractions and what's included you plan directly with your driver.",
+    topup_banner_btn: "💰 Top up your balance",
+    autodebit_section_title: "VIP: Automatic top-up", autodebit_setup_intro: "You're eligible for automatic top-up: if your balance ever runs low, we can top it up automatically from a linked payment method — no manual top-up needed. Link it once below.",
+    autodebit_mobile_placeholder: "Mobile number (e.g. 818555988)", autodebit_card_last4_placeholder: "Card last 4 digits", autodebit_card_expiry_placeholder: "Card expiry (MM/YY)", autodebit_email_placeholder: "Email",
+    autodebit_link_btn: "Link payment method", autodebit_otp_intro: "Enter the SMS code you just received to confirm the link.", autodebit_otp_placeholder: "SMS code", autodebit_otp_btn: "Confirm code",
+    autodebit_active_title: "Payment method linked", autodebit_active_body: "Automatic top-up is ready. You can still top up manually anytime above.", autodebit_relink_btn: "Link a different method",
+    autodebit_failed_title: "Linking failed", autodebit_retry_btn: "Try again",
+    autodebit_err_fields: "Please fill in all fields correctly (card: 4 digits, expiry: MM/YY).", autodebit_err_generic: "Something went wrong — please try again in a moment.", autodebit_err_otp_empty: "Please enter the SMS code.",
     support_btn: "✉️ Message to Rydanu Support", dp_qr_dash_btn: "📱 Your Rydanu QR code",
     support_modal_title: "Message to Rydanu Support",
     support_subject_label: "Subject", support_msg_label: "Your message", support_send_btn: "Send message",
@@ -10592,7 +10934,7 @@ const translations = {
     driver_stat_bookings: "Bookings", driver_stat_revenue: "Revenue", driver_stat_fees: "Fees", driver_stat_cancelled: "Cancelled",
     lbl_tour: "Tour", lbl_duration: "Duration", lbl_vehicle: "Vehicle", lbl_languages: "Languages",
     lbl_rating: "Rating", lbl_price: "Price", lbl_not_included: "Not included", lbl_driver: "Driver",
-    lbl_date: "Date", lbl_time: "Time", lbl_guests: "Guests", lbl_notes_for_driver: "Notes for the driver", btn_whatsapp_contact: "Contact via WhatsApp", join_rydanu_eyebrow: "Join Rydanu", register_driver_modal_title: "Register as new driver", pm_conv_not_found_title: "Conversation not found", pm_conv_not_found_body: "This link may be invalid, or the conversation may have been removed. Please contact your driver directly.", pm_conv_with_prefix: "Your conversation with", pm_your_reply_label: "Your reply", pm_reply_placeholder: "Write your reply...", pm_send_reply_btn: "Send reply", pm_write_message_first: "Please write a message first.", oc_offer_not_found_title: "Offer not found", oc_offer_not_found_body: "This link may be invalid, or the offer may have been withdrawn. Please contact your driver directly.", oc_already_confirmed_title: "Already confirmed", oc_already_confirmed_body: "You already confirmed this booking — see you soon!", oc_no_longer_available_title: "This offer is no longer available", oc_no_longer_available_body: "Please contact your driver directly for an updated offer.", oc_offer_from_prefix: "Your tour offer from", oc_confirm_btn: "Confirm this booking", oc_confirm_payment_note: "By confirming, you agree to arrange payment directly with your driver, as usual on Rydanu.", oc_decline_btn: "Decline this offer", oc_decline_confirm: "Decline this offer? This offer will be closed and cannot be un-declined — if you still want a transfer, you will need to submit a new request.", oc_declined_title: "Offer declined", oc_declined_body: "Your driver has been informed. This offer is now closed and can't be confirmed later — if you'd still like a transfer or tour, please submit a new request and a driver will get back to you with a fresh offer.", oc_confirm_err: "Something went wrong confirming this booking. Please try again, or contact your driver directly.", lbl_total: "Total tour price", lbl_pickup: "Pickup", lbl_tour_singular: "tour", lbl_tour_plural: "tours", lbl_rating_new: "New",
+    lbl_date: "Date", lbl_time: "Time", lbl_guests: "Guests", lbl_notes_for_driver: "Notes for the driver", btn_whatsapp_contact: "Contact via WhatsApp", join_rydanu_eyebrow: "Join Rydanu", register_driver_modal_title: "Register as new driver", pm_conv_not_found_title: "Conversation not found", pm_conv_not_found_body: "This link may be invalid, or the conversation may have been removed. Please contact your driver directly.", pm_conv_with_prefix: "Your conversation with", pm_your_reply_label: "Your reply", pm_reply_placeholder: "Write your reply...", pm_send_reply_btn: "Send reply", pm_write_message_first: "Please write a message first.", oc_offer_not_found_title: "Offer not found", oc_offer_not_found_body: "This link may be invalid, or the offer may have been withdrawn. Please contact your driver directly.", oc_already_confirmed_title: "Already confirmed", oc_already_confirmed_body: "You already confirmed this booking — see you soon!", oc_no_longer_available_title: "This offer is no longer available", oc_no_longer_available_body: "Please contact your driver directly for an updated offer.", oc_offer_from_prefix: "Your tour offer from", oc_confirm_btn: "Confirm this booking", oc_confirm_payment_note: "By confirming, you agree to arrange payment directly with your driver, as usual on Rydanu.", oc_decline_btn: "Decline this offer", oc_decline_confirm: "Decline this offer? This offer will be closed and cannot be un-declined — if you still want a transfer, you will need to submit a new request.", oc_declined_title: "Offer declined", oc_declined_body: "Your driver has been informed. This offer is now closed and can't be confirmed later — if you'd still like a transfer or tour, please submit a new request and a driver will get back to you with a fresh offer.", oc_confirm_err: "Something went wrong confirming this booking. Please try again, or contact your driver directly.", oc_confirm_driver_unavailable: "This driver can't accept new bookings right now. Please contact them directly, or submit a new request to find another driver.", payment_processing_title: "Processing payment…", payment_processing_note: "This can take a few seconds, please wait.", accept_err_low_balance: "This booking couldn't be confirmed — your balance buffer is reached. Please top up your balance first.", accept_err_generic: "Something went wrong confirming this booking. Please try again in a moment.", accept_err_autodebit_failed: "The automatic top-up didn't go through, so your account has been temporarily locked. Rydanu has been notified — please top up manually or contact support.", accept_err_account_locked: "Your account is locked. Please contact support to get it unlocked.", lbl_total: "Total tour price", lbl_pickup: "Pickup", lbl_tour_singular: "tour", lbl_tour_plural: "tours", lbl_rating_new: "New",
     lbl_total_price_due: "Total — pay driver directly", lbl_ryvio_fee: "Rydanu fee (10%)", lbl_your_car: "Your driver's car",
     lbl_fullname: "Full name", lbl_whatsapp: 'WhatsApp number <span class="optional">(for booking confirmation)</span>', ep_eyebrow: "Your profile", ep_title: "Edit profile", ep_address_label: "Full address (required for invoices)", ep_taxnumber_label: "Tax number (optional)",
     lbl_pickup_loc: "Pickup location", lbl_pickup_dropoff_loc: "Pickup / drop-off location", lbl_airport_destination: "Destination region", lbl_transfer_destination: "Destination", lbl_pickup_region: "Your pickup region",
@@ -10630,6 +10972,12 @@ const translations = {
  fees_listing_profile: "Set up tours & driver profile", fees_hero_free_label: "always free", fees_listing_desc: "Create unlimited listings, no cost while you have zero bookings",
     fees_conditions_apply: "Conditions apply", fees_see_full_terms: "see full terms", fees_th_booking_value: "Booking value", fees_th_fee_charged: "Fee charged to driver", fees_row_any_booking: "Any confirmed booking", fees_row_any_booking_val: "10% of tour price", fees_villa_rate_val: "20% of tour price", fees_conditions_apply_booking: "Conditions apply to every booking", fees_zero_bookings_note: "A driver with zero bookings this month pays nothing at all — the fee only appears once a guest actually confirms a paid trip.",
     fees_featured_placement: "Featured placement", fees_featured_desc: "Higher spot in search results — auto-expires after 1 month", fees_featured_price: "IDR 100,000 / month",
+    topup_section_title: "Your balance", topup_current_balance_lbl: "Current balance", topup_choose_amount: "Choose an amount to top up",
+    topup_custom_placeholder: "Other amount (IDR)", topup_submit_btn: "Top up", topup_loading: "Redirecting…",
+    topup_redirect_note: "ⓘ You'll be redirected to a secure payment page (QRIS, bank transfer, or e-wallet). Your balance updates automatically once payment is confirmed — this can take up to a minute.",
+    topup_err_min_amount: "Please choose or enter an amount of at least IDR 10,000.", topup_err_generic: "Something went wrong — please try again in a moment.",
+    topup_redirect_success: "Thanks! We're confirming your payment — your balance will update in a few seconds. Feel free to reopen this page shortly.",
+    topup_redirect_failed: "The payment wasn't completed. You can try again anytime.",
     fees_open_fees_title: "Open fees this month", fees_open_fees_desc: "Pay your accumulated booking fees",
     fees_cancellation_title: "Includes a cancellation fee", fees_cancellation_desc: "For tours you cancelled yourself — see Bookings for details",
     cancel_outcome_customer_1: "Cancelled —", cancel_outcome_customer_2: "Since the customer didn't show up, the platform fee already charged for this booking has been refunded to you. The customer has been informed by email.",
@@ -10756,6 +11104,7 @@ const translations = {
     admin_openpay_days_left: "{n} days left", admin_confirm_run_settlement: "Run the automatic month-end fee settlement for all drivers now? This charges everyone with open fees and a valid payment method, and starts the 5-day countdown for anyone without one.",
     admin_settlement_done: "Settlement run complete. Check the lists below for results.",
     payment_suspended_banner: "Your account is suspended because your Rydanu fees ({amount}) weren't settled in time. Your tours are hidden from travelers. Pay now to be reinstated automatically.",
+    payment_suspended_banner_other: "Your account has been suspended. Your tours are hidden from travelers. Please contact Rydanu Support to sort this out.",
     auto_payment_success_title: "✓ Automatic fee payment successful", auto_payment_success_body: "We automatically charged your saved payment method {amount} for this month's Rydanu fees (receipt {ref}). Available under \"Fees & billing\".",
     payment_failed_title: "⚠️ Automatic fee payment failed", payment_failed_body: "We couldn't charge your saved payment method for this month's fees ({amount}) — please add a valid payment method and pay by {date}, or your account will be automatically suspended.",
     suspended_inbox_title: "🚫 Account suspended — unpaid fees", suspended_inbox_body: "Your account has been automatically suspended because {amount} in Rydanu fees wasn't paid within 5 days. Your tours are now hidden from travelers. Pay your open fees anytime to be reinstated automatically — you can still access your profile and messages.",
@@ -10883,7 +11232,7 @@ const translations = {
     admin_fch_confirm_delete: "Delete this charge entry? This does not reverse the amount already applied.",
     admin_fc_confirm_delete: "Really delete this credit? The already-credited amount will be deducted from the driver again, if not yet used.",
     admin_fc_empty_default: "No credits created yet.", admin_fc_empty_filtered: "No credits created for this driver yet.",
-    admin_all_drivers_option: "All drivers", admin_drivers_search_placeholder: "Search driver…", admin_delete_btn: "✕ Delete", admin_status_suspended: "🚫 Suspended (unpaid fees)", admin_status_blocked: "🚫 Blocked", admin_status_active: "Active", admin_lock_btn: "Block", admin_unlock_btn: "Unblock", payment_received_title: "Payment received — receipt {ref}", payment_received_body_credit: "We received your fee payment of {amount} (an {credit} referral credit was applied). The receipt is available under \"Fees & billing\".", payment_received_body_plain: "We received your fee payment of {amount}. The receipt is available under \"Fees & billing\".", welcome_inbox_title: "Welcome to Rydanu! 🌴", welcome_inbox_body: "Your registration was received and is under review. Your Rydanu number is {number} — keep it handy for all support requests.", approved_inbox_title: "Your account is approved ✓", approved_inbox_body: "Congratulations! Your profile and all your tours are now live and bookable for travelers.", approved_alert: "{name} has been approved and is now live on Rydanu.", rejected_inbox_title: "Your registration was rejected", rejected_inbox_body: "Reason: {reason} — you can register again with corrected documents or contact support.", rejected_alert: "{name} has been rejected and notified with your reason.", account_blocked_banner: "🚫 Your account has been blocked by Rydanu. Your tours are not visible to travelers. Please contact support via the WhatsApp button below.", rejected_banner: "✕ Your registration was rejected. Reason: {reason}<br>Please contact Rydanu support or register again with corrected documents.",
+    admin_all_drivers_option: "All drivers", admin_drivers_search_placeholder: "Search driver…", admin_delete_btn: "✕ Delete", admin_status_suspended: "🚫 Suspended (unpaid fees)", admin_status_blocked: "🚫 Blocked", admin_status_active: "Active", admin_lock_reason_fees: "fees", admin_lock_reason_autodebit: "auto top-up failed", admin_lock_reason_manual: "manual", admin_lock_btn: "Block", admin_unlock_btn: "Unblock", payment_received_title: "Payment received — receipt {ref}", payment_received_body_credit: "We received your fee payment of {amount} (an {credit} referral credit was applied). The receipt is available under \"Fees & billing\".", payment_received_body_plain: "We received your fee payment of {amount}. The receipt is available under \"Fees & billing\".", welcome_inbox_title: "Welcome to Rydanu! 🌴", welcome_inbox_body: "Your registration was received and is under review. Your Rydanu number is {number} — keep it handy for all support requests.", approved_inbox_title: "Your account is approved ✓", approved_inbox_body: "Congratulations! Your profile and all your tours are now live and bookable for travelers.", approved_alert: "{name} has been approved and is now live on Rydanu.", rejected_inbox_title: "Your registration was rejected", rejected_inbox_body: "Reason: {reason} — you can register again with corrected documents or contact support.", rejected_alert: "{name} has been rejected and notified with your reason.", account_blocked_banner: "🚫 Your account has been blocked by Rydanu. Your tours are not visible to travelers. Please contact support via the WhatsApp button below.", rejected_banner: "✕ Your registration was rejected. Reason: {reason}<br>Please contact Rydanu support or register again with corrected documents.",
     modal_services_label: "Service (on request)",
     modal_start_label: "Start of tour",
     surcharge_note: "against surcharge",
@@ -10923,6 +11272,13 @@ const translations = {
     results_heading: "Verfügbare Fahrer diese Woche", search_results_in_prefix: "Fahrer in",
     tours_heading: "Verfügbare Touren diese Woche", order_toggle_drivers: "Fahrer zuerst", order_toggle_tours: "Touren zuerst", reset_filters_link: "Filter zurücksetzen", soft_filter_notice: "Nicht alle Filter konnten berücksichtigt werden — hier die besten Treffer.",
     plan_with_driver: "ⓘ Die genauen Attraktionen und was enthalten ist, planst du direkt mit deinem Fahrer.",
+    topup_banner_btn: "💰 Guthaben aufladen",
+    autodebit_section_title: "VIP: Automatischer Einzug", autodebit_setup_intro: "Du bist für automatischen Einzug freigeschaltet: Wird dein Guthaben knapp, können wir es automatisch über eine hinterlegte Zahlungsmethode aufladen — kein manuelles Aufladen mehr nötig. Einmalig unten verknüpfen.",
+    autodebit_mobile_placeholder: "Handynummer (z.B. 818555988)", autodebit_card_last4_placeholder: "Letzte 4 Ziffern der Karte", autodebit_card_expiry_placeholder: "Ablaufdatum Karte (MM/JJ)", autodebit_email_placeholder: "E-Mail",
+    autodebit_link_btn: "Zahlungsmethode verknüpfen", autodebit_otp_intro: "Gib den gerade erhaltenen SMS-Code ein, um die Verknüpfung zu bestätigen.", autodebit_otp_placeholder: "SMS-Code", autodebit_otp_btn: "Code bestätigen",
+    autodebit_active_title: "Zahlungsmethode verknüpft", autodebit_active_body: "Automatischer Einzug ist bereit. Du kannst weiterhin jederzeit oben manuell aufladen.", autodebit_relink_btn: "Andere Methode verknüpfen",
+    autodebit_failed_title: "Verknüpfung fehlgeschlagen", autodebit_retry_btn: "Nochmal versuchen",
+    autodebit_err_fields: "Bitte alle Felder korrekt ausfüllen (Karte: 4 Ziffern, Ablauf: MM/JJ).", autodebit_err_generic: "Etwas ist schiefgelaufen — bitte gleich nochmal versuchen.", autodebit_err_otp_empty: "Bitte den SMS-Code eingeben.",
     support_btn: "✉️ Nachricht an Rydanu Support", dp_qr_dash_btn: "📱 Dein Rydanu QR-Code",
     support_modal_title: "Nachricht an Rydanu Support",
     support_subject_label: "Betreff", support_msg_label: "Deine Nachricht", support_send_btn: "Nachricht senden",
@@ -10950,7 +11306,7 @@ const translations = {
     driver_stat_bookings: "Buchungen", driver_stat_revenue: "Umsatz", driver_stat_fees: "Gebühren", driver_stat_cancelled: "Storniert",
     lbl_tour: "Tour", lbl_duration: "Dauer", lbl_vehicle: "Fahrzeug", lbl_languages: "Sprachen",
     lbl_rating: "Bewertung", lbl_price: "Preis", lbl_not_included: "Nicht enthalten", lbl_driver: "Fahrer",
-    lbl_date: "Datum", lbl_time: "Uhrzeit", lbl_guests: "Gäste", lbl_notes_for_driver: "Notizen für den Fahrer", btn_whatsapp_contact: "Per WhatsApp kontaktieren", join_rydanu_eyebrow: "Rydanu beitreten", register_driver_modal_title: "Als neuer Fahrer registrieren", pm_conv_not_found_title: "Unterhaltung nicht gefunden", pm_conv_not_found_body: "Dieser Link ist evtl. ungültig, oder die Unterhaltung wurde entfernt. Bitte kontaktiere deinen Fahrer direkt.", pm_conv_with_prefix: "Deine Unterhaltung mit", pm_your_reply_label: "Deine Antwort", pm_reply_placeholder: "Antwort schreiben...", pm_send_reply_btn: "Antwort senden", pm_write_message_first: "Bitte zuerst eine Nachricht schreiben.", oc_offer_not_found_title: "Angebot nicht gefunden", oc_offer_not_found_body: "Dieser Link ist evtl. ungültig, oder das Angebot wurde zurückgezogen. Bitte kontaktiere deinen Fahrer direkt.", oc_already_confirmed_title: "Bereits bestätigt", oc_already_confirmed_body: "Du hast diese Buchung bereits bestätigt — bis bald!", oc_no_longer_available_title: "Dieses Angebot ist nicht mehr verfügbar", oc_no_longer_available_body: "Bitte kontaktiere deinen Fahrer direkt für ein aktuelles Angebot.", oc_offer_from_prefix: "Dein Tour-Angebot von", oc_confirm_btn: "Diese Buchung bestätigen", oc_confirm_payment_note: "Mit der Bestätigung erklärst du dich einverstanden, die Zahlung wie gewohnt bei Rydanu direkt mit deinem Fahrer zu klären.", oc_decline_btn: "Angebot ablehnen", oc_decline_confirm: "Dieses Angebot ablehnen? Es wird geschlossen und kann danach nicht mehr bestätigt werden — falls du weiterhin einen Transfer möchtest, musst du eine neue Anfrage stellen.", oc_declined_title: "Angebot abgelehnt", oc_declined_body: "Dein Fahrer wurde informiert. Dieses Angebot ist jetzt geschlossen und kann später nicht mehr bestätigt werden — falls du weiterhin einen Transfer oder eine Tour möchtest, stelle bitte eine neue Anfrage, ein Fahrer meldet sich dann mit einem neuen Angebot.", oc_confirm_err: "Bei der Bestätigung ist etwas schiefgelaufen. Bitte nochmal versuchen oder deinen Fahrer direkt kontaktieren.", lbl_total: "Gesamtpreis der Tour", lbl_pickup: "Abholung", lbl_tour_singular: "Tour", lbl_tour_plural: "Touren", lbl_rating_new: "Neu",
+    lbl_date: "Datum", lbl_time: "Uhrzeit", lbl_guests: "Gäste", lbl_notes_for_driver: "Notizen für den Fahrer", btn_whatsapp_contact: "Per WhatsApp kontaktieren", join_rydanu_eyebrow: "Rydanu beitreten", register_driver_modal_title: "Als neuer Fahrer registrieren", pm_conv_not_found_title: "Unterhaltung nicht gefunden", pm_conv_not_found_body: "Dieser Link ist evtl. ungültig, oder die Unterhaltung wurde entfernt. Bitte kontaktiere deinen Fahrer direkt.", pm_conv_with_prefix: "Deine Unterhaltung mit", pm_your_reply_label: "Deine Antwort", pm_reply_placeholder: "Antwort schreiben...", pm_send_reply_btn: "Antwort senden", pm_write_message_first: "Bitte zuerst eine Nachricht schreiben.", oc_offer_not_found_title: "Angebot nicht gefunden", oc_offer_not_found_body: "Dieser Link ist evtl. ungültig, oder das Angebot wurde zurückgezogen. Bitte kontaktiere deinen Fahrer direkt.", oc_already_confirmed_title: "Bereits bestätigt", oc_already_confirmed_body: "Du hast diese Buchung bereits bestätigt — bis bald!", oc_no_longer_available_title: "Dieses Angebot ist nicht mehr verfügbar", oc_no_longer_available_body: "Bitte kontaktiere deinen Fahrer direkt für ein aktuelles Angebot.", oc_offer_from_prefix: "Dein Tour-Angebot von", oc_confirm_btn: "Diese Buchung bestätigen", oc_confirm_payment_note: "Mit der Bestätigung erklärst du dich einverstanden, die Zahlung wie gewohnt bei Rydanu direkt mit deinem Fahrer zu klären.", oc_decline_btn: "Angebot ablehnen", oc_decline_confirm: "Dieses Angebot ablehnen? Es wird geschlossen und kann danach nicht mehr bestätigt werden — falls du weiterhin einen Transfer möchtest, musst du eine neue Anfrage stellen.", oc_declined_title: "Angebot abgelehnt", oc_declined_body: "Dein Fahrer wurde informiert. Dieses Angebot ist jetzt geschlossen und kann später nicht mehr bestätigt werden — falls du weiterhin einen Transfer oder eine Tour möchtest, stelle bitte eine neue Anfrage, ein Fahrer meldet sich dann mit einem neuen Angebot.", oc_confirm_err: "Bei der Bestätigung ist etwas schiefgelaufen. Bitte nochmal versuchen oder deinen Fahrer direkt kontaktieren.", oc_confirm_driver_unavailable: "Dieser Fahrer kann gerade keine neuen Buchungen annehmen. Bitte kontaktiere ihn direkt oder stelle eine neue Anfrage für einen anderen Fahrer.", payment_processing_title: "Zahlung wird bearbeitet…", payment_processing_note: "Das kann ein paar Sekunden dauern, bitte warten.", accept_err_low_balance: "Diese Buchung konnte nicht bestätigt werden — dein Guthaben-Puffer ist erreicht. Bitte lade zuerst dein Guthaben auf.", accept_err_generic: "Bei der Bestätigung ist etwas schiefgelaufen. Bitte gleich nochmal versuchen.", accept_err_autodebit_failed: "Der automatische Einzug hat nicht geklappt, dein Account wurde vorübergehend gesperrt. Rydanu wurde informiert — bitte manuell aufladen oder den Support kontaktieren.", accept_err_account_locked: "Dein Account ist gesperrt. Bitte kontaktiere den Support, damit er wieder freigeschaltet wird.", lbl_total: "Gesamtpreis der Tour", lbl_pickup: "Abholung", lbl_tour_singular: "Tour", lbl_tour_plural: "Touren", lbl_rating_new: "Neu",
     lbl_total_price_due: "Gesamtbetrag — direkt an den Fahrer", lbl_ryvio_fee: "Rydanu-Gebühr (10%)", lbl_your_car: "Das Auto deines Fahrers",
     lbl_fullname: "Vollständiger Name", lbl_whatsapp: 'WhatsApp-Nummer <span class="optional">(für die Buchungsbestätigung)</span>', ep_eyebrow: "Dein Profil", ep_title: "Profil bearbeiten", ep_address_label: "Vollständige Adresse (Pflichtangabe für Rechnungen)", ep_taxnumber_label: "Steuernummer (optional)",
     lbl_pickup_loc: "Abholort", lbl_pickup_dropoff_loc: "Abhol-/Zielort", lbl_airport_destination: "Zielregion", lbl_transfer_destination: "Ziel", lbl_pickup_region: "Deine Abholregion",
@@ -10988,6 +11344,12 @@ const translations = {
  fees_listing_profile: "Touren einstellen & Fahrerprofil", fees_hero_free_label: "immer kostenlos", fees_listing_desc: "Erstelle unbegrenzt viele Angebote, keine Kosten solange du keine Buchungen hast",
     fees_conditions_apply: "Bedingungen gelten", fees_see_full_terms: "vollständige Bedingungen ansehen", fees_th_booking_value: "Buchungswert", fees_th_fee_charged: "Gebühr für Fahrer", fees_row_any_booking: "Jede bestätigte Buchung", fees_row_any_booking_val: "10% des Tourpreises", fees_villa_rate_val: "20% des Tourpreises", fees_conditions_apply_booking: "Bedingungen gelten für jede Buchung", fees_zero_bookings_note: "Ein Fahrer ohne Buchungen in diesem Monat zahlt gar nichts — die Gebühr entsteht erst, sobald ein Gast tatsächlich eine bezahlte Tour bestätigt.",
     fees_featured_placement: "Featured Placement", fees_featured_desc: "Höhere Platzierung in den Suchergebnissen — läuft automatisch nach 1 Monat aus", fees_featured_price: "IDR 100.000 / Monat",
+    topup_section_title: "Dein Guthaben", topup_current_balance_lbl: "Aktuelles Guthaben", topup_choose_amount: "Betrag zum Aufladen wählen",
+    topup_custom_placeholder: "Anderer Betrag (IDR)", topup_submit_btn: "Aufladen", topup_loading: "Weiterleitung…",
+    topup_redirect_note: "ⓘ Du wirst zu einer sicheren Zahlungsseite weitergeleitet (QRIS, Banküberweisung oder E-Wallet). Dein Guthaben aktualisiert sich automatisch, sobald die Zahlung bestätigt ist — das kann bis zu einer Minute dauern.",
+    topup_err_min_amount: "Bitte einen Betrag von mindestens IDR 10.000 wählen oder eingeben.", topup_err_generic: "Etwas ist schiefgelaufen — bitte gleich nochmal versuchen.",
+    topup_redirect_success: "Danke! Wir bestätigen gerade deine Zahlung — dein Guthaben aktualisiert sich in ein paar Sekunden. Schau gleich nochmal auf dieser Seite vorbei.",
+    topup_redirect_failed: "Die Zahlung wurde nicht abgeschlossen. Du kannst es jederzeit erneut versuchen.",
     fees_open_fees_title: "Offene Gebühren diesen Monat", fees_open_fees_desc: "Bezahle deine angesammelten Buchungsgebühren — eine Rechnung wird dir automatisch per E-Mail zugesendet",
     fees_cancellation_title: "Enthält eine Stornogebühr", fees_cancellation_desc: "Für Touren, die du selbst storniert hast — Details unter Buchungen",
     cancel_outcome_customer_1: "Storniert —", cancel_outcome_customer_2: "Da der Kunde nicht erschienen ist, wurde dir die bereits belastete Plattformgebühr für diese Buchung zurückerstattet. Der Kunde wurde per E-Mail informiert.",
@@ -11114,6 +11476,7 @@ const translations = {
     admin_openpay_days_left: "noch {n} Tage", admin_confirm_run_settlement: "Jetzt die automatische Monatsend-Gebührenabrechnung für alle Fahrer ausführen? Das belastet alle mit offenen Gebühren und gültiger Zahlungsmethode und startet die 5-Tage-Frist für alle ohne.",
     admin_settlement_done: "Abrechnungslauf abgeschlossen. Ergebnisse unten prüfen.",
     payment_suspended_banner: "Dein Konto ist gesperrt, weil deine Rydanu-Gebühren ({amount}) nicht rechtzeitig beglichen wurden. Deine Touren sind für Reisende ausgeblendet. Jetzt bezahlen, um automatisch wieder freigeschaltet zu werden.",
+    payment_suspended_banner_other: "Dein Konto wurde gesperrt. Deine Touren sind für Reisende ausgeblendet. Bitte wende dich an den Rydanu-Support, um das zu klären.",
     auto_payment_success_title: "✓ Automatische Gebührenzahlung erfolgreich", auto_payment_success_body: "Wir haben deiner hinterlegten Zahlungsmethode automatisch {amount} für die Rydanu-Gebühren diesen Monats belastet (Beleg {ref}). Verfügbar unter \"Gebühren & Abrechnung\".",
     payment_failed_title: "⚠️ Automatische Gebührenzahlung fehlgeschlagen", payment_failed_body: "Wir konnten deine hinterlegte Zahlungsmethode nicht mit den Gebühren diesen Monats ({amount}) belasten — bitte hinterlege eine gültige Zahlungsmethode und zahle bis {date}, sonst wird dein Konto automatisch gesperrt.",
     suspended_inbox_title: "🚫 Konto gesperrt — unbezahlte Gebühren", suspended_inbox_body: "Dein Konto wurde automatisch gesperrt, weil {amount} an Rydanu-Gebühren nicht innerhalb von 5 Tagen bezahlt wurden. Deine Touren sind jetzt für Reisende ausgeblendet. Bezahle deine offenen Gebühren jederzeit, um automatisch wieder freigeschaltet zu werden — Profil und Nachrichten kannst du weiterhin nutzen.",
@@ -11241,7 +11604,7 @@ const translations = {
     admin_fch_confirm_delete: "Diesen Belastungs-Eintrag löschen? Der bereits verrechnete Betrag wird dadurch nicht rückgängig gemacht.",
     admin_fc_confirm_delete: "Diese Gutschrift wirklich löschen? Der bereits gutgeschriebene Betrag wird dem Fahrer wieder abgezogen, sofern er noch nicht verbraucht wurde.",
     admin_fc_empty_default: "Noch keine Gutschriften erstellt.", admin_fc_empty_filtered: "Für diesen Fahrer wurden noch keine Gutschriften erstellt.",
-    admin_all_drivers_option: "Alle Fahrer", admin_drivers_search_placeholder: "Fahrer suchen…", admin_delete_btn: "✕ Löschen", admin_status_suspended: "🚫 Gesperrt (unbezahlte Gebühren)", admin_status_blocked: "🚫 Gesperrt", admin_status_active: "Aktiv", admin_lock_btn: "Sperren", admin_unlock_btn: "Entsperren", payment_received_title: "Zahlung erhalten — Beleg {ref}", payment_received_body_credit: "Wir haben deine Gebührenzahlung von {amount} erhalten (eine Empfehlungs-Gutschrift von {credit} wurde angerechnet). Der Beleg ist unter \"Gebühren & Abrechnung\" verfügbar.", payment_received_body_plain: "Wir haben deine Gebührenzahlung von {amount} erhalten. Der Beleg ist unter \"Gebühren & Abrechnung\" verfügbar.", welcome_inbox_title: "Willkommen bei Rydanu! 🌴", welcome_inbox_body: "Deine Registrierung ist eingegangen und wird geprüft. Deine Rydanu-Nummer ist {number} — halte sie für alle Support-Anfragen bereit.", approved_inbox_title: "Dein Konto ist freigeschaltet ✓", approved_inbox_body: "Glückwunsch! Dein Profil und alle deine Touren sind jetzt live und für Reisende buchbar.", approved_alert: "{name} wurde freigeschaltet und ist jetzt live auf Rydanu.", rejected_inbox_title: "Deine Registrierung wurde abgelehnt", rejected_inbox_body: "Grund: {reason} — du kannst dich mit korrigierten Dokumenten erneut registrieren oder den Support kontaktieren.", rejected_alert: "{name} wurde abgelehnt und über deinen Grund benachrichtigt.", account_blocked_banner: "🚫 Dein Konto wurde von Rydanu gesperrt. Deine Touren sind für Reisende nicht sichtbar. Bitte kontaktiere den Support über den WhatsApp-Button unten.", rejected_banner: "✕ Deine Registrierung wurde abgelehnt. Grund: {reason}<br>Bitte kontaktiere den Rydanu-Support oder registriere dich mit korrigierten Dokumenten erneut.",
+    admin_all_drivers_option: "Alle Fahrer", admin_drivers_search_placeholder: "Fahrer suchen…", admin_delete_btn: "✕ Löschen", admin_status_suspended: "🚫 Gesperrt (unbezahlte Gebühren)", admin_status_blocked: "🚫 Gesperrt", admin_status_active: "Aktiv", admin_lock_reason_fees: "Gebühren", admin_lock_reason_autodebit: "Auto-Einzug fehlgeschlagen", admin_lock_reason_manual: "manuell", admin_lock_btn: "Sperren", admin_unlock_btn: "Entsperren", payment_received_title: "Zahlung erhalten — Beleg {ref}", payment_received_body_credit: "Wir haben deine Gebührenzahlung von {amount} erhalten (eine Empfehlungs-Gutschrift von {credit} wurde angerechnet). Der Beleg ist unter \"Gebühren & Abrechnung\" verfügbar.", payment_received_body_plain: "Wir haben deine Gebührenzahlung von {amount} erhalten. Der Beleg ist unter \"Gebühren & Abrechnung\" verfügbar.", welcome_inbox_title: "Willkommen bei Rydanu! 🌴", welcome_inbox_body: "Deine Registrierung ist eingegangen und wird geprüft. Deine Rydanu-Nummer ist {number} — halte sie für alle Support-Anfragen bereit.", approved_inbox_title: "Dein Konto ist freigeschaltet ✓", approved_inbox_body: "Glückwunsch! Dein Profil und alle deine Touren sind jetzt live und für Reisende buchbar.", approved_alert: "{name} wurde freigeschaltet und ist jetzt live auf Rydanu.", rejected_inbox_title: "Deine Registrierung wurde abgelehnt", rejected_inbox_body: "Grund: {reason} — du kannst dich mit korrigierten Dokumenten erneut registrieren oder den Support kontaktieren.", rejected_alert: "{name} wurde abgelehnt und über deinen Grund benachrichtigt.", account_blocked_banner: "🚫 Dein Konto wurde von Rydanu gesperrt. Deine Touren sind für Reisende nicht sichtbar. Bitte kontaktiere den Support über den WhatsApp-Button unten.", rejected_banner: "✕ Deine Registrierung wurde abgelehnt. Grund: {reason}<br>Bitte kontaktiere den Rydanu-Support oder registriere dich mit korrigierten Dokumenten erneut.",
     modal_services_label: "Service (auf Anfrage)",
     modal_start_label: "Start der Tour",
     surcharge_note: "gegen Aufpreis",
@@ -11281,6 +11644,13 @@ const translations = {
     results_heading: "Sopir tersedia minggu ini", search_results_in_prefix: "Sopir di",
     tours_heading: "Tur tersedia minggu ini", order_toggle_drivers: "Sopir dulu", order_toggle_tours: "Tur dulu", reset_filters_link: "Setel ulang filter", soft_filter_notice: "Tidak semua filter dapat diterapkan — menampilkan hasil terdekat.",
     plan_with_driver: "ⓘ Atraksi yang tepat dan apa saja yang termasuk Anda rencanakan langsung dengan sopir Anda.",
+    topup_banner_btn: "💰 Isi ulang saldo Anda",
+    autodebit_section_title: "VIP: Isi ulang otomatis", autodebit_setup_intro: "Anda memenuhi syarat untuk isi ulang otomatis: jika saldo Anda menipis, kami dapat mengisinya secara otomatis dari metode pembayaran yang tertaut — tidak perlu isi ulang manual. Tautkan sekali di bawah ini.",
+    autodebit_mobile_placeholder: "Nomor HP (mis. 818555988)", autodebit_card_last4_placeholder: "4 digit terakhir kartu", autodebit_card_expiry_placeholder: "Masa berlaku kartu (BB/TT)", autodebit_email_placeholder: "Email",
+    autodebit_link_btn: "Tautkan metode pembayaran", autodebit_otp_intro: "Masukkan kode SMS yang baru saja Anda terima untuk mengonfirmasi tautan.", autodebit_otp_placeholder: "Kode SMS", autodebit_otp_btn: "Konfirmasi kode",
+    autodebit_active_title: "Metode pembayaran tertaut", autodebit_active_body: "Isi ulang otomatis sudah siap. Anda tetap bisa isi ulang manual kapan saja di atas.", autodebit_relink_btn: "Tautkan metode lain",
+    autodebit_failed_title: "Penautan gagal", autodebit_retry_btn: "Coba lagi",
+    autodebit_err_fields: "Silakan isi semua kolom dengan benar (kartu: 4 digit, masa berlaku: BB/TT).", autodebit_err_generic: "Terjadi kesalahan — silakan coba lagi sebentar.", autodebit_err_otp_empty: "Silakan masukkan kode SMS.",
     support_btn: "✉️ Pesan ke Dukungan Rydanu", dp_qr_dash_btn: "📱 Kode QR Rydanu Anda",
     support_modal_title: "Pesan ke Dukungan Rydanu",
     support_subject_label: "Subjek", support_msg_label: "Pesan Anda", support_send_btn: "Kirim pesan",
@@ -11308,7 +11678,7 @@ const translations = {
     driver_stat_bookings: "Pemesanan", driver_stat_revenue: "Pendapatan", driver_stat_fees: "Biaya", driver_stat_cancelled: "Dibatalkan",
     lbl_tour: "Tur", lbl_duration: "Durasi", lbl_vehicle: "Kendaraan", lbl_languages: "Bahasa",
     lbl_rating: "Rating", lbl_price: "Harga", lbl_not_included: "Tidak termasuk", lbl_driver: "Sopir",
-    lbl_date: "Tanggal", lbl_time: "Waktu", lbl_guests: "Tamu", lbl_notes_for_driver: "Catatan untuk sopir", btn_whatsapp_contact: "Hubungi via WhatsApp", join_rydanu_eyebrow: "Bergabung dengan Rydanu", register_driver_modal_title: "Daftar sebagai sopir baru", pm_conv_not_found_title: "Percakapan tidak ditemukan", pm_conv_not_found_body: "Tautan ini mungkin tidak valid, atau percakapan telah dihapus. Silakan hubungi sopir Anda langsung.", pm_conv_with_prefix: "Percakapan Anda dengan", pm_your_reply_label: "Balasan Anda", pm_reply_placeholder: "Tulis balasan Anda...", pm_send_reply_btn: "Kirim balasan", pm_write_message_first: "Silakan tulis pesan terlebih dahulu.", oc_offer_not_found_title: "Penawaran tidak ditemukan", oc_offer_not_found_body: "Tautan ini mungkin tidak valid, atau penawaran telah ditarik. Silakan hubungi sopir Anda langsung.", oc_already_confirmed_title: "Sudah dikonfirmasi", oc_already_confirmed_body: "Anda sudah mengonfirmasi pemesanan ini — sampai jumpa!", oc_no_longer_available_title: "Penawaran ini sudah tidak tersedia", oc_no_longer_available_body: "Silakan hubungi sopir Anda langsung untuk penawaran terbaru.", oc_offer_from_prefix: "Penawaran tur Anda dari", oc_confirm_btn: "Konfirmasi pemesanan ini", oc_confirm_payment_note: "Dengan mengonfirmasi, Anda setuju untuk mengatur pembayaran langsung dengan sopir Anda, seperti biasa di Rydanu.", oc_decline_btn: "Tolak penawaran ini", oc_decline_confirm: "Tolak penawaran ini? Penawaran ini akan ditutup dan tidak dapat dibatalkan penolakannya — jika Anda masih ingin transfer, Anda perlu mengajukan permintaan baru.", oc_declined_title: "Penawaran ditolak", oc_declined_body: "Sopir Anda telah diberi tahu. Penawaran ini sekarang ditutup dan tidak dapat dikonfirmasi lagi — jika Anda masih ingin transfer atau tur, silakan ajukan permintaan baru dan sopir akan menghubungi Anda dengan penawaran baru.", oc_confirm_err: "Terjadi kesalahan saat mengonfirmasi pemesanan ini. Silakan coba lagi, atau hubungi sopir Anda langsung.", lbl_total: "Total harga tur", lbl_pickup: "Penjemputan", lbl_tour_singular: "tur", lbl_tour_plural: "tur", lbl_rating_new: "Baru",
+    lbl_date: "Tanggal", lbl_time: "Waktu", lbl_guests: "Tamu", lbl_notes_for_driver: "Catatan untuk sopir", btn_whatsapp_contact: "Hubungi via WhatsApp", join_rydanu_eyebrow: "Bergabung dengan Rydanu", register_driver_modal_title: "Daftar sebagai sopir baru", pm_conv_not_found_title: "Percakapan tidak ditemukan", pm_conv_not_found_body: "Tautan ini mungkin tidak valid, atau percakapan telah dihapus. Silakan hubungi sopir Anda langsung.", pm_conv_with_prefix: "Percakapan Anda dengan", pm_your_reply_label: "Balasan Anda", pm_reply_placeholder: "Tulis balasan Anda...", pm_send_reply_btn: "Kirim balasan", pm_write_message_first: "Silakan tulis pesan terlebih dahulu.", oc_offer_not_found_title: "Penawaran tidak ditemukan", oc_offer_not_found_body: "Tautan ini mungkin tidak valid, atau penawaran telah ditarik. Silakan hubungi sopir Anda langsung.", oc_already_confirmed_title: "Sudah dikonfirmasi", oc_already_confirmed_body: "Anda sudah mengonfirmasi pemesanan ini — sampai jumpa!", oc_no_longer_available_title: "Penawaran ini sudah tidak tersedia", oc_no_longer_available_body: "Silakan hubungi sopir Anda langsung untuk penawaran terbaru.", oc_offer_from_prefix: "Penawaran tur Anda dari", oc_confirm_btn: "Konfirmasi pemesanan ini", oc_confirm_payment_note: "Dengan mengonfirmasi, Anda setuju untuk mengatur pembayaran langsung dengan sopir Anda, seperti biasa di Rydanu.", oc_decline_btn: "Tolak penawaran ini", oc_decline_confirm: "Tolak penawaran ini? Penawaran ini akan ditutup dan tidak dapat dibatalkan penolakannya — jika Anda masih ingin transfer, Anda perlu mengajukan permintaan baru.", oc_declined_title: "Penawaran ditolak", oc_declined_body: "Sopir Anda telah diberi tahu. Penawaran ini sekarang ditutup dan tidak dapat dikonfirmasi lagi — jika Anda masih ingin transfer atau tur, silakan ajukan permintaan baru dan sopir akan menghubungi Anda dengan penawaran baru.", oc_confirm_err: "Terjadi kesalahan saat mengonfirmasi pemesanan ini. Silakan coba lagi, atau hubungi sopir Anda langsung.", oc_confirm_driver_unavailable: "Sopir ini belum bisa menerima pemesanan baru saat ini. Silakan hubungi langsung, atau ajukan permintaan baru untuk mencari sopir lain.", payment_processing_title: "Memproses pembayaran…", payment_processing_note: "Ini bisa memakan waktu beberapa detik, mohon tunggu.", accept_err_low_balance: "Pemesanan ini tidak dapat dikonfirmasi — batas saldo Anda telah tercapai. Silakan isi ulang saldo Anda terlebih dahulu.", accept_err_generic: "Terjadi kesalahan saat mengonfirmasi pemesanan ini. Silakan coba lagi sebentar.", accept_err_autodebit_failed: "Isi ulang otomatis tidak berhasil, akun Anda sementara dikunci. Rydanu telah diberi tahu — silakan isi ulang manual atau hubungi dukungan.", accept_err_account_locked: "Akun Anda terkunci. Silakan hubungi dukungan untuk membukanya kembali.", lbl_total: "Total harga tur", lbl_pickup: "Penjemputan", lbl_tour_singular: "tur", lbl_tour_plural: "tur", lbl_rating_new: "Baru",
     lbl_total_price_due: "Total — bayar langsung ke sopir", lbl_ryvio_fee: "Biaya Rydanu (10%)", lbl_your_car: "Mobil sopir Anda",
     lbl_fullname: "Nama lengkap", lbl_whatsapp: 'Nomor WhatsApp <span class="optional">(untuk konfirmasi pemesanan)</span>', ep_eyebrow: "Profil Anda", ep_title: "Edit profil", ep_address_label: "Alamat lengkap (wajib untuk faktur)", ep_taxnumber_label: "NPWP (opsional)",
     lbl_pickup_loc: "Lokasi penjemputan", lbl_pickup_dropoff_loc: "Lokasi jemput/antar", lbl_airport_destination: "Wilayah tujuan", lbl_transfer_destination: "Tujuan", lbl_pickup_region: "Wilayah penjemputan Anda",
@@ -11346,6 +11716,12 @@ const translations = {
  fees_listing_profile: "Atur tur & profil sopir", fees_hero_free_label: "selalu gratis", fees_listing_desc: "Buat tur aktif tanpa batas, tanpa biaya selama Anda belum memiliki pemesanan",
     fees_conditions_apply: "Ketentuan berlaku", fees_see_full_terms: "lihat ketentuan lengkap", fees_th_booking_value: "Nilai pemesanan", fees_th_fee_charged: "Biaya yang dibebankan ke sopir", fees_row_any_booking: "Setiap pemesanan terkonfirmasi", fees_row_any_booking_val: "10% dari harga tur", fees_villa_rate_val: "20% dari harga tur", fees_conditions_apply_booking: "Ketentuan berlaku untuk setiap pemesanan", fees_zero_bookings_note: "Sopir tanpa pemesanan bulan ini tidak membayar apa pun — biaya baru muncul setelah tamu benar-benar mengonfirmasi perjalanan berbayar.",
     fees_featured_placement: "Featured placement", fees_featured_desc: "Posisi lebih tinggi di hasil pencarian — otomatis berakhir setelah 1 bulan", fees_featured_price: "IDR 100.000 / bulan",
+    topup_section_title: "Saldo Anda", topup_current_balance_lbl: "Saldo saat ini", topup_choose_amount: "Pilih jumlah untuk top up",
+    topup_custom_placeholder: "Jumlah lain (IDR)", topup_submit_btn: "Top up", topup_loading: "Mengalihkan…",
+    topup_redirect_note: "ⓘ Anda akan diarahkan ke halaman pembayaran aman (QRIS, transfer bank, atau e-wallet). Saldo Anda otomatis diperbarui setelah pembayaran dikonfirmasi — bisa memakan waktu hingga satu menit.",
+    topup_err_min_amount: "Silakan pilih atau masukkan jumlah minimal IDR 10.000.", topup_err_generic: "Terjadi kesalahan — silakan coba lagi sebentar.",
+    topup_redirect_success: "Terima kasih! Kami sedang mengonfirmasi pembayaran Anda — saldo akan diperbarui dalam beberapa detik. Silakan buka kembali halaman ini sebentar lagi.",
+    topup_redirect_failed: "Pembayaran belum selesai. Anda bisa mencoba lagi kapan saja.",
     fees_open_fees_title: "Biaya terbuka bulan ini", fees_open_fees_desc: "Bayar biaya pemesanan terkumpul Anda — faktur dikirim otomatis melalui email",
     fees_cancellation_title: "Termasuk biaya pembatalan", fees_cancellation_desc: "Untuk tur yang Anda batalkan sendiri — lihat Pemesanan untuk detail",
     cancel_outcome_customer_1: "Dibatalkan —", cancel_outcome_customer_2: "Karena pelanggan tidak datang, biaya platform yang sudah dibebankan untuk pemesanan ini telah dikembalikan kepada Anda. Pelanggan telah diberi tahu melalui email.",
@@ -11472,6 +11848,7 @@ const translations = {
     admin_openpay_days_left: "{n} hari lagi", admin_confirm_run_settlement: "Jalankan penyelesaian biaya akhir bulan otomatis untuk semua sopir sekarang? Ini akan menagih semua yang memiliki biaya terbuka dan metode pembayaran valid, dan memulai hitung mundur 5 hari untuk yang tidak punya.",
     admin_settlement_done: "Penyelesaian selesai. Periksa daftar di bawah untuk hasilnya.",
     payment_suspended_banner: "Akun Anda ditangguhkan karena biaya Rydanu Anda ({amount}) tidak dilunasi tepat waktu. Tur Anda disembunyikan dari wisatawan. Bayar sekarang untuk diaktifkan kembali secara otomatis.",
+    payment_suspended_banner_other: "Akun Anda telah ditangguhkan. Tur Anda disembunyikan dari wisatawan. Silakan hubungi Rydanu Support untuk menyelesaikannya.",
     auto_payment_success_title: "✓ Pembayaran biaya otomatis berhasil", auto_payment_success_body: "Kami secara otomatis menagih metode pembayaran tersimpan Anda sebesar {amount} untuk biaya Rydanu bulan ini (kuitansi {ref}). Tersedia di bawah \"Biaya & tagihan\".",
     payment_failed_title: "⚠️ Pembayaran biaya otomatis gagal", payment_failed_body: "Kami tidak dapat menagih metode pembayaran tersimpan Anda untuk biaya bulan ini ({amount}) — mohon tambahkan metode pembayaran yang valid dan bayar sebelum {date}, atau akun Anda akan ditangguhkan otomatis.",
     suspended_inbox_title: "🚫 Akun ditangguhkan — biaya belum dibayar", suspended_inbox_body: "Akun Anda telah ditangguhkan secara otomatis karena {amount} biaya Rydanu tidak dibayar dalam 5 hari. Tur Anda kini disembunyikan dari wisatawan. Bayar biaya terbuka Anda kapan saja untuk diaktifkan kembali secara otomatis — Anda masih dapat mengakses profil dan pesan Anda.",
@@ -11599,7 +11976,7 @@ const translations = {
     admin_fch_confirm_delete: "Hapus entri pembebanan ini? Jumlah yang sudah diterapkan tidak akan dibatalkan.",
     admin_fc_confirm_delete: "Yakin ingin menghapus kredit ini? Jumlah yang sudah dikreditkan akan dikurangi kembali dari sopir, jika belum digunakan.",
     admin_fc_empty_default: "Belum ada kredit yang dibuat.", admin_fc_empty_filtered: "Belum ada kredit yang dibuat untuk sopir ini.",
-    admin_all_drivers_option: "Semua sopir", admin_drivers_search_placeholder: "Cari sopir…", admin_delete_btn: "✕ Hapus", admin_status_suspended: "🚫 Ditangguhkan (biaya belum dibayar)", admin_status_blocked: "🚫 Diblokir", admin_status_active: "Aktif", admin_lock_btn: "Blokir", admin_unlock_btn: "Buka blokir", payment_received_title: "Pembayaran diterima — kwitansi {ref}", payment_received_body_credit: "Kami telah menerima pembayaran biaya Anda sebesar {amount} (kredit referral sebesar {credit} telah diterapkan). Kwitansi tersedia di \"Biaya & tagihan\".", payment_received_body_plain: "Kami telah menerima pembayaran biaya Anda sebesar {amount}. Kwitansi tersedia di \"Biaya & tagihan\".", welcome_inbox_title: "Selamat datang di Rydanu! 🌴", welcome_inbox_body: "Pendaftaran Anda telah diterima dan sedang ditinjau. Nomor Rydanu Anda adalah {number} — simpan baik-baik untuk semua permintaan dukungan.", approved_inbox_title: "Akun Anda telah disetujui ✓", approved_inbox_body: "Selamat! Profil dan semua tur Anda sekarang aktif dan dapat dipesan oleh wisatawan.", approved_alert: "{name} telah disetujui dan sekarang aktif di Rydanu.", rejected_inbox_title: "Pendaftaran Anda ditolak", rejected_inbox_body: "Alasan: {reason} — Anda dapat mendaftar lagi dengan dokumen yang telah diperbaiki atau menghubungi dukungan.", rejected_alert: "{name} telah ditolak dan diberi tahu dengan alasan Anda.", account_blocked_banner: "🚫 Akun Anda telah diblokir oleh Rydanu. Tur Anda tidak terlihat oleh wisatawan. Silakan hubungi dukungan melalui tombol WhatsApp di bawah.", rejected_banner: "✕ Pendaftaran Anda ditolak. Alasan: {reason}<br>Silakan hubungi dukungan Rydanu atau daftar lagi dengan dokumen yang telah diperbaiki.",
+    admin_all_drivers_option: "Semua sopir", admin_drivers_search_placeholder: "Cari sopir…", admin_delete_btn: "✕ Hapus", admin_status_suspended: "🚫 Ditangguhkan (biaya belum dibayar)", admin_status_blocked: "🚫 Diblokir", admin_status_active: "Aktif", admin_lock_reason_fees: "biaya", admin_lock_reason_autodebit: "auto top-up gagal", admin_lock_reason_manual: "manual", admin_lock_btn: "Blokir", admin_unlock_btn: "Buka blokir", payment_received_title: "Pembayaran diterima — kwitansi {ref}", payment_received_body_credit: "Kami telah menerima pembayaran biaya Anda sebesar {amount} (kredit referral sebesar {credit} telah diterapkan). Kwitansi tersedia di \"Biaya & tagihan\".", payment_received_body_plain: "Kami telah menerima pembayaran biaya Anda sebesar {amount}. Kwitansi tersedia di \"Biaya & tagihan\".", welcome_inbox_title: "Selamat datang di Rydanu! 🌴", welcome_inbox_body: "Pendaftaran Anda telah diterima dan sedang ditinjau. Nomor Rydanu Anda adalah {number} — simpan baik-baik untuk semua permintaan dukungan.", approved_inbox_title: "Akun Anda telah disetujui ✓", approved_inbox_body: "Selamat! Profil dan semua tur Anda sekarang aktif dan dapat dipesan oleh wisatawan.", approved_alert: "{name} telah disetujui dan sekarang aktif di Rydanu.", rejected_inbox_title: "Pendaftaran Anda ditolak", rejected_inbox_body: "Alasan: {reason} — Anda dapat mendaftar lagi dengan dokumen yang telah diperbaiki atau menghubungi dukungan.", rejected_alert: "{name} telah ditolak dan diberi tahu dengan alasan Anda.", account_blocked_banner: "🚫 Akun Anda telah diblokir oleh Rydanu. Tur Anda tidak terlihat oleh wisatawan. Silakan hubungi dukungan melalui tombol WhatsApp di bawah.", rejected_banner: "✕ Pendaftaran Anda ditolak. Alasan: {reason}<br>Silakan hubungi dukungan Rydanu atau daftar lagi dengan dokumen yang telah diperbaiki.",
     modal_services_label: "Layanan (atas permintaan)",
     modal_start_label: "Awal tur",
     surcharge_note: "dengan biaya tambahan",
@@ -13353,16 +13730,23 @@ function renderOtherTours(d){
   section.style.display = 'block';
   const selLabel = (translations[currentLang] && translations[currentLang].your_selection) || 'Your selection';
   list.innerHTML = sameDriver.map(x=>{
-    const isSel = x.tour === d.tour;
+    // Bugfix (31.8., Joerg gemeldet): Abgleich ueber die eindeutige dbListingId statt ueber den
+    // Tour-NAMEN, sofern vorhanden -- bei zwei gleichnamigen Angeboten (z.B. zwei "Test Zahlung")
+    // wurden bisher faelschlich BEIDE gleichzeitig als "Deine Auswahl" markiert, und ein Klick
+    // landete immer beim ERSTEN Namens-Treffer statt beim wirklich angeklickten. Fuer echte
+    // Angebote ist dbListingId garantiert eindeutig; Demo-Angebote (ohne dbListingId) verhalten
+    // sich unveraendert wie bisher ueber den Namen.
+    const isSel = (d.dbListingId && x.dbListingId) ? (x.dbListingId === d.dbListingId) : (x.tour === d.tour);
+    const switchKey = x.dbListingId ? String(x.dbListingId) : x.tour.replace(/'/g,"\\'");
     return `
-    <div class="other-tour-row ${isSel?'selected':''}" ${isSel?'':`onclick="switchModalTour('${x.tour.replace(/'/g,"\\'")}','${(d.ownerId||d.name).replace(/'/g,"\\'")}')"`}>
+    <div class="other-tour-row ${isSel?'selected':''}" ${isSel?'':`onclick="switchModalTour('${switchKey}','${(d.ownerId||d.name).replace(/'/g,"\\'")}')"`}>
       <div><div class="ot-name">${x.tour}</div><div class="ot-meta">${x.price} · ${spotLabel(x.duration)}</div></div>
       ${isSel ? `<span class="your-selection-tag">✓ ${selLabel}</span>` : ''}
     </div>`;
   }).join('');
 }
-function switchModalTour(tourName, ownerKey){
-  const target = visibleDrivers().find(x => x.tour===tourName && ((x.ownerId||x.name)===ownerKey));
+function switchModalTour(tourKey, ownerKey){
+  const target = visibleDrivers().find(x => ((x.ownerId||x.name)===ownerKey) && (x.dbListingId ? String(x.dbListingId)===tourKey : x.tour===tourKey));
   if(target) openModal(target);
 }
 
@@ -14741,7 +15125,15 @@ async function confirmCustomOfferPublic(token){
   const { error } = await supabaseClient.rpc('confirm_custom_tour_request', { p_token: token });
   if(error){
     console.error('Bestaetigung fehlgeschlagen:', error);
-    alert(t('oc_confirm_err'));
+    // Etappe 2 (Minus-Puffer): der Fahrer hat nicht genug Guthaben, um diese Buchung anzunehmen.
+    // Das ist kein Problem des Kunden -- deshalb eine neutrale, freundliche Meldung statt der
+    // technischen Fahrer-Guthaben-Sprache, und der Fahrer bekommt separat eine dringende Nachricht.
+    if(error.message && error.message.includes('RYDANU_LOW_BALANCE')){
+      alert(t('oc_confirm_driver_unavailable'));
+      supabaseClient.rpc('notify_driver_low_balance_block_by_token', { p_token: token }).catch(()=>{});
+    } else {
+      alert(t('oc_confirm_err'));
+    }
     if(btn) btn.disabled = false;
     return;
   }
@@ -15312,6 +15704,7 @@ async function checkDriverAuthState(silent){
   if(driverRow.status === 'approved' && 'Notification' in window && Notification.permission === 'default'){
     setTimeout(()=>{ enableVillaPush(true); }, 800);
   }
+  checkTopupRedirectResult();
 }
 // Fragt den Fahrer-Status automatisch neu ab, wenn die Seite wieder aktiv wird (z.B. nach
 // Tab-Wechsel) - so verschwindet der "wartet auf Freischaltung"-Hinweis von selbst, sobald
@@ -15396,7 +15789,7 @@ function switchView(view){
   // Ohne diesen Reset blieb das Signup-Formular beim Tab-Wechsel einfach stehen.
   if(view==='driver'){ toggleAuthForm('login'); }
   if(view==='driver'){ checkDriverAuthState(true); }
-  if(view==='admin'){ updateIsAdminSession().then(()=>{ applyRoleBasedMenuVisibility(); renderAdminList(); loadAdminPendingDrivers(); loadRealAdminMessages(); loadAdminDocsResubmittedCount(); renderAdminOpenPayments(); loadVillaApplicationsCount(); }); }
+  if(view==='admin'){ updateIsAdminSession().then(()=>{ applyRoleBasedMenuVisibility(); renderAdminList(); loadAdminPendingDrivers(); loadRealAdminMessages(); loadAdminDocsResubmittedCount(); renderAdminOpenPayments(); loadVillaApplicationsCount(); loadAdminLockedDriverCount(); }); }
 }
 function switchViewProgrammatic(view){
   if(view!=='customer') closeSeoMenu();
@@ -15412,7 +15805,7 @@ function switchViewProgrammatic(view){
   if(regBtn2) regBtn2.classList.remove('active');
   if(view==='driver'){ toggleAuthForm('login'); }
   if(view==='driver'){ checkDriverAuthState(true); }
-  if(view==='admin'){ updateIsAdminSession().then(()=>{ applyRoleBasedMenuVisibility(); renderAdminList(); loadAdminPendingDrivers(); loadRealAdminMessages(); loadAdminDocsResubmittedCount(); renderAdminOpenPayments(); loadVillaApplicationsCount(); }); }
+  if(view==='admin'){ updateIsAdminSession().then(()=>{ applyRoleBasedMenuVisibility(); renderAdminList(); loadAdminPendingDrivers(); loadRealAdminMessages(); loadAdminDocsResubmittedCount(); renderAdminOpenPayments(); loadVillaApplicationsCount(); loadAdminLockedDriverCount(); }); }
 }
 // ---- admin: approve pending drivers ----
 let adminPeriod = 'month';
@@ -15946,7 +16339,7 @@ function closeFeeChargesModal(){ document.getElementById('fee-charges-modal-bg')
 let realAllDriversCache = [];
 async function loadRealAllDriversCache(){
   const { data, error } = await supabaseClient.from('drivers')
-    .select('id, name, lw_number, region, is_locked, locked_since, fees_due_idr, balance_idr, phone')
+    .select('id, name, lw_number, region, is_locked, locked_since, lock_reason, fees_due_idr, balance_idr, phone, auto_debit_enabled')
     .eq('status', 'approved')
     .order('name');
   if(error){ console.error('Fahrerliste konnte nicht geladen werden (evtl. nicht als Admin eingeloggt):', error); realAllDriversCache = []; return; }
@@ -15991,12 +16384,21 @@ async function renderRealAdminBlockList(){
   }
   el.innerHTML = list.map(d=>{
     const safeName = escapeHtml(d.name).replace(/'/g, "\\'");
+    // Sperrgrund als kurzer Zusatz neben dem Status-Badge (31.8.): faellt sofort auf, WARUM
+    // ein Fahrer gesperrt ist, ohne extra nachschauen zu muessen. Unbekannt/Altdaten (null)
+    // fallen bewusst auf "Manuell" zurueck -- konservativste Annahme, kein falsches "Gebuehren".
+    const lockReasonLabel = d.is_locked
+      ? ' · ' + (d.lock_reason === 'fees' ? t('admin_lock_reason_fees')
+        : d.lock_reason === 'autodebit_failed' ? t('admin_lock_reason_autodebit')
+        : t('admin_lock_reason_manual'))
+      : '';
     return `
     <div class="booking-row admin-driver-row ${d.is_locked?'blocked-row':''}">
       <div style="flex:1;">
         <div class="who">${escapeHtml(d.name)}</div><div class="when">${d.region==='lombok'?'Lombok':'Bali'} · ${t('admin_stat_fees')||'Gebühren'}: ${formatIDR(d.fees_due_idr||0)}${d.declinedCount ? ` · ⚠️ ${d.declinedCount} ${t('admin_declined_count_label')}` : ''}</div>
       </div>
-      <span class="status-pill ${d.is_locked?'pending':'confirmed'}">${d.is_locked ? t('admin_status_blocked') : t('admin_status_active')}</span>
+      <span class="status-pill ${d.is_locked?'pending':'confirmed'}">${d.is_locked ? t('admin_status_blocked') : t('admin_status_active')}${lockReasonLabel}</span>
+      <button type="button" class="${d.auto_debit_enabled ? 'accept-btn' : 'lock-btn'}" style="margin-left:8px; white-space:nowrap;" onclick="event.stopPropagation(); toggleAutoDebit('${d.id}', ${d.auto_debit_enabled ? 'true':'false'}, '${safeName}')">${d.auto_debit_enabled ? '⭐ VIP aktiv' : '☆ VIP Auto-Einzug'}</button>
       <button type="button" class="${d.is_locked ? 'accept-btn' : 'lock-btn'}" style="margin-left:8px; white-space:nowrap;" onclick="event.stopPropagation(); toggleRealDriverLock('${d.id}', ${d.is_locked ? 'true':'false'}, '${safeName}')">${d.is_locked ? '🔓 ' + t('admin_unlock_btn') : '🔒 ' + t('admin_lock_btn')}</button>
       <button type="button" class="cancel-btn" style="margin-left:8px; padding:6px 10px; border-radius:5px; white-space:nowrap;" onclick="event.stopPropagation(); deleteRealDriver('${d.id}', '${safeName}')">🗑️ Löschen</button>
     </div>`;
@@ -16018,7 +16420,8 @@ async function toggleRealDriverLock(id, isLocked, name){
   const newLocked = !isLocked;
   const { error } = await supabaseClient.from('drivers').update({
     is_locked: newLocked,
-    locked_since: newLocked ? new Date().toISOString() : null
+    locked_since: newLocked ? new Date().toISOString() : null,
+    lock_reason: newLocked ? 'manual' : null
   }).eq('id', id);
   if(error){ alert('Sperren/Entsperren fehlgeschlagen: ' + error.message); console.error(error); return; }
   await supabaseClient.from('driver_messages').insert({
@@ -16029,7 +16432,30 @@ async function toggleRealDriverLock(id, isLocked, name){
   });
   await renderRealAdminBlockList();
   loadRealPublicListings(); // gesperrter Fahrer sofort aus der Kundensuche entfernen (bzw. entsperrten wieder rein)
+  loadAdminLockedDriverCount(); // "Fahrer verwalten"-Kachel sofort rot/weiss aktualisieren
   alert(newLocked ? t('admin_locked_alert') : t('admin_unlocked_alert'));
+}
+// Etappe 3: VIP-Auto-Einzug -- VERSTECKTE Admin-Funktion, ausschliesslich hier umschaltbar.
+// Der Fahrer selbst hat in seinem eigenen Dashboard keinen Zugriff auf diesen Schalter (siehe
+// protect_driver_columns-Trigger in der Datenbank, der genau das serverseitig absichert).
+async function toggleAutoDebit(id, isEnabled, name){
+  const newVal = !isEnabled;
+  const msg = newVal
+    ? `VIP-Auto-Einzug für ${name} freischalten? Der Fahrer kann danach eine Zahlungsmethode bei Xendit hinterlegen.`
+    : `VIP-Auto-Einzug für ${name} wieder deaktivieren?`;
+  if(!confirm(msg)) return;
+  const { error } = await supabaseClient.from('drivers').update({ auto_debit_enabled: newVal }).eq('id', id);
+  if(error){ alert('Umschalten fehlgeschlagen: ' + error.message); console.error(error); return; }
+  await supabaseClient.from('driver_messages').insert({
+    driver_id: id,
+    type: 'system',
+    subject: newVal ? '⭐ VIP-Auto-Einzug freigeschaltet' : 'VIP-Auto-Einzug deaktiviert',
+    body: newVal
+      ? 'Du kannst jetzt optional eine Zahlungsmethode für automatischen Einzug hinterlegen, siehe Gebühren & Abrechnung.'
+      : 'Dein automatischer Einzug wurde deaktiviert.'
+  });
+  await renderRealAdminBlockList();
+  alert(newVal ? `VIP-Auto-Einzug für ${name} freigeschaltet ✓` : `VIP-Auto-Einzug für ${name} deaktiviert.`);
 }
 
 // -- Sonderkonditionen (fee_overrides), echt --
@@ -16872,7 +17298,21 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v357</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v382</div>
+
+<!-- Etappe 4: Lade-Overlay waehrend "Buchung annehmen" im Hintergrund laeuft (kann bei VIP-Fahrern
+     mit Auto-Einzug ein paar Sekunden dauern, da erst mit Xendit gesprochen wird, bevor die
+     Buchung bestaetigt wird). Nicht schliessbar -- kein Backdrop-Klick, kein X -- da der Vorgang
+     laeuft und nicht unterbrochen werden soll. -->
+<div id="payment-processing-overlay" style="display:none; position:fixed; inset:0; z-index:999999; background:rgba(15,23,20,0.55); align-items:center; justify-content:center;">
+  <div style="background:#fff; border-radius:16px; padding:28px 32px; text-align:center; max-width:280px; box-shadow:0 10px 40px rgba(0,0,0,0.25);">
+    <div style="font-size:2.6rem; line-height:1; margin-bottom:12px;">
+      <span style="display:inline-block; animation: hourglassTip 1.6s ease-in-out infinite;">⏳</span>
+    </div>
+    <div style="font-weight:800; color:var(--ink); margin-bottom:4px;" data-i18n="payment_processing_title">Processing payment…</div>
+    <div class="note" style="margin:0;" data-i18n="payment_processing_note">This can take a few seconds, please wait.</div>
+  </div>
+</div>
 
 </body>
 </html>
