@@ -1629,6 +1629,7 @@
     <span id="ryvio-rating-summary"></span>
   </div>
   <div class="tabs">
+    <button type="button" class="tab-btn" id="tab-home-link" onclick="goToHome()" data-i18n-title="tab_home_tooltip" title="Home" style="background:var(--ink); color:#fff; font-weight:700; padding-left:11px; padding-right:11px;">🏠</button>
     <button class="tab-btn active" id="tab-customer" data-i18n="tab_travelers" onclick="handleTravelersTabClick()">For Travelers</button>
     <button type="button" class="tab-btn" id="tab-faq-link" onclick="toggleFaqMenu()" style="background:var(--teal); color:#fff; font-weight:700;"><span data-i18n="tab_faq">❓ Fragen</span></button>
     <button type="button" class="tab-btn" id="tab-lombok-link" onclick="location.href='/lombok'" style="background:#C9895F; color:#fff; font-weight:700;"><span data-i18n="tab_lombok">🌴 Lombok</span></button>
@@ -3487,6 +3488,7 @@
   <div class="dp-video-lightbox" id="dp-video-lightbox" style="display:none;">
     <button type="button" class="dp-video-lightbox-close" onclick="closeVideoLightbox()">✕</button>
     <video id="dp-video-lightbox-player" controls playsinline autoplay></video>
+    <img id="dp-photo-lightbox-img" style="display:none; width:100%; max-height:80vh; border-radius:8px; object-fit:contain;" alt="">
   </div>
 </div>
 
@@ -3553,7 +3555,7 @@
         </div>
       </div>
       <div class="form-field">
-        <label data-i18n="lbl_email_address">Email address</label>
+        <label data-i18n="tr_email_label">Email address *</label>
         <input type="email" id="tr-email" placeholder="you@email.com">
       </div>
       <div class="spots-section">
@@ -4651,7 +4653,12 @@ async function submitTourRequest(){
   const trCountry = document.getElementById('tr-country').value;
   const destination = document.getElementById('tr-destination').value.trim();
   const trTime = document.getElementById('tr-time').value;
-  if(!name || !destination){
+  // Bugfix (2.9., Joerg gemeldet): E-Mail war hier bisher optional, wird aber zwingend gebraucht,
+  // sobald der Fahrer aus dieser Anfrage ein individuelles Angebot erstellt (co-email ist dort
+  // Pflicht) -- ohne E-Mail blieb der Fahrer an dieser Stelle sonst haengen. Jetzt hier bereits
+  // Pflichtfeld + Format-Check (gleiches Muster wie bei sendPageMessage).
+  const trEmailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  if(!name || !destination || !trEmailOk){
     document.getElementById('tr-error').textContent = t('tr_err');
     return;
   }
@@ -5108,6 +5115,13 @@ function toggleSeoMenu(){
 function closeSeoMenu(){
   document.getElementById('seo-menu-panel').classList.remove('active');
 }
+// Neue Home-Pille (2.9., Joerg-Wunsch): von ueberall (Fahrer-Dashboard, Admin, tief gescrollte
+// Suchergebnisse) mit einem Klick zurueck zur obersten Kunden-Startseite. Bewusst NICHT die
+// laufende Suche/Filter zuruecksetzen -- nur Ansicht wechseln + nach oben scrollen.
+function goToHome(){
+  switchView('customer');
+  window.scrollTo({ top: 0, behavior: 'instant' });
+}
 function handleTravelersTabClick(){
   switchView('customer');
   toggleSeoMenu();
@@ -5493,7 +5507,7 @@ function renderRealGallery(isOwner){
     const safeCaption = (m.caption||'').replace(/"/g,'&quot;');
     return `
     <div class="dp-media-cell">
-      <div class="dp-media-item img-skeleton" ${m.media_type==='video' ? `onclick="openRealVideoLightbox('${m.id}')" style="cursor:pointer;"` : ''}>
+      <div class="dp-media-item img-skeleton" onclick="openRealMediaLightbox('${m.id}')" style="cursor:pointer;">
         ${m.media_type==='video'
           ? (m.thumbnail_url
               ? `<img src="${m.thumbnail_url}" alt="${safeCaption}" onload="this.parentElement.classList.remove('img-skeleton')" onerror="this.parentElement.classList.remove('img-skeleton')"><span class="dp-play-badge">▶</span>`
@@ -5674,13 +5688,29 @@ async function deleteRealPageMedia(id){
   if(error){ console.error('Medium konnte nicht gelöscht werden:', error); return; }
   await reloadRealGallery();
 }
-function openRealVideoLightbox(id){
+// Bugfix (2.9., Joerg gemeldet): Fotos in der Galerie liessen sich bisher nicht oeffnen/vergroessern
+// (kein onclick), nur Videos hatten eine Lightbox. Beide teilen sich jetzt dasselbe Lightbox-Fenster.
+function openRealMediaLightbox(id){
   const m = (dpRealData && dpRealData.media || []).find(x=>x.id===id);
-  if(!m || m.media_type!=='video') return;
+  if(!m) return;
   const player = document.getElementById('dp-video-lightbox-player');
-  player.src = m.url;
+  const img = document.getElementById('dp-photo-lightbox-img');
+  if(m.media_type==='video'){
+    img.style.display = 'none';
+    img.src = '';
+    player.style.display = 'block';
+    player.src = m.url;
+  } else {
+    player.pause();
+    player.style.display = 'none';
+    player.src = '';
+    img.src = m.url;
+    img.style.display = 'block';
+  }
   document.getElementById('dp-video-lightbox').style.display = 'flex';
 }
+// Alter Name bleibt als Alias bestehen, falls irgendwo noch direkt darauf verwiesen wird.
+function openRealVideoLightbox(id){ openRealMediaLightbox(id); }
 async function bookRealTourFromPage(tourTitle){
   let pub = drivers.find(dd => dd.isReal && dd.ownerId===dpDriverId && dd.tour===tourTitle);
   if(!pub){
@@ -5724,10 +5754,15 @@ function bookTourFromPage(tourName){
 // openVideoLightbox() entfernt (2.9.): unerreichbar seit Entfernen des Demo-Fahrers "Wayan" --
 // die echte Fahrerseite ruft stattdessen openRealVideoLightbox() auf. closeVideoLightbox()
 // bleibt bestehen, wird von beiden Pfaden gemeinsam genutzt (schliesst dasselbe Lightbox-Fenster).
+// closeVideoLightbox() schliesst jetzt auch das Foto-Element mit (Punkt 1, 2.9.) -- ein
+// gemeinsames Lightbox-Fenster fuer Foto + Video.
 function closeVideoLightbox(){
   const player = document.getElementById('dp-video-lightbox-player');
   player.pause();
   player.src = '';
+  const img = document.getElementById('dp-photo-lightbox-img');
+  img.style.display = 'none';
+  img.src = '';
   document.getElementById('dp-video-lightbox').style.display = 'none';
 }
 // updateMediaCaption() und deletePageMedia() entfernt (2.9.): unerreichbar seit Entfernen des
@@ -10269,7 +10304,7 @@ const translations = {
   en: {
     tab_travelers: "Travel Info",
     tab_faq: "❓ FAQ",
-    tab_lombok: "🌴 To Lombok?",
+    tab_lombok: "🌴 To Lombok?", tab_home_tooltip: "Home",
     tab_driver: "Driver Dashboard",
     tab_register: "+ Register as Driver",
     tab_admin: "🔐 Admin",
@@ -10434,8 +10469,9 @@ const translations = {
     tr_time_label: "Pickup time", tr_time_err: "Please add a pickup time for your transfer.",
     tr_notes_label: "Notes", tr_notes_ph: "Anything else your driver should know...",
     tr_submit_btn: "Send request", tr_sent_note: "Your request has been sent to your driver.", tr_check_hint: "Keep this reference — use \"Find my booking\" on the homepage anytime to check whether your driver has prepared an offer yet.", tr_done_btn: "Done",
-    tr_err: "Please enter your name and what you'd like to do.", tr_inbox_title: "✨ New custom tour request",
+    tr_err: "Please fill in your name, email and what you'd like to do.", tr_inbox_title: "✨ New custom tour request",
     tr_save_err: "Couldn't send your request — please try again.", co_prefill_from_request: "From the traveler's request:",
+    tr_email_label: "Email address *",
     tr_create_offer_btn: "Create tour offer", tr_offered_tag: "Offered", tr_offered_tour_label: "Offered tour", tr_view_book_btn: "View & book this tour",
     rd_detail_eyebrow: "Tour request", rd_detail_msg_label: "Traveler's message", rd_detail_no_msg: "No message provided.",
     tr_status_offered: "Offer ready", tr_status_pending: "Awaiting driver", tr_note_offered: "Good news — your driver has prepared a tour for your request. Tap below to view and book it.", tr_note_pending: "Your driver hasn't prepared an offer yet. Check back later, or contact them directly.", tr_decline_btn: "Decline", tr_declined_tag: "Declined", confirm_decline_request: "Decline this request from", cal_conflict_alert: "Heads up — you already have a tour scheduled on {date}!", tr_status_declined: "Not available", tr_note_declined: "Unfortunately this driver isn't able to take on your request right now. Please try requesting a custom tour from another driver on Rydanu — many others may be a great fit for what you're looking for.",
@@ -10641,7 +10677,7 @@ const translations = {
   de: {
     tab_travelers: "Reise-Infos", // 26.8.: gekürzt (war "Infos für Reisende") — sonst brechen die 3 Kopf-Pillen bei DE auf 2 Zeilen um, siehe .tab-btn Mobile-Padding weiter unten
     tab_faq: "❓ Fragen",
-    tab_lombok: "🌴 Nach Lombok?",
+    tab_lombok: "🌴 Nach Lombok?", tab_home_tooltip: "Startseite",
     tab_driver: "Fahrer-Dashboard",
     tab_register: "+ Als Fahrer registrieren",
     tab_admin: "🔐 Admin",
@@ -10806,8 +10842,9 @@ const translations = {
     tr_time_label: "Abholzeit", tr_time_err: "Bitte gib eine Abholzeit für deinen Transfer an.",
     tr_notes_label: "Notizen", tr_notes_ph: "Was dein Fahrer sonst noch wissen sollte...",
     tr_submit_btn: "Anfrage senden", tr_sent_note: "Deine Anfrage wurde an deinen Fahrer gesendet.", tr_check_hint: "Notiere dir diese Referenz — prüfe jederzeit über \"Meine Buchung finden\" auf der Startseite, ob dein Fahrer ein Angebot erstellt hat.", tr_done_btn: "Fertig",
-    tr_err: "Bitte gib deinen Namen und dein Wunsch ein.", tr_inbox_title: "✨ Neue individuelle Touranfrage",
+    tr_err: "Bitte gib deinen Namen, deine E-Mail und deinen Wunsch ein.", tr_inbox_title: "✨ Neue individuelle Touranfrage",
     tr_save_err: "Anfrage konnte nicht gesendet werden — bitte erneut versuchen.", co_prefill_from_request: "Aus der Anfrage des Reisenden:",
+    tr_email_label: "E-Mail-Adresse *",
     tr_create_offer_btn: "Tourangebot erstellen", tr_offered_tag: "Angeboten", tr_offered_tour_label: "Angebotene Tour", tr_view_book_btn: "Tour ansehen & buchen",
     rd_detail_eyebrow: "Touranfrage", rd_detail_msg_label: "Nachricht des Reisenden", rd_detail_no_msg: "Keine Nachricht angegeben.",
     tr_status_offered: "Angebot bereit", tr_status_pending: "Wartet auf Fahrer", tr_note_offered: "Gute Nachricht — dein Fahrer hat eine Tour für deine Anfrage erstellt. Tippe unten, um sie anzusehen und zu buchen.", tr_note_pending: "Dein Fahrer hat noch kein Angebot erstellt. Schau später nochmal vorbei oder kontaktiere ihn direkt.", tr_decline_btn: "Ablehnen", tr_declined_tag: "Abgelehnt", confirm_decline_request: "Diese Anfrage ablehnen von", cal_conflict_alert: "Achtung — du hast am {date} schon eine Tour geplant!", tr_status_declined: "Nicht möglich", tr_note_declined: "Dieser Fahrer kann deine Anfrage aktuell leider nicht annehmen. Bitte frag gerne einen anderen Fahrer auf Rydanu nach einer individuellen Tour an — viele andere passen bestimmt gut zu dem, was du suchst.",
@@ -11013,7 +11050,7 @@ const translations = {
   id: {
     tab_travelers: "Info Wisata", // 26.8.: gekürzt (war "Info untuk Wisatawan") — gleicher Grund wie bei DE, siehe dort
     tab_faq: "❓ FAQ",
-    tab_lombok: "🌴 Ke Lombok?",
+    tab_lombok: "🌴 Ke Lombok?", tab_home_tooltip: "Beranda",
     tab_driver: "Dasbor Sopir",
     tab_register: "+ Daftar sebagai Sopir",
     tab_admin: "🔐 Admin",
@@ -11178,8 +11215,9 @@ const translations = {
     tr_time_label: "Waktu penjemputan", tr_time_err: "Silakan tambahkan waktu penjemputan untuk transfer Anda.",
     tr_notes_label: "Catatan", tr_notes_ph: "Hal lain yang perlu diketahui sopir Anda...",
     tr_submit_btn: "Kirim permintaan", tr_sent_note: "Permintaan Anda telah dikirim ke sopir Anda.", tr_check_hint: "Simpan referensi ini — gunakan \"Temukan pemesanan saya\" di beranda kapan saja untuk memeriksa apakah sopir Anda sudah menyiapkan penawaran.", tr_done_btn: "Selesai",
-    tr_err: "Mohon masukkan nama Anda dan apa yang Anda inginkan.", tr_inbox_title: "✨ Permintaan tur khusus baru",
+    tr_err: "Mohon isi nama, email, dan apa yang Anda inginkan.", tr_inbox_title: "✨ Permintaan tur khusus baru",
     tr_save_err: "Permintaan tidak dapat dikirim — silakan coba lagi.", co_prefill_from_request: "Dari permintaan wisatawan:",
+    tr_email_label: "Alamat email *",
     tr_create_offer_btn: "Buat penawaran tur", tr_offered_tag: "Ditawarkan", tr_offered_tour_label: "Tur yang ditawarkan", tr_view_book_btn: "Lihat & pesan tur ini",
     rd_detail_eyebrow: "Permintaan tur", rd_detail_msg_label: "Pesan wisatawan", rd_detail_no_msg: "Tidak ada pesan.",
     tr_status_offered: "Penawaran siap", tr_status_pending: "Menunggu sopir", tr_note_offered: "Kabar baik — sopir Anda telah menyiapkan tur untuk permintaan Anda. Ketuk di bawah untuk melihat dan memesannya.", tr_note_pending: "Sopir Anda belum menyiapkan penawaran. Periksa lagi nanti, atau hubungi mereka langsung.", tr_decline_btn: "Tolak", tr_declined_tag: "Ditolak", confirm_decline_request: "Tolak permintaan ini dari", cal_conflict_alert: "Perhatian — Anda sudah punya tur pada {date}!", tr_status_declined: "Tidak tersedia", tr_note_declined: "Sayangnya sopir ini tidak dapat menerima permintaan Anda saat ini. Silakan coba minta tur khusus dari sopir lain di Rydanu — banyak sopir lain mungkin sangat cocok untuk apa yang Anda cari.",
@@ -11431,6 +11469,12 @@ function setLanguage(lang){
   document.querySelectorAll('[data-i18n-placeholder]').forEach(el=>{
     const key = el.dataset.i18nPlaceholder;
     if(dict[key]) el.placeholder = dict[key];
+  });
+  // Neu (2.9., Home-Pille): erster Einsatz von data-i18n-title -- uebersetzt das title-Attribut
+  // (Tooltip bei Hover, v.a. Desktop) genauso wie die anderen data-i18n-*-Varianten oben.
+  document.querySelectorAll('[data-i18n-title]').forEach(el=>{
+    const key = el.dataset.i18nTitle;
+    if(dict[key]) el.title = dict[key];
   });
   // Bugfix (22.8., Joerg gemeldet per Screenshot): die Filter-Chips fuer Startort/Flughafen-Ziel/
   // Transfer-Ziel werden aus REGION_CONFIG per innerHTML gebaut (nicht ueber data-i18n), darum hat
@@ -16653,7 +16697,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v386</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v387</div>
 
 <!-- Etappe 4: Lade-Overlay waehrend "Buchung annehmen" im Hintergrund laeuft (kann bei VIP-Fahrern
      mit Auto-Einzug ein paar Sekunden dauern, da erst mit Xendit gesprochen wird, bevor die
