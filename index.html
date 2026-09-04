@@ -1629,6 +1629,7 @@
     <span id="ryvio-rating-summary"></span>
   </div>
   <div class="tabs">
+    <button type="button" class="tab-btn" id="tab-home-link" onclick="goToHome()" data-i18n-title="tab_home_tooltip" title="Home" style="background:var(--gold); color:var(--ink); font-weight:700; padding-left:22px; padding-right:22px; display:inline-flex; align-items:center; justify-content:center; text-align:center;">🏠</button>
     <button class="tab-btn active" id="tab-customer" data-i18n="tab_travelers" onclick="handleTravelersTabClick()">For Travelers</button>
     <button type="button" class="tab-btn" id="tab-faq-link" onclick="toggleFaqMenu()" style="background:var(--teal); color:#fff; font-weight:700;"><span data-i18n="tab_faq">❓ Fragen</span></button>
     <button type="button" class="tab-btn" id="tab-lombok-link" onclick="location.href='/lombok'" style="background:#C9895F; color:#fff; font-weight:700;"><span data-i18n="tab_lombok">🌴 Lombok</span></button>
@@ -3487,6 +3488,7 @@
   <div class="dp-video-lightbox" id="dp-video-lightbox" style="display:none;">
     <button type="button" class="dp-video-lightbox-close" onclick="closeVideoLightbox()">✕</button>
     <video id="dp-video-lightbox-player" controls playsinline autoplay></video>
+    <img id="dp-photo-lightbox-img" style="display:none; width:100%; max-height:80vh; border-radius:8px; object-fit:contain;" alt="">
   </div>
 </div>
 
@@ -3553,7 +3555,7 @@
         </div>
       </div>
       <div class="form-field">
-        <label data-i18n="lbl_email_address">Email address</label>
+        <label data-i18n="tr_email_label">Email address *</label>
         <input type="email" id="tr-email" placeholder="you@email.com">
       </div>
       <div class="spots-section">
@@ -3641,7 +3643,7 @@
         <p class="note" id="mbr-note"></p>
         <div id="mbr-offer-box" style="display:none;">
           <div class="row"><span class="k" data-i18n="tr_offered_tour_label">Offered tour</span><span class="v" id="mbr-offer-name"></span></div>
-          <button class="book-btn" onclick="bookOfferedRequestTour()" data-i18n="tr_view_book_btn">View &amp; book this tour</button>
+          <button class="book-btn" data-i18n="tr_view_book_btn">View &amp; book this tour</button>
         </div>
       </div>
       <div id="mb-detail-step" style="display:none;">
@@ -4452,9 +4454,6 @@ function detectIslandFromRegionValue(value){
 // Aktuelle Insel des eingeloggten Fahrers ermitteln (Standard: Bali)
 function currentDriverIsland(){
   if(typeof realDriverProfile !== 'undefined' && realDriverProfile && realDriverProfile.region) return realDriverProfile.region;
-  if(typeof currentDriverId !== 'undefined' && currentDriverId && typeof driverProfiles !== 'undefined' && driverProfiles[currentDriverId]){
-    return driverProfiles[currentDriverId].island || 'bali';
-  }
   return 'bali';
 }
 // ---- Spezialziele (Bauplan Kap. 5.2): freie Label+Preis-Zeilen, reine Info-Anzeige,
@@ -4617,18 +4616,8 @@ async function submitStandaloneReview(){
     await loadAndRenderRealDriverPage(dpDriverId, dpMode);
     return;
   }
-  const store = driverDataStore[dpDriverId];
-  if(!Array.isArray(store.reviews)) store.reviews = [];
-  store.reviews.unshift({
-    name, stars: '★'.repeat(srStarRating) + '☆'.repeat(5-srStarRating), starsNum: srStarRating,
-    text: text || '—', photo: srReviewPhoto, date: 'Jul 21, 2026'
-  });
-  syncDriverRating(dpDriverId);
-  renderDriverGrid(visibleDrivers());
-  if(dpDriverId === currentDriverId) renderOverviewStats();
-  saveState();
-  closeStandaloneReview();
-  renderDriverPage();
+  // Alter Demo-Fallback entfernt (2.9.): dpIsReal ist seit Entfernen des Demo-Fahrers "Wayan"
+  // immer true, dieser Codepfad war seither nie erreichbar.
 }
 
 // ---- driver's own Rydanu page (Instagram-style profile page) ----
@@ -4664,7 +4653,12 @@ async function submitTourRequest(){
   const trCountry = document.getElementById('tr-country').value;
   const destination = document.getElementById('tr-destination').value.trim();
   const trTime = document.getElementById('tr-time').value;
-  if(!name || !destination){
+  // Bugfix (2.9., Joerg gemeldet): E-Mail war hier bisher optional, wird aber zwingend gebraucht,
+  // sobald der Fahrer aus dieser Anfrage ein individuelles Angebot erstellt (co-email ist dort
+  // Pflicht) -- ohne E-Mail blieb der Fahrer an dieser Stelle sonst haengen. Jetzt hier bereits
+  // Pflichtfeld + Format-Check (gleiches Muster wie bei sendPageMessage).
+  const trEmailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  if(!name || !destination || !trEmailOk){
     document.getElementById('tr-error').textContent = t('tr_err');
     return;
   }
@@ -4723,22 +4717,8 @@ async function submitTourRequest(){
     setTimeout(()=>{ closeTourRequest(); }, 1400);
     return;
   }
-  const store = driverDataStore[trRequestDriverId];
-  if(!store) return;
-  if(!Array.isArray(store.tourRequests)) store.tourRequests = [];
-  store.tourRequests.unshift({
-    ref, name, email, phone,
-    destination, dateWanted, pickup, guests, notes, highlights: trSelectedHighlights.slice(),
-    tripType: trSelectedTripType || null, pickupTime: pickupTimeVal,
-    status: 'pending', offeredTourName: null, date: 'Jul 21, 2026'
-  });
-  pushInboxMessage(trRequestDriverId, t('tr_inbox_title'), name + ' — ' + destination + (dateWanted ? ' (' + dateWanted + ')' : ''), {type:'tourRequest', ref});
-  if(trRequestDriverId === currentDriverId){ updateInboxDot(); renderTourRequests(); }
-  saveState();
-  document.getElementById('tr-confirm-ref').textContent = ref;
-  document.getElementById('tr-form-step').style.display = 'none';
-  document.getElementById('tr-confirm-step').style.display = 'block';
-  setTimeout(()=>{ closeTourRequest(); }, 1400);
+  // Alter Demo-Fallback entfernt (2.9.): isRealDriver ist seit Entfernen des Demo-Fahrers "Wayan"
+  // immer true (driverProfiles ist immer leer), dieser Codepfad war seither nie erreichbar.
 }
 document.getElementById('tour-request-modal-bg').addEventListener('click', e=>{ if(e.target.id==='tour-request-modal-bg') closeTourRequest(); });
 
@@ -5135,6 +5115,13 @@ function toggleSeoMenu(){
 function closeSeoMenu(){
   document.getElementById('seo-menu-panel').classList.remove('active');
 }
+// Neue Home-Pille (2.9., Joerg-Wunsch): von ueberall (Fahrer-Dashboard, Admin, tief gescrollte
+// Suchergebnisse) mit einem Klick zurueck zur obersten Kunden-Startseite. Bewusst NICHT die
+// laufende Suche/Filter zuruecksetzen -- nur Ansicht wechseln + nach oben scrollen.
+function goToHome(){
+  switchView('customer');
+  window.scrollTo({ top: 0, behavior: 'instant' });
+}
 function handleTravelersTabClick(){
   switchView('customer');
   toggleSeoMenu();
@@ -5377,16 +5364,11 @@ function openDriverPage(driverId, mode){
   document.querySelectorAll('.modal-bg.active').forEach(m => m.classList.remove('active'));
   dpDriverId = driverId;
   dpMode = mode || 'visitor';
-  const p = driverProfiles[driverId];
   document.getElementById('driver-page').style.display = 'block';
   document.getElementById('driver-page').scrollTop = 0;
-  if(p){
-    dpIsReal = false;
-    if(!p.page) p.page = { about:'', media:[] };
-    renderDriverPage();
-    return;
-  }
-  // kein Demo-Profil mit dieser ID -> echte Fahrer-Seite aus Supabase laden (Baustein 10)
+  // Alter Demo-Profil-Zweig entfernt (2.9.): driverProfiles ist seit Entfernen des Demo-Fahrers
+  // "Wayan" immer leer, es gab hier also nie ein Profil zu finden -- echte Fahrer-Seite aus
+  // Supabase laden ist seither der einzige erreichbare Weg (Baustein 10).
   dpIsReal = true;
   // Bugfix (23.8., Joerg gemeldet: "Bild laedt erst von leer auf Bild"): die Seite wird hier schon
   // SOFORT sichtbar (Zeile oben), aber die echten Fahrerdaten (inkl. Bild-URL) kommen erst danach per
@@ -5432,90 +5414,6 @@ function openMyPageOwner(){
   if(realDriverProfile) openDriverPage(realDriverProfile.id, 'owner');
 }
 function closeDriverPage(){ document.getElementById('driver-page').style.display = 'none'; }
-function renderDriverPage(){
-  const p = driverProfiles[dpDriverId];
-  const store = driverDataStore[dpDriverId] || {};
-  const isOwner = dpMode === 'owner';
-  const avatar = document.getElementById('dp-avatar');
-  if(p.photo){ setAvatarWithSkeleton(avatar, p.photo, initials(p.fullName)); }
-  else { avatar.classList.remove('img-skeleton'); avatar.style.backgroundImage='none'; avatar.textContent = initials(p.fullName); }
-  document.getElementById('dp-name').textContent = p.fullName;
-  document.getElementById('dp-meta').textContent = '🚩 ' + (p.region || '—') + ' · ' + (p.langs || []).join(', ');
-  const dpLwEl = document.getElementById('dp-lw');
-  dpLwEl.textContent = p.lwNumber || '';
-  dpLwEl.dataset.rawNumber = p.lwNumber || '';
-  document.getElementById('dp-rank').innerHTML = driverRankBadgeHTML(dpDriverId);
-  const aboutText = document.getElementById('dp-about-text');
-  const about = (p.page && p.page.about) || '';
-  aboutText.textContent = about || (isOwner ? t('dp_about_empty_owner') : t('dp_about_empty'));
-  aboutText.style.display = 'block';
-  document.getElementById('dp-about-pencil').style.display = isOwner ? 'inline-block' : 'none';
-  document.getElementById('dp-about-edit').style.display = 'none';
-  document.getElementById('dp-about-input').value = about;
-  document.getElementById('dp-upload-row').style.display = isOwner ? 'block' : 'none';
-  const gallery = document.getElementById('dp-gallery');
-  const media = (p.page && p.page.media) || [];
-  if(media.length === 0){
-    gallery.innerHTML = `<div class="empty-state" style="grid-column:1/-1;">${isOwner ? t('dp_gallery_empty_owner') : t('dp_gallery_empty')}</div>`;
-  } else {
-    gallery.innerHTML = media.map((m,i)=>`
-      <div class="dp-media-cell">
-        <div class="dp-media-item img-skeleton" ${m.type==='video' ? `onclick="openVideoLightbox(${i})" style="cursor:pointer;"` : ''}>
-          ${m.type==='video'
-            ? (m.thumbnail
-                ? `<img src="${m.thumbnail}" alt="${(m.caption||'').replace(/"/g,'&quot;')}" onload="this.parentElement.classList.remove('img-skeleton')" onerror="this.parentElement.classList.remove('img-skeleton')"><span class="dp-play-badge">▶</span>`
-                : `<div class="dp-video-noThumb"><span class="dp-play-badge">▶</span></div>`)
-            : `<img src="${m.dataUrl}" alt="${(m.caption||'').replace(/"/g,'&quot;')}" onload="this.parentElement.classList.remove('img-skeleton')" onerror="this.parentElement.classList.remove('img-skeleton')">`}
-          ${isOwner ? `<button type="button" class="dp-media-del" onclick="event.stopPropagation(); deletePageMedia(${i})">✕</button>` : ''}
-        </div>
-        ${isOwner
-          ? `<input type="text" class="dp-caption-input" value="${(m.caption||'').replace(/"/g,'&quot;')}" data-i18n-placeholder="dp_caption_ph" placeholder="e.g. Waterfall" onchange="updateMediaCaption(${i}, this.value)">`
-          : (m.caption ? `<div class="dp-caption-label">${m.caption}</div>` : '')
-        }
-      </div>
-    `).join('');
-  }
-  const tours = (store.listings || []).filter(l=>l.active);
-  document.getElementById('dp-tours').innerHTML = tours.length
-    ? tours.map(l=>{
-        const pub = drivers.find(d => d.ownerId===dpDriverId && d.tour===l.name);
-        const clickable = !isOwner && pub;
-        return `
-        <div class="dp-tour-row" ${clickable ? `style="cursor:pointer;" onclick="bookTourFromPage('${l.name.replace(/'/g,"\\'")}')"` : ''}>
-          <div><div class="tname">${l.name}</div><div class="tmeta">${priceBlockHTML(l.price)} · ${spotLabel(l.duration)}</div></div>
-          ${l.featured ? '<span class="mailbox-replied-tag">⭐</span>' : ''}
-          ${clickable ? '<span class="dp-tour-arrow">›</span>' : ''}
-        </div>
-      `;}).join('')
-    : `<div class="empty-state">${t('dp_tours_empty')}</div>`;
-  const revs = store.reviews || [];
-  const summaryEl = document.getElementById('dp-reviews-summary');
-  if(revs.length){
-    const rated = revs.filter(r=>r.starsNum);
-    const avg = rated.length ? (rated.reduce((sum,r)=>sum+r.starsNum,0) / rated.length) : null;
-    const avgRounded = avg ? Math.round(avg) : 5;
-    const starsHTML = '★'.repeat(avgRounded) + '☆'.repeat(5-avgRounded);
-    summaryEl.innerHTML = `<span class="dp-reviews-avg-stars">${starsHTML}</span> <span class="dp-reviews-avg-num">${avg ? avg.toFixed(1) : '5.0'}</span> <span class="dp-reviews-avg-count">(${revs.length} ${revs.length===1 ? t('dp_review_singular') : t('dp_review_plural')})</span>`;
-  } else {
-    summaryEl.innerHTML = '';
-  }
-  document.getElementById('dp-reviews').innerHTML = revs.length
-    ? revs.map((r,i)=>`
-        <div class="dp-review${i>=5 ? ' dp-review-hidden' : ''}">
-          <div class="r-head"><span class="r-name">${r.name}</span><span class="r-stars">${r.stars}</span></div>
-          <div class="r-text">${r.text}</div>
-          ${r.photo ? `<img src="${r.photo}" alt="Bewertungsfoto" style="max-width:130px; border-radius:8px; margin-top:8px;">` : ''}
-        </div>
-      `).join('') + (revs.length>5 ? `<button type="button" class="dp-reviews-more-btn" onclick="expandReviewsList('dp-reviews')">${t('dp_reviews_more')}</button>` : '')
-    : `<div class="empty-state">${t('dp_reviews_empty')}</div>`;
-  document.getElementById('dp-message-section').style.display = isOwner ? 'none' : 'block';
-  document.getElementById('dp-leave-review-btn').style.display = isOwner ? 'none' : 'block';
-  document.getElementById('dp-request-tour-btn').style.display = isOwner ? 'none' : 'block';
-  document.getElementById('dp-msg-status').textContent = '';
-  document.getElementById('dp-msg-name').value = '';
-  document.getElementById('dp-msg-email').value = '';
-  document.getElementById('dp-msg-text').value = '';
-}
 // echte "My Page" rendern (Baustein 10) — nutzt dieselben dp-* Elemente wie die Demo-Seite,
 // aber Fotos/Galerie-Upload und die Demo-only Kontakt-/Bewertungsformulare kommen erst spaeter
 // Bild vorab laden (Preload), bevor es als CSS-Hintergrund gesetzt wird -- verhindert das ploetzliche
@@ -5609,7 +5507,7 @@ function renderRealGallery(isOwner){
     const safeCaption = (m.caption||'').replace(/"/g,'&quot;');
     return `
     <div class="dp-media-cell">
-      <div class="dp-media-item img-skeleton" ${m.media_type==='video' ? `onclick="openRealVideoLightbox('${m.id}')" style="cursor:pointer;"` : ''}>
+      <div class="dp-media-item img-skeleton" onclick="openRealMediaLightbox('${m.id}')" style="cursor:pointer;">
         ${m.media_type==='video'
           ? (m.thumbnail_url
               ? `<img src="${m.thumbnail_url}" alt="${safeCaption}" onload="this.parentElement.classList.remove('img-skeleton')" onerror="this.parentElement.classList.remove('img-skeleton')"><span class="dp-play-badge">▶</span>`
@@ -5790,13 +5688,29 @@ async function deleteRealPageMedia(id){
   if(error){ console.error('Medium konnte nicht gelöscht werden:', error); return; }
   await reloadRealGallery();
 }
-function openRealVideoLightbox(id){
+// Bugfix (2.9., Joerg gemeldet): Fotos in der Galerie liessen sich bisher nicht oeffnen/vergroessern
+// (kein onclick), nur Videos hatten eine Lightbox. Beide teilen sich jetzt dasselbe Lightbox-Fenster.
+function openRealMediaLightbox(id){
   const m = (dpRealData && dpRealData.media || []).find(x=>x.id===id);
-  if(!m || m.media_type!=='video') return;
+  if(!m) return;
   const player = document.getElementById('dp-video-lightbox-player');
-  player.src = m.url;
+  const img = document.getElementById('dp-photo-lightbox-img');
+  if(m.media_type==='video'){
+    img.style.display = 'none';
+    img.src = '';
+    player.style.display = 'block';
+    player.src = m.url;
+  } else {
+    player.pause();
+    player.style.display = 'none';
+    player.src = '';
+    img.src = m.url;
+    img.style.display = 'block';
+  }
   document.getElementById('dp-video-lightbox').style.display = 'flex';
 }
+// Alter Name bleibt als Alias bestehen, falls irgendwo noch direkt darauf verwiesen wird.
+function openRealVideoLightbox(id){ openRealMediaLightbox(id); }
 async function bookRealTourFromPage(tourTitle){
   let pub = drivers.find(dd => dd.isReal && dd.ownerId===dpDriverId && dd.tour===tourTitle);
   if(!pub){
@@ -5813,12 +5727,9 @@ function toggleAboutEdit(show){
   if(show) document.getElementById('dp-about-input').focus();
 }
 function savePageAbout(){
-  if(dpIsReal){ saveRealPageAbout(); return; }
-  const p = driverProfiles[dpDriverId];
-  if(!p.page) p.page = { about:'', media:[] };
-  p.page.about = document.getElementById('dp-about-input').value.trim();
-  saveState();
-  renderDriverPage();
+  // dpIsReal ist seit Entfernen des Demo-Fahrers "Wayan" immer true -- der alte Demo-Fallback
+  // danach (driverProfiles-Zugriff) war seither nie erreichbar, entfernt (2.9.).
+  saveRealPageAbout();
 }
 // echten "Über mich"-Text speichern (Baustein 10)
 async function saveRealPageAbout(){
@@ -5830,133 +5741,33 @@ async function saveRealPageAbout(){
   renderRealDriverPage(dpMode === 'owner');
 }
 function handlePageMediaUpload(event){
-  if(dpIsReal){ handleRealPageMediaUpload(event); return; }
-  const file = event.target.files[0];
-  if(!file) return;
-  const p = driverProfiles[dpDriverId];
-  if(!p.page) p.page = { about:'', media:[] };
-  const isVideo = file.type.startsWith('video/');
-  const isPhoto = file.type.startsWith('image/');
-  if(!isVideo && !isPhoto){
-    alert(t('dp_unsupported_file'));
-    event.target.value = '';
-    return;
-  }
-  if(isPhoto){
-    const photoCount = p.page.media.filter(m=>m.type==='photo').length;
-    if(photoCount >= 20){
-      alert(t('dp_photo_limit'));
-      event.target.value = '';
-      return;
-    }
-    const img = new Image();
-    const reader = new FileReader();
-    reader.onload = e=>{
-      img.onload = ()=>{
-        const maxDim = 480;
-        const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
-        const canvas = document.createElement('canvas');
-        canvas.width = img.width * scale;
-        canvas.height = img.height * scale;
-        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-        p.page.media.unshift({type:'photo', dataUrl: canvas.toDataURL('image/jpeg', 0.6), caption:''});
-        saveState();
-        renderDriverPage();
-      };
-      img.src = e.target.result;
-    };
-    reader.readAsDataURL(file);
-  } else {
-    const videoCount = p.page.media.filter(m=>m.type==='video').length;
-    if(videoCount >= 5){
-      alert(t('dp_video_limit'));
-      event.target.value = '';
-      return;
-    }
-    // check duration before accepting — keeps exported data manageable on a phone
-    const url = URL.createObjectURL(file);
-    const probe = document.createElement('video');
-    probe.preload = 'metadata';
-    probe.muted = true;
-    probe.playsInline = true;
-    probe.onloadedmetadata = ()=>{
-      if(probe.duration > 31){
-        URL.revokeObjectURL(url);
-        alert(t('dp_video_too_long'));
-        event.target.value = '';
-        return;
-      }
-      if(file.size > 6 * 1024 * 1024){
-        URL.revokeObjectURL(url);
-        alert(t('dp_video_too_big'));
-        event.target.value = '';
-        return;
-      }
-      // capture a real frame as the thumbnail, shown instead of an inline video player
-      probe.currentTime = Math.min(0.3, probe.duration / 2);
-      probe.onseeked = ()=>{
-        let thumbnail = null;
-        try{
-          const canvas = document.createElement('canvas');
-          const maxDim = 480;
-          const scale = Math.min(1, maxDim / Math.max(probe.videoWidth, probe.videoHeight));
-          canvas.width = probe.videoWidth * scale;
-          canvas.height = probe.videoHeight * scale;
-          canvas.getContext('2d').drawImage(probe, 0, 0, canvas.width, canvas.height);
-          thumbnail = canvas.toDataURL('image/jpeg', 0.6);
-        }catch(e){ /* thumbnail capture can fail silently — falls back to a play icon only */ }
-        URL.revokeObjectURL(url);
-        const reader = new FileReader();
-        reader.onload = e=>{
-          p.page.media.unshift({type:'video', dataUrl: e.target.result, thumbnail, caption:''});
-          saveState();
-          renderDriverPage();
-        };
-        reader.readAsDataURL(file);
-      };
-    };
-    probe.onerror = ()=>{
-      URL.revokeObjectURL(url);
-      alert(t('dp_video_unreadable'));
-      event.target.value = '';
-    };
-    probe.src = url;
-  }
-  event.target.value = '';
+  // dpIsReal ist seit Entfernen des Demo-Fahrers "Wayan" immer true -- der komplette alte
+  // Demo-Fallback danach (Foto- + Video-Verarbeitung ueber driverProfiles) war seither nie
+  // erreichbar, entfernt (2.9.). Echter Upload laeuft komplett ueber handleRealPageMediaUpload.
+  handleRealPageMediaUpload(event);
 }
 function bookTourFromPage(tourName){
   const pub = drivers.find(d => d.ownerId===dpDriverId && d.tour===tourName);
   if(!pub) return;
   openModal(pub);
 }
-function openVideoLightbox(i){
-  const p = driverProfiles[dpDriverId];
-  const m = p.page && p.page.media[i];
-  if(!m || m.type!=='video') return;
-  const player = document.getElementById('dp-video-lightbox-player');
-  player.src = m.dataUrl;
-  document.getElementById('dp-video-lightbox').style.display = 'flex';
-}
+// openVideoLightbox() entfernt (2.9.): unerreichbar seit Entfernen des Demo-Fahrers "Wayan" --
+// die echte Fahrerseite ruft stattdessen openRealVideoLightbox() auf. closeVideoLightbox()
+// bleibt bestehen, wird von beiden Pfaden gemeinsam genutzt (schliesst dasselbe Lightbox-Fenster).
+// closeVideoLightbox() schliesst jetzt auch das Foto-Element mit (Punkt 1, 2.9.) -- ein
+// gemeinsames Lightbox-Fenster fuer Foto + Video.
 function closeVideoLightbox(){
   const player = document.getElementById('dp-video-lightbox-player');
   player.pause();
   player.src = '';
+  const img = document.getElementById('dp-photo-lightbox-img');
+  img.style.display = 'none';
+  img.src = '';
   document.getElementById('dp-video-lightbox').style.display = 'none';
 }
-function updateMediaCaption(i, value){
-  const p = driverProfiles[dpDriverId];
-  if(!p.page || !p.page.media[i]) return;
-  p.page.media[i].caption = value.trim();
-  saveState();
-}
-function deletePageMedia(i){
-  const p = driverProfiles[dpDriverId];
-  if(!p.page || !p.page.media[i]) return;
-  if(!confirm(t('dp_media_del_confirm'))) return;
-  p.page.media.splice(i,1);
-  saveState();
-  renderDriverPage();
-}
+// updateMediaCaption() und deletePageMedia() entfernt (2.9.): unerreichbar seit Entfernen des
+// Demo-Fahrers "Wayan" -- die echte Fahrerseite ruft stattdessen updateRealMediaCaption() bzw.
+// deleteRealPageMedia() auf.
 async function sendPageMessage(){
   const name = document.getElementById('dp-msg-name').value.trim();
   const email = document.getElementById('dp-msg-email').value.trim();
@@ -6011,19 +5822,8 @@ function openMyBooking(){
   document.getElementById('my-booking-modal-bg').classList.add('active');
 }
 function closeMyBooking(){ document.getElementById('my-booking-modal-bg').classList.remove('active'); }
-function findBookingByRef(ref, phone){
-  let found = null;
-  Object.keys(driverDataStore).forEach(driverId=>{
-    ['bookings','completed'].forEach(source=>{
-      (driverDataStore[driverId][source]||[]).forEach((b,index)=>{
-        if(b.ref && b.ref.toUpperCase()===ref){
-          found = {driverId, source, index};
-        }
-      });
-    });
-  });
-  return found;
-}
+// findBookingByRef() entfernt (2.9.): driverDataStore ist immer leer, fand hier also nie etwas.
+// Einziger verbliebener Aufrufer war openMyBookingByRef() (ebenfalls entfernt, siehe unten).
 async function findMyBooking(){
   const ref = document.getElementById('mb-ref').value.trim().toUpperCase();
   const phone = normalizePhone(document.getElementById('mb-phone').value);
@@ -6031,11 +5831,8 @@ async function findMyBooking(){
     document.getElementById('mb-error').textContent = t('mb_err_ref');
     return;
   }
-  const found = findBookingByRef(ref, phone);
-  if(found){
-    showMyBooking(found.driverId, found.source, found.index);
-    return;
-  }
+  // Alter Demo-Suchversuch entfernt (2.9.): driverDataStore ist immer leer, findBookingByRef()
+  // fand hier also nie etwas -- ging ohnehin immer direkt zur echten Datenbank-Suche unten durch.
   // echte Buchung? sichere Datenbank-Funktion fragen (nur mit passender Ref + Telefonnummer)
   if(ref.length >= 8 && phone.length >= 4){
     const { data: realRows, error: realErr } = await supabaseClient.rpc('get_booking_by_ref', { p_ref: ref, p_phone: phone });
@@ -6054,19 +5851,11 @@ async function findMyBooking(){
       return;
     }
   }
-  let foundReq = null;
-  Object.keys(driverDataStore).forEach(driverId=>{
-    (driverDataStore[driverId].tourRequests||[]).forEach((r,index)=>{
-      if(r.ref && r.ref.toUpperCase()===ref){
-        foundReq = {driverId, index};
-      }
-    });
-  });
-  if(!foundReq){
-    document.getElementById('mb-error').textContent = t('mb_err_notfound');
-    return;
-  }
-  showMyTourRequest(foundReq.driverId, foundReq.index);
+  // Alter Demo-Suchversuch entfernt (2.9.): driverDataStore ist immer leer, dieser zweite
+  // Suchversuch (individuelle Touranfrage) fand hier also ebenfalls nie etwas -- landete immer
+  // direkt bei der "nicht gefunden"-Meldung unten. showMyTourRequest() (Demo-Anzeige) dadurch
+  // ebenfalls unerreichbar geworden, entfernt.
+  document.getElementById('mb-error').textContent = t('mb_err_notfound');
 }
 function showMyTourRequestReal(r){
   document.getElementById('mb-find-step').style.display = 'none';
@@ -6099,48 +5888,11 @@ function showMyTourRequestReal(r){
     }
   }
 }
-let mbrFound = null;
-function showMyTourRequest(driverId, index){
-  const r = driverDataStore[driverId].tourRequests[index];
-  if(!r) return;
-  mbrFound = {driverId, index};
-  document.getElementById('mb-find-step').style.display = 'none';
-  document.getElementById('mb-detail-step').style.display = 'none';
-  document.getElementById('mb-request-step').style.display = 'block';
-  document.getElementById('mbr-destination').textContent = r.destination;
-  document.getElementById('mbr-date').textContent = r.dateWanted || '—';
-  document.getElementById('mbr-ref').textContent = r.ref;
-  const offered = r.status === 'offered';
-  const declined = r.status === 'declined';
-  const statusEl = document.getElementById('mbr-status');
-  if(declined){
-    statusEl.textContent = t('tr_status_declined');
-    statusEl.className = 'status-pill cancel_requested';
-  } else {
-    statusEl.textContent = offered ? t('tr_status_offered') : t('tr_status_pending');
-    statusEl.className = 'status-pill ' + (offered ? 'confirmed' : 'pending');
-  }
-  document.getElementById('mbr-note').textContent = declined ? t('tr_note_declined') : (offered ? t('tr_note_offered') : t('tr_note_pending'));
-  document.getElementById('mbr-offer-box').style.display = offered ? 'block' : 'none';
-  if(offered) document.getElementById('mbr-offer-name').textContent = r.offeredTourName;
-}
-function bookOfferedRequestTour(){
-  if(!mbrFound) return;
-  const r = driverDataStore[mbrFound.driverId].tourRequests[mbrFound.index];
-  const pub = drivers.find(d => d.ownerId===mbrFound.driverId && d.tour===r.offeredTourName);
-  if(!pub) return;
-  closeMyBooking();
-  openModal(pub);
-}
-function openMyBookingByRef(ref){
-  // simulated magic link from email/WhatsApp
-  const found = findBookingByRef(ref, '');
-  closeModal();
-  if(!found){ alert(t('mb_err_notfound')); return; }
-  document.getElementById('mb-find-step').style.display = 'none';
-  document.getElementById('my-booking-modal-bg').classList.add('active');
-  showMyBooking(found.driverId, found.source, found.index);
-}
+// showMyTourRequest(), bookOfferedRequestTour(), openMyBookingByRef() und die Variable mbrFound
+// entfernt (2.9.): alle drei Funktionen waren nur ueber driverDataStore/findBookingByRef
+// erreichbar, die immer leer sind bzw. nie etwas fanden -- kompletter toter Zweig. Der "View &
+// book this tour"-Knopf im mbr-offer-box bekommt sein onclick jetzt ausschliesslich von
+// showMyTourRequestReal() zugewiesen (echter Weg, war schon immer so aktiv).
 // zeigt eine ECHTE Buchung (aus Supabase, via get_booking_by_ref) im selben Fenster an
 function showMyBookingReal(row, phone){
   mbFound = { isReal:true, id: row.id, driverId: row.driver_id, phone: phone || '' };
@@ -6197,74 +5949,6 @@ function showMyBookingReal(row, phone){
     document.getElementById('mb-review-error').textContent = '';
     if(photoRow) photoRow.style.display = 'none'; // Fotos bei echten Bewertungen noch nicht unterstuetzt
   } else if(row.already_reviewed){
-    reviewSection.style.display = 'none';
-    reviewDone.style.display = 'block';
-  } else {
-    reviewSection.style.display = 'none';
-    reviewDone.style.display = 'none';
-  }
-}
-function showMyBooking(driverId, source, index){
-  const b = driverDataStore[driverId][source][index];
-  if(!b) return;
-  mbFound = {driverId, source, index};
-  const prof = driverProfiles[driverId];
-  document.getElementById('mb-find-step').style.display = 'none';
-  document.getElementById('mb-request-step').style.display = 'none';
-  document.getElementById('mb-detail-step').style.display = 'block';
-  document.getElementById('mb-tour').textContent = b.tour;
-  document.getElementById('mb-driver').textContent = prof ? prof.fullName : '—';
-  document.getElementById('mb-when').textContent = b.when;
-  const optional = [
-    ['mb-row-pickup','mb-pickup', b.pickup],
-    ['mb-row-vehicle','mb-vehicle', b.vehicle],
-    ['mb-row-balance','mb-balance', b.balance],
-  ];
-  optional.forEach(([rowId, valId, val])=>{
-    const row = document.getElementById(rowId);
-    if(val){ document.getElementById(valId).textContent = val; row.style.display='flex'; }
-    else { row.style.display='none'; }
-  });
-  document.getElementById('mb-refshow').textContent = b.ref || '—';
-  const confirmed = b.status==='confirmed';
-  const completedTrip = b.status==='completed';
-  const cancelled = b.status==='cancelled';
-  const cancelRequested = b.status==='cancel_requested';
-  const statusEl = document.getElementById('mb-status');
-  if(cancelRequested){
-    statusEl.textContent = t('mb_status_cancel_requested');
-    statusEl.className = 'status-pill cancel_requested';
-  } else if(cancelled){
-    statusEl.textContent = t('st_cancelled');
-    statusEl.className = 'status-pill cancelled';
-  } else if(completedTrip){
-    statusEl.textContent = t('st_completed');
-    statusEl.className = 'status-pill confirmed';
-  } else {
-    statusEl.textContent = confirmed ? t('st_confirmed') : t('st_awaiting');
-    statusEl.className = 'status-pill ' + (confirmed ? 'confirmed' : 'pending');
-  }
-  document.getElementById('mb-status-note').textContent = cancelRequested ? t('mb_note_cancel_requested')
-    : cancelled ? t('mb_note_cancelled')
-    : completedTrip ? t('mb_note_completed')
-    : confirmed ? t('mb_note_confirmed') : t('mb_note_pending');
-  // only an upcoming (still-open) booking can be cancelled by the traveler
-  const cancelBtn = document.getElementById('mb-cancel-btn');
-  if(cancelBtn) cancelBtn.style.display = (source==='bookings' && !cancelRequested) ? 'block' : 'none';
-  const reviewSection = document.getElementById('mb-review-section');
-  const reviewDone = document.getElementById('mb-review-done');
-  if((confirmed || completedTrip) && !b.reviewed){
-    reviewSection.style.display = 'block';
-    reviewDone.style.display = 'none';
-    mbStarRating = 0;
-    updateStarPicker();
-    document.getElementById('mb-review-text').value = '';
-    document.getElementById('mb-review-error').textContent = '';
-    document.getElementById('mb-review-photo-preview').style.display = 'none';
-    mbReviewPhoto = null;
-    const photoRow = document.getElementById('mb-review-photo-row');
-    if(photoRow) photoRow.style.display = 'block';
-  } else if(b.reviewed){
     reviewSection.style.display = 'none';
     reviewDone.style.display = 'block';
   } else {
@@ -7477,15 +7161,9 @@ function confirmFinalCancel(){
 }
 function closeCancelReasonModal(){ pendingCancelIndex = null; pendingCancelReason = null; document.getElementById('cancel-reason-modal-bg').classList.remove('active'); }
 document.getElementById('cancel-reason-modal-bg').addEventListener('click', e=>{ if(e.target.id==='cancel-reason-modal-bg') closeCancelReasonModal(); });
-// moves a booking out of the "open" list into "completed", tagging its final status
-function moveBookingToCompleted(driverId, index, finalStatus, cancelReason){
-  const store = driverDataStore[driverId];
-  const b = store.bookings[index];
-  if(!b) return;
-  store.bookings.splice(index, 1);
-  if(!Array.isArray(store.completed)) store.completed = [];
-  store.completed.unshift({...b, status: finalStatus, cancelReason: cancelReason || null});
-}
+// moveBookingToCompleted() entfernt (2.9.): keine einzige Aufrufstelle mehr im Code -- der echte
+// Weg (Buchung stornieren/abschliessen) laeuft komplett ueber Supabase-Updates, nicht ueber
+// driverDataStore.
 // Bugfix (22.8., Joerg-Test): fuer ECHTE Fahrer (Supabase) hing das Dashboard nach einer Aktion
 // (annehmen/stornieren/abschliessen) sichtbar fest -- Buttons/Status blieben auf altem Stand, bis
 // man einmal die Ansicht wechselte und zurueckkam. Ursache: die realen Aktionsfunktionen haben bisher
@@ -8209,8 +7887,10 @@ function deleteListingFromRow(i){
   const l = driverListings[i];
   if(!l) return;
   if(!confirm(t('el_delete_confirm').replace('{name}', l.name))) return;
-  const idx = drivers.findIndex(d => (d.ownerId===currentDriverId || (!d.ownerId && d.name===driverProfiles[currentDriverId] && driverProfiles[currentDriverId].fullName)) && d.tour===l.name);
-  if(idx !== -1) drivers.splice(idx, 1);
+  // Alter lokaler Aufraeum-Versuch entfernt (2.9.): currentDriverId ist seit der Demo-Modus-Aufraeumung
+  // permanent null, die alte Suche hat also nie etwas gefunden. loadRealPublicListings() unten laedt
+  // nach erfolgreichem DB-Loeschen ohnehin die komplette, frische Liste -- reine Verhaltens-neutrale
+  // Aufraeumung, kein Funktionsunterschied.
   const dbId = l.dbId;
   driverListings.splice(i, 1);
   renderListings();
@@ -8484,8 +8164,10 @@ function deleteListingConfirm(){
   const l = driverListings[editingListingIndex];
   if(!l) return;
   if(!confirm(t('el_delete_confirm').replace('{name}', l.name))) return;
-  const idx = drivers.findIndex(d => (d.ownerId===currentDriverId || (!d.ownerId && d.name===driverProfiles[currentDriverId].fullName)) && d.tour===l.name);
-  if(idx !== -1) drivers.splice(idx, 1);
+  // Alter lokaler Aufraeum-Versuch entfernt (2.9.): currentDriverId ist seit der Demo-Modus-Aufraeumung
+  // permanent null, die alte Suche hat also nie etwas gefunden. loadRealPublicListings() unten laedt
+  // nach erfolgreichem DB-Loeschen ohnehin die komplette, frische Liste -- reine Verhaltens-neutrale
+  // Aufraeumung, kein Funktionsunterschied.
   const dbId = l.dbId;
   driverListings.splice(editingListingIndex, 1);
   editingListingIndex = null;
@@ -10489,7 +10171,7 @@ const translations = {
   en: {
     tab_travelers: "Travel Info",
     tab_faq: "❓ FAQ",
-    tab_lombok: "🌴 To Lombok?",
+    tab_lombok: "🌴 To Lombok?", tab_home_tooltip: "Home",
     tab_driver: "Driver Dashboard",
     tab_register: "+ Register as Driver",
     tab_admin: "🔐 Admin",
@@ -10654,8 +10336,9 @@ const translations = {
     tr_time_label: "Pickup time", tr_time_err: "Please add a pickup time for your transfer.",
     tr_notes_label: "Notes", tr_notes_ph: "Anything else your driver should know...",
     tr_submit_btn: "Send request", tr_sent_note: "Your request has been sent to your driver.", tr_check_hint: "Keep this reference — use \"Find my booking\" on the homepage anytime to check whether your driver has prepared an offer yet.", tr_done_btn: "Done",
-    tr_err: "Please enter your name and what you'd like to do.", tr_inbox_title: "✨ New custom tour request",
+    tr_err: "Please fill in your name, email and what you'd like to do.", tr_inbox_title: "✨ New custom tour request",
     tr_save_err: "Couldn't send your request — please try again.", co_prefill_from_request: "From the traveler's request:",
+    tr_email_label: "Email address *",
     tr_create_offer_btn: "Create tour offer", tr_offered_tag: "Offered", tr_offered_tour_label: "Offered tour", tr_view_book_btn: "View & book this tour",
     rd_detail_eyebrow: "Tour request", rd_detail_msg_label: "Traveler's message", rd_detail_no_msg: "No message provided.",
     tr_status_offered: "Offer ready", tr_status_pending: "Awaiting driver", tr_note_offered: "Good news — your driver has prepared a tour for your request. Tap below to view and book it.", tr_note_pending: "Your driver hasn't prepared an offer yet. Check back later, or contact them directly.", tr_decline_btn: "Decline", tr_declined_tag: "Declined", confirm_decline_request: "Decline this request from", cal_conflict_alert: "Heads up — you already have a tour scheduled on {date}!", tr_status_declined: "Not available", tr_note_declined: "Unfortunately this driver isn't able to take on your request right now. Please try requesting a custom tour from another driver on Rydanu — many others may be a great fit for what you're looking for.",
@@ -10861,7 +10544,7 @@ const translations = {
   de: {
     tab_travelers: "Reise-Infos", // 26.8.: gekürzt (war "Infos für Reisende") — sonst brechen die 3 Kopf-Pillen bei DE auf 2 Zeilen um, siehe .tab-btn Mobile-Padding weiter unten
     tab_faq: "❓ Fragen",
-    tab_lombok: "🌴 Nach Lombok?",
+    tab_lombok: "🌴 Nach Lombok?", tab_home_tooltip: "Startseite",
     tab_driver: "Fahrer-Dashboard",
     tab_register: "+ Als Fahrer registrieren",
     tab_admin: "🔐 Admin",
@@ -11026,8 +10709,9 @@ const translations = {
     tr_time_label: "Abholzeit", tr_time_err: "Bitte gib eine Abholzeit für deinen Transfer an.",
     tr_notes_label: "Notizen", tr_notes_ph: "Was dein Fahrer sonst noch wissen sollte...",
     tr_submit_btn: "Anfrage senden", tr_sent_note: "Deine Anfrage wurde an deinen Fahrer gesendet.", tr_check_hint: "Notiere dir diese Referenz — prüfe jederzeit über \"Meine Buchung finden\" auf der Startseite, ob dein Fahrer ein Angebot erstellt hat.", tr_done_btn: "Fertig",
-    tr_err: "Bitte gib deinen Namen und dein Wunsch ein.", tr_inbox_title: "✨ Neue individuelle Touranfrage",
+    tr_err: "Bitte gib deinen Namen, deine E-Mail und deinen Wunsch ein.", tr_inbox_title: "✨ Neue individuelle Touranfrage",
     tr_save_err: "Anfrage konnte nicht gesendet werden — bitte erneut versuchen.", co_prefill_from_request: "Aus der Anfrage des Reisenden:",
+    tr_email_label: "E-Mail-Adresse *",
     tr_create_offer_btn: "Tourangebot erstellen", tr_offered_tag: "Angeboten", tr_offered_tour_label: "Angebotene Tour", tr_view_book_btn: "Tour ansehen & buchen",
     rd_detail_eyebrow: "Touranfrage", rd_detail_msg_label: "Nachricht des Reisenden", rd_detail_no_msg: "Keine Nachricht angegeben.",
     tr_status_offered: "Angebot bereit", tr_status_pending: "Wartet auf Fahrer", tr_note_offered: "Gute Nachricht — dein Fahrer hat eine Tour für deine Anfrage erstellt. Tippe unten, um sie anzusehen und zu buchen.", tr_note_pending: "Dein Fahrer hat noch kein Angebot erstellt. Schau später nochmal vorbei oder kontaktiere ihn direkt.", tr_decline_btn: "Ablehnen", tr_declined_tag: "Abgelehnt", confirm_decline_request: "Diese Anfrage ablehnen von", cal_conflict_alert: "Achtung — du hast am {date} schon eine Tour geplant!", tr_status_declined: "Nicht möglich", tr_note_declined: "Dieser Fahrer kann deine Anfrage aktuell leider nicht annehmen. Bitte frag gerne einen anderen Fahrer auf Rydanu nach einer individuellen Tour an — viele andere passen bestimmt gut zu dem, was du suchst.",
@@ -11233,7 +10917,7 @@ const translations = {
   id: {
     tab_travelers: "Info Wisata", // 26.8.: gekürzt (war "Info untuk Wisatawan") — gleicher Grund wie bei DE, siehe dort
     tab_faq: "❓ FAQ",
-    tab_lombok: "🌴 Ke Lombok?",
+    tab_lombok: "🌴 Ke Lombok?", tab_home_tooltip: "Beranda",
     tab_driver: "Dasbor Sopir",
     tab_register: "+ Daftar sebagai Sopir",
     tab_admin: "🔐 Admin",
@@ -11398,8 +11082,9 @@ const translations = {
     tr_time_label: "Waktu penjemputan", tr_time_err: "Silakan tambahkan waktu penjemputan untuk transfer Anda.",
     tr_notes_label: "Catatan", tr_notes_ph: "Hal lain yang perlu diketahui sopir Anda...",
     tr_submit_btn: "Kirim permintaan", tr_sent_note: "Permintaan Anda telah dikirim ke sopir Anda.", tr_check_hint: "Simpan referensi ini — gunakan \"Temukan pemesanan saya\" di beranda kapan saja untuk memeriksa apakah sopir Anda sudah menyiapkan penawaran.", tr_done_btn: "Selesai",
-    tr_err: "Mohon masukkan nama Anda dan apa yang Anda inginkan.", tr_inbox_title: "✨ Permintaan tur khusus baru",
+    tr_err: "Mohon isi nama, email, dan apa yang Anda inginkan.", tr_inbox_title: "✨ Permintaan tur khusus baru",
     tr_save_err: "Permintaan tidak dapat dikirim — silakan coba lagi.", co_prefill_from_request: "Dari permintaan wisatawan:",
+    tr_email_label: "Alamat email *",
     tr_create_offer_btn: "Buat penawaran tur", tr_offered_tag: "Ditawarkan", tr_offered_tour_label: "Tur yang ditawarkan", tr_view_book_btn: "Lihat & pesan tur ini",
     rd_detail_eyebrow: "Permintaan tur", rd_detail_msg_label: "Pesan wisatawan", rd_detail_no_msg: "Tidak ada pesan.",
     tr_status_offered: "Penawaran siap", tr_status_pending: "Menunggu sopir", tr_note_offered: "Kabar baik — sopir Anda telah menyiapkan tur untuk permintaan Anda. Ketuk di bawah untuk melihat dan memesannya.", tr_note_pending: "Sopir Anda belum menyiapkan penawaran. Periksa lagi nanti, atau hubungi mereka langsung.", tr_decline_btn: "Tolak", tr_declined_tag: "Ditolak", confirm_decline_request: "Tolak permintaan ini dari", cal_conflict_alert: "Perhatian — Anda sudah punya tur pada {date}!", tr_status_declined: "Tidak tersedia", tr_note_declined: "Sayangnya sopir ini tidak dapat menerima permintaan Anda saat ini. Silakan coba minta tur khusus dari sopir lain di Rydanu — banyak sopir lain mungkin sangat cocok untuk apa yang Anda cari.",
@@ -11652,6 +11337,12 @@ function setLanguage(lang){
     const key = el.dataset.i18nPlaceholder;
     if(dict[key]) el.placeholder = dict[key];
   });
+  // Neu (2.9., Home-Pille): erster Einsatz von data-i18n-title -- uebersetzt das title-Attribut
+  // (Tooltip bei Hover, v.a. Desktop) genauso wie die anderen data-i18n-*-Varianten oben.
+  document.querySelectorAll('[data-i18n-title]').forEach(el=>{
+    const key = el.dataset.i18nTitle;
+    if(dict[key]) el.title = dict[key];
+  });
   // Bugfix (22.8., Joerg gemeldet per Screenshot): die Filter-Chips fuer Startort/Flughafen-Ziel/
   // Transfer-Ziel werden aus REGION_CONFIG per innerHTML gebaut (nicht ueber data-i18n), darum hat
   // sie der obige Refresh-Durchlauf bisher komplett uebersehen -- sie blieben beim Sprachwechsel in
@@ -11771,7 +11462,7 @@ function renderDriverGrid(rawList){
           <div class="price">${priceBlockHTML(cardPrice)}<br><span>${spotLabel(d.duration)}</span>${d.vehicleType ? `<br><span class="vtype-tag">${vtypeLabel(d.vehicleType)}</span>` : ''}</div>
           <div class="lang-tags">${d.lang.map(l=>`<span>${l}</span>`).join('')}</div>
         </div>
-        ${d.ownerId && driverProfiles[d.ownerId] ? `<button type="button" class="edit-profile-link" style="margin-top:auto; padding-top:8px;" onclick="event.stopPropagation(); openTourRequest('${d.ownerId}')">✨ ${t('tr_open_btn')}</button>` : ''}
+        <!-- Alter Demo-Bearbeiten-Link entfernt (2.9.): driverProfiles ist immer leer, Bedingung war nie wahr -->
       </div>
     `;
     grid.appendChild(card);
@@ -11842,11 +11533,10 @@ function viewTourOnMap(e, i){
   openMapModal('tour', lastGridList[i]);
 }
 function visibleDrivers(){
-  return drivers.filter(d => {
-    if(d.active === false) return false;
-    if(d.ownerId && driverProfiles[d.ownerId] && driverProfiles[d.ownerId].status === 'blocked') return false;
-    return true;
-  });
+  // Alter Demo-Blocked-Check entfernt (2.9.): driverProfiles ist immer leer, Bedingung war nie
+  // wahr. Echte gesperrte Fahrer werden bereits in loadRealPublicListings() rausgefiltert
+  // (.eq('is_locked', false)).
+  return drivers.filter(d => d.active !== false);
 }
 // ---- filter popup ----
 let selectedFilters = { regions:[], languages:[], services:[], spots:[], airportDest:[], trust:[], vtype:[], transferDest:[] };
@@ -12273,21 +11963,10 @@ function trustBadgesHTML(d){
 // Nachbesserung (3. August): Drohnen-/Fotoservice-Icons auf der Suchkarte selbst wurden
 // bewusst wieder entfernt (Jörg-Wunsch) — bleiben aber im Tour-Detail nach dem Klick sichtbar
 // (siehe service-btn weiter unten in der Tour-Detailanzeige, unverändert).
-// Keeps the customer-facing rating/tour-count in sync with what actually happened —
-// without this, completed trips and reviews never show up on the driver's public card.
-function syncDriverRating(driverId){
-  if(!driverId || !driverId.startsWith('d_')) return; // never touch the curated seed/demo driver
-  const store = driverDataStore[driverId];
-  if(!store || !Array.isArray(drivers)) return;
-  const completedCount = (store.completed||[]).filter(b=>b.status==='completed').length;
-  const revs = store.reviews||[];
-  const rated = revs.filter(r=>r.starsNum);
-  const avg = rated.length ? (rated.reduce((s,r)=>s+r.starsNum,0)/rated.length) : null;
-  const tourWord = completedCount===1 ? t('lbl_tour_singular') : t('lbl_tour_plural');
-  const ratingStr = (avg ? avg.toFixed(1) : t('lbl_rating_new')) + ' · ' + completedCount + ' ' + tourWord;
-  drivers.filter(d=>d.ownerId===driverId).forEach(d=>{ d.rating = ratingStr; });
-  store.stats.rating = avg ? avg.toFixed(1) : 'New';
-}
+// syncDriverRating() entfernt (2.9.): keine Aufrufstelle mehr (letzter Aufrufer war der bereits
+// entfernte Demo-Fallback in submitStandaloneReview). War fuer echte Fahrer ohnehin immer ein
+// No-Op, da echte Supabase-IDs (UUIDs) nie mit "d_" beginnen -- echte Bewertungen/Ratings laufen
+// komplett ueber get_driver_public_stats() (siehe loadRealPublicListings).
 function vehicleDisplayString(v){
   if(!v) return 'To be confirmed';
   const type = v.vtype || 'Standard Car';
@@ -12309,7 +11988,8 @@ function waCallLink(phone){ return 'https://wa.me/' + String(phone||'').replace(
 // internationale Touristen, darum jetzt fest auf Englisch, unabhaengig davon welche Sprache der
 // Fahrer gerade in seiner eigenen App eingestellt hat.
 function buildDriverBookingWaText(b){
-  const driverName = realDriverProfile ? (realDriverProfile.name || '') : ((driverProfiles[currentDriverId] && driverProfiles[currentDriverId].name) || '');
+  // Alter Demo-Fallback entfernt (2.9.): driverProfiles ist immer leer.
+  const driverName = realDriverProfile ? (realDriverProfile.name || '') : '';
   const whenPart = [b.when, b.pickupTime].filter(Boolean).join(', ');
   const pickupSentence = b.pickup ? ` Pickup: ${b.pickup}.` : '';
   return `Hi ${b.who}! This is ${driverName}, your driver for "${b.tour}" on ${whenPart}.${pickupSentence} Feel free to message me if you have any questions before then!`;
@@ -12942,14 +12622,7 @@ function reviewStarsCount(r){
   if(typeof r.starsNum === 'number') return r.starsNum;
   return (String(r.stars||'').match(/★/g) || []).length;
 }
-function driverMonthsActive(driverId){
-  const p = driverProfiles[driverId];
-  if(!p || !p.joinedDate) return 0;
-  const joined = new Date(p.joinedDate);
-  const now = new Date();
-  let months = (now.getFullYear()-joined.getFullYear())*12 + (now.getMonth()-joined.getMonth());
-  return Math.max(0, months);
-}
+// driverMonthsActive() entfernt (2.9.): keine Aufrufstelle mehr im Code.
 function getDriverRank(points){
   return DRIVER_RANKS.find(r => points >= r.min) || DRIVER_RANKS[DRIVER_RANKS.length-1];
 }
@@ -12961,9 +12634,9 @@ function driverRankBadgeHTML(driverId, size){
   }
   return '';
 }
-// Rang-Badge fuer eine Fahrerkarte in der Suche — funktioniert sowohl fuer Demo- als auch fuer echte Fahrer (Baustein 10)
+// Rang-Badge fuer eine Fahrerkarte in der Suche (Baustein 10)
 function ownerRankBadgeHTML(d, size){
-  if(d.ownerId && driverProfiles[d.ownerId]) return driverRankBadgeHTML(d.ownerId, size);
+  // Alter Demo-Zweig entfernt (2.9.): driverProfiles ist immer leer, Bedingung war nie wahr.
   if(d.isReal && typeof d.rankPoints === 'number'){
     const rank = getDriverRank(d.rankPoints);
     const cls = size === 'sm' ? 'rank-badge rank-badge-sm' : 'rank-badge';
@@ -13427,7 +13100,8 @@ function openModal(d){
     svcRow.style.display = 'none';
   }
   const pageLink = document.getElementById('modal-page-link');
-  if(pageLink) pageLink.style.display = (d.ownerId && (driverProfiles[d.ownerId] || d.isReal)) ? 'inline-block' : 'none';
+  // Alter Demo-Teil entfernt (2.9.): driverProfiles ist immer leer, d.isReal traegt die echte Logik.
+  if(pageLink) pageLink.style.display = (d.ownerId && d.isReal) ? 'inline-block' : 'none';
   const reqTourBtn = document.getElementById('modal-request-tour-btn');
   if(reqTourBtn) reqTourBtn.style.display = d.ownerId ? 'block' : 'none';
   const startRegions = regionDisplayLabel(d);
@@ -13674,9 +13348,10 @@ function confirmPayment(){
   } else {
     destRow.style.display = 'none';
   }
-  const ownerProfile = currentDriver.ownerId ? driverProfiles[currentDriver.ownerId] : null;
-  const v = ownerProfile && ownerProfile.vehicle ? ownerProfile.vehicle : null;
-  const vehicleStr = v ? `${v.vtype || 'Standard Car'}${v.car ? ' — ' + v.car : ''} · ${v.color} · Plate: ${v.plate}` : (currentDriver.vehicle || 'To be confirmed');
+  // Alter Demo-Fallback entfernt (2.9.): driverProfiles ist immer leer, ownerProfile war daher
+  // immer null -- echte Fahrer haben ihr Fahrzeug schon direkt in currentDriver.vehicle (siehe
+  // loadRealPublicListings/vehicleDisplayString).
+  const vehicleStr = currentDriver.vehicle || 'To be confirmed';
   document.getElementById('confirm-vehicle').textContent = vehicleStr;
   document.getElementById('confirm-email').textContent = email;
   document.getElementById('confirm-phone').textContent = phone;
@@ -13697,7 +13372,7 @@ ${fillTemplate(bpt('vehicleLine'), emailVars)}
 
 ${fillTemplate(bpt('finalNote'), emailVars)}
 
-<button type="button" class="magic-link-btn" onclick="openMyBookingByRef('${ref}')">${bpt('magicLinkBtn')}</button>
+<button type="button" class="magic-link-btn" onclick="closeModal(); openMyBooking();">${bpt('magicLinkBtn')}</button>
 <span style="font-size:0.68rem; color:#8a8a7a;">${bpt('magicLinkNote')}</span>
 
 ${fillTemplate(bpt('reachOut'), emailVars)}
@@ -15456,43 +15131,16 @@ async function loadRealAdminStats(){
   }
 }
 function renderAdminStats(){
+  // Alter Demo-Fallback entfernt (2.9.): der Admin-Bereich ist ohnehin nur mit echter
+  // Admin-/Fahrer-Session erreichbar (realDriverProfile || isAdminSession ist hier immer wahr),
+  // der driverDataStore-Codepfad danach war seither nie erreichbar.
   const tabs = document.getElementById('admin-period-tabs');
-  if(realDriverProfile || isAdminSession){
-    if(tabs) tabs.style.display = ''; // Tag/Monat/Jahr-Aufschlüsselung jetzt auch mit echten Zahlen verfügbar
-    loadRealAdminStats();
-    return;
-  }
-  if(tabs) tabs.style.display = '';
-  const el = document.getElementById('admin-stats-row');
-  if(!el) return;
-  const f = periodFactor[adminPeriod];
-  let feesPaidTotal = 0, bookingsTotal = 0;
-  Object.values(driverDataStore).forEach(s=>{
-    (s.receipts||[]).forEach(r=> feesPaidTotal += r.amount);
-    bookingsTotal += (s.bookings||[]).length + (s.completed||[]).length;
-  });
-  // scale the demo base by period
-  // scale the demo base by period (in IDR now — was USD)
-  const fees = feesPaidTotal + (adminPeriod==='day' ? 60000 : adminPeriod==='month' ? 1320000 : 14400000);
-  const booked = bookingsTotal * (adminPeriod==='day' ? 1 : adminPeriod==='month' ? 4 : 40);
-  const cancelled = Math.round(booked * 0.08);
-  el.innerHTML = `
-    <div class="stat-card"><div class="num" style="font-size:1.05rem;">${formatIDR(fees)}</div><div class="lbl">${t('admin_stat_fees')}</div></div>
-    <div class="stat-card"><div class="num">${booked}</div><div class="lbl">${t('admin_stat_booked')}</div></div>
-    <div class="stat-card"><div class="num">${cancelled}</div><div class="lbl">${t('admin_stat_cancelled')}</div></div>
-    <div class="stat-card"><div class="num">${Object.values(driverProfiles).filter(p=>p.status==='approved').length}</div><div class="lbl">${t('admin_stat_drivers')}</div></div>
-  `;
+  if(tabs) tabs.style.display = ''; // Tag/Monat/Jahr-Aufschlüsselung jetzt auch mit echten Zahlen verfügbar
+  loadRealAdminStats();
 }
-function populateAdminDriverStatsSelect(){
-  const sel = document.getElementById('admin-driver-stats-select');
-  if(!sel) return;
-  const current = sel.value;
-  sel.innerHTML = Object.keys(driverProfiles).map(id=>{
-    const p = driverProfiles[id];
-    return `<option value="${id}">${p.fullName || p.name} (${p.lwNumber || id})</option>`;
-  }).join('');
-  if(current && driverProfiles[current]) sel.value = current;
-}
+// populateAdminDriverStatsSelect() (alte Demo-Version) entfernt (2.9.): war nur aus dem toten
+// Codepfad in renderAdminDriverStats() erreichbar, siehe dort. Echter Weg ist
+// populateAdminDriverStatsSelectReal() weiter unten.
 // echte Fahrerliste fuer die Fahrer-Statistik laden (Baustein 10-Nachbesserung)
 async function populateAdminDriverStatsSelectReal(){
   const sel = document.getElementById('admin-driver-stats-select');
@@ -15505,37 +15153,10 @@ async function populateAdminDriverStatsSelectReal(){
   renderAdminDriverStatsReal();
 }
 function renderAdminDriverStats(){
-  if(realDriverProfile || isAdminSession){ populateAdminDriverStatsSelectReal(); return; }
-  const el = document.getElementById('admin-driver-stats-row');
-  if(!el) return;
-  populateAdminDriverStatsSelect();
-  const sel = document.getElementById('admin-driver-stats-select');
-  const driverId = sel.value;
-  const store = driverDataStore[driverId] || {};
-  const completed = store.completed || [];
-  const open = store.bookings || [];
-  const completedOnly = completed.filter(b=>b.status==='completed');
-  const completedCount = completedOnly.length;
-  const cancelledByDriver = completed.filter(b=>b.status==='cancelled' && b.cancelReason==='driver').length;
-  const cancelledByCustomer = completed.filter(b=>b.status==='cancelled' && (b.cancelReason==='customer' || !b.cancelReason)).length;
-  const total = completed.length + open.length;
-  const revenue = completedOnly.reduce((sum,b)=>{
-    const listing = (store.listings||[]).find(l=>l.name===b.tour);
-    return sum + (listing ? parseIDR(listing.price) : 0);
-  }, 0);
-  const feeRevenue = completedOnly.reduce((sum,b)=>{
-    const listing = (store.listings||[]).find(l=>l.name===b.tour);
-    const feeStr = listing ? listing.fee : 'IDR 40,000';
-    return sum + parseIDR(feeStr);
-  }, 0);
-  el.innerHTML = `
-    <div class="stat-card"><div class="num">${completedCount}</div><div class="lbl">${t('admin_stat_driver_completed')}</div></div>
-    <div class="stat-card"><div class="num">${cancelledByDriver}</div><div class="lbl">${t('admin_stat_driver_cancelled_driver')}</div></div>
-    <div class="stat-card"><div class="num">${cancelledByCustomer}</div><div class="lbl">${t('admin_stat_driver_cancelled_customer')}</div></div>
-    <div class="stat-card"><div class="num">${total}</div><div class="lbl">${t('admin_stat_driver_total')}</div></div>
-    <div class="stat-card"><div class="num">${formatIDR(revenue)}</div><div class="lbl">${t('admin_stat_driver_revenue')}</div></div>
-    <div class="stat-card"><div class="num">${formatIDR(feeRevenue)}</div><div class="lbl">${t('admin_stat_driver_fee_revenue')}</div></div>
-  `;
+  // Alter Demo-Fallback entfernt (2.9.): gleicher Grund wie bei renderAdminStats() -- der
+  // Admin-Bereich ist nur mit echter Session erreichbar, der driverDataStore-Codepfad danach
+  // war seither nie erreichbar.
+  populateAdminDriverStatsSelectReal();
 }
 // echte Fahrer-Statistik: nutzt price_idr/fee_idr, die direkt an jeder Buchung gespeichert sind
 async function renderAdminDriverStatsReal(){
@@ -16349,30 +15970,13 @@ async function renderBalanceOverviewList(){
 
 // ---- support conversation: ONE thread per driver, entries appended over time ----
 let supportThreads = {}; // keyed by driverId
-function getOrCreateThread(driverId, subjectIfNew){
-  const p = driverProfiles[driverId];
-  if(!supportThreads[driverId]){
-    supportThreads[driverId] = {
-      driverId, driverName: p.fullName, lwNumber: p.lwNumber || '—',
-      subject: subjectIfNew || t('admin_msg_reply_subject'),
-      entries: [], unreadForAdmin: false, archived: false
-    };
-  }
-  return supportThreads[driverId];
-}
-function addDriverEntry(driverId, body, subjectIfNew){
-  const thread = getOrCreateThread(driverId, subjectIfNew);
-  thread.entries.push({from:'driver', body, date: todayMsgDate()});
-  thread.unreadForAdmin = true;
-  thread.archived = false; // a new message always reopens the thread
-  saveState();
-}
-function addAdminEntry(driverId, body, subjectIfNew){
-  const thread = getOrCreateThread(driverId, subjectIfNew);
-  thread.entries.push({from:'admin', body, date: todayMsgDate()});
-  thread.archived = false;
-  saveState();
-}
+// getOrCreateThread(), addDriverEntry(), addAdminEntry() entfernt (2.9.): keine Aufrufstelle
+// mehr im Code (beide Aufrufer waren bereits toter Demo-Fallback-Code in sendAdminComposeMsg()
+// und sendAdminMsgReply(), siehe dort). Wichtig: getOrCreateThread() haette bei echtem Aufruf
+// sogar abstuerzen koennen (driverProfiles[driverId] ist immer undefined, .fullName darauf wirft
+// eine Ausnahme) -- war aber nie erreichbar, da beide Aufrufer hinter einer echten Session-Pruefung
+// lagen. supportThreads bleibt als leeres Objekt bestehen (gleiches Prinzip wie driverProfiles),
+// da an mehreren Stellen noch defensiv/lesend darauf zugegriffen wird.
 function renderThreadEntries(containerId, entries){
   const el = document.getElementById(containerId);
   if(!el) return;
@@ -16533,22 +16137,12 @@ async function sendPageMessageThreadReply(){
 }
 
 async function openAdminComposeMsg(){
-  if(realDriverProfile || isAdminSession){
-    const { data: drv, error } = await supabaseClient.from('drivers').select('id, name, lw_number').order('name');
-    if(error) console.error('Fahrerliste konnte nicht geladen werden:', error);
-    const sel = document.getElementById('admin-compose-driver-select');
-    sel.innerHTML = (drv||[]).map(d=>`<option value="${d.id}">${escapeHtml(d.name)} (${d.lw_number||'—'})</option>`).join('');
-    document.getElementById('admin-compose-subject').value = '';
-    document.getElementById('admin-compose-body').value = '';
-    document.getElementById('admin-compose-error').textContent = '';
-    document.getElementById('admin-compose-modal-bg').classList.add('active');
-    return;
-  }
+  // Alter Demo-Fallback entfernt (2.9.): der Admin-Bereich ist nur mit echter Session erreichbar,
+  // der driverProfiles-Codepfad danach war seither nie erreichbar.
+  const { data: drv, error } = await supabaseClient.from('drivers').select('id, name, lw_number').order('name');
+  if(error) console.error('Fahrerliste konnte nicht geladen werden:', error);
   const sel = document.getElementById('admin-compose-driver-select');
-  sel.innerHTML = Object.keys(driverProfiles).map(id=>{
-    const p = driverProfiles[id];
-    return `<option value="${id}">${p.fullName || p.name} (${p.lwNumber || id})</option>`;
-  }).join('');
+  sel.innerHTML = (drv||[]).map(d=>`<option value="${d.id}">${escapeHtml(d.name)} (${d.lw_number||'—'})</option>`).join('');
   document.getElementById('admin-compose-subject').value = '';
   document.getElementById('admin-compose-body').value = '';
   document.getElementById('admin-compose-error').textContent = '';
@@ -16587,13 +16181,8 @@ async function sendAdminComposeMsg(){
     openAdminMsgDetail(driverId);
     return;
   }
-  addAdminEntry(driverId, body, subject);
-  pushInboxMessage(driverId, subject, body);
-  renderAdminMessages();
-  if(driverId === currentDriverId) updateInboxDot();
-  saveState();
-  closeAdminComposeMsg();
-  openAdminMsgDetail(driverId);
+  // Alter Demo-Fallback entfernt (2.9.): der Admin-Bereich ist nur mit echter Session erreichbar,
+  // dieser Codepfad (addAdminEntry/driverDataStore) war seither nie erreichbar.
 }
 // ---- admin side: one row per driver thread ----
 let realAdminThreads = [];
@@ -16783,14 +16372,8 @@ async function sendAdminMsgReply(){
     closeAdminMsgDetail();
     return;
   }
-  addAdminEntry(currentAdminThreadDriverId, reply);
-  if(driverDataStore[currentAdminThreadDriverId]){
-    pushInboxMessage(currentAdminThreadDriverId, t('admin_msg_reply_subject'), reply);
-  }
-  renderAdminMessages();
-  if(currentAdminThreadDriverId === currentDriverId) updateInboxDot();
-  saveState();
-  closeAdminMsgDetail();
+  // Alter Demo-Fallback entfernt (2.9.): der Admin-Bereich ist nur mit echter Session erreichbar,
+  // dieser Codepfad (addAdminEntry/driverDataStore) war seither nie erreichbar.
 }
 function archiveCurrentAdminMsg(){
   if(!currentAdminThreadDriverId) return;
@@ -16873,7 +16456,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v384</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v391</div>
 
 <!-- Etappe 4: Lade-Overlay waehrend "Buchung annehmen" im Hintergrund laeuft (kann bei VIP-Fahrern
      mit Auto-Einzug ein paar Sekunden dauern, da erst mit Xendit gesprochen wird, bevor die
