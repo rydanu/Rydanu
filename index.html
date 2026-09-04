@@ -121,12 +121,18 @@
   }
   html{ color-scheme: light; background:#F7FAF4; -webkit-text-size-adjust:100%; text-size-adjust:100%; }
   *{box-sizing:border-box; margin:0; padding:0;}
+  /* 4.9. (Joerg-Screenshots, Pillen Bali vs Lombok weiterhin unterschiedlich trotz html-Regel):
+     text-size-adjust auf html allein hat die Safari-Auto-Schriftvergroesserung nicht zuverlaessig
+     fuer alle Elemente unterdrueckt (nachgemessen: Home-Pille 80px vs. 95px Hoehe). Regel jetzt
+     zusaetzlich redundant auf body UND direkt auf .tab-btn gesetzt, dort wo das Problem konkret
+     auftrat. */
   body{
     background:var(--paper);
     color:var(--ink);
     font-family:'Public Sans', sans-serif;
     -webkit-font-smoothing:antialiased;
     min-height:100vh;
+    -webkit-text-size-adjust:100%; text-size-adjust:100%;
   }
   .mono{ font-family:'JetBrains Mono', monospace; letter-spacing:0.02em; }
   h1,h2,h3,.display{ font-family:'Public Sans', sans-serif; font-weight:700; letter-spacing:-0.01em; }
@@ -172,6 +178,7 @@
     border:none; background:transparent; padding:8px 18px; border-radius:16px;
     font-family:'Public Sans'; font-size:0.85rem; font-weight:600; color:var(--ink-soft);
     cursor:pointer; transition:all .2s ease; outline:none;
+    -webkit-text-size-adjust:100%; text-size-adjust:100%;
   }
   .tab-btn:hover:not(.active){ background:rgba(11,61,34,0.08); color:var(--ink); }
   .tab-btn.active{ background:var(--ink); color:var(--paper); }
@@ -742,6 +749,12 @@
        Regeln bleiben unabhaengig voneinander in ihren jeweiligen Media-Queries. */
     .logo-word{ height:108px; }
     .logo-tagline{ font-size:0.96rem; }
+    /* 4.9. (Joerg-Screenshot): grosser Leerraum zwischen Sprachumschalter und dem Hero-Logo/-Text
+       auf dem Handy -- Hauptursache ist das feste 56px-Top-Padding von .hero-centered, das fuer
+       Desktop gedacht war und mit dem jetzt groesseren Kopfbereich (Logo +20%, Zeilenumbrueche bei
+       Tabs/Sprache) zusammen zu viel Luft ergibt. Auf Mobile deutlich reduziert, Seiten/Unten-Padding
+       unveraendert gelassen. */
+    .hero-centered{ padding-top:20px; }
     /* 26.8.: etwas schmalere Buttons auf dem Handy, damit "Reise-Infos" + "Fragen" + "Nach Lombok?"
        (bzw. die EN/ID-Entsprechungen) in JEDER Sprache in einer Zeile bleiben und die Seite beim
        Sprachwechsel nicht mehr springt. Getestet bis runter auf 375px (iPhone SE) in DE/EN/ID.
@@ -16463,7 +16476,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v398</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v400</div>
 
 <!-- Etappe 4: Lade-Overlay waehrend "Buchung annehmen" im Hintergrund laeuft (kann bei VIP-Fahrern
      mit Auto-Einzug ein paar Sekunden dauern, da erst mit Xendit gesprochen wird, bevor die
