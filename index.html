@@ -15280,43 +15280,16 @@ async function loadRealAdminStats(){
   }
 }
 function renderAdminStats(){
+  // Alter Demo-Fallback entfernt (2.9.): der Admin-Bereich ist ohnehin nur mit echter
+  // Admin-/Fahrer-Session erreichbar (realDriverProfile || isAdminSession ist hier immer wahr),
+  // der driverDataStore-Codepfad danach war seither nie erreichbar.
   const tabs = document.getElementById('admin-period-tabs');
-  if(realDriverProfile || isAdminSession){
-    if(tabs) tabs.style.display = ''; // Tag/Monat/Jahr-Aufschlüsselung jetzt auch mit echten Zahlen verfügbar
-    loadRealAdminStats();
-    return;
-  }
-  if(tabs) tabs.style.display = '';
-  const el = document.getElementById('admin-stats-row');
-  if(!el) return;
-  const f = periodFactor[adminPeriod];
-  let feesPaidTotal = 0, bookingsTotal = 0;
-  Object.values(driverDataStore).forEach(s=>{
-    (s.receipts||[]).forEach(r=> feesPaidTotal += r.amount);
-    bookingsTotal += (s.bookings||[]).length + (s.completed||[]).length;
-  });
-  // scale the demo base by period
-  // scale the demo base by period (in IDR now — was USD)
-  const fees = feesPaidTotal + (adminPeriod==='day' ? 60000 : adminPeriod==='month' ? 1320000 : 14400000);
-  const booked = bookingsTotal * (adminPeriod==='day' ? 1 : adminPeriod==='month' ? 4 : 40);
-  const cancelled = Math.round(booked * 0.08);
-  el.innerHTML = `
-    <div class="stat-card"><div class="num" style="font-size:1.05rem;">${formatIDR(fees)}</div><div class="lbl">${t('admin_stat_fees')}</div></div>
-    <div class="stat-card"><div class="num">${booked}</div><div class="lbl">${t('admin_stat_booked')}</div></div>
-    <div class="stat-card"><div class="num">${cancelled}</div><div class="lbl">${t('admin_stat_cancelled')}</div></div>
-    <div class="stat-card"><div class="num">${Object.values(driverProfiles).filter(p=>p.status==='approved').length}</div><div class="lbl">${t('admin_stat_drivers')}</div></div>
-  `;
+  if(tabs) tabs.style.display = ''; // Tag/Monat/Jahr-Aufschlüsselung jetzt auch mit echten Zahlen verfügbar
+  loadRealAdminStats();
 }
-function populateAdminDriverStatsSelect(){
-  const sel = document.getElementById('admin-driver-stats-select');
-  if(!sel) return;
-  const current = sel.value;
-  sel.innerHTML = Object.keys(driverProfiles).map(id=>{
-    const p = driverProfiles[id];
-    return `<option value="${id}">${p.fullName || p.name} (${p.lwNumber || id})</option>`;
-  }).join('');
-  if(current && driverProfiles[current]) sel.value = current;
-}
+// populateAdminDriverStatsSelect() (alte Demo-Version) entfernt (2.9.): war nur aus dem toten
+// Codepfad in renderAdminDriverStats() erreichbar, siehe dort. Echter Weg ist
+// populateAdminDriverStatsSelectReal() weiter unten.
 // echte Fahrerliste fuer die Fahrer-Statistik laden (Baustein 10-Nachbesserung)
 async function populateAdminDriverStatsSelectReal(){
   const sel = document.getElementById('admin-driver-stats-select');
@@ -15329,37 +15302,10 @@ async function populateAdminDriverStatsSelectReal(){
   renderAdminDriverStatsReal();
 }
 function renderAdminDriverStats(){
-  if(realDriverProfile || isAdminSession){ populateAdminDriverStatsSelectReal(); return; }
-  const el = document.getElementById('admin-driver-stats-row');
-  if(!el) return;
-  populateAdminDriverStatsSelect();
-  const sel = document.getElementById('admin-driver-stats-select');
-  const driverId = sel.value;
-  const store = driverDataStore[driverId] || {};
-  const completed = store.completed || [];
-  const open = store.bookings || [];
-  const completedOnly = completed.filter(b=>b.status==='completed');
-  const completedCount = completedOnly.length;
-  const cancelledByDriver = completed.filter(b=>b.status==='cancelled' && b.cancelReason==='driver').length;
-  const cancelledByCustomer = completed.filter(b=>b.status==='cancelled' && (b.cancelReason==='customer' || !b.cancelReason)).length;
-  const total = completed.length + open.length;
-  const revenue = completedOnly.reduce((sum,b)=>{
-    const listing = (store.listings||[]).find(l=>l.name===b.tour);
-    return sum + (listing ? parseIDR(listing.price) : 0);
-  }, 0);
-  const feeRevenue = completedOnly.reduce((sum,b)=>{
-    const listing = (store.listings||[]).find(l=>l.name===b.tour);
-    const feeStr = listing ? listing.fee : 'IDR 40,000';
-    return sum + parseIDR(feeStr);
-  }, 0);
-  el.innerHTML = `
-    <div class="stat-card"><div class="num">${completedCount}</div><div class="lbl">${t('admin_stat_driver_completed')}</div></div>
-    <div class="stat-card"><div class="num">${cancelledByDriver}</div><div class="lbl">${t('admin_stat_driver_cancelled_driver')}</div></div>
-    <div class="stat-card"><div class="num">${cancelledByCustomer}</div><div class="lbl">${t('admin_stat_driver_cancelled_customer')}</div></div>
-    <div class="stat-card"><div class="num">${total}</div><div class="lbl">${t('admin_stat_driver_total')}</div></div>
-    <div class="stat-card"><div class="num">${formatIDR(revenue)}</div><div class="lbl">${t('admin_stat_driver_revenue')}</div></div>
-    <div class="stat-card"><div class="num">${formatIDR(feeRevenue)}</div><div class="lbl">${t('admin_stat_driver_fee_revenue')}</div></div>
-  `;
+  // Alter Demo-Fallback entfernt (2.9.): gleicher Grund wie bei renderAdminStats() -- der
+  // Admin-Bereich ist nur mit echter Session erreichbar, der driverDataStore-Codepfad danach
+  // war seither nie erreichbar.
+  populateAdminDriverStatsSelectReal();
 }
 // echte Fahrer-Statistik: nutzt price_idr/fee_idr, die direkt an jeder Buchung gespeichert sind
 async function renderAdminDriverStatsReal(){
@@ -16357,22 +16303,12 @@ async function sendPageMessageThreadReply(){
 }
 
 async function openAdminComposeMsg(){
-  if(realDriverProfile || isAdminSession){
-    const { data: drv, error } = await supabaseClient.from('drivers').select('id, name, lw_number').order('name');
-    if(error) console.error('Fahrerliste konnte nicht geladen werden:', error);
-    const sel = document.getElementById('admin-compose-driver-select');
-    sel.innerHTML = (drv||[]).map(d=>`<option value="${d.id}">${escapeHtml(d.name)} (${d.lw_number||'—'})</option>`).join('');
-    document.getElementById('admin-compose-subject').value = '';
-    document.getElementById('admin-compose-body').value = '';
-    document.getElementById('admin-compose-error').textContent = '';
-    document.getElementById('admin-compose-modal-bg').classList.add('active');
-    return;
-  }
+  // Alter Demo-Fallback entfernt (2.9.): der Admin-Bereich ist nur mit echter Session erreichbar,
+  // der driverProfiles-Codepfad danach war seither nie erreichbar.
+  const { data: drv, error } = await supabaseClient.from('drivers').select('id, name, lw_number').order('name');
+  if(error) console.error('Fahrerliste konnte nicht geladen werden:', error);
   const sel = document.getElementById('admin-compose-driver-select');
-  sel.innerHTML = Object.keys(driverProfiles).map(id=>{
-    const p = driverProfiles[id];
-    return `<option value="${id}">${p.fullName || p.name} (${p.lwNumber || id})</option>`;
-  }).join('');
+  sel.innerHTML = (drv||[]).map(d=>`<option value="${d.id}">${escapeHtml(d.name)} (${d.lw_number||'—'})</option>`).join('');
   document.getElementById('admin-compose-subject').value = '';
   document.getElementById('admin-compose-body').value = '';
   document.getElementById('admin-compose-error').textContent = '';
@@ -16697,7 +16633,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v387</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v388</div>
 
 <!-- Etappe 4: Lade-Overlay waehrend "Buchung annehmen" im Hintergrund laeuft (kann bei VIP-Fahrern
      mit Auto-Einzug ein paar Sekunden dauern, da erst mit Xendit gesprochen wird, bevor die
