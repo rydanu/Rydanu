@@ -1515,6 +1515,11 @@
     .stat-row{ grid-template-columns:repeat(2,1fr); }
     .searchbar{ flex-direction:column; }
     .filter-toggle-btn{ border-left:none; border-top:1px solid rgba(242,236,216,0.15); }
+    /* Bugfix (4.9., Joerg gemeldet per Screenrecording): "Filter" und "Suchen" hingen auf dem Handy
+       direkt uebereinander, beide goldfarben -- sah aus wie ein einziger Button. Die .searchbar hat
+       ohnehin schon einen dunkelgruenen Hintergrund (--ink); ein kleiner Abstand nach oben beim
+       Suchen-Button laesst genau diesen Hintergrund als duennen gruenen Trennstrich durchscheinen. */
+    #search-submit-btn{ margin-top:3px; }
   }
 
   /* v214: iOS zoomt beim Antippen eines Formularfelds automatisch rein, sobald dessen Schriftgroesse
@@ -1815,13 +1820,13 @@
           <div class="search-suggest-list" id="search-suggest-list" style="display:none;"></div>
         </div>
         <button type="button" class="filter-toggle-btn" onclick="openFilters()"><span data-i18n="filters_btn">Filters</span> <span class="filter-count" id="filter-count" style="display:none;">0</span></button>
-        <button onclick="runSearch()" data-i18n="search_btn">Search</button>
+        <button id="search-submit-btn" onclick="runSearch()" data-i18n="search_btn">Search</button>
       </div>
       <button type="button" class="my-booking-btn" onclick="openMyBooking()">🎫 <span data-i18n="my_booking_link">Find my booking</span></button>
     </div>
   </section>
 
-  <div class="route-divider">
+  <div class="route-divider" id="results-top-anchor">
     <span id="result-count">6 drivers found</span>
     <button type="button" id="reset-filters-link" class="reset-filters-link" onclick="clearFiltersAndSearch()" style="display:none; margin-left:10px;" data-i18n="reset_filters_link">Reset filters</button>
   </div>
@@ -4286,7 +4291,13 @@
     </div>
     <div class="modal-body">
 
-      <div class="filter-group">
+      <!-- Insel-Umschalter im Filter entfernt (4.9., Joerg-Wunsch): Bali<->Lombok war hier ein zweiter,
+           unvollstaendiger Umschaltweg neben den echten Insel-Buttons oben ("Nach Lombok?" /
+           "Zurueck zu Bali") -- ueber den Filter-Chip fehlten z.B. der Lombok-Foto-Hero, die
+           Tagline-Anpassung und die Zonen-Kacheln. setSelectedIsland() selbst bleibt unveraendert
+           bestehen (wird weiterhin beim Laden von /lombok automatisch aufgerufen), nur diese UI ist
+           bewusst raus -- Insel-Wechsel laeuft jetzt ausschliesslich ueber die dedizierten Buttons. -->
+      <div class="filter-group" id="filter-island-group" style="display:none;">
         <div class="filter-group-title" data-i18n="filter_island_title">Island</div>
         <div class="chip-row" data-group="_island_noop" id="filter-island-row">
           <button type="button" class="chip chip-active" data-value="bali" onclick="setSelectedIsland('bali')">🌊 Bali</button>
@@ -11893,6 +11904,21 @@ function setResultOrder(mode){
   const t2 = document.getElementById('order-toggle-tours-2');
   if(d2) d2.classList.toggle('active', mode!=='tours');
   if(t2) t2.classList.toggle('active', mode==='tours');
+  scrollToResultsTop();
+}
+// Bugfix (4.9., Joerg gemeldet per Screenrecording): beim Umschalten "Fahrer zuerst"/"Touren zuerst"
+// blieb die Scroll-Position (in Pixeln) bisher unveraendert -- war man z.B. tief in der Touren-Liste
+// gescrollt, landete man nach dem Wechsel mitten in der neu einsortierten Fahrer-Liste statt am
+// Anfang der Ergebnisse. Fix: nach jedem Umschalten sanft zum Trefferzaehler ("X Fahrer/Touren
+// gefunden") hochscrollen. Die sticky Kopfzeile (.topbar) wird dabei per Hoehen-Berechnung
+// beruecksichtigt, sonst wuerde sie den Anfang der Ergebnisse verdecken.
+function scrollToResultsTop(){
+  const anchor = document.getElementById('results-top-anchor');
+  if(!anchor) return;
+  const topbar = document.querySelector('.topbar');
+  const topbarHeight = topbar ? topbar.getBoundingClientRect().height : 0;
+  const targetY = anchor.getBoundingClientRect().top + window.scrollY - topbarHeight - 12;
+  window.scrollTo({ top: Math.max(targetY, 0), behavior: 'smooth' });
 }
 // Kleiner, dezenter "Filter zuruecksetzen"-Link direkt bei der Trefferzahl (bisher nur ganz unten
 // im Filter-Popup versteckt) -- ruft dieselbe, bereits bestehende clearFilters()-Funktion auf.
@@ -16480,7 +16506,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v401</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v402</div>
 
 <!-- Etappe 4: Lade-Overlay waehrend "Buchung annehmen" im Hintergrund laeuft (kann bei VIP-Fahrern
      mit Auto-Einzug ein paar Sekunden dauern, da erst mit Xendit gesprochen wird, bevor die
