@@ -8209,8 +8209,10 @@ function deleteListingFromRow(i){
   const l = driverListings[i];
   if(!l) return;
   if(!confirm(t('el_delete_confirm').replace('{name}', l.name))) return;
-  const idx = drivers.findIndex(d => (d.ownerId===currentDriverId || (!d.ownerId && d.name===driverProfiles[currentDriverId] && driverProfiles[currentDriverId].fullName)) && d.tour===l.name);
-  if(idx !== -1) drivers.splice(idx, 1);
+  // Alter lokaler Aufraeum-Versuch entfernt (2.9.): currentDriverId ist seit der Demo-Modus-Aufraeumung
+  // permanent null, die alte Suche hat also nie etwas gefunden. loadRealPublicListings() unten laedt
+  // nach erfolgreichem DB-Loeschen ohnehin die komplette, frische Liste -- reine Verhaltens-neutrale
+  // Aufraeumung, kein Funktionsunterschied.
   const dbId = l.dbId;
   driverListings.splice(i, 1);
   renderListings();
@@ -8484,8 +8486,10 @@ function deleteListingConfirm(){
   const l = driverListings[editingListingIndex];
   if(!l) return;
   if(!confirm(t('el_delete_confirm').replace('{name}', l.name))) return;
-  const idx = drivers.findIndex(d => (d.ownerId===currentDriverId || (!d.ownerId && d.name===driverProfiles[currentDriverId].fullName)) && d.tour===l.name);
-  if(idx !== -1) drivers.splice(idx, 1);
+  // Alter lokaler Aufraeum-Versuch entfernt (2.9.): currentDriverId ist seit der Demo-Modus-Aufraeumung
+  // permanent null, die alte Suche hat also nie etwas gefunden. loadRealPublicListings() unten laedt
+  // nach erfolgreichem DB-Loeschen ohnehin die komplette, frische Liste -- reine Verhaltens-neutrale
+  // Aufraeumung, kein Funktionsunterschied.
   const dbId = l.dbId;
   driverListings.splice(editingListingIndex, 1);
   editingListingIndex = null;
@@ -16873,7 +16877,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v384</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v385</div>
 
 <!-- Etappe 4: Lade-Overlay waehrend "Buchung annehmen" im Hintergrund laeuft (kann bei VIP-Fahrern
      mit Auto-Einzug ein paar Sekunden dauern, da erst mit Xendit gesprochen wird, bevor die
