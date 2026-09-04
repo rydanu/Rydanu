@@ -119,7 +119,7 @@
     --shadow-card-hover: 0 2px 6px rgba(11,61,34,0.07), 0 14px 32px rgba(11,61,34,0.12);
     --shadow-btn: 0 1px 2px rgba(11,61,34,0.06), 0 3px 10px rgba(11,61,34,0.08);
   }
-  html{ color-scheme: light; background:#F7FAF4; }
+  html{ color-scheme: light; background:#F7FAF4; -webkit-text-size-adjust:100%; text-size-adjust:100%; }
   *{box-sizing:border-box; margin:0; padding:0;}
   body{
     background:var(--paper);
@@ -735,6 +735,13 @@
     .topbar-right{ flex-wrap:wrap; row-gap:10px; }
     .topbar-right-main{ margin-left:0; gap:10px; row-gap:8px; }
     .tabs{ flex-wrap:wrap; row-gap:6px; }
+    /* 4.9. (Joerg-Wunsch): Kopf-Logo (Pin+Schriftzug als ein Bild) + Slogan-Text auf dem Handy um
+       ca. 20% vergroessert -- Position bleibt unveraendert oben links, nur Groesse. 90px->108px
+       (exakt +20%), Tagline 0.8rem->0.96rem (ebenfalls +20%). Faellt zufaellig mit dem separaten
+       Desktop-Wert (108px, siehe unten im Desktop-Media-Query) zusammen -- reiner Zufall, beide
+       Regeln bleiben unabhaengig voneinander in ihren jeweiligen Media-Queries. */
+    .logo-word{ height:108px; }
+    .logo-tagline{ font-size:0.96rem; }
     /* 26.8.: etwas schmalere Buttons auf dem Handy, damit "Reise-Infos" + "Fragen" + "Nach Lombok?"
        (bzw. die EN/ID-Entsprechungen) in JEDER Sprache in einer Zeile bleiben und die Seite beim
        Sprachwechsel nicht mehr springt. Getestet bis runter auf 375px (iPhone SE) in DE/EN/ID.
@@ -16456,7 +16463,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v394</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v396</div>
 
 <!-- Etappe 4: Lade-Overlay waehrend "Buchung annehmen" im Hintergrund laeuft (kann bei VIP-Fahrern
      mit Auto-Einzug ein paar Sekunden dauern, da erst mit Xendit gesprochen wird, bevor die
