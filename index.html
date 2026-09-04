@@ -4452,9 +4452,6 @@ function detectIslandFromRegionValue(value){
 // Aktuelle Insel des eingeloggten Fahrers ermitteln (Standard: Bali)
 function currentDriverIsland(){
   if(typeof realDriverProfile !== 'undefined' && realDriverProfile && realDriverProfile.region) return realDriverProfile.region;
-  if(typeof currentDriverId !== 'undefined' && currentDriverId && typeof driverProfiles !== 'undefined' && driverProfiles[currentDriverId]){
-    return driverProfiles[currentDriverId].island || 'bali';
-  }
   return 'bali';
 }
 // ---- Spezialziele (Bauplan Kap. 5.2): freie Label+Preis-Zeilen, reine Info-Anzeige,
@@ -4617,18 +4614,8 @@ async function submitStandaloneReview(){
     await loadAndRenderRealDriverPage(dpDriverId, dpMode);
     return;
   }
-  const store = driverDataStore[dpDriverId];
-  if(!Array.isArray(store.reviews)) store.reviews = [];
-  store.reviews.unshift({
-    name, stars: '★'.repeat(srStarRating) + '☆'.repeat(5-srStarRating), starsNum: srStarRating,
-    text: text || '—', photo: srReviewPhoto, date: 'Jul 21, 2026'
-  });
-  syncDriverRating(dpDriverId);
-  renderDriverGrid(visibleDrivers());
-  if(dpDriverId === currentDriverId) renderOverviewStats();
-  saveState();
-  closeStandaloneReview();
-  renderDriverPage();
+  // Alter Demo-Fallback entfernt (2.9.): dpIsReal ist seit Entfernen des Demo-Fahrers "Wayan"
+  // immer true, dieser Codepfad war seither nie erreichbar.
 }
 
 // ---- driver's own Rydanu page (Instagram-style profile page) ----
@@ -4723,22 +4710,8 @@ async function submitTourRequest(){
     setTimeout(()=>{ closeTourRequest(); }, 1400);
     return;
   }
-  const store = driverDataStore[trRequestDriverId];
-  if(!store) return;
-  if(!Array.isArray(store.tourRequests)) store.tourRequests = [];
-  store.tourRequests.unshift({
-    ref, name, email, phone,
-    destination, dateWanted, pickup, guests, notes, highlights: trSelectedHighlights.slice(),
-    tripType: trSelectedTripType || null, pickupTime: pickupTimeVal,
-    status: 'pending', offeredTourName: null, date: 'Jul 21, 2026'
-  });
-  pushInboxMessage(trRequestDriverId, t('tr_inbox_title'), name + ' — ' + destination + (dateWanted ? ' (' + dateWanted + ')' : ''), {type:'tourRequest', ref});
-  if(trRequestDriverId === currentDriverId){ updateInboxDot(); renderTourRequests(); }
-  saveState();
-  document.getElementById('tr-confirm-ref').textContent = ref;
-  document.getElementById('tr-form-step').style.display = 'none';
-  document.getElementById('tr-confirm-step').style.display = 'block';
-  setTimeout(()=>{ closeTourRequest(); }, 1400);
+  // Alter Demo-Fallback entfernt (2.9.): isRealDriver ist seit Entfernen des Demo-Fahrers "Wayan"
+  // immer true (driverProfiles ist immer leer), dieser Codepfad war seither nie erreichbar.
 }
 document.getElementById('tour-request-modal-bg').addEventListener('click', e=>{ if(e.target.id==='tour-request-modal-bg') closeTourRequest(); });
 
@@ -5377,16 +5350,11 @@ function openDriverPage(driverId, mode){
   document.querySelectorAll('.modal-bg.active').forEach(m => m.classList.remove('active'));
   dpDriverId = driverId;
   dpMode = mode || 'visitor';
-  const p = driverProfiles[driverId];
   document.getElementById('driver-page').style.display = 'block';
   document.getElementById('driver-page').scrollTop = 0;
-  if(p){
-    dpIsReal = false;
-    if(!p.page) p.page = { about:'', media:[] };
-    renderDriverPage();
-    return;
-  }
-  // kein Demo-Profil mit dieser ID -> echte Fahrer-Seite aus Supabase laden (Baustein 10)
+  // Alter Demo-Profil-Zweig entfernt (2.9.): driverProfiles ist seit Entfernen des Demo-Fahrers
+  // "Wayan" immer leer, es gab hier also nie ein Profil zu finden -- echte Fahrer-Seite aus
+  // Supabase laden ist seither der einzige erreichbare Weg (Baustein 10).
   dpIsReal = true;
   // Bugfix (23.8., Joerg gemeldet: "Bild laedt erst von leer auf Bild"): die Seite wird hier schon
   // SOFORT sichtbar (Zeile oben), aber die echten Fahrerdaten (inkl. Bild-URL) kommen erst danach per
@@ -5432,90 +5400,6 @@ function openMyPageOwner(){
   if(realDriverProfile) openDriverPage(realDriverProfile.id, 'owner');
 }
 function closeDriverPage(){ document.getElementById('driver-page').style.display = 'none'; }
-function renderDriverPage(){
-  const p = driverProfiles[dpDriverId];
-  const store = driverDataStore[dpDriverId] || {};
-  const isOwner = dpMode === 'owner';
-  const avatar = document.getElementById('dp-avatar');
-  if(p.photo){ setAvatarWithSkeleton(avatar, p.photo, initials(p.fullName)); }
-  else { avatar.classList.remove('img-skeleton'); avatar.style.backgroundImage='none'; avatar.textContent = initials(p.fullName); }
-  document.getElementById('dp-name').textContent = p.fullName;
-  document.getElementById('dp-meta').textContent = '🚩 ' + (p.region || '—') + ' · ' + (p.langs || []).join(', ');
-  const dpLwEl = document.getElementById('dp-lw');
-  dpLwEl.textContent = p.lwNumber || '';
-  dpLwEl.dataset.rawNumber = p.lwNumber || '';
-  document.getElementById('dp-rank').innerHTML = driverRankBadgeHTML(dpDriverId);
-  const aboutText = document.getElementById('dp-about-text');
-  const about = (p.page && p.page.about) || '';
-  aboutText.textContent = about || (isOwner ? t('dp_about_empty_owner') : t('dp_about_empty'));
-  aboutText.style.display = 'block';
-  document.getElementById('dp-about-pencil').style.display = isOwner ? 'inline-block' : 'none';
-  document.getElementById('dp-about-edit').style.display = 'none';
-  document.getElementById('dp-about-input').value = about;
-  document.getElementById('dp-upload-row').style.display = isOwner ? 'block' : 'none';
-  const gallery = document.getElementById('dp-gallery');
-  const media = (p.page && p.page.media) || [];
-  if(media.length === 0){
-    gallery.innerHTML = `<div class="empty-state" style="grid-column:1/-1;">${isOwner ? t('dp_gallery_empty_owner') : t('dp_gallery_empty')}</div>`;
-  } else {
-    gallery.innerHTML = media.map((m,i)=>`
-      <div class="dp-media-cell">
-        <div class="dp-media-item img-skeleton" ${m.type==='video' ? `onclick="openVideoLightbox(${i})" style="cursor:pointer;"` : ''}>
-          ${m.type==='video'
-            ? (m.thumbnail
-                ? `<img src="${m.thumbnail}" alt="${(m.caption||'').replace(/"/g,'&quot;')}" onload="this.parentElement.classList.remove('img-skeleton')" onerror="this.parentElement.classList.remove('img-skeleton')"><span class="dp-play-badge">▶</span>`
-                : `<div class="dp-video-noThumb"><span class="dp-play-badge">▶</span></div>`)
-            : `<img src="${m.dataUrl}" alt="${(m.caption||'').replace(/"/g,'&quot;')}" onload="this.parentElement.classList.remove('img-skeleton')" onerror="this.parentElement.classList.remove('img-skeleton')">`}
-          ${isOwner ? `<button type="button" class="dp-media-del" onclick="event.stopPropagation(); deletePageMedia(${i})">✕</button>` : ''}
-        </div>
-        ${isOwner
-          ? `<input type="text" class="dp-caption-input" value="${(m.caption||'').replace(/"/g,'&quot;')}" data-i18n-placeholder="dp_caption_ph" placeholder="e.g. Waterfall" onchange="updateMediaCaption(${i}, this.value)">`
-          : (m.caption ? `<div class="dp-caption-label">${m.caption}</div>` : '')
-        }
-      </div>
-    `).join('');
-  }
-  const tours = (store.listings || []).filter(l=>l.active);
-  document.getElementById('dp-tours').innerHTML = tours.length
-    ? tours.map(l=>{
-        const pub = drivers.find(d => d.ownerId===dpDriverId && d.tour===l.name);
-        const clickable = !isOwner && pub;
-        return `
-        <div class="dp-tour-row" ${clickable ? `style="cursor:pointer;" onclick="bookTourFromPage('${l.name.replace(/'/g,"\\'")}')"` : ''}>
-          <div><div class="tname">${l.name}</div><div class="tmeta">${priceBlockHTML(l.price)} · ${spotLabel(l.duration)}</div></div>
-          ${l.featured ? '<span class="mailbox-replied-tag">⭐</span>' : ''}
-          ${clickable ? '<span class="dp-tour-arrow">›</span>' : ''}
-        </div>
-      `;}).join('')
-    : `<div class="empty-state">${t('dp_tours_empty')}</div>`;
-  const revs = store.reviews || [];
-  const summaryEl = document.getElementById('dp-reviews-summary');
-  if(revs.length){
-    const rated = revs.filter(r=>r.starsNum);
-    const avg = rated.length ? (rated.reduce((sum,r)=>sum+r.starsNum,0) / rated.length) : null;
-    const avgRounded = avg ? Math.round(avg) : 5;
-    const starsHTML = '★'.repeat(avgRounded) + '☆'.repeat(5-avgRounded);
-    summaryEl.innerHTML = `<span class="dp-reviews-avg-stars">${starsHTML}</span> <span class="dp-reviews-avg-num">${avg ? avg.toFixed(1) : '5.0'}</span> <span class="dp-reviews-avg-count">(${revs.length} ${revs.length===1 ? t('dp_review_singular') : t('dp_review_plural')})</span>`;
-  } else {
-    summaryEl.innerHTML = '';
-  }
-  document.getElementById('dp-reviews').innerHTML = revs.length
-    ? revs.map((r,i)=>`
-        <div class="dp-review${i>=5 ? ' dp-review-hidden' : ''}">
-          <div class="r-head"><span class="r-name">${r.name}</span><span class="r-stars">${r.stars}</span></div>
-          <div class="r-text">${r.text}</div>
-          ${r.photo ? `<img src="${r.photo}" alt="Bewertungsfoto" style="max-width:130px; border-radius:8px; margin-top:8px;">` : ''}
-        </div>
-      `).join('') + (revs.length>5 ? `<button type="button" class="dp-reviews-more-btn" onclick="expandReviewsList('dp-reviews')">${t('dp_reviews_more')}</button>` : '')
-    : `<div class="empty-state">${t('dp_reviews_empty')}</div>`;
-  document.getElementById('dp-message-section').style.display = isOwner ? 'none' : 'block';
-  document.getElementById('dp-leave-review-btn').style.display = isOwner ? 'none' : 'block';
-  document.getElementById('dp-request-tour-btn').style.display = isOwner ? 'none' : 'block';
-  document.getElementById('dp-msg-status').textContent = '';
-  document.getElementById('dp-msg-name').value = '';
-  document.getElementById('dp-msg-email').value = '';
-  document.getElementById('dp-msg-text').value = '';
-}
 // echte "My Page" rendern (Baustein 10) — nutzt dieselben dp-* Elemente wie die Demo-Seite,
 // aber Fotos/Galerie-Upload und die Demo-only Kontakt-/Bewertungsformulare kommen erst spaeter
 // Bild vorab laden (Preload), bevor es als CSS-Hintergrund gesetzt wird -- verhindert das ploetzliche
@@ -5813,12 +5697,9 @@ function toggleAboutEdit(show){
   if(show) document.getElementById('dp-about-input').focus();
 }
 function savePageAbout(){
-  if(dpIsReal){ saveRealPageAbout(); return; }
-  const p = driverProfiles[dpDriverId];
-  if(!p.page) p.page = { about:'', media:[] };
-  p.page.about = document.getElementById('dp-about-input').value.trim();
-  saveState();
-  renderDriverPage();
+  // dpIsReal ist seit Entfernen des Demo-Fahrers "Wayan" immer true -- der alte Demo-Fallback
+  // danach (driverProfiles-Zugriff) war seither nie erreichbar, entfernt (2.9.).
+  saveRealPageAbout();
 }
 // echten "Über mich"-Text speichern (Baustein 10)
 async function saveRealPageAbout(){
@@ -5830,133 +5711,28 @@ async function saveRealPageAbout(){
   renderRealDriverPage(dpMode === 'owner');
 }
 function handlePageMediaUpload(event){
-  if(dpIsReal){ handleRealPageMediaUpload(event); return; }
-  const file = event.target.files[0];
-  if(!file) return;
-  const p = driverProfiles[dpDriverId];
-  if(!p.page) p.page = { about:'', media:[] };
-  const isVideo = file.type.startsWith('video/');
-  const isPhoto = file.type.startsWith('image/');
-  if(!isVideo && !isPhoto){
-    alert(t('dp_unsupported_file'));
-    event.target.value = '';
-    return;
-  }
-  if(isPhoto){
-    const photoCount = p.page.media.filter(m=>m.type==='photo').length;
-    if(photoCount >= 20){
-      alert(t('dp_photo_limit'));
-      event.target.value = '';
-      return;
-    }
-    const img = new Image();
-    const reader = new FileReader();
-    reader.onload = e=>{
-      img.onload = ()=>{
-        const maxDim = 480;
-        const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
-        const canvas = document.createElement('canvas');
-        canvas.width = img.width * scale;
-        canvas.height = img.height * scale;
-        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-        p.page.media.unshift({type:'photo', dataUrl: canvas.toDataURL('image/jpeg', 0.6), caption:''});
-        saveState();
-        renderDriverPage();
-      };
-      img.src = e.target.result;
-    };
-    reader.readAsDataURL(file);
-  } else {
-    const videoCount = p.page.media.filter(m=>m.type==='video').length;
-    if(videoCount >= 5){
-      alert(t('dp_video_limit'));
-      event.target.value = '';
-      return;
-    }
-    // check duration before accepting — keeps exported data manageable on a phone
-    const url = URL.createObjectURL(file);
-    const probe = document.createElement('video');
-    probe.preload = 'metadata';
-    probe.muted = true;
-    probe.playsInline = true;
-    probe.onloadedmetadata = ()=>{
-      if(probe.duration > 31){
-        URL.revokeObjectURL(url);
-        alert(t('dp_video_too_long'));
-        event.target.value = '';
-        return;
-      }
-      if(file.size > 6 * 1024 * 1024){
-        URL.revokeObjectURL(url);
-        alert(t('dp_video_too_big'));
-        event.target.value = '';
-        return;
-      }
-      // capture a real frame as the thumbnail, shown instead of an inline video player
-      probe.currentTime = Math.min(0.3, probe.duration / 2);
-      probe.onseeked = ()=>{
-        let thumbnail = null;
-        try{
-          const canvas = document.createElement('canvas');
-          const maxDim = 480;
-          const scale = Math.min(1, maxDim / Math.max(probe.videoWidth, probe.videoHeight));
-          canvas.width = probe.videoWidth * scale;
-          canvas.height = probe.videoHeight * scale;
-          canvas.getContext('2d').drawImage(probe, 0, 0, canvas.width, canvas.height);
-          thumbnail = canvas.toDataURL('image/jpeg', 0.6);
-        }catch(e){ /* thumbnail capture can fail silently — falls back to a play icon only */ }
-        URL.revokeObjectURL(url);
-        const reader = new FileReader();
-        reader.onload = e=>{
-          p.page.media.unshift({type:'video', dataUrl: e.target.result, thumbnail, caption:''});
-          saveState();
-          renderDriverPage();
-        };
-        reader.readAsDataURL(file);
-      };
-    };
-    probe.onerror = ()=>{
-      URL.revokeObjectURL(url);
-      alert(t('dp_video_unreadable'));
-      event.target.value = '';
-    };
-    probe.src = url;
-  }
-  event.target.value = '';
+  // dpIsReal ist seit Entfernen des Demo-Fahrers "Wayan" immer true -- der komplette alte
+  // Demo-Fallback danach (Foto- + Video-Verarbeitung ueber driverProfiles) war seither nie
+  // erreichbar, entfernt (2.9.). Echter Upload laeuft komplett ueber handleRealPageMediaUpload.
+  handleRealPageMediaUpload(event);
 }
 function bookTourFromPage(tourName){
   const pub = drivers.find(d => d.ownerId===dpDriverId && d.tour===tourName);
   if(!pub) return;
   openModal(pub);
 }
-function openVideoLightbox(i){
-  const p = driverProfiles[dpDriverId];
-  const m = p.page && p.page.media[i];
-  if(!m || m.type!=='video') return;
-  const player = document.getElementById('dp-video-lightbox-player');
-  player.src = m.dataUrl;
-  document.getElementById('dp-video-lightbox').style.display = 'flex';
-}
+// openVideoLightbox() entfernt (2.9.): unerreichbar seit Entfernen des Demo-Fahrers "Wayan" --
+// die echte Fahrerseite ruft stattdessen openRealVideoLightbox() auf. closeVideoLightbox()
+// bleibt bestehen, wird von beiden Pfaden gemeinsam genutzt (schliesst dasselbe Lightbox-Fenster).
 function closeVideoLightbox(){
   const player = document.getElementById('dp-video-lightbox-player');
   player.pause();
   player.src = '';
   document.getElementById('dp-video-lightbox').style.display = 'none';
 }
-function updateMediaCaption(i, value){
-  const p = driverProfiles[dpDriverId];
-  if(!p.page || !p.page.media[i]) return;
-  p.page.media[i].caption = value.trim();
-  saveState();
-}
-function deletePageMedia(i){
-  const p = driverProfiles[dpDriverId];
-  if(!p.page || !p.page.media[i]) return;
-  if(!confirm(t('dp_media_del_confirm'))) return;
-  p.page.media.splice(i,1);
-  saveState();
-  renderDriverPage();
-}
+// updateMediaCaption() und deletePageMedia() entfernt (2.9.): unerreichbar seit Entfernen des
+// Demo-Fahrers "Wayan" -- die echte Fahrerseite ruft stattdessen updateRealMediaCaption() bzw.
+// deleteRealPageMedia() auf.
 async function sendPageMessage(){
   const name = document.getElementById('dp-msg-name').value.trim();
   const email = document.getElementById('dp-msg-email').value.trim();
@@ -16877,7 +16653,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v385</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v386</div>
 
 <!-- Etappe 4: Lade-Overlay waehrend "Buchung annehmen" im Hintergrund laeuft (kann bei VIP-Fahrern
      mit Auto-Einzug ein paar Sekunden dauern, da erst mit Xendit gesprochen wird, bevor die
