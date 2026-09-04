@@ -3643,7 +3643,7 @@
         <p class="note" id="mbr-note"></p>
         <div id="mbr-offer-box" style="display:none;">
           <div class="row"><span class="k" data-i18n="tr_offered_tour_label">Offered tour</span><span class="v" id="mbr-offer-name"></span></div>
-          <button class="book-btn" onclick="bookOfferedRequestTour()" data-i18n="tr_view_book_btn">View &amp; book this tour</button>
+          <button class="book-btn" data-i18n="tr_view_book_btn">View &amp; book this tour</button>
         </div>
       </div>
       <div id="mb-detail-step" style="display:none;">
@@ -5822,19 +5822,8 @@ function openMyBooking(){
   document.getElementById('my-booking-modal-bg').classList.add('active');
 }
 function closeMyBooking(){ document.getElementById('my-booking-modal-bg').classList.remove('active'); }
-function findBookingByRef(ref, phone){
-  let found = null;
-  Object.keys(driverDataStore).forEach(driverId=>{
-    ['bookings','completed'].forEach(source=>{
-      (driverDataStore[driverId][source]||[]).forEach((b,index)=>{
-        if(b.ref && b.ref.toUpperCase()===ref){
-          found = {driverId, source, index};
-        }
-      });
-    });
-  });
-  return found;
-}
+// findBookingByRef() entfernt (2.9.): driverDataStore ist immer leer, fand hier also nie etwas.
+// Einziger verbliebener Aufrufer war openMyBookingByRef() (ebenfalls entfernt, siehe unten).
 async function findMyBooking(){
   const ref = document.getElementById('mb-ref').value.trim().toUpperCase();
   const phone = normalizePhone(document.getElementById('mb-phone').value);
@@ -5842,11 +5831,8 @@ async function findMyBooking(){
     document.getElementById('mb-error').textContent = t('mb_err_ref');
     return;
   }
-  const found = findBookingByRef(ref, phone);
-  if(found){
-    showMyBooking(found.driverId, found.source, found.index);
-    return;
-  }
+  // Alter Demo-Suchversuch entfernt (2.9.): driverDataStore ist immer leer, findBookingByRef()
+  // fand hier also nie etwas -- ging ohnehin immer direkt zur echten Datenbank-Suche unten durch.
   // echte Buchung? sichere Datenbank-Funktion fragen (nur mit passender Ref + Telefonnummer)
   if(ref.length >= 8 && phone.length >= 4){
     const { data: realRows, error: realErr } = await supabaseClient.rpc('get_booking_by_ref', { p_ref: ref, p_phone: phone });
@@ -5865,19 +5851,11 @@ async function findMyBooking(){
       return;
     }
   }
-  let foundReq = null;
-  Object.keys(driverDataStore).forEach(driverId=>{
-    (driverDataStore[driverId].tourRequests||[]).forEach((r,index)=>{
-      if(r.ref && r.ref.toUpperCase()===ref){
-        foundReq = {driverId, index};
-      }
-    });
-  });
-  if(!foundReq){
-    document.getElementById('mb-error').textContent = t('mb_err_notfound');
-    return;
-  }
-  showMyTourRequest(foundReq.driverId, foundReq.index);
+  // Alter Demo-Suchversuch entfernt (2.9.): driverDataStore ist immer leer, dieser zweite
+  // Suchversuch (individuelle Touranfrage) fand hier also ebenfalls nie etwas -- landete immer
+  // direkt bei der "nicht gefunden"-Meldung unten. showMyTourRequest() (Demo-Anzeige) dadurch
+  // ebenfalls unerreichbar geworden, entfernt.
+  document.getElementById('mb-error').textContent = t('mb_err_notfound');
 }
 function showMyTourRequestReal(r){
   document.getElementById('mb-find-step').style.display = 'none';
@@ -5910,48 +5888,11 @@ function showMyTourRequestReal(r){
     }
   }
 }
-let mbrFound = null;
-function showMyTourRequest(driverId, index){
-  const r = driverDataStore[driverId].tourRequests[index];
-  if(!r) return;
-  mbrFound = {driverId, index};
-  document.getElementById('mb-find-step').style.display = 'none';
-  document.getElementById('mb-detail-step').style.display = 'none';
-  document.getElementById('mb-request-step').style.display = 'block';
-  document.getElementById('mbr-destination').textContent = r.destination;
-  document.getElementById('mbr-date').textContent = r.dateWanted || '—';
-  document.getElementById('mbr-ref').textContent = r.ref;
-  const offered = r.status === 'offered';
-  const declined = r.status === 'declined';
-  const statusEl = document.getElementById('mbr-status');
-  if(declined){
-    statusEl.textContent = t('tr_status_declined');
-    statusEl.className = 'status-pill cancel_requested';
-  } else {
-    statusEl.textContent = offered ? t('tr_status_offered') : t('tr_status_pending');
-    statusEl.className = 'status-pill ' + (offered ? 'confirmed' : 'pending');
-  }
-  document.getElementById('mbr-note').textContent = declined ? t('tr_note_declined') : (offered ? t('tr_note_offered') : t('tr_note_pending'));
-  document.getElementById('mbr-offer-box').style.display = offered ? 'block' : 'none';
-  if(offered) document.getElementById('mbr-offer-name').textContent = r.offeredTourName;
-}
-function bookOfferedRequestTour(){
-  if(!mbrFound) return;
-  const r = driverDataStore[mbrFound.driverId].tourRequests[mbrFound.index];
-  const pub = drivers.find(d => d.ownerId===mbrFound.driverId && d.tour===r.offeredTourName);
-  if(!pub) return;
-  closeMyBooking();
-  openModal(pub);
-}
-function openMyBookingByRef(ref){
-  // simulated magic link from email/WhatsApp
-  const found = findBookingByRef(ref, '');
-  closeModal();
-  if(!found){ alert(t('mb_err_notfound')); return; }
-  document.getElementById('mb-find-step').style.display = 'none';
-  document.getElementById('my-booking-modal-bg').classList.add('active');
-  showMyBooking(found.driverId, found.source, found.index);
-}
+// showMyTourRequest(), bookOfferedRequestTour(), openMyBookingByRef() und die Variable mbrFound
+// entfernt (2.9.): alle drei Funktionen waren nur ueber driverDataStore/findBookingByRef
+// erreichbar, die immer leer sind bzw. nie etwas fanden -- kompletter toter Zweig. Der "View &
+// book this tour"-Knopf im mbr-offer-box bekommt sein onclick jetzt ausschliesslich von
+// showMyTourRequestReal() zugewiesen (echter Weg, war schon immer so aktiv).
 // zeigt eine ECHTE Buchung (aus Supabase, via get_booking_by_ref) im selben Fenster an
 function showMyBookingReal(row, phone){
   mbFound = { isReal:true, id: row.id, driverId: row.driver_id, phone: phone || '' };
@@ -6008,74 +5949,6 @@ function showMyBookingReal(row, phone){
     document.getElementById('mb-review-error').textContent = '';
     if(photoRow) photoRow.style.display = 'none'; // Fotos bei echten Bewertungen noch nicht unterstuetzt
   } else if(row.already_reviewed){
-    reviewSection.style.display = 'none';
-    reviewDone.style.display = 'block';
-  } else {
-    reviewSection.style.display = 'none';
-    reviewDone.style.display = 'none';
-  }
-}
-function showMyBooking(driverId, source, index){
-  const b = driverDataStore[driverId][source][index];
-  if(!b) return;
-  mbFound = {driverId, source, index};
-  const prof = driverProfiles[driverId];
-  document.getElementById('mb-find-step').style.display = 'none';
-  document.getElementById('mb-request-step').style.display = 'none';
-  document.getElementById('mb-detail-step').style.display = 'block';
-  document.getElementById('mb-tour').textContent = b.tour;
-  document.getElementById('mb-driver').textContent = prof ? prof.fullName : '—';
-  document.getElementById('mb-when').textContent = b.when;
-  const optional = [
-    ['mb-row-pickup','mb-pickup', b.pickup],
-    ['mb-row-vehicle','mb-vehicle', b.vehicle],
-    ['mb-row-balance','mb-balance', b.balance],
-  ];
-  optional.forEach(([rowId, valId, val])=>{
-    const row = document.getElementById(rowId);
-    if(val){ document.getElementById(valId).textContent = val; row.style.display='flex'; }
-    else { row.style.display='none'; }
-  });
-  document.getElementById('mb-refshow').textContent = b.ref || '—';
-  const confirmed = b.status==='confirmed';
-  const completedTrip = b.status==='completed';
-  const cancelled = b.status==='cancelled';
-  const cancelRequested = b.status==='cancel_requested';
-  const statusEl = document.getElementById('mb-status');
-  if(cancelRequested){
-    statusEl.textContent = t('mb_status_cancel_requested');
-    statusEl.className = 'status-pill cancel_requested';
-  } else if(cancelled){
-    statusEl.textContent = t('st_cancelled');
-    statusEl.className = 'status-pill cancelled';
-  } else if(completedTrip){
-    statusEl.textContent = t('st_completed');
-    statusEl.className = 'status-pill confirmed';
-  } else {
-    statusEl.textContent = confirmed ? t('st_confirmed') : t('st_awaiting');
-    statusEl.className = 'status-pill ' + (confirmed ? 'confirmed' : 'pending');
-  }
-  document.getElementById('mb-status-note').textContent = cancelRequested ? t('mb_note_cancel_requested')
-    : cancelled ? t('mb_note_cancelled')
-    : completedTrip ? t('mb_note_completed')
-    : confirmed ? t('mb_note_confirmed') : t('mb_note_pending');
-  // only an upcoming (still-open) booking can be cancelled by the traveler
-  const cancelBtn = document.getElementById('mb-cancel-btn');
-  if(cancelBtn) cancelBtn.style.display = (source==='bookings' && !cancelRequested) ? 'block' : 'none';
-  const reviewSection = document.getElementById('mb-review-section');
-  const reviewDone = document.getElementById('mb-review-done');
-  if((confirmed || completedTrip) && !b.reviewed){
-    reviewSection.style.display = 'block';
-    reviewDone.style.display = 'none';
-    mbStarRating = 0;
-    updateStarPicker();
-    document.getElementById('mb-review-text').value = '';
-    document.getElementById('mb-review-error').textContent = '';
-    document.getElementById('mb-review-photo-preview').style.display = 'none';
-    mbReviewPhoto = null;
-    const photoRow = document.getElementById('mb-review-photo-row');
-    if(photoRow) photoRow.style.display = 'block';
-  } else if(b.reviewed){
     reviewSection.style.display = 'none';
     reviewDone.style.display = 'block';
   } else {
@@ -7288,15 +7161,9 @@ function confirmFinalCancel(){
 }
 function closeCancelReasonModal(){ pendingCancelIndex = null; pendingCancelReason = null; document.getElementById('cancel-reason-modal-bg').classList.remove('active'); }
 document.getElementById('cancel-reason-modal-bg').addEventListener('click', e=>{ if(e.target.id==='cancel-reason-modal-bg') closeCancelReasonModal(); });
-// moves a booking out of the "open" list into "completed", tagging its final status
-function moveBookingToCompleted(driverId, index, finalStatus, cancelReason){
-  const store = driverDataStore[driverId];
-  const b = store.bookings[index];
-  if(!b) return;
-  store.bookings.splice(index, 1);
-  if(!Array.isArray(store.completed)) store.completed = [];
-  store.completed.unshift({...b, status: finalStatus, cancelReason: cancelReason || null});
-}
+// moveBookingToCompleted() entfernt (2.9.): keine einzige Aufrufstelle mehr im Code -- der echte
+// Weg (Buchung stornieren/abschliessen) laeuft komplett ueber Supabase-Updates, nicht ueber
+// driverDataStore.
 // Bugfix (22.8., Joerg-Test): fuer ECHTE Fahrer (Supabase) hing das Dashboard nach einer Aktion
 // (annehmen/stornieren/abschliessen) sichtbar fest -- Buttons/Status blieben auf altem Stand, bis
 // man einmal die Ansicht wechselte und zurueckkam. Ursache: die realen Aktionsfunktionen haben bisher
@@ -11595,7 +11462,7 @@ function renderDriverGrid(rawList){
           <div class="price">${priceBlockHTML(cardPrice)}<br><span>${spotLabel(d.duration)}</span>${d.vehicleType ? `<br><span class="vtype-tag">${vtypeLabel(d.vehicleType)}</span>` : ''}</div>
           <div class="lang-tags">${d.lang.map(l=>`<span>${l}</span>`).join('')}</div>
         </div>
-        ${d.ownerId && driverProfiles[d.ownerId] ? `<button type="button" class="edit-profile-link" style="margin-top:auto; padding-top:8px;" onclick="event.stopPropagation(); openTourRequest('${d.ownerId}')">✨ ${t('tr_open_btn')}</button>` : ''}
+        <!-- Alter Demo-Bearbeiten-Link entfernt (2.9.): driverProfiles ist immer leer, Bedingung war nie wahr -->
       </div>
     `;
     grid.appendChild(card);
@@ -11666,11 +11533,10 @@ function viewTourOnMap(e, i){
   openMapModal('tour', lastGridList[i]);
 }
 function visibleDrivers(){
-  return drivers.filter(d => {
-    if(d.active === false) return false;
-    if(d.ownerId && driverProfiles[d.ownerId] && driverProfiles[d.ownerId].status === 'blocked') return false;
-    return true;
-  });
+  // Alter Demo-Blocked-Check entfernt (2.9.): driverProfiles ist immer leer, Bedingung war nie
+  // wahr. Echte gesperrte Fahrer werden bereits in loadRealPublicListings() rausgefiltert
+  // (.eq('is_locked', false)).
+  return drivers.filter(d => d.active !== false);
 }
 // ---- filter popup ----
 let selectedFilters = { regions:[], languages:[], services:[], spots:[], airportDest:[], trust:[], vtype:[], transferDest:[] };
@@ -12097,21 +11963,10 @@ function trustBadgesHTML(d){
 // Nachbesserung (3. August): Drohnen-/Fotoservice-Icons auf der Suchkarte selbst wurden
 // bewusst wieder entfernt (Jörg-Wunsch) — bleiben aber im Tour-Detail nach dem Klick sichtbar
 // (siehe service-btn weiter unten in der Tour-Detailanzeige, unverändert).
-// Keeps the customer-facing rating/tour-count in sync with what actually happened —
-// without this, completed trips and reviews never show up on the driver's public card.
-function syncDriverRating(driverId){
-  if(!driverId || !driverId.startsWith('d_')) return; // never touch the curated seed/demo driver
-  const store = driverDataStore[driverId];
-  if(!store || !Array.isArray(drivers)) return;
-  const completedCount = (store.completed||[]).filter(b=>b.status==='completed').length;
-  const revs = store.reviews||[];
-  const rated = revs.filter(r=>r.starsNum);
-  const avg = rated.length ? (rated.reduce((s,r)=>s+r.starsNum,0)/rated.length) : null;
-  const tourWord = completedCount===1 ? t('lbl_tour_singular') : t('lbl_tour_plural');
-  const ratingStr = (avg ? avg.toFixed(1) : t('lbl_rating_new')) + ' · ' + completedCount + ' ' + tourWord;
-  drivers.filter(d=>d.ownerId===driverId).forEach(d=>{ d.rating = ratingStr; });
-  store.stats.rating = avg ? avg.toFixed(1) : 'New';
-}
+// syncDriverRating() entfernt (2.9.): keine Aufrufstelle mehr (letzter Aufrufer war der bereits
+// entfernte Demo-Fallback in submitStandaloneReview). War fuer echte Fahrer ohnehin immer ein
+// No-Op, da echte Supabase-IDs (UUIDs) nie mit "d_" beginnen -- echte Bewertungen/Ratings laufen
+// komplett ueber get_driver_public_stats() (siehe loadRealPublicListings).
 function vehicleDisplayString(v){
   if(!v) return 'To be confirmed';
   const type = v.vtype || 'Standard Car';
@@ -12133,7 +11988,8 @@ function waCallLink(phone){ return 'https://wa.me/' + String(phone||'').replace(
 // internationale Touristen, darum jetzt fest auf Englisch, unabhaengig davon welche Sprache der
 // Fahrer gerade in seiner eigenen App eingestellt hat.
 function buildDriverBookingWaText(b){
-  const driverName = realDriverProfile ? (realDriverProfile.name || '') : ((driverProfiles[currentDriverId] && driverProfiles[currentDriverId].name) || '');
+  // Alter Demo-Fallback entfernt (2.9.): driverProfiles ist immer leer.
+  const driverName = realDriverProfile ? (realDriverProfile.name || '') : '';
   const whenPart = [b.when, b.pickupTime].filter(Boolean).join(', ');
   const pickupSentence = b.pickup ? ` Pickup: ${b.pickup}.` : '';
   return `Hi ${b.who}! This is ${driverName}, your driver for "${b.tour}" on ${whenPart}.${pickupSentence} Feel free to message me if you have any questions before then!`;
@@ -12766,14 +12622,7 @@ function reviewStarsCount(r){
   if(typeof r.starsNum === 'number') return r.starsNum;
   return (String(r.stars||'').match(/★/g) || []).length;
 }
-function driverMonthsActive(driverId){
-  const p = driverProfiles[driverId];
-  if(!p || !p.joinedDate) return 0;
-  const joined = new Date(p.joinedDate);
-  const now = new Date();
-  let months = (now.getFullYear()-joined.getFullYear())*12 + (now.getMonth()-joined.getMonth());
-  return Math.max(0, months);
-}
+// driverMonthsActive() entfernt (2.9.): keine Aufrufstelle mehr im Code.
 function getDriverRank(points){
   return DRIVER_RANKS.find(r => points >= r.min) || DRIVER_RANKS[DRIVER_RANKS.length-1];
 }
@@ -12785,9 +12634,9 @@ function driverRankBadgeHTML(driverId, size){
   }
   return '';
 }
-// Rang-Badge fuer eine Fahrerkarte in der Suche — funktioniert sowohl fuer Demo- als auch fuer echte Fahrer (Baustein 10)
+// Rang-Badge fuer eine Fahrerkarte in der Suche (Baustein 10)
 function ownerRankBadgeHTML(d, size){
-  if(d.ownerId && driverProfiles[d.ownerId]) return driverRankBadgeHTML(d.ownerId, size);
+  // Alter Demo-Zweig entfernt (2.9.): driverProfiles ist immer leer, Bedingung war nie wahr.
   if(d.isReal && typeof d.rankPoints === 'number'){
     const rank = getDriverRank(d.rankPoints);
     const cls = size === 'sm' ? 'rank-badge rank-badge-sm' : 'rank-badge';
@@ -13251,7 +13100,8 @@ function openModal(d){
     svcRow.style.display = 'none';
   }
   const pageLink = document.getElementById('modal-page-link');
-  if(pageLink) pageLink.style.display = (d.ownerId && (driverProfiles[d.ownerId] || d.isReal)) ? 'inline-block' : 'none';
+  // Alter Demo-Teil entfernt (2.9.): driverProfiles ist immer leer, d.isReal traegt die echte Logik.
+  if(pageLink) pageLink.style.display = (d.ownerId && d.isReal) ? 'inline-block' : 'none';
   const reqTourBtn = document.getElementById('modal-request-tour-btn');
   if(reqTourBtn) reqTourBtn.style.display = d.ownerId ? 'block' : 'none';
   const startRegions = regionDisplayLabel(d);
@@ -13498,9 +13348,10 @@ function confirmPayment(){
   } else {
     destRow.style.display = 'none';
   }
-  const ownerProfile = currentDriver.ownerId ? driverProfiles[currentDriver.ownerId] : null;
-  const v = ownerProfile && ownerProfile.vehicle ? ownerProfile.vehicle : null;
-  const vehicleStr = v ? `${v.vtype || 'Standard Car'}${v.car ? ' — ' + v.car : ''} · ${v.color} · Plate: ${v.plate}` : (currentDriver.vehicle || 'To be confirmed');
+  // Alter Demo-Fallback entfernt (2.9.): driverProfiles ist immer leer, ownerProfile war daher
+  // immer null -- echte Fahrer haben ihr Fahrzeug schon direkt in currentDriver.vehicle (siehe
+  // loadRealPublicListings/vehicleDisplayString).
+  const vehicleStr = currentDriver.vehicle || 'To be confirmed';
   document.getElementById('confirm-vehicle').textContent = vehicleStr;
   document.getElementById('confirm-email').textContent = email;
   document.getElementById('confirm-phone').textContent = phone;
@@ -13521,7 +13372,7 @@ ${fillTemplate(bpt('vehicleLine'), emailVars)}
 
 ${fillTemplate(bpt('finalNote'), emailVars)}
 
-<button type="button" class="magic-link-btn" onclick="openMyBookingByRef('${ref}')">${bpt('magicLinkBtn')}</button>
+<button type="button" class="magic-link-btn" onclick="closeModal(); openMyBooking();">${bpt('magicLinkBtn')}</button>
 <span style="font-size:0.68rem; color:#8a8a7a;">${bpt('magicLinkNote')}</span>
 
 ${fillTemplate(bpt('reachOut'), emailVars)}
@@ -16119,30 +15970,13 @@ async function renderBalanceOverviewList(){
 
 // ---- support conversation: ONE thread per driver, entries appended over time ----
 let supportThreads = {}; // keyed by driverId
-function getOrCreateThread(driverId, subjectIfNew){
-  const p = driverProfiles[driverId];
-  if(!supportThreads[driverId]){
-    supportThreads[driverId] = {
-      driverId, driverName: p.fullName, lwNumber: p.lwNumber || '—',
-      subject: subjectIfNew || t('admin_msg_reply_subject'),
-      entries: [], unreadForAdmin: false, archived: false
-    };
-  }
-  return supportThreads[driverId];
-}
-function addDriverEntry(driverId, body, subjectIfNew){
-  const thread = getOrCreateThread(driverId, subjectIfNew);
-  thread.entries.push({from:'driver', body, date: todayMsgDate()});
-  thread.unreadForAdmin = true;
-  thread.archived = false; // a new message always reopens the thread
-  saveState();
-}
-function addAdminEntry(driverId, body, subjectIfNew){
-  const thread = getOrCreateThread(driverId, subjectIfNew);
-  thread.entries.push({from:'admin', body, date: todayMsgDate()});
-  thread.archived = false;
-  saveState();
-}
+// getOrCreateThread(), addDriverEntry(), addAdminEntry() entfernt (2.9.): keine Aufrufstelle
+// mehr im Code (beide Aufrufer waren bereits toter Demo-Fallback-Code in sendAdminComposeMsg()
+// und sendAdminMsgReply(), siehe dort). Wichtig: getOrCreateThread() haette bei echtem Aufruf
+// sogar abstuerzen koennen (driverProfiles[driverId] ist immer undefined, .fullName darauf wirft
+// eine Ausnahme) -- war aber nie erreichbar, da beide Aufrufer hinter einer echten Session-Pruefung
+// lagen. supportThreads bleibt als leeres Objekt bestehen (gleiches Prinzip wie driverProfiles),
+// da an mehreren Stellen noch defensiv/lesend darauf zugegriffen wird.
 function renderThreadEntries(containerId, entries){
   const el = document.getElementById(containerId);
   if(!el) return;
@@ -16347,13 +16181,8 @@ async function sendAdminComposeMsg(){
     openAdminMsgDetail(driverId);
     return;
   }
-  addAdminEntry(driverId, body, subject);
-  pushInboxMessage(driverId, subject, body);
-  renderAdminMessages();
-  if(driverId === currentDriverId) updateInboxDot();
-  saveState();
-  closeAdminComposeMsg();
-  openAdminMsgDetail(driverId);
+  // Alter Demo-Fallback entfernt (2.9.): der Admin-Bereich ist nur mit echter Session erreichbar,
+  // dieser Codepfad (addAdminEntry/driverDataStore) war seither nie erreichbar.
 }
 // ---- admin side: one row per driver thread ----
 let realAdminThreads = [];
@@ -16543,14 +16372,8 @@ async function sendAdminMsgReply(){
     closeAdminMsgDetail();
     return;
   }
-  addAdminEntry(currentAdminThreadDriverId, reply);
-  if(driverDataStore[currentAdminThreadDriverId]){
-    pushInboxMessage(currentAdminThreadDriverId, t('admin_msg_reply_subject'), reply);
-  }
-  renderAdminMessages();
-  if(currentAdminThreadDriverId === currentDriverId) updateInboxDot();
-  saveState();
-  closeAdminMsgDetail();
+  // Alter Demo-Fallback entfernt (2.9.): der Admin-Bereich ist nur mit echter Session erreichbar,
+  // dieser Codepfad (addAdminEntry/driverDataStore) war seither nie erreichbar.
 }
 function archiveCurrentAdminMsg(){
   if(!currentAdminThreadDriverId) return;
@@ -16633,7 +16456,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v390</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v391</div>
 
 <!-- Etappe 4: Lade-Overlay waehrend "Buchung annehmen" im Hintergrund laeuft (kann bei VIP-Fahrern
      mit Auto-Einzug ein paar Sekunden dauern, da erst mit Xendit gesprochen wird, bevor die
