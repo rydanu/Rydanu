@@ -6419,9 +6419,7 @@ function renderCurrentFeeRate(){
   if(override && Number(override.percent) === 0){
     const untilStr = override.endDate ? t('fee_rate_valid_until').replace('{date}', override.endDate) : t('fee_rate_valid_unlimited');
     el.classList.add('fee-rate-badge-vip');
-    // Joerg-Wunsch (2. Anlauf): "0% Gebuehren" + Gueltigkeit jetzt in EINER Zeile zusammengefasst,
-    // statt zwei getrennten Zeilen -- passt zur neuen 2er-Groessen-Hierarchie (Ueberschrift + Rest).
-    el.innerHTML = `<span class="fee-rate-badge-label">🌟 ${t('fee_rate_vip_bonus')}</span><span class="fee-rate-badge-main">${t('fee_rate_zero_fees')} · ${untilStr}</span><span class="fee-rate-badge-note">${t('fee_rate_villa_excluded')}</span>`;
+    el.innerHTML = `<span class="fee-rate-badge-label">${t('fee_rate_current')}</span><span class="fee-rate-badge-main">🌟 ${t('fee_rate_vip_bonus')} 0% · ${untilStr}</span><span class="fee-rate-badge-note">${t('fee_rate_villa_excluded')}</span>`;
   } else if(override && Number(override.percent) !== DEFAULT_FEE_PERCENT){
     // Gleicher Bugfix wie bei der echten Fahrer-Variante: Sonderkondition == Standardsatz zeigt jetzt
     // ganz normal "Standard" an, statt faelschlich weiter als Sonderkondition markiert zu bleiben.
@@ -6429,10 +6427,10 @@ function renderCurrentFeeRate(){
     const range = (override.startDate || override.endDate)
       ? `${override.startDate||'…'} – ${override.endDate||t('fee_rate_unlimited_short')}`
       : t('fee_rate_unlimited_short');
-    el.innerHTML = `<span class="fee-rate-badge-label">${t('fee_rate_special_condition')}</span><span class="fee-rate-badge-main">${t('fee_rate_current')} ${override.percent}% · ${range}</span>`;
+    el.innerHTML = `<span class="fee-rate-badge-label">${t('fee_rate_current')}</span><span class="fee-rate-badge-main">${t('fee_rate_special_condition')} ${override.percent}% · ${range}</span>`;
   } else {
     el.classList.remove('fee-rate-badge-vip');
-    el.innerHTML = `<span class="fee-rate-badge-main">${t('fee_rate_current')} ${DEFAULT_FEE_PERCENT}% · ${t('fee_rate_standard')}</span>`;
+    el.innerHTML = `<span class="fee-rate-badge-label">${t('fee_rate_current')}</span><span class="fee-rate-badge-main">${t('fee_rate_standard')} ${DEFAULT_FEE_PERCENT}%</span>`;
   }
 }
 // Bewertungen: nach den ersten 5 einklappen, "Mehr anzeigen" blendet den Rest ein (22.8.-Wunsch,
@@ -6778,6 +6776,9 @@ async function renderRealOverviewStats(){
   }
 
   // aktueller Gebührensatz (Standard oder Sonderkondition)
+  // Format-Korrektur (5.9., Joerg-Wunsch): einheitlich für ALLE Faelle (Standard/Sonderkondition/VIP)
+  // zweizeilig -- Zeile 1 immer "Deine aktuelle Provision" als Ueberschrift, Zeile 2 "{Kategorie}
+  // {Prozent}%" (Kategorie zuerst, dann Prozent -- vorher andersrum und in einer Zeile zusammen).
   const rateEl = document.getElementById('current-fee-rate-display');
   if(rateEl){
     rateEl.style.display = 'inline-block';
@@ -6785,22 +6786,16 @@ async function renderRealOverviewStats(){
     if(ov && Number(ov.fee_percent) === 0){
       const untilStr = ov.ends_at ? t('fee_rate_valid_until').replace('{date}', formatDateDisplay(ov.ends_at)) : t('fee_rate_valid_unlimited');
       rateEl.classList.add('fee-rate-badge-vip');
-      rateEl.innerHTML = `<span class="fee-rate-badge-label">🌟 ${t('fee_rate_vip_bonus')}</span><span class="fee-rate-badge-main">${t('fee_rate_zero_fees')} · ${untilStr}</span><span class="fee-rate-badge-note">${t('fee_rate_villa_excluded')}</span>`;
+      rateEl.innerHTML = `<span class="fee-rate-badge-label">${t('fee_rate_current')}</span><span class="fee-rate-badge-main">🌟 ${t('fee_rate_vip_bonus')} 0% · ${untilStr}</span><span class="fee-rate-badge-note">${t('fee_rate_villa_excluded')}</span>`;
     } else if(ov && Number(ov.fee_percent) !== DEFAULT_FEE_PERCENT){
-      // Bugfix (24.8., Joerg gemeldet): eine Sonderkondition, die der Admin exakt auf den Standardsatz
-      // (10%) zurueckgesetzt hat -- z.B. indem er einfach eine neue Sonderkondition mit 10% angelegt hat,
-      // statt die alte zu loeschen -- zeigte trotzdem weiterhin das "Sonderkondition"-Badge an, obwohl
-      // sie inhaltlich genau dem Standard entspricht. Jetzt: nur noch als Sonderkondition anzeigen, wenn
-      // der Satz WIRKLICH vom Standard abweicht. Eine wirklich abgelaufene Sonderkondition faellt schon
-      // vorher aus der Datenbankabfrage raus (ends_at-Filter), landet also automatisch im "else"-Zweig.
       rateEl.classList.remove('fee-rate-badge-vip');
       const range = (ov.starts_at || ov.ends_at)
         ? `${ov.starts_at ? formatDateDisplay(ov.starts_at) : '…'} – ${ov.ends_at ? formatDateDisplay(ov.ends_at) : t('fee_rate_unlimited_short')}`
         : t('fee_rate_unlimited_short');
-      rateEl.innerHTML = `<span class="fee-rate-badge-label">${t('fee_rate_special_condition')}</span><span class="fee-rate-badge-main">${t('fee_rate_current')} ${ov.fee_percent}% · ${range}</span>`;
+      rateEl.innerHTML = `<span class="fee-rate-badge-label">${t('fee_rate_current')}</span><span class="fee-rate-badge-main">${t('fee_rate_special_condition')} ${ov.fee_percent}% · ${range}</span>`;
     } else {
       rateEl.classList.remove('fee-rate-badge-vip');
-      rateEl.innerHTML = `<span class="fee-rate-badge-main">${t('fee_rate_current')} ${DEFAULT_FEE_PERCENT}% · ${t('fee_rate_standard')}</span>`;
+      rateEl.innerHTML = `<span class="fee-rate-badge-label">${t('fee_rate_current')}</span><span class="fee-rate-badge-main">${t('fee_rate_standard')} ${DEFAULT_FEE_PERCENT}%</span>`;
     }
   }
   const rankEl = document.getElementById('rank-panel-body');
@@ -10626,7 +10621,7 @@ const translations = {
     admin_fc_cannot_delete_applied: "This credit was already used against a fee and can no longer be deleted.",
     admin_view_balances_btn: "View all balances",
     fee_rate_vip_bonus: "VIP Bonus", fee_rate_zero_fees: "0% fees", fee_rate_valid_until: "valid until {date}", fee_rate_valid_unlimited: "valid indefinitely", fee_rate_villa_excluded: "*excludes villa bookings",
-    fee_rate_current: "📊 Your current commission:", fee_rate_special_condition: "special rate", fee_rate_standard: "Standard", fee_rate_unlimited_short: "unlimited",
+    fee_rate_current: "📊 Your current commission", fee_rate_special_condition: "Special rate", fee_rate_standard: "Standard", fee_rate_unlimited_short: "unlimited",
     admin_fo_fill_required: "Please select a driver and enter a percentage.", admin_fo_negative_error: "The percentage cannot be negative.",
     admin_fo_saved: "✓ Saved and driver notified.", admin_fo_confirm_delete: "Really delete this individual fee rate? The driver will pay the standard 10% again.",
     admin_fo_notify_title: "📊 Your fee has been adjusted",
@@ -11001,7 +10996,7 @@ const translations = {
     admin_fc_cannot_delete_applied: "Diese Gutschrift wurde bereits mit einer Gebühr verrechnet und kann nicht mehr gelöscht werden.",
     admin_view_balances_btn: "Alle Guthaben anzeigen",
     fee_rate_vip_bonus: "VIP Bonus", fee_rate_zero_fees: "0% Gebühren", fee_rate_valid_until: "gültig bis {date}", fee_rate_valid_unlimited: "unbefristet gültig", fee_rate_villa_excluded: "*ausgenommen Villa-Buchungen",
-    fee_rate_current: "📊 Deine aktuelle Provision:", fee_rate_special_condition: "Sonderkondition", fee_rate_standard: "Standard", fee_rate_unlimited_short: "unbefristet",
+    fee_rate_current: "📊 Deine aktuelle Provision", fee_rate_special_condition: "Sonderkondition", fee_rate_standard: "Standard", fee_rate_unlimited_short: "unbefristet",
     admin_fo_fill_required: "Bitte Fahrer und Prozentsatz angeben.", admin_fo_negative_error: "Der Prozentsatz darf nicht negativ sein.",
     admin_fo_saved: "✓ Gespeichert und Fahrer benachrichtigt.", admin_fo_confirm_delete: "Diesen individuellen Gebührensatz wirklich löschen? Der Fahrer zahlt danach wieder den Standardsatz von 10%.",
     admin_fo_notify_title: "📊 Deine Gebühr wurde angepasst",
@@ -11376,7 +11371,7 @@ const translations = {
     admin_fc_cannot_delete_applied: "Kredit ini sudah digunakan untuk biaya dan tidak dapat dihapus lagi.",
     admin_view_balances_btn: "Lihat semua saldo",
     fee_rate_vip_bonus: "VIP Bonus", fee_rate_zero_fees: "0% biaya", fee_rate_valid_until: "berlaku hingga {date}", fee_rate_valid_unlimited: "berlaku tanpa batas waktu", fee_rate_villa_excluded: "*tidak termasuk pemesanan villa",
-    fee_rate_current: "📊 Komisi Anda saat ini:", fee_rate_special_condition: "tarif khusus", fee_rate_standard: "Standar", fee_rate_unlimited_short: "tanpa batas",
+    fee_rate_current: "📊 Komisi Anda saat ini", fee_rate_special_condition: "Tarif khusus", fee_rate_standard: "Standar", fee_rate_unlimited_short: "tanpa batas",
     admin_fo_fill_required: "Harap pilih sopir dan masukkan persentase.", admin_fo_negative_error: "Persentase tidak boleh negatif.",
     admin_fo_saved: "✓ Disimpan dan sopir telah diberi tahu.", admin_fo_confirm_delete: "Yakin ingin menghapus tarif biaya individual ini? Sopir akan kembali membayar tarif standar 10%.",
     admin_fo_notify_title: "📊 Biaya Anda telah disesuaikan",
@@ -12505,13 +12500,21 @@ async function openInvoiceDetail(invoiceId){
   const recipientEmail = inv.recipient_type === 'driver' ? (inv.drivers && inv.drivers.email) : (inv.villa_partners && inv.villa_partners.contact_email);
   const recipientPhone = inv.recipient_type === 'driver' ? (inv.drivers && inv.drivers.phone) : (inv.villa_partners && inv.villa_partners.contact_phone);
 
-  const itemsHtml = (items||[]).map(it=>`
-    <tr>
-      <td>${escapeHtml(it.description)}</td>
-      <td style="text-align:right;">${it.quantity}</td>
-      <td style="text-align:right;">${formatIDR(it.unit_price_idr)}</td>
-      <td style="text-align:right;">${formatIDR(it.line_total_idr)}</td>
-    </tr>`).join('');
+  // Bugfix (5.9., Joerg gemeldet per Screenshot): eine starre 4-Spalten-Tabelle (Position/Menge/
+  // Einzelpreis/Gesamt) ohne Zellenabstand funktioniert auf dem Handy nicht, sobald die Position
+  // laenger ist (z.B. "Buchung #4 (25.08.2026) — Fahrpreis 500.000 IDR, Satz 10%") -- die 3 Zahlen-
+  // Spalten wurden dann so schmal gequetscht, dass "Menge"/"Einzelpreis"/"Gesamt" ohne jeden Abstand
+  // ineinanderliefen. Jetzt zeilenweise (gleiches .booking-row-Muster wie ueberall sonst in der App):
+  // Position wird oben in voller Breite angezeigt und darf frei umbrechen, der Betrag steht rechts
+  // in einer eigenen Zeile und bricht nie mitten im Text um.
+  const itemsHtml = (items||[]).map(it=>{
+    const qtyPrefix = (Number(it.quantity) !== 1) ? `${it.quantity} × ${formatIDR(it.unit_price_idr)} = ` : '';
+    return `
+    <div class="booking-row">
+      <div class="who">${escapeHtml(it.description)}</div>
+      <span class="mono" style="font-weight:700; white-space:nowrap; flex-shrink:0;">${qtyPrefix}${formatIDR(it.line_total_idr)}</span>
+    </div>`;
+  }).join('');
 
   // Rohdaten fuer die PDF-Erzeugung (buildInvoicePdf() liest ausschliesslich hieraus) --
   // gleiches Zwischenspeicher-Muster wie beim bestehenden Gebuehren-Beleg (lastReceiptPdfData).
@@ -12578,10 +12581,7 @@ async function openInvoiceDetail(invoiceId){
         <div><strong>Empfänger-Adresse</strong><br>${recipientAddress || '<span style="color:var(--danger);">fehlt</span>'}</div>
         <div><strong>Steuernummer Empfänger</strong><br>${recipientTaxNumber || '—'}</div>
       </div>
-      <table style="width:100%; border-collapse:collapse; margin-bottom:14px; font-size:0.9rem;">
-        <thead><tr style="border-bottom:1px solid var(--line);"><th style="text-align:left;">Position</th><th style="text-align:right;">Menge</th><th style="text-align:right;">Einzelpreis</th><th style="text-align:right;">Gesamt</th></tr></thead>
-        <tbody>${itemsHtml}</tbody>
-      </table>
+      <div class="panel" style="margin-bottom:14px;">${itemsHtml}</div>
       <div style="text-align:right; margin-bottom:18px;">
         <div>Netto: ${formatIDR(inv.amount_net)}</div>
         <div>${inv.vat_exempt ? 'MwSt-befreit' : 'MwSt (' + inv.vat_rate + '%): ' + formatIDR(inv.vat_amount)}</div>
@@ -16678,7 +16678,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v405</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v407</div>
 
 <!-- Etappe 4: Lade-Overlay waehrend "Buchung annehmen" im Hintergrund laeuft (kann bei VIP-Fahrern
      mit Auto-Einzug ein paar Sekunden dauern, da erst mit Xendit gesprochen wird, bevor die
