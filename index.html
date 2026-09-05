@@ -2647,10 +2647,10 @@
         <span class="at-title">Nachrichten</span>
         <span class="at-sub">Nachrichten von Fahrern lesen &amp; beantworten</span>
       </button>
-      <button type="button" class="admin-tile" id="admin-tile-block" onclick="showAdminSection('block')">
-        <span class="at-icon">🔒</span>
-        <span class="at-title">Fahrer verwalten</span>
-        <span class="at-sub">Sperren, entsperren oder löschen</span>
+      <button type="button" class="admin-tile" id="admin-tile-block" onclick="showAdminSection('block'); loadPeopleAdminData();">
+        <span class="at-icon">🧑‍✈️</span>
+        <span class="at-title">Fahrer/Villa verwalten</span>
+        <span class="at-sub">Suchen, bearbeiten, sperren, MwSt &amp; Gebührensatz</span>
       </button>
       <button type="button" class="admin-tile" id="admin-tile-documents" onclick="showAdminSection('documents')">
         <span class="at-icon">📄</span>
@@ -2664,8 +2664,8 @@
       </button>
       <button type="button" class="admin-tile" id="admin-tile-villa" onclick="showAdminSection('villa'); loadVillaAdminData();">
         <span class="at-icon">🏠</span>
-        <span class="at-title">Villa-Partner</span>
-        <span class="at-sub">Villen anlegen, Provisionssatz &amp; Buchungen verwalten</span>
+        <span class="at-title">Neue Villa anlegen</span>
+        <span class="at-sub">Neue Villa-Partner + Bewerbungen annehmen/ablehnen</span>
       </button>
       <button type="button" class="admin-tile" id="admin-tile-villabookings" onclick="showAdminSection('villabookings'); populateVillaBookingsSelect();">
         <span class="at-icon">📖</span>
@@ -2752,11 +2752,182 @@
     </div>
 
     <div id="admin-sec-block" style="display:none;">
-    <h2 style="margin-top:0;" data-i18n="admin_block_title">All drivers — block / unblock</h2>
-    <p class="dash-head" style="display:block; margin-bottom:20px;" data-i18n="admin_block_sub">Tap a driver to block them — blocked drivers and all their tours disappear from the traveler view immediately.</p>
-    <button type="button" class="link-btn" onclick="openDriversBlockModal()">📋 <span data-i18n="admin_view_drivers_btn">Alle Fahrer anzeigen</span> (<span id="admin-drivers-count">0</span>)</button>
+    <h2 style="margin-top:0;">🧑‍✈️🏠 Fahrer/Villa verwalten</h2>
+    <p class="dash-head" style="display:block; margin-bottom:20px;">Suchen und auswählen, dann bearbeiten — Stammdaten, Gebührensatz, MwSt-Einstellung und Konto-Aktionen an einem Ort.</p>
 
+    <div class="form-field" style="position:relative;">
+      <label>🔍 Fahrer oder Villa suchen</label>
+      <input type="text" id="people-search" placeholder="Name oder RY-Nummer suchen…" autocomplete="off"
+        oninput="renderPeopleSearchResults()" onfocus="renderPeopleSearchResults()">
+      <div class="pickup-suggestions" id="people-search-results"></div>
     </div>
+
+    <!-- ===== Fahrer-Formular ===== -->
+    <div id="people-driver-form" style="display:none; margin-top:18px;">
+      <div class="panel" style="padding:16px; margin-bottom:16px;">
+        <h3 style="margin-top:0;">👤 Stammdaten</h3>
+        <div class="form-field">
+          <label>Name</label>
+          <input type="text" id="pd-name">
+        </div>
+        <div style="display:flex; gap:10px;">
+          <div class="form-field" style="flex:1;">
+            <label>WhatsApp / Telefon</label>
+            <input type="text" id="pd-phone">
+          </div>
+          <div class="form-field" style="flex:1;">
+            <label>E-Mail <span class="optional">(optional)</span></label>
+            <input type="email" id="pd-email">
+          </div>
+        </div>
+        <div class="form-field">
+          <label>Adresse (Pflicht für Rechnungen)</label>
+          <input type="text" id="pd-address" placeholder="z.B. Jl. Raya Ubud No. 12, Gianyar, Bali">
+        </div>
+        <div class="form-field">
+          <label>Steuernummer (optional)</label>
+          <input type="text" id="pd-taxnumber">
+        </div>
+        <button type="button" class="period-btn" onclick="savePersonDriverStammdaten()" style="background:var(--gold); border-color:var(--gold); color:var(--ink); font-weight:700;">Änderungen speichern</button>
+        <p class="form-error" id="pd-stammdaten-status"></p>
+      </div>
+
+      <div class="panel" style="padding:16px; margin-bottom:16px;">
+        <h3 style="margin-top:0;">💳 Individueller Gebührensatz</h3>
+        <p class="dash-head" style="display:block; margin-bottom:10px;">Standard sind 10% pro Buchung. Hier kannst du für diesen Fahrer einen abweichenden Satz für einen Zeitraum festlegen.</p>
+        <div class="form-field">
+          <label>Gebühr in % (0 oder höher)</label>
+          <input type="number" id="pd-fee-percent" min="0" step="0.5" placeholder="z.B. 5">
+        </div>
+        <div style="display:flex; gap:10px;">
+          <div class="form-field" style="flex:1;">
+            <label>Startdatum</label>
+            <input type="date" id="pd-fee-start">
+          </div>
+          <div class="form-field" style="flex:1;">
+            <label>Enddatum</label>
+            <input type="date" id="pd-fee-end">
+          </div>
+        </div>
+        <button type="button" class="period-btn" onclick="savePersonDriverFeeOverride()" style="background:var(--gold); border-color:var(--gold); color:var(--ink); font-weight:700;">Speichern</button>
+        <p class="form-error" id="pd-fee-status"></p>
+        <div id="pd-fee-history" style="margin-top:14px;"></div>
+      </div>
+
+      <div class="panel" style="padding:16px; margin-bottom:16px;">
+        <h3 style="margin-top:0;">🧾 MwSt-Einstellung</h3>
+        <p class="dash-head" style="display:block; margin-bottom:10px;">Gilt für die automatisch am Monatsletzten erzeugte Rechnung dieses Fahrers. Vorbelegung ist MwSt-befreit — nur ändern, wenn für diesen Fahrer wirklich etwas anderes gilt.</p>
+        <div class="form-field">
+          <label class="toggle-row" style="display:flex; align-items:center; gap:10px; cursor:pointer;">
+            <input type="checkbox" id="pd-vat-exempt" onchange="togglePersonDriverVatRateField()" style="width:auto;">
+            <span>MwSt-befreit</span>
+          </label>
+        </div>
+        <div class="form-field" id="pd-vat-rate-wrap" style="display:none;">
+          <label>MwSt-Satz in %</label>
+          <input type="number" id="pd-vat-rate" min="0" step="0.5" placeholder="z.B. 19">
+        </div>
+        <button type="button" class="period-btn" onclick="savePersonDriverVat()" style="background:var(--gold); border-color:var(--gold); color:var(--ink); font-weight:700;">MwSt-Einstellung speichern</button>
+        <p class="form-error" id="pd-vat-status"></p>
+      </div>
+
+      <div class="panel" style="padding:16px; margin-bottom:16px;">
+        <h3 style="margin-top:0;">⚙️ Konto-Aktionen</h3>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button type="button" class="lock-btn" id="pd-lock-btn" style="white-space:nowrap;" onclick="togglePersonDriverLock()"></button>
+          <button type="button" class="lock-btn" id="pd-vip-btn" style="white-space:nowrap;" onclick="togglePersonDriverVip()"></button>
+          <button type="button" class="cancel-btn" style="white-space:nowrap;" onclick="deletePersonDriver()">🗑️ Löschen</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== Villa-Formular ===== -->
+    <div id="people-villa-form" style="display:none; margin-top:18px;">
+      <div class="panel" style="padding:16px; margin-bottom:16px;">
+        <h3 style="margin-top:0;">🏠 Stammdaten</h3>
+        <div class="form-field">
+          <label>Name der Villa / des Hotels</label>
+          <input type="text" id="villa-edit-name">
+        </div>
+        <div class="form-field">
+          <label>Link (Kennung kann aus technischen Gründen nicht mehr geändert werden)</label>
+          <input type="text" id="villa-edit-slug" disabled style="opacity:0.6;">
+        </div>
+        <div style="display:flex; gap:10px;">
+          <div class="form-field" style="flex:1;">
+            <label>Ansprechpartner</label>
+            <input type="text" id="villa-edit-contact-name">
+          </div>
+          <div class="form-field" style="flex:1;">
+            <label>Region</label>
+            <select id="villa-edit-region">
+              <option value="bali">Bali</option>
+              <option value="lombok">Lombok</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:flex; gap:10px;">
+          <div class="form-field" style="flex:1;">
+            <label>WhatsApp / Telefon</label>
+            <input type="text" id="villa-edit-contact-phone">
+          </div>
+          <div class="form-field" style="flex:1;">
+            <label>E-Mail</label>
+            <input type="email" id="villa-edit-contact-email">
+          </div>
+        </div>
+        <div class="form-field">
+          <label>Provisionssatz der Villa (5–20%)</label>
+          <input type="number" id="villa-edit-commission" min="5" max="20" step="0.5">
+        </div>
+        <div class="form-field">
+          <label>Adresse (Pflicht für Rechnungen)</label>
+          <input type="text" id="villa-edit-address" placeholder="z.B. Jl. Sunset Road No. 5, Seminyak, Bali">
+        </div>
+        <div class="form-field">
+          <label>Steuernummer (optional)</label>
+          <input type="text" id="villa-edit-taxnumber">
+        </div>
+        <button type="button" class="period-btn" onclick="saveVillaEdits()" style="background:var(--gold); border-color:var(--gold); color:var(--ink); font-weight:700;">Änderungen speichern</button>
+        <button type="button" class="link-btn" id="villa-edit-toggle-active-btn" onclick="toggleVillaActiveFromEditForm()" style="margin-top:8px;"></button>
+        <p class="form-error" id="villa-edit-status"></p>
+
+        <div style="margin-top:18px; padding-top:14px; border-top:1px solid var(--line);">
+          <div class="when">🔗 <span id="villa-edit-link" class="mono villa-link-mono"></span></div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;">
+            <button type="button" class="link-btn" style="width:auto; text-decoration:none; background:var(--paper-dim); padding:8px 12px; border-radius:6px;" id="villa-edit-copy-btn" onclick="copyVillaLink()">📋 Link kopieren</button>
+            <button type="button" class="link-btn" style="width:auto; text-decoration:none; background:var(--paper-dim); padding:8px 12px; border-radius:6px;" onclick="toggleVillaQr()">📱 QR-Code</button>
+            <button type="button" class="link-btn" style="width:auto; text-decoration:none; background:var(--paper-dim); padding:8px 12px; border-radius:6px;" onclick="shareVillaLinkWhatsapp()">📲 Per WhatsApp senden</button>
+          </div>
+          <div id="villa-edit-qr-wrap" style="display:none; margin-top:12px; text-align:center;">
+            <img id="villa-edit-qr-img" alt="QR code" style="width:180px; height:180px; border:1px solid var(--line); border-radius:8px; background:#fff; padding:8px;">
+          </div>
+          <div class="when" style="margin-top:12px;">Offene Anfragen: <strong id="villa-edit-openreqs">0</strong></div>
+          <div class="when">Provision offen: <strong id="villa-edit-earned">IDR 0</strong></div>
+          <div class="when">Bereits ausgezahlt: <span id="villa-edit-paid">IDR 0</span></div>
+          <button type="button" class="link-btn" id="villa-edit-markpaid-btn" onclick="markVillaCommissionsPaid(currentManagedVillaId)" style="margin-top:8px;">Als ausgezahlt markieren</button>
+        </div>
+      </div>
+
+      <div class="panel" style="padding:16px; margin-bottom:16px;">
+        <h3 style="margin-top:0;">🧾 MwSt-Einstellung</h3>
+        <p class="dash-head" style="display:block; margin-bottom:10px;">Gilt für die automatisch am Monatsletzten erzeugte Gutschrift dieser Villa. Vorbelegung ist MwSt-befreit — nur ändern, wenn für diese Villa wirklich etwas anderes gilt.</p>
+        <div class="form-field">
+          <label class="toggle-row" style="display:flex; align-items:center; gap:10px; cursor:pointer;">
+            <input type="checkbox" id="villa-vat-exempt" onchange="toggleVillaVatRateField()" style="width:auto;">
+            <span>MwSt-befreit</span>
+          </label>
+        </div>
+        <div class="form-field" id="villa-vat-rate-wrap" style="display:none;">
+          <label>MwSt-Satz in %</label>
+          <input type="number" id="villa-vat-rate" min="0" step="0.5" placeholder="z.B. 19">
+        </div>
+        <button type="button" class="period-btn" onclick="saveVillaVat()" style="background:var(--gold); border-color:var(--gold); color:var(--ink); font-weight:700;">MwSt-Einstellung speichern</button>
+        <p class="form-error" id="villa-vat-status"></p>
+      </div>
+    </div>
+    </div>
+
 
     <div id="admin-sec-documents" style="display:none;">
     <h2 style="margin-top:0;">📄 Fahrer Dokumente</h2>
@@ -2775,28 +2946,7 @@
     <div class="money-panel-grid">
     <div>
     <h3 data-i18n="admin_feeoverride_title">Individuellen Gebührensatz festlegen</h3>
-    <div class="panel" style="padding:16px; margin-bottom:20px;">
-      <div class="form-field">
-        <label data-i18n="admin_select_driver">Fahrer auswählen</label>
-        <select id="fee-override-driver-select"></select>
-      </div>
-      <div class="form-field">
-        <label data-i18n="admin_fee_percent">Gebühr in % (0 oder höher)</label>
-        <input type="number" id="fee-override-percent" min="0" step="0.5" placeholder="z.B. 5">
-      </div>
-      <div style="display:flex; gap:10px;">
-        <div class="form-field" style="flex:1;">
-          <label data-i18n="admin_fee_start">Startdatum</label>
-          <input type="date" id="fee-override-start">
-        </div>
-        <div class="form-field" style="flex:1;">
-          <label data-i18n="admin_fee_end">Enddatum</label>
-          <input type="date" id="fee-override-end">
-        </div>
-      </div>
-      <button type="button" class="period-btn" onclick="createFeeOverride()" style="background:var(--gold); border-color:var(--gold); color:var(--ink); font-weight:700;" data-i18n="admin_fee_save_btn">Speichern</button>
-      <p class="form-error" id="fee-override-status"></p>
-    </div>
+    <p class="dash-head" style="display:block; margin-bottom:10px;">Wird jetzt direkt beim jeweiligen Fahrer eingestellt, siehe "Fahrer/Villa verwalten". Hier nur noch die Gesamt-Übersicht:</p>
     <button type="button" class="link-btn" onclick="openFeeOverridesModal()" style="margin-bottom:24px;">📋 <span data-i18n="admin_view_overrides_btn">Alle individuellen Gebührensätze anzeigen</span> (<span id="fee-overrides-count">0</span>)</button>
     </div>
 
@@ -3042,81 +3192,6 @@
       </div>
       <button type="button" class="period-btn" onclick="createVillaPartner()" style="background:var(--gold); border-color:var(--gold); color:var(--ink); font-weight:700;">Villa anlegen</button>
       <p class="form-error" id="villa-new-status"></p>
-    </div>
-    </div>
-
-    <div>
-    <h3>Villa verwalten</h3>
-    <div class="panel" style="padding:16px; margin-bottom:20px;">
-      <div class="form-field">
-        <label>Villa suchen / auswählen</label>
-        <input type="text" id="villa-manage-search" placeholder="Namen tippen zum Filtern…" oninput="filterVillaManageSelect()" style="margin-bottom:8px;">
-        <select id="villa-manage-select" onchange="loadVillaIntoManageForm()" size="5" style="height:auto;"></select>
-      </div>
-      <div id="villa-manage-form" style="display:none; margin-top:16px; padding-top:16px; border-top:1px solid var(--line);">
-        <div class="form-field">
-          <label>Name der Villa / des Hotels</label>
-          <input type="text" id="villa-edit-name">
-        </div>
-        <div class="form-field">
-          <label>Link (Kennung kann aus technischen Gründen nicht mehr geändert werden)</label>
-          <input type="text" id="villa-edit-slug" disabled style="opacity:0.6;">
-        </div>
-        <div style="display:flex; gap:10px;">
-          <div class="form-field" style="flex:1;">
-            <label>Ansprechpartner</label>
-            <input type="text" id="villa-edit-contact-name">
-          </div>
-          <div class="form-field" style="flex:1;">
-            <label>Region</label>
-            <select id="villa-edit-region">
-              <option value="bali">Bali</option>
-              <option value="lombok">Lombok</option>
-            </select>
-          </div>
-        </div>
-        <div style="display:flex; gap:10px;">
-          <div class="form-field" style="flex:1;">
-            <label>WhatsApp / Telefon</label>
-            <input type="text" id="villa-edit-contact-phone">
-          </div>
-          <div class="form-field" style="flex:1;">
-            <label>E-Mail</label>
-            <input type="email" id="villa-edit-contact-email">
-          </div>
-        </div>
-        <div class="form-field">
-          <label>Provisionssatz der Villa (5–20%)</label>
-          <input type="number" id="villa-edit-commission" min="5" max="20" step="0.5">
-        </div>
-        <div class="form-field">
-          <label>Adresse (Pflicht für Rechnungen)</label>
-          <input type="text" id="villa-edit-address" placeholder="z.B. Jl. Sunset Road No. 5, Seminyak, Bali">
-        </div>
-        <div class="form-field">
-          <label>Steuernummer (optional)</label>
-          <input type="text" id="villa-edit-taxnumber">
-        </div>
-        <button type="button" class="period-btn" onclick="saveVillaEdits()" style="background:var(--gold); border-color:var(--gold); color:var(--ink); font-weight:700;">Änderungen speichern</button>
-        <button type="button" class="link-btn" id="villa-edit-toggle-active-btn" onclick="toggleVillaActiveFromEditForm()" style="margin-top:8px;"></button>
-        <p class="form-error" id="villa-edit-status"></p>
-
-        <div style="margin-top:18px; padding-top:14px; border-top:1px solid var(--line);">
-          <div class="when">🔗 <span id="villa-edit-link" class="mono villa-link-mono"></span></div>
-          <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;">
-            <button type="button" class="link-btn" style="width:auto; text-decoration:none; background:var(--paper-dim); padding:8px 12px; border-radius:6px;" id="villa-edit-copy-btn" onclick="copyVillaLink()">📋 Link kopieren</button>
-            <button type="button" class="link-btn" style="width:auto; text-decoration:none; background:var(--paper-dim); padding:8px 12px; border-radius:6px;" onclick="toggleVillaQr()">📱 QR-Code</button>
-            <button type="button" class="link-btn" style="width:auto; text-decoration:none; background:var(--paper-dim); padding:8px 12px; border-radius:6px;" onclick="shareVillaLinkWhatsapp()">📲 Per WhatsApp senden</button>
-          </div>
-          <div id="villa-edit-qr-wrap" style="display:none; margin-top:12px; text-align:center;">
-            <img id="villa-edit-qr-img" alt="QR code" style="width:180px; height:180px; border:1px solid var(--line); border-radius:8px; background:#fff; padding:8px;">
-          </div>
-          <div class="when" style="margin-top:12px;">Offene Anfragen: <strong id="villa-edit-openreqs">0</strong></div>
-          <div class="when">Provision offen: <strong id="villa-edit-earned">IDR 0</strong></div>
-          <div class="when">Bereits ausgezahlt: <span id="villa-edit-paid">IDR 0</span></div>
-          <button type="button" class="link-btn" id="villa-edit-markpaid-btn" onclick="markVillaCommissionsPaid(currentManagedVillaId)" style="margin-top:8px;">Als ausgezahlt markieren</button>
-        </div>
-      </div>
     </div>
     </div>
     </div>
@@ -8891,14 +8966,11 @@ async function createVillaPartner(){
 let villaAdminCache = [];
 let currentManagedVillaId = null;
 async function loadVillaAdminData(){
-  const sel = document.getElementById('villa-manage-select');
-  if(!sel) return;
   const linkEl = document.getElementById('villa-apply-link');
   if(linkEl) linkEl.textContent = location.origin + '/?apply=villa';
   const { data: villas, error: villasErr } = await supabaseClient.from('villa_partners').select('*').order('name');
   if(villasErr){ console.error('Villen konnten nicht geladen werden:', villasErr); return; }
   villaAdminCache = villas || [];
-  renderVillaManageOptions(villaAdminCache);
   loadVillaApplications();
 }
 // Nur die Anzahl laden (fuer die rote Admin-Kachel), ohne den ganzen Villa-Bereich zu oeffnen --
@@ -8997,28 +9069,12 @@ function shareVillaApplyLinkWhatsapp(){
   const text = `Hello! We'd love to welcome you as a Rydanu Villa Partner — your guests will then be able to book transfers easily through your own personal link. Quick sign-up here:\n${link}`;
   window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
 }
-function renderVillaManageOptions(list){
-  const sel = document.getElementById('villa-manage-select');
-  if(!sel) return;
-  if(list.length === 0){
-    sel.innerHTML = '<option disabled>Keine Villa gefunden</option>';
-    return;
-  }
-  sel.innerHTML = list.map(v => `<option value="${v.id}">${v.active ? '' : '🚫 '}${escapeHtml(v.name)} (${v.slug})</option>`).join('');
-}
-function filterVillaManageSelect(){
-  const q = document.getElementById('villa-manage-search').value.trim().toLowerCase();
-  const filtered = q ? villaAdminCache.filter(v => v.name.toLowerCase().includes(q) || v.slug.toLowerCase().includes(q)) : villaAdminCache;
-  renderVillaManageOptions(filtered);
-}
-async function loadVillaIntoManageForm(){
-  const sel = document.getElementById('villa-manage-select');
-  const villaId = sel.value;
+async function loadVillaIntoManageForm(villaId){
   if(!villaId) return;
   currentManagedVillaId = villaId;
   const v = villaAdminCache.find(x=>x.id===villaId);
   if(!v) return;
-  document.getElementById('villa-manage-form').style.display = 'block';
+  document.getElementById('people-villa-form').style.display = 'block';
   document.getElementById('villa-edit-name').value = v.name;
   document.getElementById('villa-edit-slug').value = v.slug;
   document.getElementById('villa-edit-contact-name').value = v.contact_name || '';
@@ -9029,6 +9085,10 @@ async function loadVillaIntoManageForm(){
   document.getElementById('villa-edit-address').value = v.address || '';
   document.getElementById('villa-edit-taxnumber').value = v.tax_number || '';
   document.getElementById('villa-edit-status').textContent = '';
+  document.getElementById('villa-vat-exempt').checked = (v.default_vat_exempt !== false);
+  document.getElementById('villa-vat-rate').value = v.default_vat_rate || '';
+  toggleVillaVatRateField();
+  document.getElementById('villa-vat-status').textContent = '';
   const activeBtn = document.getElementById('villa-edit-toggle-active-btn');
   activeBtn.textContent = v.active ? '🚫 Villa deaktivieren' : '✓ Villa aktivieren';
   // Zeilenumbruch-Fix Runde 2 (siehe .villa-link-mono CSS): einfacher Text reicht jetzt, das
@@ -9045,6 +9105,21 @@ async function loadVillaIntoManageForm(){
   document.getElementById('villa-edit-openreqs').textContent = (openReqs||[]).length;
   document.getElementById('villa-edit-earned').textContent = formatIDR(earned);
   document.getElementById('villa-edit-paid').textContent = formatIDR(paid);
+}
+function toggleVillaVatRateField(){
+  document.getElementById('villa-vat-rate-wrap').style.display = document.getElementById('villa-vat-exempt').checked ? 'none' : 'block';
+}
+async function saveVillaVat(){
+  if(!currentManagedVillaId) return;
+  const exempt = document.getElementById('villa-vat-exempt').checked;
+  const rate = exempt ? 0 : Number(document.getElementById('villa-vat-rate').value || 0);
+  const statusEl = document.getElementById('villa-vat-status');
+  const { error } = await supabaseClient.from('villa_partners').update({ default_vat_exempt: exempt, default_vat_rate: rate }).eq('id', currentManagedVillaId);
+  if(error){ console.error('MwSt-Einstellung konnte nicht gespeichert werden:', error); statusEl.style.color = 'var(--danger)'; statusEl.textContent = 'Fehler beim Speichern.'; return; }
+  const v = villaAdminCache.find(x=>x.id===currentManagedVillaId);
+  if(v){ v.default_vat_exempt = exempt; v.default_vat_rate = rate; }
+  statusEl.style.color = 'var(--teal)';
+  statusEl.textContent = '✓ Gespeichert.';
 }
 // Villa-Link teilen: kopieren, QR-Code anzeigen, per WhatsApp senden (gleiches QR-API-Muster wie
 // beim bereits bestehenden Fahrer-QR-Code, keine neue Abhaengigkeit noetig).
@@ -9094,9 +9169,10 @@ async function saveVillaEdits(){
     address, tax_number: taxNumber || null
   }).eq('id', currentManagedVillaId);
   if(error){ console.error('Villa konnte nicht aktualisiert werden:', error); statusEl.style.color = 'var(--danger)'; statusEl.textContent = 'Fehler beim Speichern.'; return; }
-  statusEl.style.color = 'var(--teal)';
-  statusEl.textContent = '✓ Gespeichert.';
-  loadVillaAdminData();
+  await loadVillaAdminData();
+  // Joerg-Wunsch (5.9.): nach erfolgreichem Speichern schliesst sich das Formular wieder, statt
+  // einfach offen stehen zu bleiben.
+  closePeopleForms();
 }
 async function toggleVillaActiveFromEditForm(){
   if(!currentManagedVillaId) return;
@@ -9104,18 +9180,193 @@ async function toggleVillaActiveFromEditForm(){
   if(!v) return;
   const { error } = await supabaseClient.from('villa_partners').update({ active: !v.active }).eq('id', currentManagedVillaId);
   if(error){ console.error('Status konnte nicht geaendert werden:', error); alert('Fehler beim Speichern.'); return; }
+  const keepId = currentManagedVillaId;
   await loadVillaAdminData();
-  const sel = document.getElementById('villa-manage-select');
-  sel.value = currentManagedVillaId;
-  loadVillaIntoManageForm();
+  await loadVillaIntoManageForm(keepId);
 }
 async function markVillaCommissionsPaid(villaId){
   if(!villaId) return;
   if(!confirm('Alle offenen Provisionen dieser Villa als ausgezahlt markieren? (Auszahlung selbst läuft weiterhin manuell außerhalb der Plattform, z.B. per Überweisung.)')) return;
   const { error } = await supabaseClient.from('villa_commissions').update({ status:'paid', paid_at: new Date().toISOString() }).eq('villa_partner_id', villaId).eq('status','earned');
   if(error){ console.error('Konnte nicht als ausgezahlt markiert werden:', error); alert('Fehler beim Speichern.'); return; }
-  loadVillaIntoManageForm();
+  loadVillaIntoManageForm(villaId);
 }
+
+// ========== NEU (5.9.): Vereinheitlichte "Fahrer/Villa verwalten"-Suche ==========
+// Kombiniert Fahrer + Villen in einer Live-Ergebnisliste (gleiches Muster wie die
+// Rechnungs-Kundensuche), Auswahl zeigt darunter das passende Bearbeiten-Formular.
+async function loadPeopleAdminData(){
+  await Promise.all([loadRealAllDriversCache(), loadVillaAdminData()]);
+}
+function closePeopleForms(){
+  document.getElementById('people-search').value = '';
+  document.getElementById('people-search-results').classList.remove('open');
+  document.getElementById('people-driver-form').style.display = 'none';
+  document.getElementById('people-villa-form').style.display = 'none';
+  currentManagedDriverId = null;
+  currentManagedVillaId = null;
+}
+function renderPeopleSearchResults(){
+  const box = document.getElementById('people-search-results');
+  const q = document.getElementById('people-search').value.trim().toLowerCase();
+  const matches = (label) => !q || label.toLowerCase().includes(q);
+  let entries = realAllDriversCache
+    .filter(d => matches(d.name + ' ' + (d.lw_number||'')))
+    .map(d => ({ type:'driver', id:d.id, label:`🚗 ${d.name} (${d.lw_number||'—'})` }));
+  entries = entries.concat(villaAdminCache
+    .filter(v => matches(v.name))
+    .map(v => ({ type:'villa', id:v.id, label:`🏠 ${v.name}${v.active ? '' : ' (inaktiv)'}` })));
+  box.innerHTML = entries.length
+    ? entries.map(e => `<div class="suggestion-item" onclick="selectPeopleSearchResult('${e.type}','${e.id}')"><span class="s-name">${escapeHtml(e.label)}</span></div>`).join('')
+    : `<div class="suggestion-item" style="cursor:default; color:var(--ink-soft);">Keine Treffer</div>`;
+  box.classList.add('open');
+}
+document.addEventListener('click', (e)=>{
+  const box = document.getElementById('people-search-results');
+  const input = document.getElementById('people-search');
+  if(!box || !input) return;
+  if(e.target !== input && !box.contains(e.target)) box.classList.remove('open');
+});
+function selectPeopleSearchResult(type, id){
+  document.getElementById('people-search-results').classList.remove('open');
+  if(type === 'driver'){
+    document.getElementById('people-villa-form').style.display = 'none';
+    document.getElementById('people-search').value = realAllDriversCache.find(d=>d.id===id)?.name || '';
+    loadDriverIntoManageForm(id);
+  } else {
+    document.getElementById('people-driver-form').style.display = 'none';
+    document.getElementById('people-search').value = villaAdminCache.find(v=>v.id===id)?.name || '';
+    loadVillaIntoManageForm(id);
+  }
+}
+
+// ---- Fahrer-Formular ----
+let currentManagedDriverId = null;
+function loadDriverIntoManageForm(driverId){
+  const d = realAllDriversCache.find(x=>x.id===driverId);
+  if(!d) return;
+  currentManagedDriverId = driverId;
+  document.getElementById('people-driver-form').style.display = 'block';
+  document.getElementById('pd-name').value = d.name || '';
+  document.getElementById('pd-phone').value = d.phone || '';
+  document.getElementById('pd-email').value = d.email || '';
+  document.getElementById('pd-address').value = d.address || '';
+  document.getElementById('pd-taxnumber').value = d.tax_number || '';
+  document.getElementById('pd-stammdaten-status').textContent = '';
+  document.getElementById('pd-fee-percent').value = '';
+  document.getElementById('pd-fee-start').value = '';
+  document.getElementById('pd-fee-end').value = '';
+  document.getElementById('pd-fee-status').textContent = '';
+  document.getElementById('pd-vat-exempt').checked = (d.default_vat_exempt !== false);
+  document.getElementById('pd-vat-rate').value = d.default_vat_rate || '';
+  togglePersonDriverVatRateField();
+  document.getElementById('pd-vat-status').textContent = '';
+  const lockBtn = document.getElementById('pd-lock-btn');
+  lockBtn.className = d.is_locked ? 'accept-btn' : 'lock-btn';
+  lockBtn.textContent = d.is_locked ? '🔓 Entsperren' : '🔒 Sperren';
+  const vipBtn = document.getElementById('pd-vip-btn');
+  vipBtn.className = d.auto_debit_enabled ? 'accept-btn' : 'lock-btn';
+  vipBtn.textContent = d.auto_debit_enabled ? '⭐ VIP aktiv' : '☆ VIP Auto-Einzug';
+  renderPersonDriverFeeHistory(driverId);
+}
+async function savePersonDriverStammdaten(){
+  if(!currentManagedDriverId) return;
+  const name = document.getElementById('pd-name').value.trim();
+  const phone = document.getElementById('pd-phone').value.trim();
+  const email = document.getElementById('pd-email').value.trim();
+  const address = document.getElementById('pd-address').value.trim();
+  const taxNumber = document.getElementById('pd-taxnumber').value.trim();
+  const statusEl = document.getElementById('pd-stammdaten-status');
+  if(!name){ statusEl.style.color = 'var(--danger)'; statusEl.textContent = 'Name darf nicht leer sein.'; return; }
+  if(email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ statusEl.style.color = 'var(--danger)'; statusEl.textContent = 'Bitte eine gültige E-Mail-Adresse angeben (oder leer lassen).'; return; }
+  const { error } = await supabaseClient.from('drivers').update({
+    name, phone: phone || null, email: email || null, address: address || null, tax_number: taxNumber || null
+  }).eq('id', currentManagedDriverId);
+  if(error){ console.error('Fahrer konnte nicht aktualisiert werden:', error); statusEl.style.color = 'var(--danger)'; statusEl.textContent = 'Fehler beim Speichern.'; return; }
+  await loadRealAllDriversCache();
+  closePeopleForms();
+}
+function togglePersonDriverVatRateField(){
+  document.getElementById('pd-vat-rate-wrap').style.display = document.getElementById('pd-vat-exempt').checked ? 'none' : 'block';
+}
+async function savePersonDriverVat(){
+  if(!currentManagedDriverId) return;
+  const exempt = document.getElementById('pd-vat-exempt').checked;
+  const rate = exempt ? 0 : Number(document.getElementById('pd-vat-rate').value || 0);
+  const statusEl = document.getElementById('pd-vat-status');
+  const { error } = await supabaseClient.from('drivers').update({ default_vat_exempt: exempt, default_vat_rate: rate }).eq('id', currentManagedDriverId);
+  if(error){ console.error('MwSt-Einstellung konnte nicht gespeichert werden:', error); statusEl.style.color = 'var(--danger)'; statusEl.textContent = 'Fehler beim Speichern.'; return; }
+  const d = realAllDriversCache.find(x=>x.id===currentManagedDriverId);
+  if(d){ d.default_vat_exempt = exempt; d.default_vat_rate = rate; }
+  statusEl.style.color = 'var(--teal)';
+  statusEl.textContent = '✓ Gespeichert.';
+}
+async function savePersonDriverFeeOverride(){
+  if(!currentManagedDriverId) return;
+  const percent = document.getElementById('pd-fee-percent').value;
+  const start = document.getElementById('pd-fee-start').value;
+  const end = document.getElementById('pd-fee-end').value;
+  const statusEl = document.getElementById('pd-fee-status');
+  if(percent === '' || percent === null){ statusEl.style.color=''; statusEl.textContent = t('admin_fo_fill_required'); return; }
+  if(Number(percent) < 0){ statusEl.style.color=''; statusEl.textContent = t('admin_fo_negative_error'); return; }
+  const { error } = await supabaseClient.from('fee_overrides').insert({
+    driver_id: currentManagedDriverId,
+    fee_percent: Number(percent),
+    starts_at: start || new Date().toISOString().slice(0,10),
+    ends_at: end || null,
+    created_by: (realDriverProfile && realDriverProfile.name) ? realDriverProfile.name : 'admin'
+  });
+  if(error){ console.error('Sonderkondition konnte nicht gespeichert werden:', error); statusEl.style.color = 'var(--danger)'; statusEl.textContent = 'Fehler beim Speichern.'; return; }
+  // Fahrer wie gewohnt per Nachricht informieren (gleiches Verhalten wie die alte Sonderkonditionen-Seite)
+  const range = (start || end) ? t('admin_fo_range_from_to').replace('{start}', start||'…').replace('{end}', end||'…') : t('admin_fo_range_immediate');
+  const noticeBody = Number(percent) === 0
+    ? t('admin_fo_notify_body_vip').replace('{range}', range)
+    : t('admin_fo_notify_body_set').replace('{percent}', Number(percent)).replace('{range}', range);
+  await supabaseClient.from('driver_messages').insert({
+    driver_id: currentManagedDriverId, type:'system', subject: t('admin_fo_notify_title'), body: noticeBody
+  });
+  statusEl.style.color = 'var(--teal)';
+  statusEl.textContent = '✓ Gespeichert.';
+  document.getElementById('pd-fee-percent').value = '';
+  document.getElementById('pd-fee-start').value = '';
+  document.getElementById('pd-fee-end').value = '';
+  renderPersonDriverFeeHistory(currentManagedDriverId);
+}
+async function renderPersonDriverFeeHistory(driverId){
+  const el = document.getElementById('pd-fee-history');
+  el.innerHTML = '<p class="note">Lädt…</p>';
+  const rows = await loadRealFeeOverridesCache(driverId);
+  if(rows.length === 0){ el.innerHTML = '<p class="note">Noch keine Sonderkonditionen für diesen Fahrer.</p>'; return; }
+  el.innerHTML = '<p class="dash-head" style="display:block; margin-bottom:6px;">Verlauf für diesen Fahrer:</p>' + rows.map(r => `
+    <div class="booking-row">
+      <div><div class="who">${r.fee_percent}%</div>
+        <div class="when">${r.starts_at ? formatDateDisplay(r.starts_at) : '…'} – ${r.ends_at ? formatDateDisplay(r.ends_at) : 'unbefristet'}</div></div>
+    </div>`).join('');
+}
+async function togglePersonDriverLock(){
+  if(!currentManagedDriverId) return;
+  const d = realAllDriversCache.find(x=>x.id===currentManagedDriverId);
+  if(!d) return;
+  await toggleRealDriverLock(d.id, d.is_locked, d.name);
+  await loadRealAllDriversCache();
+  loadDriverIntoManageForm(currentManagedDriverId);
+}
+async function togglePersonDriverVip(){
+  if(!currentManagedDriverId) return;
+  const d = realAllDriversCache.find(x=>x.id===currentManagedDriverId);
+  if(!d) return;
+  await toggleAutoDebit(d.id, d.auto_debit_enabled, d.name);
+  await loadRealAllDriversCache();
+  loadDriverIntoManageForm(currentManagedDriverId);
+}
+async function deletePersonDriver(){
+  if(!currentManagedDriverId) return;
+  const d = realAllDriversCache.find(x=>x.id===currentManagedDriverId);
+  if(!d) return;
+  await deleteRealDriver(d.id, d.name);
+  closePeopleForms();
+}
+
 // ---------- Villa-Buchungen (Detailansicht je Villa) ----------
 async function populateVillaBookingsSelect(){
   const sel = document.getElementById('villa-bookings-select');
@@ -15706,13 +15957,15 @@ document.getElementById('drivers-block-modal-bg').addEventListener('click', e=>{
 
 // ---- admin: Geld — fee overrides & fee credits ----
 async function renderFeeOverridePanel(){
-  const driverSel = document.getElementById('fee-override-driver-select');
+  // Bugfix (5.9.): fee-override-driver-select gibt es nicht mehr (das Formular ist jetzt Teil von
+  // "Fahrer/Villa verwalten", siehe pd-fee-*). Diese Funktion darf trotzdem nicht mehr komplett
+  // abbrechen, sonst wuerden auch die noch bestehenden Selects (Gutschrift, Belasten, Aufladen,
+  // Passwort-Reset, alle Filter) nie befuellt werden.
   const creditSel = document.getElementById('fee-credit-driver-select');
-  if(!driverSel || !creditSel) return; // not on this view
+  if(!creditSel) return; // nicht auf dieser Ansicht
   if(!(realDriverProfile || isAdminSession)) return;
   await loadRealAllDriversCache();
   const optsHTML = realDriverOptionsHTML();
-  driverSel.innerHTML = optsHTML;
   creditSel.innerHTML = optsHTML;
   const topupSel = document.getElementById('balance-topup-driver-select');
   if(topupSel) topupSel.innerHTML = optsHTML;
@@ -15741,9 +15994,6 @@ function openFeeCreditsModal(){ document.getElementById('fee-credits-modal-bg').
 function closeFeeCreditsModal(){ document.getElementById('fee-credits-modal-bg').classList.remove('active'); }
 document.getElementById('fee-credits-modal-bg').addEventListener('click', e=>{ if(e.target.id==='fee-credits-modal-bg') closeFeeCreditsModal(); });
 document.getElementById('fee-charges-modal-bg').addEventListener('click', e=>{ if(e.target.id==='fee-charges-modal-bg') closeFeeChargesModal(); });
-function createFeeOverride(){
-  if(realDriverProfile || isAdminSession) createRealFeeOverride();
-}
 function createFeeCredit(){
   if(realDriverProfile || isAdminSession) createRealFeeCredit();
 }
@@ -15757,7 +16007,7 @@ function closeFeeChargesModal(){ document.getElementById('fee-charges-modal-bg')
 let realAllDriversCache = [];
 async function loadRealAllDriversCache(){
   const { data, error } = await supabaseClient.from('drivers')
-    .select('id, name, lw_number, region, is_locked, locked_since, lock_reason, fees_due_idr, balance_idr, phone, auto_debit_enabled')
+    .select('id, name, lw_number, region, is_locked, locked_since, lock_reason, fees_due_idr, balance_idr, phone, email, address, tax_number, default_vat_exempt, default_vat_rate, auto_debit_enabled')
     .eq('status', 'approved')
     .order('name');
   if(error){ console.error('Fahrerliste konnte nicht geladen werden (evtl. nicht als Admin eingeloggt):', error); realAllDriversCache = []; return; }
@@ -15883,37 +16133,6 @@ async function loadRealFeeOverridesCache(filterDriverId){
   const { data, error } = await q;
   if(error){ console.error('Sonderkonditionen konnten nicht geladen werden:', error); return []; }
   return data || [];
-}
-async function createRealFeeOverride(){
-  const driverId = document.getElementById('fee-override-driver-select').value;
-  const percent = document.getElementById('fee-override-percent').value;
-  const start = document.getElementById('fee-override-start').value;
-  const end = document.getElementById('fee-override-end').value;
-  const statusEl = document.getElementById('fee-override-status');
-  if(!driverId || percent === '' || percent === null){ statusEl.style.color=''; statusEl.textContent = t('admin_fo_fill_required'); return; }
-  if(Number(percent) < 0){ statusEl.style.color=''; statusEl.textContent = t('admin_fo_negative_error'); return; }
-  const { error } = await supabaseClient.from('fee_overrides').insert({
-    driver_id: driverId,
-    fee_percent: Number(percent),
-    starts_at: start || new Date().toISOString().slice(0,10),
-    ends_at: end || null,
-    created_by: (realDriverProfile && realDriverProfile.name) ? realDriverProfile.name : 'admin'
-  });
-  if(error){ statusEl.style.color='var(--danger)'; statusEl.textContent = 'Fehler: ' + error.message; return; }
-  statusEl.style.color = 'var(--teal)';
-  statusEl.textContent = t('admin_fo_saved');
-  const range = (start || end) ? t('admin_fo_range_from_to').replace('{start}', start||'…').replace('{end}', end||'…') : t('admin_fo_range_immediate');
-  const noticeBody = Number(percent) === 0
-    ? t('admin_fo_notify_body_vip').replace('{range}', range)
-    : t('admin_fo_notify_body_set').replace('{percent}', Number(percent)).replace('{range}', range);
-  await supabaseClient.from('driver_messages').insert({
-    driver_id: driverId, type:'system', subject: t('admin_fo_notify_title'),
-    body: noticeBody
-  });
-  document.getElementById('fee-override-percent').value = '';
-  document.getElementById('fee-override-start').value = '';
-  document.getElementById('fee-override-end').value = '';
-  renderRealFeeOverridesList();
 }
 async function deleteRealFeeOverride(id, driverId){
   if(!confirm(t('admin_fo_confirm_delete'))) return;
@@ -16678,7 +16897,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v407</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v408</div>
 
 <!-- Etappe 4: Lade-Overlay waehrend "Buchung annehmen" im Hintergrund laeuft (kann bei VIP-Fahrern
      mit Auto-Einzug ein paar Sekunden dauern, da erst mit Xendit gesprochen wird, bevor die
