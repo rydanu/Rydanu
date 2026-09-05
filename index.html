@@ -974,6 +974,10 @@
     color:var(--teal); font-weight:700; font-family:'Public Sans'; font-size:0.88rem; background:none; border:none; padding:0;
   }
   @media (max-width:520px){ .admin-tile-grid{ gap:10px; } .admin-tile{ padding:14px 12px; } }
+  /* Einheitliche Ueberschrift fuer alle Admin-Bereiche (5.9., Joerg-Wunsch): linksbuendig statt
+     zentriert, klarer Abstand nach unten zum naechsten Element, unterstrichen zur besseren
+     optischen Abgrenzung. Wird auf alle admin-sec-* H2 angewendet. */
+  .admin-sec-title{ margin-top:0; margin-bottom:18px; text-align:left; text-decoration:underline; text-underline-offset:4px; }
   .money-panel-grid{ display:grid; grid-template-columns:1fr 1fr; gap:24px; align-items:start; }
   .money-panel-grid h3{ margin-top:0; }
   @media (max-width:860px){ .money-panel-grid{ grid-template-columns:1fr; gap:0; } }
@@ -2687,21 +2691,21 @@
     <button type="button" class="admin-back-link" id="admin-back-link" onclick="showAdminHome()" style="display:none;">‹ Zurück zur Übersicht</button>
 
     <div id="admin-sec-pending" style="display:none;">
-    <h2 data-i18n="admin_title">Pending driver approvals</h2>
+    <h2 class="admin-sec-title" data-i18n="admin_title">Pending driver approvals</h2>
     <p class="dash-head" style="display:block; margin-bottom:20px;" data-i18n="admin_sub">Review uploaded documents, then approve to make a driver's listings publicly bookable.</p>
     <div id="admin-pending-list"></div>
 
     </div>
 
     <div id="admin-sec-openpay" style="display:none;">
-    <h2 style="margin-top:0;" data-i18n="admin_openpay_title">Open payments</h2>
+    <h2 class="admin-sec-title" data-i18n="admin_openpay_title">Open payments</h2>
     <p class="dash-head" style="display:block; margin-bottom:14px;" data-i18n="admin_openpay_sub">All drivers with open fees right now. You can collect fees manually here at any time — real billing also runs automatically every day.</p>
     <div class="panel" id="admin-openpayments-list" style="margin-bottom:8px;"></div>
 
     </div>
 
     <div id="admin-sec-stats" style="display:none;">
-    <h2 style="margin-top:0; margin-bottom:16px;" data-i18n="admin_stats_title">Business overview</h2>
+    <h2 class="admin-sec-title" data-i18n="admin_stats_title">Business overview</h2>
     <div class="period-tabs" id="admin-period-tabs">
       <button type="button" class="period-btn active" data-period="day" onclick="setAdminPeriod('day')" data-i18n="period_day">Daily</button>
       <button type="button" class="period-btn" data-period="month" onclick="setAdminPeriod('month')" data-i18n="period_month">Monthly</button>
@@ -2717,7 +2721,7 @@
     </div>
 
     <div id="admin-sec-driverstats" style="display:none;">
-    <h2 style="margin-top:0; text-align:center;">Fahrer- / Villen-Statistik</h2>
+    <h2 class="admin-sec-title">📈 Fahrer- / Villen-Statistik</h2>
     <div class="money-panel-grid" style="max-width:100%; margin:0 auto; gap:56px;">
     <div>
     <h3 data-i18n="admin_driverstats_title">Driver statistics</h3>
@@ -2740,7 +2744,7 @@
     </div>
 
     <div id="admin-sec-messages" style="display:none;">
-    <h2 style="margin-top:0; margin-bottom:16px;" data-i18n="admin_messages_title">Messages from drivers</h2>
+    <h2 class="admin-sec-title" data-i18n="admin_messages_title">Messages from drivers</h2>
     <button type="button" class="period-btn" onclick="openAdminComposeMsg()" style="margin-bottom:16px; background:var(--gold); border-color:var(--gold); color:var(--ink); font-weight:700;">✉️ <span data-i18n="admin_compose_btn">Message a driver</span></button>
     <div class="period-tabs" id="admin-msg-view-tabs">
       <button type="button" class="period-btn active" data-view="inbox" onclick="setAdminMsgViewTab('inbox')" data-i18n="mailbox_tab_inbox">Inbox</button>
@@ -2752,7 +2756,7 @@
     </div>
 
     <div id="admin-sec-block" style="display:none;">
-    <h2 style="margin-top:0;">🧑‍✈️🏠 Fahrer/Villa verwalten</h2>
+    <h2 class="admin-sec-title">🧑‍✈️🏠 Fahrer/Villa verwalten</h2>
     <p class="dash-head" style="display:block; margin-bottom:20px;">Suchen und auswählen, dann bearbeiten — Stammdaten, Gebührensatz, MwSt-Einstellung und Konto-Aktionen an einem Ort.</p>
 
     <div class="form-field">
@@ -2935,7 +2939,7 @@
 
 
     <div id="admin-sec-documents" style="display:none;">
-    <h2 style="margin-top:0;">📄 Fahrer Dokumente</h2>
+    <h2 class="admin-sec-title">📄 Fahrer Dokumente</h2>
     <p class="dash-head" style="display:block; margin-bottom:14px;">Fahrer auswählen, um die bei der Registrierung hochgeladenen Dokumente anzusehen. Die Dokumente selbst bleiben dauerhaft gespeichert — beim erneuten Öffnen dieser Seite wird automatisch ein frischer Link erzeugt, es geht also nichts verloren.</p>
     <div class="form-field" style="max-width:340px;">
       <select id="admin-documents-driver-select" onchange="renderAdminDocuments()"></select>
@@ -2945,7 +2949,7 @@
     </div>
 
     <div id="admin-sec-money" style="display:none;">
-    <h2 style="margin-top:0; margin-bottom:20px;" data-i18n="admin_money_title">💰 Geld — Gebühren &amp; Gutschriften</h2>
+    <h2 class="admin-sec-title" data-i18n="admin_money_title">💰 Geld — Gebühren &amp; Gutschriften</h2>
 
     <div class="money-panel-grid">
     <div>
@@ -3020,7 +3024,7 @@
     </div>
 
     <div id="admin-sec-invoices" style="display:none;">
-    <h2 style="margin-top:0;">🧾 Rechnungen</h2>
+    <h2 class="admin-sec-title">🧾 Rechnungen</h2>
     <p class="dash-head" style="display:block; margin-bottom:20px;">Rechnungen für Fahrer und Villa-Partner erstellen, archivieren, versenden und verwalten. Absender: Rydanu UG.</p>
 
     <div id="inv-view-list">
@@ -3123,7 +3127,7 @@
     </div>
 
     <div id="admin-sec-villa" style="display:none;">
-    <h2 style="margin-top:0;">Villa-Partner</h2>
+    <h2 class="admin-sec-title">🏠 Villa-Partner</h2>
     <p class="dash-head" style="display:block; margin-bottom:20px;">Villen &amp; Hotels anlegen, die ihren Gästen über einen persönlichen Link Transfers anfragen lassen können. Fahrer zahlen bei Villa-Buchungen pauschal 20% (statt normal 10%) — die Villa bekommt davon ihren festgelegten Anteil, Rydanu die Differenz.</p>
 
     <div class="panel" style="padding:16px; margin-bottom:20px;">
@@ -3201,7 +3205,7 @@
     </div>
 
     <div id="admin-sec-villabookings" style="display:none;">
-    <h2 style="margin-top:0;">📖 Villa-Buchungen</h2>
+    <h2 class="admin-sec-title">📖 Villa-Buchungen</h2>
     <p class="dash-head" style="display:block; margin-bottom:14px;">Villa auswählen, um alle ihre Buchungen mit Provisions-/Gebührenaufteilung einzusehen.</p>
     <div class="form-field" style="max-width:340px;">
       <select id="villa-bookings-select" onchange="renderVillaBookingsList(); renderVillaRequestsAdminList();"></select>
@@ -3217,7 +3221,7 @@
     </div>
 
     <div id="admin-sec-pwreset" style="display:none;">
-    <h2 style="margin-top:0;" data-i18n="admin_pwreset_title">🔑 Fahrer-Passwort zurücksetzen</h2>
+    <h2 class="admin-sec-title" data-i18n="admin_pwreset_title">🔑 Fahrer-Passwort zurücksetzen</h2>
     <p class="dash-head" style="display:block; margin-bottom:20px;" data-i18n="admin_pwreset_sub">Für Fahrer, die sich nicht mehr einloggen können (z. B. Passwort vergessen ohne eigene E-Mail). Das neue Passwort gibst du dem Fahrer danach selbst durch, z. B. per WhatsApp.</p>
     <div class="panel" style="padding:16px; margin-bottom:20px;">
       <div class="form-field">
@@ -10650,7 +10654,7 @@ const translations = {
     support_error: "Please enter a subject and a message.",
     support_sent: "Your message has been sent to Rydanu Support. ✓ We'll reply to your inbox.",
     period_day: "Daily", period_month: "Monthly", period_year: "Yearly",
-    admin_stats_title: "Business overview", admin_messages_title: "Messages from drivers",
+    admin_stats_title: "📊 Business overview", admin_messages_title: "✉️ Messages from drivers",
     admin_compose_btn: "Message a driver", admin_compose_title: "Message a driver", admin_compose_driver_label: "Driver", admin_compose_send_btn: "Send message",
     admin_driverstats_title: "Driver statistics", admin_driverstats_sub: "Select a driver to see their completed and cancelled tours.",
     admin_stat_driver_completed: "Completed tours", admin_stat_driver_cancelled_driver: "Cancelled by driver", admin_stat_driver_cancelled_customer: "Cancelled by customer", admin_stat_driver_total: "Total tours", admin_stat_driver_revenue: "Revenue", admin_stat_driver_fee_revenue: "Fee revenue",
@@ -10834,7 +10838,7 @@ const translations = {
     nav_bookings: "Bookings", booking_history_title: "Booking history",
     bd_title: "Booking details", bd_email: "Email", bd_phone: "WhatsApp", bd_ref: "Reference", bd_status: "Status",
     rcpt_title: "Receipt", rcpt_no: "Receipt no.", rcpt_item: "Booking fees", rcpt_total: "Total paid", rcpt_note: "This receipt was also sent to your email address. Payment method: your saved payment method (Stripe).", el_eyebrow: "My listings", el_title: "Edit listing", el_name_label: "Tour name *", el_price_label: "Price *", el_duration_label: "Duration", el_save_btn: "Save changes", el_error: "Please fill the highlighted fields.", el_delete_btn: "🗑️ Delete this listing", el_delete_confirm: "Really delete \"{name}\"? This cannot be undone.", nl_pickup_prices_title: "Different price per pickup region? (optional — leave empty to use the same price everywhere)", nl_special_rates_title: "Special destinations (optional) — free text, info only, not auto-matched", nl_special_rates_add: "+ Add destination", rcpt_credit_applied: "Referral credit applied", rcpt_pdf_open_btn: "🧾 Open as PDF", rcpt_pdf_download_btn: "⬇ Download", rcpt_pdf_receipt_no: "Receipt no.", rcpt_pdf_date: "Date", rcpt_pdf_driver: "Driver", rcpt_pdf_rydanu_no: "Rydanu no.", rcpt_pdf_item: "Trip", rcpt_pdf_amount: "Amount", rcpt_pdf_total: "Total settled", rcpt_pdf_footer: "This receipt was generated automatically by Rydanu and lists the trip fees included in this settlement.", rcpt_pdf_filename_prefix: "Rydanu-Beleg",
-    admin_openpay_title: "Open payments", admin_openpay_sub: "Drivers whose automatic month-end fee payment failed. They have 5 days to settle before their account is automatically suspended.",
+    admin_openpay_title: "💳 Open payments", admin_openpay_sub: "Drivers whose automatic month-end fee payment failed. They have 5 days to settle before their account is automatically suspended.",
     admin_run_settlement_btn: "Run month-end settlement now (test)", admin_settlement_real_note: "Real fee billing already runs automatically every day (daily cron job) — there's no manual trigger for real drivers, and this button only affects demo data.", admin_openpay_empty: "No open payments right now — everyone is settled.",
     admin_openpay_amount: "Amount due", admin_openpay_due: "Due date", admin_openpay_suspended: "🚫 Suspended", admin_openpay_overdue: "Overdue",
     admin_openpay_balance: "Balance", admin_openpay_credit: "Pending credit", admin_openpay_collect_btn: "Collect now", admin_openpay_details_btn: "Details", admin_openpay_hide_btn: "Hide",
@@ -10935,7 +10939,7 @@ const translations = {
     rd_notify_admin_wa: "WhatsApp to Rydanu admin",
     rd_notify_driver: "Email & WhatsApp to you",
     rd_pending_done_btn: "Go to my dashboard",
-    admin_title: "Pending driver approvals",
+    admin_title: "🆕 Pending driver approvals",
     admin_sub: "Review uploaded documents, then approve to make a driver's listings publicly bookable.",
     admin_block_title: "All drivers — block / unblock",
     admin_block_sub: "Tap a driver to block them — blocked drivers and all their tours disappear from the traveler view immediately.",
@@ -11025,7 +11029,7 @@ const translations = {
     support_error: "Bitte gib einen Betreff und eine Nachricht ein.",
     support_sent: "Deine Nachricht wurde an den Rydanu Support gesendet. ✓ Die Antwort erhältst du in deinem Posteingang.",
     period_day: "Täglich", period_month: "Monatlich", period_year: "Jährlich",
-    admin_stats_title: "Geschäftsübersicht", admin_messages_title: "Nachrichten von Fahrern",
+    admin_stats_title: "📊 Geschäftsübersicht", admin_messages_title: "✉️ Nachrichten von Fahrern",
     admin_compose_btn: "Nachricht an Fahrer", admin_compose_title: "Nachricht an Fahrer", admin_compose_driver_label: "Fahrer", admin_compose_send_btn: "Nachricht senden",
     admin_driverstats_title: "Fahrer-Statistik", admin_driverstats_sub: "Wähle einen Fahrer, um dessen abgeschlossene und stornierte Touren zu sehen.",
     admin_stat_driver_completed: "Abgeschlossene Touren", admin_stat_driver_cancelled_driver: "Storniert durch Fahrer", admin_stat_driver_cancelled_customer: "Storniert durch Kunde", admin_stat_driver_total: "Touren insgesamt", admin_stat_driver_revenue: "Umsatz", admin_stat_driver_fee_revenue: "Gebühren-Umsatz",
@@ -11209,7 +11213,7 @@ const translations = {
     nav_bookings: "Buchungen", booking_history_title: "Buchungsverlauf",
     bd_title: "Buchungsdetails", bd_email: "E-Mail", bd_phone: "WhatsApp", bd_ref: "Referenz", bd_status: "Status",
     rcpt_title: "Beleg", rcpt_no: "Beleg-Nr.", rcpt_item: "Buchungsgebühren", rcpt_total: "Gesamt bezahlt", rcpt_note: "Dieser Beleg wurde zusätzlich an deine E-Mail-Adresse gesendet. Zahlungsmethode: deine hinterlegte Zahlungsmethode (Stripe).", el_eyebrow: "Meine Angebote", el_title: "Angebot bearbeiten", el_name_label: "Tour-Name *", el_price_label: "Preis *", el_duration_label: "Dauer", el_save_btn: "Änderungen speichern", el_error: "Bitte fülle die markierten Felder aus.", el_delete_btn: "🗑️ Angebot löschen", el_delete_confirm: "\"{name}\" wirklich löschen? Das kann nicht rückgängig gemacht werden.", nl_pickup_prices_title: "Unterschiedlicher Preis je Abholregion? (optional — leer lassen für überall denselben Preis)", nl_special_rates_title: "Spezialziele (optional) — Freitext, nur Info, kein automatisches Matching", nl_special_rates_add: "+ Ziel hinzufügen", rcpt_credit_applied: "Empfehlungs-Gutschrift angerechnet", rcpt_pdf_open_btn: "🧾 Als PDF öffnen", rcpt_pdf_download_btn: "⬇ Herunterladen", rcpt_pdf_receipt_no: "Beleg-Nr.", rcpt_pdf_date: "Datum", rcpt_pdf_driver: "Fahrer", rcpt_pdf_rydanu_no: "Rydanu-Nr.", rcpt_pdf_item: "Fahrt", rcpt_pdf_amount: "Betrag", rcpt_pdf_total: "Gesamt beglichen", rcpt_pdf_footer: "Dieser Beleg wurde automatisch von Rydanu erstellt und listet die Fahrtgebühren dieses Einzugs auf.", rcpt_pdf_filename_prefix: "Rydanu-Beleg",
-    admin_openpay_title: "Offene Zahlungen", admin_openpay_sub: "Fahrer, deren automatische Monatsend-Gebührenzahlung fehlgeschlagen ist. Sie haben 5 Tage Zeit zu zahlen, bevor ihr Konto automatisch gesperrt wird.",
+    admin_openpay_title: "💳 Offene Zahlungen", admin_openpay_sub: "Fahrer, deren automatische Monatsend-Gebührenzahlung fehlgeschlagen ist. Sie haben 5 Tage Zeit zu zahlen, bevor ihr Konto automatisch gesperrt wird.",
     admin_run_settlement_btn: "Monatsabrechnung jetzt ausführen (Test)", admin_settlement_real_note: "Die echte Gebührenabrechnung läuft schon automatisch jeden Tag (täglicher Cronjob) — dafür gibt es keinen manuellen Auslöser für echte Fahrer, dieser Button betrifft nur Demo-Daten.", admin_openpay_empty: "Aktuell keine offenen Zahlungen — alles beglichen.",
     admin_openpay_amount: "Fälliger Betrag", admin_openpay_due: "Fällig am", admin_openpay_suspended: "🚫 Gesperrt", admin_openpay_overdue: "Überfällig",
     admin_openpay_balance: "Guthaben", admin_openpay_credit: "Offene Gutschrift", admin_openpay_collect_btn: "Jetzt einziehen", admin_openpay_details_btn: "Details", admin_openpay_hide_btn: "Ausblenden",
@@ -11310,7 +11314,7 @@ const translations = {
     rd_notify_admin_wa: "WhatsApp an Rydanu-Admin",
     rd_notify_driver: "E-Mail & WhatsApp an dich",
     rd_pending_done_btn: "Zu meinem Dashboard",
-    admin_title: "Ausstehende Fahrer-Freischaltungen",
+    admin_title: "🆕 Ausstehende Fahrer-Freischaltungen",
     admin_sub: "Prüfe die hochgeladenen Dokumente und schalte den Fahrer frei, damit seine Angebote öffentlich buchbar werden.",
     admin_block_title: "Alle Fahrer — sperren / entsperren",
     admin_block_sub: "Tippe einen Fahrer an, um ihn zu sperren — gesperrte Fahrer und alle ihre Touren verschwinden sofort aus der Kundenansicht.",
@@ -11400,7 +11404,7 @@ const translations = {
     support_error: "Mohon isi subjek dan pesan.",
     support_sent: "Pesan Anda telah dikirim ke Dukungan Rydanu. ✓ Balasan akan masuk ke kotak masuk Anda.",
     period_day: "Harian", period_month: "Bulanan", period_year: "Tahunan",
-    admin_stats_title: "Ringkasan bisnis", admin_messages_title: "Pesan dari sopir",
+    admin_stats_title: "📊 Ringkasan bisnis", admin_messages_title: "✉️ Pesan dari sopir",
     admin_compose_btn: "Pesan ke sopir", admin_compose_title: "Pesan ke sopir", admin_compose_driver_label: "Sopir", admin_compose_send_btn: "Kirim pesan",
     admin_driverstats_title: "Statistik sopir", admin_driverstats_sub: "Pilih sopir untuk melihat tur yang selesai dan dibatalkan.",
     admin_stat_driver_completed: "Tur selesai", admin_stat_driver_cancelled_driver: "Dibatalkan oleh sopir", admin_stat_driver_cancelled_customer: "Dibatalkan oleh pelanggan", admin_stat_driver_total: "Total tur", admin_stat_driver_revenue: "Pendapatan", admin_stat_driver_fee_revenue: "Pendapatan biaya",
@@ -11584,7 +11588,7 @@ const translations = {
     nav_bookings: "Pemesanan", booking_history_title: "Riwayat pemesanan",
     bd_title: "Detail pemesanan", bd_email: "Email", bd_phone: "WhatsApp", bd_ref: "Referensi", bd_status: "Status",
     rcpt_title: "Kuitansi", rcpt_no: "No. kuitansi", rcpt_item: "Biaya pemesanan", rcpt_total: "Total dibayar", rcpt_note: "Kuitansi ini juga dikirim ke alamat email Anda. Metode pembayaran: metode pembayaran tersimpan Anda (Stripe).", el_eyebrow: "Tur saya", el_title: "Edit tur", el_name_label: "Nama tur *", el_price_label: "Harga *", el_duration_label: "Durasi", el_save_btn: "Simpan perubahan", el_error: "Mohon isi kolom yang ditandai.", el_delete_btn: "🗑️ Hapus tur ini", el_delete_confirm: "Yakin ingin menghapus \"{name}\"? Tindakan ini tidak dapat dibatalkan.", nl_pickup_prices_title: "Harga berbeda per wilayah penjemputan? (opsional — kosongkan untuk harga yang sama di mana saja)", nl_special_rates_title: "Tujuan khusus (opsional) — teks bebas, hanya info, tidak dicocokkan otomatis", nl_special_rates_add: "+ Tambah tujuan", rcpt_credit_applied: "Kredit referral diterapkan", rcpt_pdf_open_btn: "🧾 Buka sebagai PDF", rcpt_pdf_download_btn: "⬇ Unduh", rcpt_pdf_receipt_no: "No. kuitansi", rcpt_pdf_date: "Tanggal", rcpt_pdf_driver: "Pengemudi", rcpt_pdf_rydanu_no: "No. Rydanu", rcpt_pdf_item: "Perjalanan", rcpt_pdf_amount: "Jumlah", rcpt_pdf_total: "Total diselesaikan", rcpt_pdf_footer: "Kuitansi ini dibuat otomatis oleh Rydanu dan mencantumkan biaya perjalanan dalam penyelesaian ini.", rcpt_pdf_filename_prefix: "Rydanu-Kuitansi",
-    admin_openpay_title: "Pembayaran terbuka", admin_openpay_sub: "Sopir yang pembayaran biaya akhir bulan otomatisnya gagal. Mereka punya 5 hari untuk melunasi sebelum akun mereka otomatis ditangguhkan.",
+    admin_openpay_title: "💳 Pembayaran terbuka", admin_openpay_sub: "Sopir yang pembayaran biaya akhir bulan otomatisnya gagal. Mereka punya 5 hari untuk melunasi sebelum akun mereka otomatis ditangguhkan.",
     admin_run_settlement_btn: "Jalankan penyelesaian akhir bulan sekarang (uji)", admin_settlement_real_note: "Penagihan biaya sesungguhnya sudah berjalan otomatis setiap hari (cron job harian) — tidak ada pemicu manual untuk sopir sungguhan, tombol ini hanya memengaruhi data demo.", admin_openpay_empty: "Tidak ada pembayaran terbuka saat ini — semua sudah lunas.",
     admin_openpay_amount: "Jumlah jatuh tempo", admin_openpay_due: "Tanggal jatuh tempo", admin_openpay_suspended: "🚫 Ditangguhkan", admin_openpay_overdue: "Terlambat",
     admin_openpay_balance: "Saldo", admin_openpay_credit: "Kredit tertunda", admin_openpay_collect_btn: "Tagih sekarang", admin_openpay_details_btn: "Rincian", admin_openpay_hide_btn: "Sembunyikan",
@@ -11685,7 +11689,7 @@ const translations = {
     rd_notify_admin_wa: "WhatsApp ke admin Rydanu",
     rd_notify_driver: "Email & WhatsApp ke Anda",
     rd_pending_done_btn: "Ke dasbor saya",
-    admin_title: "Persetujuan sopir yang tertunda",
+    admin_title: "🆕 Persetujuan sopir yang tertunda",
     admin_sub: "Tinjau dokumen yang diunggah, lalu setujui agar tur sopir dapat dipesan publik.",
     admin_block_title: "Semua sopir — blokir / buka blokir",
     admin_block_sub: "Ketuk sopir untuk memblokirnya — sopir yang diblokir dan semua turnya langsung hilang dari tampilan wisatawan.",
@@ -16017,8 +16021,18 @@ function showAdminSection(id){
     const el = document.getElementById('admin-sec-'+s);
     if(el) el.style.display = (s===id) ? 'block' : 'none';
   });
-  const wrap = document.querySelector('#view-admin > div');
-  if(wrap) wrap.scrollIntoView({ behavior:'instant', block:'start' });
+  // Bugfix (5.9.): vorher zielte scrollIntoView IMMER auf '#view-admin > div', also den
+  // aeusseren Gesamt-Wrapper der kompletten Admin-Seite -- unabhaengig davon, welche Kachel
+  // gerade geoeffnet wurde. Ausserdem lief der Scroll sofort, bevor der Browser das
+  // Ein-/Ausblenden der Bereiche fertig neu layoutet hatte (race condition, gleiches Muster
+  // wie beim Reflow-Fix vom 20.8.). Jetzt: Ziel ist die tatsaechlich geoeffnete Section, und
+  // zwei requestAnimationFrame-Durchlaeufe warten, bis das Layout sicher fertig ist.
+  const target = document.getElementById('admin-sec-'+id) || document.querySelector('#view-admin > div');
+  requestAnimationFrame(()=>{
+    requestAnimationFrame(()=>{
+      if(target) target.scrollIntoView({ behavior:'instant', block:'start' });
+    });
+  });
 }
 function showAdminHome(){
   const menu = document.getElementById('admin-tile-menu');
@@ -16993,7 +17007,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v411</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v412</div>
 
 <!-- Etappe 4: Lade-Overlay waehrend "Buchung annehmen" im Hintergrund laeuft (kann bei VIP-Fahrern
      mit Auto-Einzug ein paar Sekunden dauern, da erst mit Xendit gesprochen wird, bevor die
