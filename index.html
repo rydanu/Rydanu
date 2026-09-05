@@ -2288,7 +2288,7 @@
           <div class="stat-card"><div class="num" id="stat-views">312</div><div class="lbl" data-i18n="stat_views">Profile views</div></div>
           <div class="stat-card"><div class="num" id="stat-requests">18</div><div class="lbl" data-i18n="stat_requests">Booking requests</div></div>
           <div class="stat-card"><div class="num" id="stat-rating">4.9</div><div class="lbl" data-i18n="stat_rating">Avg. rating</div></div>
-          <div class="stat-card stat-card-clickable" id="fees-stat-card" onclick="payFees()"><div class="num" id="stat-fees">IDR 0</div><div class="lbl" data-i18n="stat_fees">Fees this month</div><div class="pay-fees-hint" id="pay-fees-hint">Tap to pay</div>
+          <div class="stat-card stat-card-clickable" id="fees-stat-card" onclick="openDriverMonthlyChargesPreview()"><div class="num" id="stat-fees">IDR 0</div><div class="lbl" data-i18n="stat_fees">Fees this month</div><div class="pay-fees-hint" id="pay-fees-hint">Tap to pay</div>
             <div class="referral-credit-row" id="referral-credit-row" style="display:none;">🎁 <span data-i18n="referral_credit_lbl">Referral credit</span> <span id="referral-credit-amount">− IDR 0</span></div>
             <div class="referral-credit-row" id="admin-credit-row" style="display:none;">💚 <span data-i18n="admin_credit_lbl">Credit</span> <span id="admin-credit-amount">− IDR 0</span></div>
             <div class="referral-credit-row" id="real-balance-row" style="display:none;">💰 <span id="real-balance-label">Guthaben</span> <span id="real-balance-amount"></span></div>
@@ -2873,13 +2873,15 @@
         </div>
         <div class="form-field" style="margin-bottom:0;">
           <label>Kunde</label>
+          <input type="text" id="inv-filter-customer-search" placeholder="Name oder RY-Nummer suchen…"
+            oninput="rebuildInvoiceCustomerOptions()" style="margin-bottom:6px;">
           <select id="inv-filter-customer" onchange="renderInvoicesList()">
             <option value="">Alle</option>
           </select>
         </div>
         <div class="form-field" style="margin-bottom:0;">
           <label>Empfänger-Art</label>
-          <select id="inv-filter-recipient" onchange="renderInvoicesList()">
+          <select id="inv-filter-recipient" onchange="rebuildInvoiceCustomerOptions(); renderInvoicesList();">
             <option value="">Alle</option>
             <option value="driver">Fahrer</option>
             <option value="villa">Villa</option>
@@ -6508,6 +6510,64 @@ async function openFeeBreakdown(){
   document.getElementById('fee-breakdown-total').textContent = formatIDR(total);
 }
 function closeFeeBreakdown(){ document.getElementById('fee-breakdown-modal-bg').classList.remove('active'); }
+
+// NEU (5.9., Bugfix): die Gebuehren-Kachel rief bisher payFees() auf -- eine reine Alt-Platzhalter-
+// Funktion aus der Zeit vor dem Zahlungssystem-Umbau, die nur eine Meldung zeigt und nichts tut.
+// Diese neue Funktion zeigt stattdessen dieselbe Aufschluesselung, die auch die automatische
+// Monats-Rechnung nutzt: jede diesen Monat abgebuchte Buchung einzeln mit Fahrpreis + Satz +
+// Provision (Finanzamt-Nachweis-Format). Ist eine LIVE-Vorschau des laufenden Monats -- die
+// tatsaechliche Rechnung entsteht ja erst automatisch am Monatsletzten.
+function _baliTodayParts(){
+  // Asia/Makassar hat ganzjaehrig UTC+8, keine Sommerzeit -- einfache, zuverlaessige Berechnung.
+  const utcMs = Date.now() + (new Date().getTimezoneOffset() * 60000);
+  const bali = new Date(utcMs + 8 * 3600000);
+  return { y: bali.getUTCFullYear(), m: bali.getUTCMonth() }; // m: 0-basiert
+}
+async function openDriverMonthlyChargesPreview(){
+  if(!realDriverProfile) return;
+  const list = document.getElementById('fee-breakdown-list');
+  list.innerHTML = `<div class="empty-state">${t('loading_generic')}</div>`;
+  document.getElementById('fee-breakdown-modal-bg').classList.add('active');
+  document.getElementById('fee-breakdown-eyebrow').textContent = t('stat_fees');
+  document.getElementById('fee-breakdown-title').textContent = t('fee_breakdown_title');
+  document.getElementById('fee-breakdown-total-label').textContent = t('fee_breakdown_total_label');
+  const goBtn = document.getElementById('fee-breakdown-go-to-fees-btn');
+  if(goBtn) goBtn.style.display = 'none';
+  const pdfRow = document.getElementById('fee-breakdown-pdf-row');
+  if(pdfRow) pdfRow.style.display = 'none';
+  lastReceiptPdfData = null;
+
+  const { y, m } = _baliTodayParts();
+  const firstDay = new Date(Date.UTC(y, m, 1)).toISOString().slice(0,10);
+  const lastDay = new Date(Date.UTC(y, m + 1, 0)).toISOString().slice(0,10);
+
+  const { data, error } = await supabaseClient.from('bookings')
+    .select('booking_number, price_idr, fee_percent_applied, fee_idr, fee_charged_at, status')
+    .eq('driver_id', realDriverProfile.id)
+    .gte('fee_charged_at', firstDay + 'T00:00:00+08:00')
+    .lt('fee_charged_at', lastDay + 'T23:59:59.999+08:00')
+    .not('status', 'in', '(cancel_requested,cancelled_by_customer)')
+    .order('fee_charged_at', { ascending:true });
+
+  if(error){ console.error('Monats-Aufschlüsselung konnte nicht geladen werden:', error); list.innerHTML = `<div class="empty-state">${t('fee_breakdown_load_err')}</div>`; return; }
+  const rows = (data||[]).filter(b => (b.fee_idr||0) > 0);
+  let total = 0;
+  if(rows.length === 0){
+    list.innerHTML = `<div class="empty-state">${t('fee_breakdown_empty')}</div>`;
+  } else {
+    list.innerHTML = rows.map(b=>{
+      total += (b.fee_idr||0);
+      const dateStr = b.fee_charged_at ? formatDateDisplay(b.fee_charged_at.slice(0,10)) : '—';
+      return `
+      <div class="booking-row">
+        <div><div class="who">Buchung #${b.booking_number}</div>
+          <div class="when">${dateStr} · Fahrpreis ${formatIDR(b.price_idr||0)} · Satz ${b.fee_percent_applied}%</div></div>
+        <span class="mono" style="font-weight:700;">${formatIDR(b.fee_idr||0)}</span>
+      </div>`;
+    }).join('');
+  }
+  document.getElementById('fee-breakdown-total').textContent = formatIDR(total);
+}
 document.getElementById('fee-breakdown-modal-bg').addEventListener('click', e=>{ if(e.target.id==='fee-breakdown-modal-bg') closeFeeBreakdown(); });
 
 // PDF-Beleg (14. August, auf Joergs Wunsch): wird komplett im Browser erzeugt, kein Server/Edge
@@ -6639,20 +6699,17 @@ async function renderRealOverviewStats(){
   const feesEl = document.getElementById('stat-fees');
   if(feesEl) feesEl.textContent = formatIDR(feesDue);
   const feesCard = document.getElementById('fees-stat-card');
-  // Baustein "Offener Betrag aufschluesseln" (13. August): echte Zahlung ist zwar weiterhin nicht
-  // angebunden (kein Zahlungsanbieter), aber jetzt kann der Fahrer wenigstens sehen, WELCHE Touren
-  // hinter dem offenen Betrag stecken (nutzt die neue fee_settled-Spalte, siehe openFeeBreakdown()).
+  // Bugfix (5.9., Joerg gemeldet): dieser Block hat den Klick der Kachel bisher komplett
+  // ABGESCHALTET (onclick=null), sobald feesDue (nur noch fuer Featured-Placement genutzt) bei 0
+  // lag -- was seit dem Zahlungssystem-Umbau der Normalfall ist. Die Kachel blieb dadurch faktisch
+  // fast immer tot. Jetzt IMMER klickbar, zeigt die Monats-Aufschluesselung (Fahrpreis+Satz+Provision
+  // pro Buchung, siehe openDriverMonthlyChargesPreview()) unabhaengig vom alten feesDue-Wert.
   if(feesCard){
-    if(feesDue > 0){
-      feesCard.onclick = openFeeBreakdown;
-      feesCard.classList.add('stat-card-clickable');
-    } else {
-      feesCard.onclick = null;
-      feesCard.classList.remove('stat-card-clickable');
-    }
+    feesCard.onclick = openDriverMonthlyChargesPreview;
+    feesCard.classList.add('stat-card-clickable');
   }
   const feesHint = document.getElementById('pay-fees-hint');
-  if(feesHint) feesHint.textContent = feesDue > 0 ? t('fee_breakdown_tap_hint') : ('✓ ' + t('st_paid'));
+  if(feesHint) feesHint.textContent = t('fee_breakdown_tap_hint');
   const balanceRow = document.getElementById('real-balance-row');
   const balanceLabel = document.getElementById('real-balance-label');
   const balanceAmount = document.getElementById('real-balance-amount');
@@ -12079,24 +12136,62 @@ async function loadInvoicesList(){
 
 // Kombinierte "Kunde"-Filterliste aus Fahrern + Villen, damit man wie gewuenscht nach einem
 // konkreten Empfaenger filtern kann (nicht nur nach Fahrer/Villa als Kategorie).
+// Bugfix (5.9., Joerg gemeldet per Screenshot): vorher wurden IMMER alle Fahrer+Villen zusammen
+// aufgelistet, unabhaengig vom "Empfaenger-Art"-Filter, und es gab keine Namensuche (nur eine lange
+// Liste). Beides jetzt behoben: die komplette Liste wird einmal geladen und lokal zwischengespeichert
+// (_invCustomerCache), rebuildInvoiceCustomerOptions() filtert daraus clientseitig nach Suchtext UND
+// nach dem aktuell gewaehlten Empfaenger-Art-Filter, ohne jedes Mal neu von der Datenbank zu laden.
+let _invCustomerCache = { drivers: [], villas: [] };
+
 async function populateInvoiceFilterCustomerSelect(){
   const sel = document.getElementById('inv-filter-customer');
   if(!sel) return;
-  const current = sel.value;
   const { data: drivers } = await supabaseClient.from('drivers').select('id, name, lw_number').order('name');
   const { data: villas } = await supabaseClient.from('villa_partners').select('id, name').order('name');
+  _invCustomerCache.drivers = drivers || [];
+  _invCustomerCache.villas = villas || [];
+  rebuildInvoiceCustomerOptions();
+}
+
+function rebuildInvoiceCustomerOptions(){
+  const sel = document.getElementById('inv-filter-customer');
+  const searchEl = document.getElementById('inv-filter-customer-search');
+  const recipientFilter = document.getElementById('inv-filter-recipient').value; // '', 'driver', 'villa'
+  if(!sel) return;
+  const current = sel.value;
+  const q = (searchEl ? searchEl.value : '').trim().toLowerCase();
+
+  const matchesSearch = (label) => !q || label.toLowerCase().includes(q);
+
   let opts = '<option value="">Alle</option>';
-  opts += (drivers||[]).map(d => `<option value="driver:${d.id}">🚗 ${escapeHtml(d.name)} (${d.lw_number||'—'})</option>`).join('');
-  opts += (villas||[]).map(v => `<option value="villa:${v.id}">🏠 ${escapeHtml(v.name)}</option>`).join('');
+  if(recipientFilter === '' || recipientFilter === 'driver'){
+    opts += _invCustomerCache.drivers
+      .filter(d => matchesSearch(d.name + ' ' + (d.lw_number||'')))
+      .map(d => `<option value="driver:${d.id}">🚗 ${escapeHtml(d.name)} (${d.lw_number||'—'})</option>`).join('');
+  }
+  if(recipientFilter === '' || recipientFilter === 'villa'){
+    opts += _invCustomerCache.villas
+      .filter(v => matchesSearch(v.name))
+      .map(v => `<option value="villa:${v.id}">🏠 ${escapeHtml(v.name)}</option>`).join('');
+  }
   sel.innerHTML = opts;
-  if(current && sel.querySelector(`option[value="${current}"]`)) sel.value = current;
+  // Auswahl beibehalten, falls nach dem Neu-Filtern noch gueltig -- sonst zurueck auf "Alle"
+  // und die Liste neu rendern, damit sie zum jetzt gueltigen Filter passt.
+  if(current && sel.querySelector(`option[value="${current}"]`)){
+    sel.value = current;
+  } else if(current){
+    sel.value = '';
+    renderInvoicesList();
+  }
 }
 
 function resetInvoiceFilters(){
   document.getElementById('inv-filter-month').value = '';
+  document.getElementById('inv-filter-customer-search').value = '';
   document.getElementById('inv-filter-customer').value = '';
   document.getElementById('inv-filter-recipient').value = '';
   document.getElementById('inv-filter-status').value = '';
+  rebuildInvoiceCustomerOptions();
   renderInvoicesList();
 }
 
@@ -12112,7 +12207,7 @@ async function renderInvoicesList(){
 
   let query = supabaseClient
     .from('invoices')
-    .select('id, invoice_number, recipient_type, driver_id, villa_partner_id, invoice_date, period_start, period_end, amount_gross, currency, status, drivers(name, lw_number), villa_partners(name, slug)')
+    .select('id, invoice_number, document_type, recipient_type, driver_id, villa_partner_id, invoice_date, period_start, period_end, amount_gross, currency, status, created_by, drivers(name, lw_number), villa_partners(name, slug)')
     .order('invoice_number', { ascending:false });
 
   if(customerFilter){
@@ -12138,13 +12233,22 @@ async function renderInvoicesList(){
     const name = r.recipient_type === 'driver'
       ? (r.drivers ? escapeHtml(r.drivers.name) + ' (' + (r.drivers.lw_number||'—') + ')' : '—')
       : (r.villa_partners ? escapeHtml(r.villa_partners.name) : '—');
+    // Dokumenttyp-Label (Rechnung/Gutschrift) + Erkennung automatisch vs. manuell erstellt (5.9.,
+    // Teil der "ausfuehrlichsten Auflistung" -- created_by wird von den automatischen Jobs auf
+    // 'system_monthly_job' bzw. 'system_referral_bonus' gesetzt, sonst ist es Jörgs Admin-Kennung).
+    const docLabel = r.document_type === 'gutschrift' ? '🧾 Gutschrift' : '🧾 Rechnung';
+    const isAuto = r.created_by === 'system_monthly_job' || r.created_by === 'system_referral_bonus';
+    const autoBadge = isAuto ? '<span class="status-pill" style="background:var(--paper-dim); color:var(--ink-soft); margin-left:6px;">⚙ automatisch</span>' : '';
     return `
     <div class="booking-row" style="cursor:pointer;" onclick="openInvoiceDetail('${r.id}')">
       <div>
-        <div class="who">#${r.invoice_number} · ${name}</div>
+        <div class="who">#${r.invoice_number} · ${docLabel} · ${name}</div>
         <div class="when">${r.period_start} – ${r.period_end} · ${formatIDR(r.amount_gross)}</div>
       </div>
-      <span class="status-pill ${invoiceStatusPillClass(r.status)}">${invoiceStatusLabel(r.status)}</span>
+      <div style="display:flex; align-items:center; flex-wrap:wrap; justify-content:flex-end; gap:4px;">
+        <span class="status-pill ${invoiceStatusPillClass(r.status)}">${invoiceStatusLabel(r.status)}</span>
+        ${autoBadge}
+      </div>
     </div>`;
   }).join('');
 }
@@ -16506,7 +16610,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v402</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v403</div>
 
 <!-- Etappe 4: Lade-Overlay waehrend "Buchung annehmen" im Hintergrund laeuft (kann bei VIP-Fahrern
      mit Auto-Einzug ein paar Sekunden dauern, da erst mit Xendit gesprochen wird, bevor die
