@@ -16021,16 +16021,20 @@ function showAdminSection(id){
     const el = document.getElementById('admin-sec-'+s);
     if(el) el.style.display = (s===id) ? 'block' : 'none';
   });
-  // Bugfix (5.9.): vorher zielte scrollIntoView IMMER auf '#view-admin > div', also den
-  // aeusseren Gesamt-Wrapper der kompletten Admin-Seite -- unabhaengig davon, welche Kachel
-  // gerade geoeffnet wurde. Ausserdem lief der Scroll sofort, bevor der Browser das
-  // Ein-/Ausblenden der Bereiche fertig neu layoutet hatte (race condition, gleiches Muster
-  // wie beim Reflow-Fix vom 20.8.). Jetzt: Ziel ist die tatsaechlich geoeffnete Section, und
-  // zwei requestAnimationFrame-Durchlaeufe warten, bis das Layout sicher fertig ist.
+  // Bugfix (5.9., Teil 2): scrollIntoView allein reicht nicht -- .topbar (Logo, Nav-Pillen,
+  // Admin-Buttons, Sprachumschalter) ist position:sticky; top:0 und auf dem Handy ca. 550-600px
+  // hoch. scrollIntoView kennt Sticky-Header nicht und positioniert das Ziel exakt auf Bildschirm-
+  // Position 0 -- der Sticky-Header ueberdeckt danach genau den oberen Teil der Sektion (die
+  // Ueberschrift), sichtbar wird erst der Rest darunter (wirkt wie ein Sprung "in die Mitte").
+  // Fix: Zielposition manuell berechnen und die aktuelle Topbar-Hoehe abziehen, dazu 12px Luft.
   const target = document.getElementById('admin-sec-'+id) || document.querySelector('#view-admin > div');
   requestAnimationFrame(()=>{
     requestAnimationFrame(()=>{
-      if(target) target.scrollIntoView({ behavior:'instant', block:'start' });
+      if(!target) return;
+      const topbar = document.querySelector('.topbar');
+      const offset = topbar ? topbar.offsetHeight : 0;
+      const y = target.getBoundingClientRect().top + window.scrollY - offset - 12;
+      window.scrollTo({ top: Math.max(y, 0), left: 0, behavior: 'instant' });
     });
   });
 }
@@ -17007,7 +17011,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v412</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v413</div>
 
 <!-- Etappe 4: Lade-Overlay waehrend "Buchung annehmen" im Hintergrund laeuft (kann bei VIP-Fahrern
      mit Auto-Einzug ein paar Sekunden dauern, da erst mit Xendit gesprochen wird, bevor die

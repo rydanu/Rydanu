@@ -1,5 +1,5 @@
 // Rydanu — simple offline-friendly cache-first service worker
-const CACHE_NAME = 'rydanu-cache-v412';
+const CACHE_NAME = 'rydanu-cache-v413';
 const CORE_ASSETS = [
   './',
   './manifest.json'
