@@ -2761,6 +2761,7 @@
         oninput="renderPeopleSearchResults()" onfocus="renderPeopleSearchResults()">
       <div class="pickup-suggestions" id="people-search-results"></div>
     </div>
+    <button type="button" class="link-btn" onclick="openLockedOverviewModal()" style="margin-top:10px; margin-bottom:6px; font-weight:700;">🔒 Gesperrte Fahrer &amp; deaktivierte Villen anzeigen (<span id="locked-overview-count">0</span>)</button>
 
     <!-- ===== Fahrer-Formular ===== -->
     <div id="people-driver-form" style="display:none; margin-top:18px;">
@@ -2945,9 +2946,9 @@
 
     <div class="money-panel-grid">
     <div>
-    <h3 data-i18n="admin_feeoverride_title">Individuellen Gebührensatz festlegen</h3>
+    <h3>Individuelle Gebührensatzung Fahrer</h3>
     <p class="dash-head" style="display:block; margin-bottom:10px;">Wird jetzt direkt beim jeweiligen Fahrer eingestellt, siehe "Fahrer/Villa verwalten". Hier nur noch die Gesamt-Übersicht:</p>
-    <button type="button" class="link-btn" onclick="openFeeOverridesModal()" style="margin-bottom:24px;">📋 <span data-i18n="admin_view_overrides_btn">Alle individuellen Gebührensätze anzeigen</span> (<span id="fee-overrides-count">0</span>)</button>
+    <button type="button" class="period-btn" onclick="openFeeOverridesModal()" style="background:var(--gold); border-color:var(--gold); color:var(--ink); font-weight:700; margin-bottom:24px;">📋 <span data-i18n="admin_view_overrides_btn">Alle individuellen Gebührensätze anzeigen</span> (<span id="fee-overrides-count">0</span>)</button>
     </div>
 
     <div>
@@ -3072,11 +3073,11 @@
         </div>
         <div class="form-field" id="inv-form-driver-field">
           <label>Fahrer auswählen</label>
-          <select id="inv-form-driver-select"></select>
+          <select id="inv-form-driver-select" onchange="prefillInvoiceVatFromRecipient()"></select>
         </div>
         <div class="form-field" id="inv-form-villa-field" style="display:none;">
           <label>Villa auswählen</label>
-          <select id="inv-form-villa-select"></select>
+          <select id="inv-form-villa-select" onchange="prefillInvoiceVatFromRecipient()"></select>
         </div>
         <div style="display:flex; gap:10px;">
           <div class="form-field" style="flex:1;">
@@ -3256,6 +3257,20 @@
 </div>
 
 <!-- fee overrides list modal -->
+<!-- gesperrte Fahrer & deaktivierte Villen -->
+<div class="modal-bg" id="locked-overview-modal-bg">
+  <div class="modal" style="max-width:520px;">
+    <div class="modal-header">
+      <button class="modal-close" onclick="closeLockedOverviewModal()">✕</button>
+      <span class="eyebrow">Fahrer/Villa verwalten</span>
+      <h2>🔒 Gesperrte Fahrer &amp; deaktivierte Villen</h2>
+    </div>
+    <div class="modal-body">
+      <div id="locked-overview-list"></div>
+    </div>
+  </div>
+</div>
+
 <div class="modal-bg" id="fee-overrides-modal-bg">
   <div class="modal" style="max-width:520px;">
     <div class="modal-header">
@@ -4860,7 +4875,7 @@ async function shareQrViaWhatsapp(){
       return;
     }
   }catch(e){ /* fall through to text-link fallback below */ }
-  window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
+  window.location.href = 'https://wa.me/?text=' + encodeURIComponent(text);
 }
 function openQrModal(){
   // Bugfix: currentDriverId bleibt bei einem echten eingeloggten Fahrer auf dem alten Demo-Wert
@@ -6414,7 +6429,7 @@ function shareReferralLinkWhatsapp(){
     id: `Hai! 👋 Saya menawarkan perjalanan di Bali sebagai sopir independen lewat Rydanu — berjalan lancar banget! Mau ikut gabung? Daftar saja lewat link saya, nomor saya otomatis tersimpan sebagai referensi: ${link}`
   };
   const text = texts[currentLang] || texts.en;
-  window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
+  window.location.href = 'https://wa.me/?text=' + encodeURIComponent(text);
 }
 function copyRyvioNumber(elId){
   const el = document.getElementById(elId || 'profile-lwnumber');
@@ -9067,7 +9082,7 @@ function shareVillaApplyLinkWhatsapp(){
   // Bewusst fest auf Englisch (24.8., Joerg-Wunsch): Villa-Partner sind international, Ansprache
   // per WhatsApp soll unabhaengig von der eigenen App-Sprache immer auf Englisch rausgehen.
   const text = `Hello! We'd love to welcome you as a Rydanu Villa Partner — your guests will then be able to book transfers easily through your own personal link. Quick sign-up here:\n${link}`;
-  window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
+  window.location.href = 'https://wa.me/?text=' + encodeURIComponent(text);
 }
 async function loadVillaIntoManageForm(villaId){
   if(!villaId) return;
@@ -9120,6 +9135,7 @@ async function saveVillaVat(){
   if(v){ v.default_vat_exempt = exempt; v.default_vat_rate = rate; }
   statusEl.style.color = 'var(--teal)';
   statusEl.textContent = '✓ Gespeichert.';
+  setTimeout(closePeopleForms, 700);
 }
 // Villa-Link teilen: kopieren, QR-Code anzeigen, per WhatsApp senden (gleiches QR-API-Muster wie
 // beim bereits bestehenden Fahrer-QR-Code, keine neue Abhaengigkeit noetig).
@@ -9147,7 +9163,7 @@ function shareVillaLinkWhatsapp(){
   if(!link) return;
   const villaName = document.getElementById('villa-edit-name').value.trim() || 'Ihre Villa';
   const text = `Hallo! Hier ist Ihr persönlicher Rydanu-Buchungslink für ${villaName} — Gäste können darüber direkt einen Transfer anfragen:\n${link}`;
-  window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
+  window.location.href = 'https://wa.me/?text=' + encodeURIComponent(text);
 }
 async function saveVillaEdits(){
   if(!currentManagedVillaId) return;
@@ -9170,9 +9186,11 @@ async function saveVillaEdits(){
   }).eq('id', currentManagedVillaId);
   if(error){ console.error('Villa konnte nicht aktualisiert werden:', error); statusEl.style.color = 'var(--danger)'; statusEl.textContent = 'Fehler beim Speichern.'; return; }
   await loadVillaAdminData();
-  // Joerg-Wunsch (5.9.): nach erfolgreichem Speichern schliesst sich das Formular wieder, statt
-  // einfach offen stehen zu bleiben.
-  closePeopleForms();
+  statusEl.style.color = 'var(--teal)';
+  statusEl.textContent = '✓ Gespeichert.';
+  // Joerg-Wunsch (5.9.): jede "Speichern"-Aktion schliesst das Formular danach wieder, statt
+  // einfach offen stehen zu bleiben. Kurze Verzoegerung, damit die Bestaetigung noch sichtbar ist.
+  setTimeout(closePeopleForms, 700);
 }
 async function toggleVillaActiveFromEditForm(){
   if(!currentManagedVillaId) return;
@@ -9182,6 +9200,7 @@ async function toggleVillaActiveFromEditForm(){
   if(error){ console.error('Status konnte nicht geaendert werden:', error); alert('Fehler beim Speichern.'); return; }
   const keepId = currentManagedVillaId;
   await loadVillaAdminData();
+  updateLockedOverviewCount();
   await loadVillaIntoManageForm(keepId);
 }
 async function markVillaCommissionsPaid(villaId){
@@ -9197,6 +9216,51 @@ async function markVillaCommissionsPaid(villaId){
 // Rechnungs-Kundensuche), Auswahl zeigt darunter das passende Bearbeiten-Formular.
 async function loadPeopleAdminData(){
   await Promise.all([loadRealAllDriversCache(), loadVillaAdminData()]);
+  updateLockedOverviewCount();
+}
+function updateLockedOverviewCount(){
+  const countEl = document.getElementById('locked-overview-count');
+  if(!countEl) return;
+  const lockedDrivers = realAllDriversCache.filter(d => d.is_locked).length;
+  const inactiveVillas = villaAdminCache.filter(v => !v.active).length;
+  countEl.textContent = lockedDrivers + inactiveVillas;
+}
+function openLockedOverviewModal(){
+  renderLockedOverviewList();
+  document.getElementById('locked-overview-modal-bg').classList.add('active');
+}
+function closeLockedOverviewModal(){ document.getElementById('locked-overview-modal-bg').classList.remove('active'); }
+document.getElementById('locked-overview-modal-bg').addEventListener('click', e=>{ if(e.target.id==='locked-overview-modal-bg') closeLockedOverviewModal(); });
+function renderLockedOverviewList(){
+  const el = document.getElementById('locked-overview-list');
+  const lockedDrivers = realAllDriversCache.filter(d => d.is_locked);
+  const inactiveVillas = villaAdminCache.filter(v => !v.active);
+  updateLockedOverviewCount();
+  if(lockedDrivers.length === 0 && inactiveVillas.length === 0){
+    el.innerHTML = '<div class="empty-state">Aktuell keine gesperrten Fahrer oder deaktivierten Villen.</div>';
+    return;
+  }
+  let html = '';
+  if(lockedDrivers.length > 0){
+    html += '<p class="dash-head" style="display:block; margin-bottom:6px;">🚗 Gesperrte Fahrer:</p>';
+    html += lockedDrivers.map(d => {
+      const reasonLabel = d.lock_reason === 'fees' ? t('admin_lock_reason_fees')
+        : d.lock_reason === 'autodebit_failed' ? t('admin_lock_reason_autodebit')
+        : t('admin_lock_reason_manual');
+      return `<div class="booking-row" style="cursor:pointer;" onclick="closeLockedOverviewModal(); selectPeopleSearchResult('driver','${d.id}');">
+        <div><div class="who">${escapeHtml(d.name)} (${d.lw_number||'—'})</div><div class="when">${reasonLabel}</div></div>
+        <span class="status-pill pending">Gesperrt</span>
+      </div>`;
+    }).join('');
+  }
+  if(inactiveVillas.length > 0){
+    html += '<p class="dash-head" style="display:block; margin:14px 0 6px;">🏠 Deaktivierte Villen:</p>';
+    html += inactiveVillas.map(v => `<div class="booking-row" style="cursor:pointer;" onclick="closeLockedOverviewModal(); selectPeopleSearchResult('villa','${v.id}');">
+        <div><div class="who">${escapeHtml(v.name)}</div><div class="when">${v.slug}</div></div>
+        <span class="status-pill pending">Deaktiviert</span>
+      </div>`).join('');
+  }
+  el.innerHTML = html;
 }
 function closePeopleForms(){
   document.getElementById('people-search').value = '';
@@ -9284,7 +9348,9 @@ async function savePersonDriverStammdaten(){
   }).eq('id', currentManagedDriverId);
   if(error){ console.error('Fahrer konnte nicht aktualisiert werden:', error); statusEl.style.color = 'var(--danger)'; statusEl.textContent = 'Fehler beim Speichern.'; return; }
   await loadRealAllDriversCache();
-  closePeopleForms();
+  statusEl.style.color = 'var(--teal)';
+  statusEl.textContent = '✓ Gespeichert.';
+  setTimeout(closePeopleForms, 700);
 }
 function togglePersonDriverVatRateField(){
   document.getElementById('pd-vat-rate-wrap').style.display = document.getElementById('pd-vat-exempt').checked ? 'none' : 'block';
@@ -9300,6 +9366,7 @@ async function savePersonDriverVat(){
   if(d){ d.default_vat_exempt = exempt; d.default_vat_rate = rate; }
   statusEl.style.color = 'var(--teal)';
   statusEl.textContent = '✓ Gespeichert.';
+  setTimeout(closePeopleForms, 700);
 }
 async function savePersonDriverFeeOverride(){
   if(!currentManagedDriverId) return;
@@ -9331,6 +9398,10 @@ async function savePersonDriverFeeOverride(){
   document.getElementById('pd-fee-start').value = '';
   document.getElementById('pd-fee-end').value = '';
   renderPersonDriverFeeHistory(currentManagedDriverId);
+  // Joerg-Wunsch (5.9., Runde 2): jede "Speichern"-Aktion im Fahrer-/Villa-Formular soll das
+  // Formular danach schliessen -- vorher war das nur bei den Stammdaten der Fall, bei MwSt und
+  // Gebuehrensatz blieb die Karte faelschlich offen stehen.
+  setTimeout(closePeopleForms, 700);
 }
 async function renderPersonDriverFeeHistory(driverId){
   const el = document.getElementById('pd-fee-history');
@@ -9349,6 +9420,7 @@ async function togglePersonDriverLock(){
   if(!d) return;
   await toggleRealDriverLock(d.id, d.is_locked, d.name);
   await loadRealAllDriversCache();
+  updateLockedOverviewCount();
   loadDriverIntoManageForm(currentManagedDriverId);
 }
 async function togglePersonDriverVip(){
@@ -12574,19 +12646,37 @@ async function openNewInvoiceForm(){
   showInvoiceView('new');
 }
 
+let _invFormDrivers = [], _invFormVillas = [];
 async function populateInvoiceFormSelects(){
   const dSel = document.getElementById('inv-form-driver-select');
   const vSel = document.getElementById('inv-form-villa-select');
-  const { data: drivers } = await supabaseClient.from('drivers').select('id, name, lw_number').eq('status','approved').order('name');
-  dSel.innerHTML = (drivers||[]).map(d=>`<option value="${d.id}">${escapeHtml(d.name)} (${d.lw_number||'—'})</option>`).join('');
-  const { data: villas } = await supabaseClient.from('villa_partners').select('id, name, slug').order('name');
-  vSel.innerHTML = (villas||[]).map(v=>`<option value="${v.id}">${escapeHtml(v.name)}</option>`).join('');
+  const { data: drivers } = await supabaseClient.from('drivers').select('id, name, lw_number, default_vat_exempt, default_vat_rate').eq('status','approved').order('name');
+  _invFormDrivers = drivers || [];
+  dSel.innerHTML = _invFormDrivers.map(d=>`<option value="${d.id}">${escapeHtml(d.name)} (${d.lw_number||'—'})</option>`).join('');
+  const { data: villas } = await supabaseClient.from('villa_partners').select('id, name, slug, default_vat_exempt, default_vat_rate').order('name');
+  _invFormVillas = villas || [];
+  vSel.innerHTML = _invFormVillas.map(v=>`<option value="${v.id}">${escapeHtml(v.name)}</option>`).join('');
+  prefillInvoiceVatFromRecipient();
 }
 
 function onInvoiceRecipientTypeChange(){
   const type = document.getElementById('inv-form-recipient-type').value;
   document.getElementById('inv-form-driver-field').style.display = (type==='driver') ? '' : 'none';
   document.getElementById('inv-form-villa-field').style.display = (type==='villa') ? '' : 'none';
+  prefillInvoiceVatFromRecipient();
+}
+// NEU (5.9., Joerg-Wunsch): der MwSt-Satz kommt jetzt automatisch aus den Stammdaten des
+// ausgewaehlten Fahrers/der Villa vor -- bleibt aber weiterhin manuell aenderbar fuer diese eine
+// Rechnung (die Stammdaten selbst werden dabei NICHT veraendert, nur dieses Formularfeld).
+function prefillInvoiceVatFromRecipient(){
+  const type = document.getElementById('inv-form-recipient-type').value;
+  const id = type === 'driver' ? document.getElementById('inv-form-driver-select').value : document.getElementById('inv-form-villa-select').value;
+  const list = type === 'driver' ? _invFormDrivers : _invFormVillas;
+  const entity = list.find(x=>x.id===id);
+  if(!entity) return;
+  document.getElementById('inv-form-vat-exempt').checked = (entity.default_vat_exempt !== false);
+  document.getElementById('inv-form-vat-rate').value = entity.default_vat_rate || 0;
+  onVatExemptToggle();
 }
 
 function addInvoiceItemRow(desc, qty, unit){
@@ -13056,13 +13146,13 @@ async function sendInvoiceWhatsappAdmin(invoiceId){
     const { data: signed, error: signErr } = await supabaseClient.storage.from('invoice-pdfs').createSignedUrl(pdfPath, 60*60*24*7);
     if(signErr || !signed){ throw signErr || new Error('Link konnte nicht erzeugt werden.'); }
     const text = `Hello! Please find your Rydanu invoice #${lastInvoicePdfData.invoiceNumber} (${lastInvoicePdfData.periodStart} – ${lastInvoicePdfData.periodEnd}) here:\n${signed.signedUrl}\n\nThis link stays valid for 7 days.`;
-    // Bugfix (5.9., Joerg gemeldet): der per window.open() geoeffnete Tab blieb nach der Uebergabe an
-    // die WhatsApp-App als leere, verwaiste Seite in Safari stehen. Versuch, das Fenster nach kurzer
-    // Verzoegerung selbst wieder zu schliessen (funktioniert nur, weil WIR es per Skript geoeffnet
-    // haben -- bei iOS/Safari nicht 100% garantiert, macht es aber bestenfalls sauberer und schadet
-    // im schlimmsten Fall nicht, falls der Browser das Schliessen verweigert).
-    const waWindow = window.open(waCallLinkWithText(lastInvoicePdfData.recipientPhone, text), '_blank');
-    if(waWindow){ setTimeout(()=>{ try{ waWindow.close(); }catch(e){} }, 1500); }
+    // Bugfix Runde 2 (5.9., Joerg gemeldet per Screenshot): das Schliessen per waWindow.close() nach
+    // kurzer Verzoegerung hat NICHT funktioniert -- Safari verweigert das Schliessen eines Tabs, sobald
+    // er zu einer fremden Domain (wa.me) navigiert ist (Cross-Origin-Sicherheitsregel, technisch nicht
+    // umgehbar). Statt einen NEUEN Tab zu oeffnen (der dann leer haengen bleibt), navigiert jetzt der
+    // AKTUELLE Tab direkt zum WhatsApp-Link -- iOS uebergibt an die WhatsApp-App, bevor die Seite
+    // wirklich neu laedt, man landet beim Zurueckwechseln wieder genau hier, kein verwaister Tab mehr.
+    window.location.href = waCallLinkWithText(lastInvoicePdfData.recipientPhone, text);
     btn.disabled = false; btn.textContent = original;
   } catch(e){
     console.error('WhatsApp-Versand vorbereiten fehlgeschlagen:', e);
@@ -15251,7 +15341,7 @@ function openForgotPasswordWhatsapp(){
   const phone = document.getElementById('forgot-password-phone').value.trim();
   if(!phone){ alert(t('fp_err_no_phone')); return false; }
   const text = `Hallo Rydanu-Support, ich habe mein Passwort vergessen. Meine registrierte Telefonnummer ist: ${phone}`;
-  window.open('https://wa.me/' + SUPPORT_WHATSAPP_NUMBER + '?text=' + encodeURIComponent(text), '_blank');
+  window.location.href = 'https://wa.me/' + SUPPORT_WHATSAPP_NUMBER + '?text=' + encodeURIComponent(text);
   return false;
 }
 function openForgotPassword(){
@@ -15802,7 +15892,7 @@ async function requestDocReuploadWhatsApp(driverId, docKey, docLabel, driverPhon
   if(tokenErr || !token){ console.error('Upload-Link konnte nicht erzeugt werden:', tokenErr); alert('Fehler: Upload-Link konnte nicht erzeugt werden.'); return; }
   const link = location.origin + location.pathname + '?docupload=' + token;
   const text = `Hi! Bitte lade dein Dokument "${docLabel}" noch einmal bei Rydanu hoch — direkt hier, kein Login nötig: ${link}`;
-  window.open(waCallLink(driverPhone) + '?text=' + encodeURIComponent(text), '_blank');
+  window.location.href = waCallLink(driverPhone) + '?text=' + encodeURIComponent(text);
   await renderAdminDocuments();
 }
 // ---- echter Admin-Bereich (Baustein 9a): ausstehende Fahrer freischalten/ablehnen ----
@@ -16382,7 +16472,7 @@ function sendPwresetPasswordWhatsapp(){
   }
   const waPhone = phone.replace(/\D/g, '');
   const text = `Hallo ${driverName}, dein neues Rydanu-Passwort lautet: ${newPassword}\nBitte damit einloggen und bei Bedarf danach in deinem Profil ändern.`;
-  window.open('https://wa.me/' + waPhone + '?text=' + encodeURIComponent(text), '_blank');
+  window.location.href = 'https://wa.me/' + waPhone + '?text=' + encodeURIComponent(text);
   return false;
 }
 function openBalanceOverviewModal(){ document.getElementById('balance-overview-modal-bg').classList.add('active'); renderBalanceOverviewList(); }
@@ -16897,7 +16987,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v408</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v409</div>
 
 <!-- Etappe 4: Lade-Overlay waehrend "Buchung annehmen" im Hintergrund laeuft (kann bei VIP-Fahrern
      mit Auto-Einzug ein paar Sekunden dauern, da erst mit Xendit gesprochen wird, bevor die
