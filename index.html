@@ -1513,14 +1513,11 @@
        Mit echten Buchungsdaten getestet und bestaetigt (vorher 447px breit auf 393px Bildschirm,
        danach exakt 393px). */
     .dash-main{ min-width:0; }
-    /* Bugfix (5.9., Joerg gemeldet per Screenshot): vorher 2x2-Raster, wodurch die Gebühren-Kachel
-       (mit zusätzlichem Hinweistext + Guthaben-Zeile) das gesamte 2. Zeilen-Paar in die Höhe zog und
-       die "Bewertung"-Kachel unnötig gestreckt aussah. Jetzt: die 3 einfachen Kacheln (Profilaufrufe/
-       Buchungsanfragen/Bewertung) nebeneinander in einer eigenen Zeile, Gebühren-Kachel darunter über
-       die volle Breite -- Gesamthöhe bleibt dadurch gleich oder wird sogar knapper, da die drei
-       einfachen Kacheln jetzt untereinander gleich hoch sind statt an der Gebühren-Kachel gestreckt. */
-    .stat-row{ grid-template-columns:repeat(3,1fr); }
-    #fees-stat-card{ grid-column: 1 / -1; }
+    /* Korrektur (5.9., Joerg-Feedback): der 3+1-Umbau von eben wieder zurueckgebaut -- die
+       Gebühren-Kachel braucht tatsaechlich nicht so viel Extra-Platz wie angenommen, das urspruengliche
+       2x2-Raster passt wieder. Stattdessen wurde "Buchungsanfragen" (DE) auf "Anfragen" gekuerzt,
+       damit die 3 kleinen Kacheln nebeneinander im 2x2 nicht mehr abgeschnitten wirken. */
+    .stat-row{ grid-template-columns:repeat(2,1fr); }
     .searchbar{ flex-direction:column; }
     .filter-toggle-btn{ border-left:none; border-top:1px solid rgba(242,236,216,0.15); }
     /* Bugfix (4.9., Joerg gemeldet per Screenrecording): "Filter" und "Suchen" hingen auf dem Handy
@@ -10917,7 +10914,7 @@ const translations = {
     dash_greeting_sub: "So laufen deine Angebote diese Woche.",
     plan_chip_line1: "Kostenlos einstellen", plan_chip_line2: "10% pro Buchung", plan_chip_line3: "20% bei Villa-Anfragen",
     stat_views: "Profilaufrufe",
-    stat_requests: "Buchungsanfragen",
+    stat_requests: "Anfragen",
     stat_rating: "Ø Bewertung",
     stat_fees: "Gebühren diesen Monat", loading_generic: "Wird geladen…",
     fee_breakdown_eyebrow: "Gebühren diesen Monat", fee_breakdown_title: "Das steckt in deinem offenen Betrag", fee_breakdown_title_charged: "Das wurde diesen Monat bereits abgebucht", fee_breakdown_total_label: "Gesamt offen", fee_breakdown_total_label_charged: "Gesamt diesen Monat abgebucht", fee_receipt_breakdown_eyebrow: "Beleg", fee_receipt_breakdown_title: "Das steckt in diesem Beleg", fee_receipt_breakdown_total_label: "Gesamt beglichen", fee_receipt_no_breakdown: "Für diesen Beleg ist keine Touren-Aufschlüsselung verfügbar.", fee_breakdown_go_to_fees_btn: "Zu Gebühren & Abrechnung", fee_breakdown_tap_hint: "Antippen für Details", fee_breakdown_empty: "Diesen Monat noch nichts abgebucht.", fee_breakdown_load_err: "Konnte nicht geladen werden — bitte nochmal versuchen.",
@@ -16681,7 +16678,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v404</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v405</div>
 
 <!-- Etappe 4: Lade-Overlay waehrend "Buchung annehmen" im Hintergrund laeuft (kann bei VIP-Fahrern
      mit Auto-Einzug ein paar Sekunden dauern, da erst mit Xendit gesprochen wird, bevor die
