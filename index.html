@@ -853,7 +853,8 @@
   }
   .stat-card-clickable{ cursor:pointer; border:1.5px solid var(--gold); }
   .pay-fees-hint{ font-family:'JetBrains Mono'; font-size:0.62rem; color:var(--teal); margin-top:4px; font-weight:700; }
-  .referral-credit-row{ font-family:'JetBrains Mono'; font-size:0.62rem; color:var(--teal); margin-top:4px; font-weight:700; align-items:center; gap:5px; }
+  .referral-credit-row{ font-family:'JetBrains Mono'; font-size:0.62rem; color:var(--teal); margin-top:4px; font-weight:700; display:flex; align-items:baseline; gap:5px; flex-wrap:nowrap; }
+  .referral-credit-row span{ white-space:nowrap; }
   .referral-code-box{
     display:flex; justify-content:space-between; align-items:center; background:#fff; border:1px dashed var(--gold-deep);
     border-radius:6px; padding:10px 14px; font-size:0.85rem;
@@ -1512,7 +1513,14 @@
        Mit echten Buchungsdaten getestet und bestaetigt (vorher 447px breit auf 393px Bildschirm,
        danach exakt 393px). */
     .dash-main{ min-width:0; }
-    .stat-row{ grid-template-columns:repeat(2,1fr); }
+    /* Bugfix (5.9., Joerg gemeldet per Screenshot): vorher 2x2-Raster, wodurch die Gebühren-Kachel
+       (mit zusätzlichem Hinweistext + Guthaben-Zeile) das gesamte 2. Zeilen-Paar in die Höhe zog und
+       die "Bewertung"-Kachel unnötig gestreckt aussah. Jetzt: die 3 einfachen Kacheln (Profilaufrufe/
+       Buchungsanfragen/Bewertung) nebeneinander in einer eigenen Zeile, Gebühren-Kachel darunter über
+       die volle Breite -- Gesamthöhe bleibt dadurch gleich oder wird sogar knapper, da die drei
+       einfachen Kacheln jetzt untereinander gleich hoch sind statt an der Gebühren-Kachel gestreckt. */
+    .stat-row{ grid-template-columns:repeat(3,1fr); }
+    #fees-stat-card{ grid-column: 1 / -1; }
     .searchbar{ flex-direction:column; }
     .filter-toggle-btn{ border-left:none; border-top:1px solid rgba(242,236,216,0.15); }
     /* Bugfix (4.9., Joerg gemeldet per Screenrecording): "Filter" und "Suchen" hingen auf dem Handy
@@ -2871,17 +2879,18 @@
           <label>Monat</label>
           <input type="month" id="inv-filter-month" onchange="renderInvoicesList()">
         </div>
-        <div class="form-field" style="margin-bottom:0;">
+        <div class="form-field" style="margin-bottom:0; position:relative;">
           <label>Kunde</label>
           <input type="text" id="inv-filter-customer-search" placeholder="Name oder RY-Nummer suchen…"
-            oninput="rebuildInvoiceCustomerOptions()" style="margin-bottom:6px;">
-          <select id="inv-filter-customer" onchange="renderInvoicesList()">
+            autocomplete="off" oninput="rebuildInvoiceCustomerOptions()" onfocus="rebuildInvoiceCustomerOptions()">
+          <div class="pickup-suggestions" id="inv-filter-customer-results"></div>
+          <select id="inv-filter-customer" style="display:none;">
             <option value="">Alle</option>
           </select>
         </div>
         <div class="form-field" style="margin-bottom:0;">
           <label>Empfänger-Art</label>
-          <select id="inv-filter-recipient" onchange="rebuildInvoiceCustomerOptions(); renderInvoicesList();">
+          <select id="inv-filter-recipient" onchange="onInvoiceRecipientFilterChange()">
             <option value="">Alle</option>
             <option value="driver">Fahrer</option>
             <option value="villa">Villa</option>
@@ -3333,6 +3342,10 @@
       <div class="form-field">
         <label data-i18n-html="lbl_whatsapp">WhatsApp number <span class="optional">(for booking confirmation)</span></label>
         <input type="tel" id="ep-phone" placeholder="+62 812 3456 7890">
+      </div>
+      <div class="form-field">
+        <label data-i18n-html="ep_email_label">Email <span class="optional">(optional, for invoices e.g.)</span></label>
+        <input type="email" id="ep-email" placeholder="name@example.com">
       </div>
       <div class="form-field">
         <label data-i18n="ep_address_label">Full address (required for invoices)</label>
@@ -6529,34 +6542,19 @@ async function openDriverMonthlyChargesPreview(){
   list.innerHTML = `<div class="empty-state">${t('loading_generic')}</div>`;
   document.getElementById('fee-breakdown-modal-bg').classList.add('active');
   document.getElementById('fee-breakdown-eyebrow').textContent = t('stat_fees');
-  document.getElementById('fee-breakdown-title').textContent = t('fee_breakdown_title');
-  document.getElementById('fee-breakdown-total-label').textContent = t('fee_breakdown_total_label');
+  document.getElementById('fee-breakdown-title').textContent = t('fee_breakdown_title_charged');
+  document.getElementById('fee-breakdown-total-label').textContent = t('fee_breakdown_total_label_charged');
   const goBtn = document.getElementById('fee-breakdown-go-to-fees-btn');
   if(goBtn) goBtn.style.display = 'none';
   const pdfRow = document.getElementById('fee-breakdown-pdf-row');
   if(pdfRow) pdfRow.style.display = 'none';
   lastReceiptPdfData = null;
 
-  const { y, m } = _baliTodayParts();
-  const firstDay = new Date(Date.UTC(y, m, 1)).toISOString().slice(0,10);
-  const lastDay = new Date(Date.UTC(y, m + 1, 0)).toISOString().slice(0,10);
-
-  const { data, error } = await supabaseClient.from('bookings')
-    .select('booking_number, price_idr, fee_percent_applied, fee_idr, fee_charged_at, status')
-    .eq('driver_id', realDriverProfile.id)
-    .gte('fee_charged_at', firstDay + 'T00:00:00+08:00')
-    .lt('fee_charged_at', lastDay + 'T23:59:59.999+08:00')
-    .not('status', 'in', '(cancel_requested,cancelled_by_customer)')
-    .order('fee_charged_at', { ascending:true });
-
-  if(error){ console.error('Monats-Aufschlüsselung konnte nicht geladen werden:', error); list.innerHTML = `<div class="empty-state">${t('fee_breakdown_load_err')}</div>`; return; }
-  const rows = (data||[]).filter(b => (b.fee_idr||0) > 0);
-  let total = 0;
+  const { rows, total } = await getDriverMonthlyChargeRows(realDriverProfile.id);
   if(rows.length === 0){
     list.innerHTML = `<div class="empty-state">${t('fee_breakdown_empty')}</div>`;
   } else {
     list.innerHTML = rows.map(b=>{
-      total += (b.fee_idr||0);
       const dateStr = b.fee_charged_at ? formatDateDisplay(b.fee_charged_at.slice(0,10)) : '—';
       return `
       <div class="booking-row">
@@ -6670,6 +6668,27 @@ function openFeeReceiptPdf(mode){
   }
 }
 
+// NEU (5.9.): gemeinsame Datengrundlage fuer Gebuehren-Kachel-Zahl UND Popup-Aufschluesselung --
+// vorher hat die Kachel die alte fees_due_idr gezeigt, das Popup aber schon die neue Berechnung,
+// dadurch stand auf der Kachel "IDR 0" waehrend das Popup "IDR 90.000" zeigte. Jetzt EINE
+// Berechnung fuer beides, damit die Zahlen immer exakt uebereinstimmen.
+async function getDriverMonthlyChargeRows(driverId){
+  const { y, m } = _baliTodayParts();
+  const firstDay = new Date(Date.UTC(y, m, 1)).toISOString().slice(0,10);
+  const lastDay = new Date(Date.UTC(y, m + 1, 0)).toISOString().slice(0,10);
+  const { data, error } = await supabaseClient.from('bookings')
+    .select('booking_number, price_idr, fee_percent_applied, fee_idr, fee_charged_at, status')
+    .eq('driver_id', driverId)
+    .gte('fee_charged_at', firstDay + 'T00:00:00+08:00')
+    .lt('fee_charged_at', lastDay + 'T23:59:59.999+08:00')
+    .not('status', 'in', '(cancel_requested,cancelled_by_customer)')
+    .order('fee_charged_at', { ascending:true });
+  if(error){ console.error('Monats-Gebühren konnten nicht geladen werden:', error); return { rows: [], total: 0 }; }
+  const rows = (data||[]).filter(b => (b.fee_idr||0) > 0);
+  const total = rows.reduce((sum,b)=> sum + (b.fee_idr||0), 0);
+  return { rows, total };
+}
+
 async function renderRealOverviewStats(){
   if(!realDriverProfile) return;
   const today = new Date().toISOString().slice(0,10);
@@ -6695,9 +6714,13 @@ async function renderRealOverviewStats(){
   const requestsEl = document.getElementById('stat-requests');
   if(requestsEl) requestsEl.textContent = String((driverBookings.length||0) + (completedBookings.length||0));
 
-  // Gebühren + Guthaben
+  // Gebühren + Guthaben (5.9.: Kachel-Zahl kommt jetzt aus derselben Berechnung wie das Popup,
+  // siehe getDriverMonthlyChargeRows() -- vorher zeigte die Kachel die alte fees_due_idr, die seit
+  // dem Zahlungsumbau nur noch fuer Featured-Placement genutzt wird und meist 0 ist.)
   const feesEl = document.getElementById('stat-fees');
-  if(feesEl) feesEl.textContent = formatIDR(feesDue);
+  if(feesEl){
+    getDriverMonthlyChargeRows(realDriverProfile.id).then(({total})=>{ feesEl.textContent = formatIDR(total); });
+  }
   const feesCard = document.getElementById('fees-stat-card');
   // Bugfix (5.9., Joerg gemeldet): dieser Block hat den Klick der Kachel bisher komplett
   // ABGESCHALTET (onclick=null), sobald feesDue (nur noch fuer Featured-Placement genutzt) bei 0
@@ -10147,6 +10170,7 @@ function openEditProfileReal(){
   document.getElementById('ep-paylink').value = pay.link || '';
   document.getElementById('ep-qris').checked = pay.qris !== false;
   document.getElementById('ep-phone').value = d.phone || '';
+  document.getElementById('ep-email').value = d.email || '';
   document.getElementById('ep-address').value = d.address || '';
   document.getElementById('ep-taxnumber').value = d.tax_number || '';
   document.getElementById('ep-error').textContent = '';
@@ -10218,10 +10242,15 @@ async function saveEditProfileReal(){
     link: document.getElementById('ep-paylink').value.trim()
   };
   const phone = document.getElementById('ep-phone').value.trim();
+  const email = document.getElementById('ep-email').value.trim();
+  if(email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+    document.getElementById('ep-error').textContent = t('ep_err_email');
+    return;
+  }
   const taxNumber = document.getElementById('ep-taxnumber').value.trim();
   const villa_exclusive_opt_in = document.getElementById('ep-villa-optin-toggle').checked;
 
-  const updatePayload = { name, region: island, home_area, languages, services, vehicle, payment, phone, villa_exclusive_opt_in, address, tax_number: taxNumber || null };
+  const updatePayload = { name, region: island, home_area, languages, services, vehicle, payment, phone, email: email || null, villa_exclusive_opt_in, address, tax_number: taxNumber || null };
   if(island === 'lombok'){ updatePayload.service_regions_lombok = currentRegions; }
   else { updatePayload.service_regions = currentRegions; }
 
@@ -10344,6 +10373,8 @@ const translations = {
     reg_terms_checkbox_label: "I have read and accept Rydanu's terms & conditions for drivers.", reg_terms_submit_btn: "Accept & submit registration",
     ep_err_name: "Name cannot be empty.",
     ep_err_address: "Please enter your full address (required for invoices).",
+    ep_err_email: "Please enter a valid email address (or leave it empty).",
+    ep_email_label: 'Email <span class="optional">(optional, e.g. for invoices)</span>',
     map_note_dropoff_booking: "Marker shows the general drop-off area — your driver will confirm the exact address after booking.", map_note_dropoff_general: "Marker shows the general drop-off area.",
     form_err_name_email: "Please enter your name and email to continue.", form_err_pickup: "Please enter your pickup location (hotel or address) before continuing — your driver needs it to plan the tour.", form_err_required_all: "Please fill in all fields (WhatsApp number, date and pickup location) — only luggage and notes are optional.",
     eyebrow_profile: "Driver profile", eyebrow_trip: "Trip details", eyebrow_payment: "Payment", eyebrow_confirm: "All set",
@@ -10514,7 +10545,7 @@ const translations = {
     stat_requests: "Booking requests",
     stat_rating: "Avg. rating",
     stat_fees: "Fees this month", loading_generic: "Loading…",
-    fee_breakdown_eyebrow: "Fees this month", fee_breakdown_title: "What's in your open balance", fee_breakdown_total_label: "Total open", fee_receipt_breakdown_eyebrow: "Receipt", fee_receipt_breakdown_title: "What this receipt covers", fee_receipt_breakdown_total_label: "Total settled", fee_receipt_no_breakdown: "No trip breakdown available for this receipt.", fee_breakdown_go_to_fees_btn: "Go to Fees & billing", fee_breakdown_tap_hint: "Tap to see what's included", fee_breakdown_empty: "Nothing open right now.", fee_breakdown_load_err: "Couldn't load this — please try again.",
+    fee_breakdown_eyebrow: "Fees this month", fee_breakdown_title: "What's in your open balance", fee_breakdown_title_charged: "Charged so far this month", fee_breakdown_total_label: "Total open", fee_breakdown_total_label_charged: "Total charged this month", fee_receipt_breakdown_eyebrow: "Receipt", fee_receipt_breakdown_title: "What this receipt covers", fee_receipt_breakdown_total_label: "Total settled", fee_receipt_no_breakdown: "No trip breakdown available for this receipt.", fee_breakdown_go_to_fees_btn: "Go to Fees & billing", fee_breakdown_tap_hint: "Tap to see what's included", fee_breakdown_empty: "Nothing charged yet this month.", fee_breakdown_load_err: "Couldn't load this — please try again.",
     upcoming_bookings: "Upcoming bookings",
     view_calendar_btn: "View calendar",
     listings_title: "My listings",
@@ -10717,6 +10748,8 @@ const translations = {
     reg_terms_checkbox_label: "Ich habe die Rydanu-Nutzungsbedingungen für Fahrer gelesen und akzeptiere sie.", reg_terms_submit_btn: "Akzeptieren & Registrierung absenden",
     ep_err_name: "Der Name darf nicht leer sein.",
     ep_err_address: "Bitte deine vollständige Adresse angeben (Pflichtangabe für Rechnungen).",
+    ep_err_email: "Bitte eine gültige E-Mail-Adresse angeben (oder leer lassen).",
+    ep_email_label: 'E-Mail <span class="optional">(optional, z.B. für Rechnungen)</span>',
     map_note_dropoff_booking: "Der Marker zeigt den ungefähren Abholbereich — dein Fahrer bestätigt die genaue Adresse nach der Buchung.", map_note_dropoff_general: "Der Marker zeigt den ungefähren Abholbereich.",
     form_err_name_email: "Bitte gib deinen Namen und deine E-Mail-Adresse ein, um fortzufahren.", form_err_pickup: "Bitte gib deinen Abholort ein (Hotel oder Adresse), bevor du fortfährst — dein Fahrer braucht diese Angabe zur Planung der Tour.", form_err_required_all: "Bitte fülle alle Felder aus (WhatsApp-Nummer, Datum und Abholort) — nur Gepäck und Notizen sind optional.",
     eyebrow_profile: "Fahrerprofil", eyebrow_trip: "Reisedetails", eyebrow_payment: "Zahlung", eyebrow_confirm: "Fertig",
@@ -10887,7 +10920,7 @@ const translations = {
     stat_requests: "Buchungsanfragen",
     stat_rating: "Ø Bewertung",
     stat_fees: "Gebühren diesen Monat", loading_generic: "Wird geladen…",
-    fee_breakdown_eyebrow: "Gebühren diesen Monat", fee_breakdown_title: "Das steckt in deinem offenen Betrag", fee_breakdown_total_label: "Gesamt offen", fee_receipt_breakdown_eyebrow: "Beleg", fee_receipt_breakdown_title: "Das steckt in diesem Beleg", fee_receipt_breakdown_total_label: "Gesamt beglichen", fee_receipt_no_breakdown: "Für diesen Beleg ist keine Touren-Aufschlüsselung verfügbar.", fee_breakdown_go_to_fees_btn: "Zu Gebühren & Abrechnung", fee_breakdown_tap_hint: "Antippen für Details", fee_breakdown_empty: "Aktuell nichts offen.", fee_breakdown_load_err: "Konnte nicht geladen werden — bitte nochmal versuchen.",
+    fee_breakdown_eyebrow: "Gebühren diesen Monat", fee_breakdown_title: "Das steckt in deinem offenen Betrag", fee_breakdown_title_charged: "Das wurde diesen Monat bereits abgebucht", fee_breakdown_total_label: "Gesamt offen", fee_breakdown_total_label_charged: "Gesamt diesen Monat abgebucht", fee_receipt_breakdown_eyebrow: "Beleg", fee_receipt_breakdown_title: "Das steckt in diesem Beleg", fee_receipt_breakdown_total_label: "Gesamt beglichen", fee_receipt_no_breakdown: "Für diesen Beleg ist keine Touren-Aufschlüsselung verfügbar.", fee_breakdown_go_to_fees_btn: "Zu Gebühren & Abrechnung", fee_breakdown_tap_hint: "Antippen für Details", fee_breakdown_empty: "Diesen Monat noch nichts abgebucht.", fee_breakdown_load_err: "Konnte nicht geladen werden — bitte nochmal versuchen.",
     upcoming_bookings: "Anstehende Buchungen",
     view_calendar_btn: "Kalender ansehen",
     listings_title: "Meine Angebote",
@@ -11090,6 +11123,8 @@ const translations = {
     reg_terms_checkbox_label: "Saya telah membaca dan menerima syarat & ketentuan Rydanu untuk sopir.", reg_terms_submit_btn: "Terima & kirim pendaftaran",
     ep_err_name: "Nama tidak boleh kosong.",
     ep_err_address: "Silakan masukkan alamat lengkap Anda (wajib untuk faktur).",
+    ep_err_email: "Silakan masukkan alamat email yang valid (atau biarkan kosong).",
+    ep_email_label: 'Email <span class="optional">(opsional, misalnya untuk faktur)</span>',
     map_note_dropoff_booking: "Penanda menunjukkan area penjemputan umum — sopir Anda akan mengonfirmasi alamat pastinya setelah pemesanan.", map_note_dropoff_general: "Penanda menunjukkan area penjemputan umum.",
     form_err_name_email: "Mohon masukkan nama dan email Anda untuk melanjutkan.", form_err_pickup: "Mohon masukkan lokasi penjemputan Anda (hotel atau alamat) sebelum melanjutkan — sopir Anda memerlukannya untuk merencanakan tur.", form_err_required_all: "Mohon isi semua kolom (nomor WhatsApp, tanggal, dan lokasi penjemputan) — hanya bagasi dan catatan yang opsional.",
     eyebrow_profile: "Profil sopir", eyebrow_trip: "Detail perjalanan", eyebrow_payment: "Pembayaran", eyebrow_confirm: "Selesai",
@@ -11260,7 +11295,7 @@ const translations = {
     stat_requests: "Permintaan pemesanan",
     stat_rating: "Rating rata-rata",
     stat_fees: "Biaya bulan ini", loading_generic: "Memuat…",
-    fee_breakdown_eyebrow: "Biaya bulan ini", fee_breakdown_title: "Rincian saldo terbuka Anda", fee_breakdown_total_label: "Total terbuka", fee_receipt_breakdown_eyebrow: "Kwitansi", fee_receipt_breakdown_title: "Rincian kwitansi ini", fee_receipt_breakdown_total_label: "Total diselesaikan", fee_receipt_no_breakdown: "Rincian perjalanan tidak tersedia untuk kwitansi ini.", fee_breakdown_go_to_fees_btn: "Ke Biaya & tagihan", fee_breakdown_tap_hint: "Ketuk untuk rincian", fee_breakdown_empty: "Tidak ada yang terbuka saat ini.", fee_breakdown_load_err: "Gagal memuat — silakan coba lagi.",
+    fee_breakdown_eyebrow: "Biaya bulan ini", fee_breakdown_title: "Rincian saldo terbuka Anda", fee_breakdown_title_charged: "Sudah dibebankan bulan ini", fee_breakdown_total_label: "Total terbuka", fee_breakdown_total_label_charged: "Total dibebankan bulan ini", fee_receipt_breakdown_eyebrow: "Kwitansi", fee_receipt_breakdown_title: "Rincian kwitansi ini", fee_receipt_breakdown_total_label: "Total diselesaikan", fee_receipt_no_breakdown: "Rincian perjalanan tidak tersedia untuk kwitansi ini.", fee_breakdown_go_to_fees_btn: "Ke Biaya & tagihan", fee_breakdown_tap_hint: "Ketuk untuk rincian", fee_breakdown_empty: "Belum ada biaya bulan ini.", fee_breakdown_load_err: "Gagal memuat — silakan coba lagi.",
     upcoming_bookings: "Pemesanan mendatang",
     view_calendar_btn: "Lihat kalender",
     listings_title: "Tur saya",
@@ -12134,64 +12169,86 @@ async function loadInvoicesList(){
   showInvoiceView('list');
 }
 
-// Kombinierte "Kunde"-Filterliste aus Fahrern + Villen, damit man wie gewuenscht nach einem
-// konkreten Empfaenger filtern kann (nicht nur nach Fahrer/Villa als Kategorie).
-// Bugfix (5.9., Joerg gemeldet per Screenshot): vorher wurden IMMER alle Fahrer+Villen zusammen
-// aufgelistet, unabhaengig vom "Empfaenger-Art"-Filter, und es gab keine Namensuche (nur eine lange
-// Liste). Beides jetzt behoben: die komplette Liste wird einmal geladen und lokal zwischengespeichert
-// (_invCustomerCache), rebuildInvoiceCustomerOptions() filtert daraus clientseitig nach Suchtext UND
-// nach dem aktuell gewaehlten Empfaenger-Art-Filter, ohne jedes Mal neu von der Datenbank zu laden.
+// Kombinierte "Kunde"-Filterliste aus Fahrern + Villen (5.9., zwei Bugfixes zusammen mit Jörg
+// besprochen): (1) zeigt jetzt eine Live-Ergebnisliste direkt unterm Suchfeld beim Tippen, statt
+// dass man erst ein separates Dropdown oeffnen muss (gleiches Muster wie die bestehende
+// Adress-Autocomplete, .pickup-suggestions/.suggestion-item). (2) berücksichtigt den aktuell
+// gewaehlten "Empfaenger-Art"-Filter, zeigt also nicht mehr immer Fahrer+Villen zusammen.
 let _invCustomerCache = { drivers: [], villas: [] };
 
 async function populateInvoiceFilterCustomerSelect(){
-  const sel = document.getElementById('inv-filter-customer');
-  if(!sel) return;
   const { data: drivers } = await supabaseClient.from('drivers').select('id, name, lw_number').order('name');
   const { data: villas } = await supabaseClient.from('villa_partners').select('id, name').order('name');
   _invCustomerCache.drivers = drivers || [];
   _invCustomerCache.villas = villas || [];
-  rebuildInvoiceCustomerOptions();
 }
 
 function rebuildInvoiceCustomerOptions(){
-  const sel = document.getElementById('inv-filter-customer');
+  const box = document.getElementById('inv-filter-customer-results');
   const searchEl = document.getElementById('inv-filter-customer-search');
   const recipientFilter = document.getElementById('inv-filter-recipient').value; // '', 'driver', 'villa'
-  if(!sel) return;
-  const current = sel.value;
-  const q = (searchEl ? searchEl.value : '').trim().toLowerCase();
-
+  if(!box) return;
+  const q = (searchEl.value || '').trim().toLowerCase();
   const matchesSearch = (label) => !q || label.toLowerCase().includes(q);
 
-  let opts = '<option value="">Alle</option>';
+  let entries = [];
   if(recipientFilter === '' || recipientFilter === 'driver'){
-    opts += _invCustomerCache.drivers
+    entries = entries.concat(_invCustomerCache.drivers
       .filter(d => matchesSearch(d.name + ' ' + (d.lw_number||'')))
-      .map(d => `<option value="driver:${d.id}">🚗 ${escapeHtml(d.name)} (${d.lw_number||'—'})</option>`).join('');
+      .map(d => ({ value:`driver:${d.id}`, label:`🚗 ${d.name} (${d.lw_number||'—'})` })));
   }
   if(recipientFilter === '' || recipientFilter === 'villa'){
-    opts += _invCustomerCache.villas
+    entries = entries.concat(_invCustomerCache.villas
       .filter(v => matchesSearch(v.name))
-      .map(v => `<option value="villa:${v.id}">🏠 ${escapeHtml(v.name)}</option>`).join('');
+      .map(v => ({ value:`villa:${v.id}`, label:`🏠 ${v.name}` })));
   }
-  sel.innerHTML = opts;
-  // Auswahl beibehalten, falls nach dem Neu-Filtern noch gueltig -- sonst zurueck auf "Alle"
-  // und die Liste neu rendern, damit sie zum jetzt gueltigen Filter passt.
-  if(current && sel.querySelector(`option[value="${current}"]`)){
-    sel.value = current;
-  } else if(current){
-    sel.value = '';
-    renderInvoicesList();
-  }
+
+  let html = `<div class="suggestion-item" onclick="selectInvoiceCustomer('','Alle')"><span class="s-name">Alle</span></div>`;
+  html += entries.length
+    ? entries.map(e => `<div class="suggestion-item" onclick="selectInvoiceCustomer('${e.value}', '${escapeHtml(e.label).replace(/'/g,"\\'")}')"><span class="s-name">${escapeHtml(e.label)}</span></div>`).join('')
+    : `<div class="suggestion-item" style="cursor:default; color:var(--ink-soft);">Keine Treffer</div>`;
+  box.innerHTML = html;
+  box.classList.add('open');
 }
+
+function selectInvoiceCustomer(value, label){
+  document.getElementById('inv-filter-customer').value = value;
+  document.getElementById('inv-filter-customer-search').value = value ? label : '';
+  document.getElementById('inv-filter-customer-results').classList.remove('open');
+  renderInvoicesList();
+}
+
+// Wenn "Empfänger-Art" gewechselt wird, waehrend schon ein konkreter Fahrer/Villa im Suchfeld
+// ausgewaehlt ist, der zur neuen Kategorie nicht mehr passt: Auswahl zuruecksetzen statt eine
+// widerspruechliche Kombination (z.B. "Villa" + ein Fahrer-Name) stehen zu lassen.
+function onInvoiceRecipientFilterChange(){
+  const recipientFilter = document.getElementById('inv-filter-recipient').value;
+  const current = document.getElementById('inv-filter-customer').value;
+  if(current){
+    const currentType = current.split(':')[0];
+    if(recipientFilter && currentType !== recipientFilter){
+      document.getElementById('inv-filter-customer').value = '';
+      document.getElementById('inv-filter-customer-search').value = '';
+    }
+  }
+  renderInvoicesList();
+}
+
+// Ergebnisliste schliessen, wenn man daneben tippt (gleiches Muster wie die bestehende Adress-Autocomplete)
+document.addEventListener('click', (e)=>{
+  const box = document.getElementById('inv-filter-customer-results');
+  const searchEl = document.getElementById('inv-filter-customer-search');
+  if(!box || !searchEl) return;
+  if(e.target !== searchEl && !box.contains(e.target)) box.classList.remove('open');
+});
 
 function resetInvoiceFilters(){
   document.getElementById('inv-filter-month').value = '';
   document.getElementById('inv-filter-customer-search').value = '';
   document.getElementById('inv-filter-customer').value = '';
+  document.getElementById('inv-filter-customer-results').classList.remove('open');
   document.getElementById('inv-filter-recipient').value = '';
   document.getElementById('inv-filter-status').value = '';
-  rebuildInvoiceCustomerOptions();
   renderInvoicesList();
 }
 
@@ -12487,11 +12544,19 @@ async function openInvoiceDetail(invoiceId){
     actionsHtml += `<p class="dash-head" style="display:block; margin-top:4px; font-style:italic;">E-Mail-/WhatsApp-Versand erst möglich, sobald die Rechnung als bezahlt markiert ist (danach eingefroren).</p>`;
   } else if(inv.status === 'paid'){
     actionsHtml += `<button type="button" class="period-btn" onclick="cancelInvoiceAdmin('${inv.id}')" style="color:var(--danger); border-color:var(--danger);">Rechnung stornieren</button>`;
+    // Bugfix (5.9., Joerg gemeldet): der E-Mail-Button war bisher immer sichtbar, auch wenn der
+    // Empfaenger (v.a. Fahrer -- Hauptkontaktweg ist WhatsApp) gar keine E-Mail hinterlegt hat.
+    // Der Versand lief dann ins Leere, ohne dass irgendwo eine Fehlermeldung erschien. Jetzt nur
+    // noch sichtbar, wenn wirklich eine E-Mail-Adresse vorliegt.
+    const emailBtnHtml = recipientEmail ? `<button type="button" class="link-btn" style="width:auto; background:var(--paper-dim); padding:8px 14px; border-radius:6px;" onclick="sendInvoiceEmailAdmin('${inv.id}')" id="inv-send-email-btn">✉️ Per E-Mail senden</button>` : '';
     actionsHtml += `<div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap;">
       <button type="button" class="link-btn" style="width:auto; background:var(--paper-dim); padding:8px 14px; border-radius:6px;" onclick="openInvoicePdf('save')">📄 PDF herunterladen</button>
-      <button type="button" class="link-btn" style="width:auto; background:var(--paper-dim); padding:8px 14px; border-radius:6px;" onclick="sendInvoiceEmailAdmin('${inv.id}')" id="inv-send-email-btn">✉️ Per E-Mail senden</button>
+      ${emailBtnHtml}
       <button type="button" class="link-btn" style="width:auto; background:var(--paper-dim); padding:8px 14px; border-radius:6px;" onclick="sendInvoiceWhatsappAdmin('${inv.id}')" id="inv-send-wa-btn">💬 Per WhatsApp senden</button>
     </div>`;
+    if(!recipientEmail){
+      actionsHtml += `<p class="dash-head" style="display:block; margin-top:6px; font-style:italic;">ℹ️ Keine E-Mail hinterlegt — Versand nur per WhatsApp möglich. E-Mail kann optional im Profil ergänzt werden.</p>`;
+    }
   } else if(inv.status === 'cancelled'){
     actionsHtml += `<p class="dash-head" style="display:block;">Diese Rechnung wurde storniert. Die Gegen-Rechnung findest du in der Liste (gleicher Zeitraum, neuere Rechnungsnummer).</p>`;
     actionsHtml += `<div style="margin-top:10px;"><button type="button" class="link-btn" style="width:auto;" onclick="openInvoicePdf('open')">📄 PDF-Vorschau (Original)</button></div>`;
@@ -12743,7 +12808,13 @@ async function sendInvoiceWhatsappAdmin(invoiceId){
     const { data: signed, error: signErr } = await supabaseClient.storage.from('invoice-pdfs').createSignedUrl(pdfPath, 60*60*24*7);
     if(signErr || !signed){ throw signErr || new Error('Link konnte nicht erzeugt werden.'); }
     const text = `Hello! Please find your Rydanu invoice #${lastInvoicePdfData.invoiceNumber} (${lastInvoicePdfData.periodStart} – ${lastInvoicePdfData.periodEnd}) here:\n${signed.signedUrl}\n\nThis link stays valid for 7 days.`;
-    window.open(waCallLinkWithText(lastInvoicePdfData.recipientPhone, text), '_blank');
+    // Bugfix (5.9., Joerg gemeldet): der per window.open() geoeffnete Tab blieb nach der Uebergabe an
+    // die WhatsApp-App als leere, verwaiste Seite in Safari stehen. Versuch, das Fenster nach kurzer
+    // Verzoegerung selbst wieder zu schliessen (funktioniert nur, weil WIR es per Skript geoeffnet
+    // haben -- bei iOS/Safari nicht 100% garantiert, macht es aber bestenfalls sauberer und schadet
+    // im schlimmsten Fall nicht, falls der Browser das Schliessen verweigert).
+    const waWindow = window.open(waCallLinkWithText(lastInvoicePdfData.recipientPhone, text), '_blank');
+    if(waWindow){ setTimeout(()=>{ try{ waWindow.close(); }catch(e){} }, 1500); }
     btn.disabled = false; btn.textContent = original;
   } catch(e){
     console.error('WhatsApp-Versand vorbereiten fehlgeschlagen:', e);
@@ -16610,7 +16681,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v403</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v404</div>
 
 <!-- Etappe 4: Lade-Overlay waehrend "Buchung annehmen" im Hintergrund laeuft (kann bei VIP-Fahrern
      mit Auto-Einzug ein paar Sekunden dauern, da erst mit Xendit gesprochen wird, bevor die
