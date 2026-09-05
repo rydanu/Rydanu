@@ -2672,12 +2672,12 @@
         <span class="at-title">Villa-Buchungen</span>
         <span class="at-sub">Buchungen &amp; Provisionen je Villa im Detail ansehen</span>
       </button>
-      <button type="button" class="admin-tile" onclick="showAdminSection('money')" style="grid-column:1 / -1;">
+      <button type="button" class="admin-tile" onclick="showAdminSection('money')">
         <span class="at-icon">💰</span>
         <span class="at-title">Geld — Gebühren &amp; Gutschriften</span>
         <span class="at-sub">Individuelle Sätze, Gutschriften &amp; Guthaben aufladen</span>
       </button>
-      <button type="button" class="admin-tile" id="admin-tile-invoices" onclick="showAdminSection('invoices'); loadInvoicesList();" style="grid-column:1 / -1;">
+      <button type="button" class="admin-tile" id="admin-tile-invoices" onclick="showAdminSection('invoices'); loadInvoicesList();">
         <span class="at-icon">🧾</span>
         <span class="at-title">Rechnungen</span>
         <span class="at-sub">Rechnungen für Fahrer &amp; Villa-Partner erstellen, archivieren &amp; verwalten</span>
@@ -2755,10 +2755,14 @@
     <h2 style="margin-top:0;">🧑‍✈️🏠 Fahrer/Villa verwalten</h2>
     <p class="dash-head" style="display:block; margin-bottom:20px;">Suchen und auswählen, dann bearbeiten — Stammdaten, Gebührensatz, MwSt-Einstellung und Konto-Aktionen an einem Ort.</p>
 
-    <div class="form-field" style="position:relative;">
+    <div class="form-field">
       <label>🔍 Fahrer oder Villa suchen</label>
-      <input type="text" id="people-search" placeholder="Name oder RY-Nummer suchen…" autocomplete="off"
-        oninput="renderPeopleSearchResults()" onfocus="renderPeopleSearchResults()">
+      <div style="position:relative;">
+        <input type="text" id="people-search" placeholder="Name oder RY-Nummer suchen…" autocomplete="off" style="padding-right:38px;"
+          oninput="renderPeopleSearchResults()" onfocus="renderPeopleSearchResults()">
+        <button type="button" id="people-search-clear" onclick="closePeopleForms()" aria-label="Suche leeren"
+          style="display:none; position:absolute; right:6px; top:50%; transform:translateY(-50%); background:none; border:none; font-size:1.15rem; color:var(--ink-soft); cursor:pointer; padding:6px 8px; line-height:1;">✕</button>
+      </div>
       <div class="pickup-suggestions" id="people-search-results"></div>
     </div>
     <button type="button" class="link-btn" onclick="openLockedOverviewModal()" style="margin-top:10px; margin-bottom:6px; font-weight:700;">🔒 Gesperrte Fahrer &amp; deaktivierte Villen anzeigen (<span id="locked-overview-count">0</span>)</button>
@@ -2947,7 +2951,6 @@
     <div class="money-panel-grid">
     <div>
     <h3>Individuelle Gebührensatzung Fahrer</h3>
-    <p class="dash-head" style="display:block; margin-bottom:10px;">Wird jetzt direkt beim jeweiligen Fahrer eingestellt, siehe "Fahrer/Villa verwalten". Hier nur noch die Gesamt-Übersicht:</p>
     <button type="button" class="period-btn" onclick="openFeeOverridesModal()" style="background:var(--gold); border-color:var(--gold); color:var(--ink); font-weight:700; margin-bottom:24px;">📋 <span data-i18n="admin_view_overrides_btn">Alle individuellen Gebührensätze anzeigen</span> (<span id="fee-overrides-count">0</span>)</button>
     </div>
 
@@ -9265,6 +9268,8 @@ function renderLockedOverviewList(){
 function closePeopleForms(){
   document.getElementById('people-search').value = '';
   document.getElementById('people-search-results').classList.remove('open');
+  document.getElementById('people-search-results').innerHTML = '';
+  document.getElementById('people-search-clear').style.display = 'none';
   document.getElementById('people-driver-form').style.display = 'none';
   document.getElementById('people-villa-form').style.display = 'none';
   currentManagedDriverId = null;
@@ -9273,6 +9278,7 @@ function closePeopleForms(){
 function renderPeopleSearchResults(){
   const box = document.getElementById('people-search-results');
   const q = document.getElementById('people-search').value.trim().toLowerCase();
+  document.getElementById('people-search-clear').style.display = q ? 'block' : 'none';
   const matches = (label) => !q || label.toLowerCase().includes(q);
   let entries = realAllDriversCache
     .filter(d => matches(d.name + ' ' + (d.lw_number||'')))
@@ -9293,6 +9299,7 @@ document.addEventListener('click', (e)=>{
 });
 function selectPeopleSearchResult(type, id){
   document.getElementById('people-search-results').classList.remove('open');
+  document.getElementById('people-search-clear').style.display = 'block';
   if(type === 'driver'){
     document.getElementById('people-villa-form').style.display = 'none';
     document.getElementById('people-search').value = realAllDriversCache.find(d=>d.id===id)?.name || '';
@@ -16987,7 +16994,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v409</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v410</div>
 
 <!-- Etappe 4: Lade-Overlay waehrend "Buchung annehmen" im Hintergrund laeuft (kann bei VIP-Fahrern
      mit Auto-Einzug ein paar Sekunden dauern, da erst mit Xendit gesprochen wird, bevor die
