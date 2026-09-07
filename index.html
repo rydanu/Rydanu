@@ -427,7 +427,16 @@
   .modal-body .row:last-of-type{ border-bottom:none; }
   .modal-body .row .k{ color:var(--ink-soft); flex:0 0 auto; }
   .modal-body .row .v{ font-weight:600; flex:1 1 auto; min-width:0; text-align:right; word-break:break-word; overflow-wrap:break-word; }
-  #modal-airport-region-select{ font-family:'Public Sans'; font-size:0.85rem; font-weight:600; padding:5px 8px; border-radius:4px; border:1px solid var(--line); background:var(--paper); color:var(--ink); }
+  /* Bugfix (7.9., Joerg-Screenshot): #modal-airport-region-select hatte bereits eigenes Styling,
+     die beiden anderen (Ziel, Abholregion) liefen bisher auf dem nackten Browser-Standard ohne
+     Breiten-Begrenzung -- bei laengeren Werten wie "Ubud — 700000" ragte der Text ueber die
+     Pille hinaus. Jetzt alle drei einheitlich gestylt, inkl. max-width:100% + Ellipsis-Kuerzung
+     als Sicherheitsnetz bei sehr langen Werten. */
+  #modal-airport-region-select, #modal-transfer-region-select, #modal-pickupregion-select{
+    font-family:'Public Sans'; font-size:0.85rem; font-weight:600; padding:5px 8px; border-radius:4px;
+    border:1px solid var(--line); background:var(--paper); color:var(--ink);
+    max-width:100%; text-overflow:ellipsis; white-space:nowrap; overflow:hidden;
+  }
   .book-btn{
     width:100%; margin-top:20px; background:var(--gold); border:none; color:var(--ink);
     font-weight:700; padding:14px; border-radius:var(--radius); cursor:pointer; font-family:'Public Sans'; font-size:0.95rem;
@@ -10732,7 +10741,7 @@ const translations = {
     cancel_outcome_driver_1: "Cancelled —", cancel_outcome_driver_2: "No regular Rydanu fee applies to this booking, but a cancellation fee of", cancel_outcome_driver_3: "The customer has been informed by email and pointed to Rydanu to find another driver.",
     cancel_note_customer: "Customer no-show", cancel_note_driver: "Cancelled by you — IDR 30,000 cancellation fee",
     btn_pay_now: "Pay now", fees_tier_note: "Per confirmed booking, the fee scales with the trip's price — small trips cost small fees:",
-    lbl_email_address: "Email address", pay_secure_note: "You'll pay your driver directly via secure payment link. Rydanu does not process tour payments.",
+    lbl_email_address: "Email address", pay_secure_note: "You pay your driver directly – in cash or via the payment method they provide (e.g. QRIS). Rydanu never handles payments itself.",
     notify_email_driver: "Email to driver", notify_email_to: "Email to", notify_wa_to: "WhatsApp to",
     filter_eyebrow: "Refine your search", filter_title: "Filters", filter_starting_point: "Starting point", filter_island_title: "Island", filter_all_regions: "All regions", filter_decision_subline: "Choose Transfer, Half-day or Full-day — what you'll experience, you settle directly with your driver.", filter_more_toggle: "More filters", filter_language_title: "Language", lang_de: "German", lang_en: "English", lang_id: "Indonesian", lang_fr: "French", lang_zh: "Chinese (Mandarin)", lang_ru: "Russian", filter_city_airport_title: "Also need an airport transfer from {city}?", filter_city_airport_chip: "✈️ Yes — to the airport",
     map_title_tour: "Tour map", map_start_of_tour: "Start of tour", map_note_tour_area: "Marker shows the tour's main area — your driver will confirm the exact pickup point and route after booking.", map_drive_time_label: "driving time",
@@ -11107,7 +11116,7 @@ const translations = {
     cancel_outcome_driver_1: "Storniert —", cancel_outcome_driver_2: "Für diese Buchung fällt keine reguläre Rydanu-Gebühr an, aber eine Stornogebühr von", cancel_outcome_driver_3: "Der Kunde wurde per E-Mail informiert und auf Rydanu verwiesen, um einen anderen Fahrer zu finden.",
     cancel_note_customer: "Kunde nicht erschienen", cancel_note_driver: "Von dir storniert — IDR 30.000 Stornogebühr",
     btn_pay_now: "Jetzt bezahlen", fees_tier_note: "Pro bestätigter Buchung richtet sich die Gebühr nach dem Reisepreis — kleine Touren, kleine Gebühren:",
-    lbl_email_address: "E-Mail-Adresse", pay_secure_note: "Du bezahlst deinen Fahrer direkt über einen sicheren Zahlungslink. Rydanu wickelt keine Tour-Zahlungen ab.",
+    lbl_email_address: "E-Mail-Adresse", pay_secure_note: "Du zahlst direkt an deinen Fahrer – bar oder über die von ihm angegebene Zahlungsmethode (z. B. QRIS). Rydanu wickelt selbst keine Zahlungen ab.",
     notify_email_driver: "E-Mail an Fahrer", notify_email_to: "E-Mail an", notify_wa_to: "WhatsApp an",
     filter_eyebrow: "Suche verfeinern", filter_title: "Filter", filter_starting_point: "Startpunkt", filter_island_title: "Insel", filter_all_regions: "Alle Regionen", filter_decision_subline: "Wähle Transfer, Halbtag oder Ganztag — was ihr erlebt, besprichst du direkt mit deinem Fahrer.", filter_more_toggle: "Weitere Filter", filter_language_title: "Sprache", lang_de: "Deutsch", lang_en: "Englisch", lang_id: "Indonesisch", lang_fr: "Französisch", lang_zh: "Chinesisch (Mandarin)", lang_ru: "Russisch", filter_city_airport_title: "Brauchst du auch einen Flughafentransfer ab {city}?", filter_city_airport_chip: "✈️ Ja — zum Flughafen",
     map_title_tour: "Tour-Karte", map_start_of_tour: "Start der Tour", map_note_tour_area: "Der Marker zeigt das Hauptgebiet der Tour — dein Fahrer bestätigt den genauen Abholpunkt und die Route nach der Buchung.", map_drive_time_label: "Fahrzeit",
@@ -11482,7 +11491,7 @@ const translations = {
     cancel_outcome_driver_1: "Dibatalkan —", cancel_outcome_driver_2: "Tidak ada biaya Rydanu reguler untuk pemesanan ini, tetapi ada biaya pembatalan sebesar", cancel_outcome_driver_3: "Pelanggan telah diberi tahu melalui email dan diarahkan ke Rydanu untuk mencari sopir lain.",
     cancel_note_customer: "Pelanggan tidak datang", cancel_note_driver: "Dibatalkan oleh Anda — biaya pembatalan IDR 30.000",
     btn_pay_now: "Bayar sekarang", fees_tier_note: "Per pemesanan terkonfirmasi, biaya menyesuaikan harga perjalanan — perjalanan kecil, biaya kecil:",
-    lbl_email_address: "Alamat email", pay_secure_note: "Anda membayar sopir Anda langsung melalui tautan pembayaran yang aman. Rydanu tidak memproses pembayaran tur.",
+    lbl_email_address: "Alamat email", pay_secure_note: "Anda membayar langsung ke pengemudi Anda – tunai atau melalui metode pembayaran yang mereka sediakan (mis. QRIS). Rydanu sendiri tidak pernah menangani pembayaran.",
     notify_email_driver: "Email ke sopir", notify_email_to: "Email ke", notify_wa_to: "WhatsApp ke",
     filter_eyebrow: "Perhalus pencarian Anda", filter_title: "Filter", filter_starting_point: "Titik keberangkatan", filter_island_title: "Pulau", filter_all_regions: "Semua wilayah", filter_decision_subline: "Pilih Transfer, Setengah hari, atau Sehari penuh — apa yang Anda alami, dibicarakan langsung dengan sopir Anda.", filter_more_toggle: "Filter lainnya", filter_language_title: "Bahasa", lang_de: "Jerman", lang_en: "Inggris", lang_id: "Indonesia", lang_fr: "Prancis", lang_zh: "Mandarin", lang_ru: "Rusia", filter_city_airport_title: "Perlu transfer bandara juga dari {city}?", filter_city_airport_chip: "✈️ Ya — ke bandara",
     map_title_tour: "Peta tur", map_start_of_tour: "Awal tur", map_note_tour_area: "Penanda menunjukkan area utama tur — sopir Anda akan mengonfirmasi titik jemput dan rute pasti setelah pemesanan.", map_drive_time_label: "waktu berkendara",
@@ -17056,7 +17065,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v415</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v416</div>
 
 <!-- Etappe 4: Lade-Overlay waehrend "Buchung annehmen" im Hintergrund laeuft (kann bei VIP-Fahrern
      mit Auto-Einzug ein paar Sekunden dauern, da erst mit Xendit gesprochen wird, bevor die
