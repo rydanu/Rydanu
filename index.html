@@ -853,7 +853,8 @@
   }
   .stat-card-clickable{ cursor:pointer; border:1.5px solid var(--gold); }
   .pay-fees-hint{ font-family:'JetBrains Mono'; font-size:0.62rem; color:var(--teal); margin-top:4px; font-weight:700; }
-  .referral-credit-row{ font-family:'JetBrains Mono'; font-size:0.62rem; color:var(--teal); margin-top:4px; font-weight:700; align-items:center; gap:5px; }
+  .referral-credit-row{ font-family:'JetBrains Mono'; font-size:0.62rem; color:var(--teal); margin-top:4px; font-weight:700; display:flex; align-items:baseline; gap:5px; flex-wrap:nowrap; }
+  .referral-credit-row span{ white-space:nowrap; }
   .referral-code-box{
     display:flex; justify-content:space-between; align-items:center; background:#fff; border:1px dashed var(--gold-deep);
     border-radius:6px; padding:10px 14px; font-size:0.85rem;
@@ -973,6 +974,10 @@
     color:var(--teal); font-weight:700; font-family:'Public Sans'; font-size:0.88rem; background:none; border:none; padding:0;
   }
   @media (max-width:520px){ .admin-tile-grid{ gap:10px; } .admin-tile{ padding:14px 12px; } }
+  /* Einheitliche Ueberschrift fuer alle Admin-Bereiche (5.9., Joerg-Wunsch): linksbuendig statt
+     zentriert, klarer Abstand nach unten zum naechsten Element, unterstrichen zur besseren
+     optischen Abgrenzung. Wird auf alle admin-sec-* H2 angewendet. */
+  .admin-sec-title{ margin-top:0; margin-bottom:18px; text-align:left; text-decoration:underline; text-underline-offset:4px; }
   .money-panel-grid{ display:grid; grid-template-columns:1fr 1fr; gap:24px; align-items:start; }
   .money-panel-grid h3{ margin-top:0; }
   @media (max-width:860px){ .money-panel-grid{ grid-template-columns:1fr; gap:0; } }
@@ -1512,6 +1517,10 @@
        Mit echten Buchungsdaten getestet und bestaetigt (vorher 447px breit auf 393px Bildschirm,
        danach exakt 393px). */
     .dash-main{ min-width:0; }
+    /* Korrektur (5.9., Joerg-Feedback): der 3+1-Umbau von eben wieder zurueckgebaut -- die
+       Gebühren-Kachel braucht tatsaechlich nicht so viel Extra-Platz wie angenommen, das urspruengliche
+       2x2-Raster passt wieder. Stattdessen wurde "Buchungsanfragen" (DE) auf "Anfragen" gekuerzt,
+       damit die 3 kleinen Kacheln nebeneinander im 2x2 nicht mehr abgeschnitten wirken. */
     .stat-row{ grid-template-columns:repeat(2,1fr); }
     .searchbar{ flex-direction:column; }
     .filter-toggle-btn{ border-left:none; border-top:1px solid rgba(242,236,216,0.15); }
@@ -2288,7 +2297,7 @@
           <div class="stat-card"><div class="num" id="stat-views">312</div><div class="lbl" data-i18n="stat_views">Profile views</div></div>
           <div class="stat-card"><div class="num" id="stat-requests">18</div><div class="lbl" data-i18n="stat_requests">Booking requests</div></div>
           <div class="stat-card"><div class="num" id="stat-rating">4.9</div><div class="lbl" data-i18n="stat_rating">Avg. rating</div></div>
-          <div class="stat-card stat-card-clickable" id="fees-stat-card" onclick="payFees()"><div class="num" id="stat-fees">IDR 0</div><div class="lbl" data-i18n="stat_fees">Fees this month</div><div class="pay-fees-hint" id="pay-fees-hint">Tap to pay</div>
+          <div class="stat-card stat-card-clickable" id="fees-stat-card" onclick="openDriverMonthlyChargesPreview()"><div class="num" id="stat-fees">IDR 0</div><div class="lbl" data-i18n="stat_fees">Fees this month</div><div class="pay-fees-hint" id="pay-fees-hint">Tap to pay</div>
             <div class="referral-credit-row" id="referral-credit-row" style="display:none;">🎁 <span data-i18n="referral_credit_lbl">Referral credit</span> <span id="referral-credit-amount">− IDR 0</span></div>
             <div class="referral-credit-row" id="admin-credit-row" style="display:none;">💚 <span data-i18n="admin_credit_lbl">Credit</span> <span id="admin-credit-amount">− IDR 0</span></div>
             <div class="referral-credit-row" id="real-balance-row" style="display:none;">💰 <span id="real-balance-label">Guthaben</span> <span id="real-balance-amount"></span></div>
@@ -2642,10 +2651,10 @@
         <span class="at-title">Nachrichten</span>
         <span class="at-sub">Nachrichten von Fahrern lesen &amp; beantworten</span>
       </button>
-      <button type="button" class="admin-tile" id="admin-tile-block" onclick="showAdminSection('block')">
-        <span class="at-icon">🔒</span>
-        <span class="at-title">Fahrer verwalten</span>
-        <span class="at-sub">Sperren, entsperren oder löschen</span>
+      <button type="button" class="admin-tile" id="admin-tile-block" onclick="showAdminSection('block'); loadPeopleAdminData();">
+        <span class="at-icon">🧑‍✈️</span>
+        <span class="at-title">Fahrer/Villa verwalten</span>
+        <span class="at-sub">Suchen, bearbeiten, sperren, MwSt &amp; Gebührensatz</span>
       </button>
       <button type="button" class="admin-tile" id="admin-tile-documents" onclick="showAdminSection('documents')">
         <span class="at-icon">📄</span>
@@ -2659,20 +2668,20 @@
       </button>
       <button type="button" class="admin-tile" id="admin-tile-villa" onclick="showAdminSection('villa'); loadVillaAdminData();">
         <span class="at-icon">🏠</span>
-        <span class="at-title">Villa-Partner</span>
-        <span class="at-sub">Villen anlegen, Provisionssatz &amp; Buchungen verwalten</span>
+        <span class="at-title">Neue Villa anlegen</span>
+        <span class="at-sub">Neue Villa-Partner + Bewerbungen annehmen/ablehnen</span>
       </button>
       <button type="button" class="admin-tile" id="admin-tile-villabookings" onclick="showAdminSection('villabookings'); populateVillaBookingsSelect();">
         <span class="at-icon">📖</span>
         <span class="at-title">Villa-Buchungen</span>
         <span class="at-sub">Buchungen &amp; Provisionen je Villa im Detail ansehen</span>
       </button>
-      <button type="button" class="admin-tile" onclick="showAdminSection('money')" style="grid-column:1 / -1;">
+      <button type="button" class="admin-tile" onclick="showAdminSection('money')">
         <span class="at-icon">💰</span>
         <span class="at-title">Geld — Gebühren &amp; Gutschriften</span>
         <span class="at-sub">Individuelle Sätze, Gutschriften &amp; Guthaben aufladen</span>
       </button>
-      <button type="button" class="admin-tile" id="admin-tile-invoices" onclick="showAdminSection('invoices'); loadInvoicesList();" style="grid-column:1 / -1;">
+      <button type="button" class="admin-tile" id="admin-tile-invoices" onclick="showAdminSection('invoices'); loadInvoicesList();">
         <span class="at-icon">🧾</span>
         <span class="at-title">Rechnungen</span>
         <span class="at-sub">Rechnungen für Fahrer &amp; Villa-Partner erstellen, archivieren &amp; verwalten</span>
@@ -2682,21 +2691,21 @@
     <button type="button" class="admin-back-link" id="admin-back-link" onclick="showAdminHome()" style="display:none;">‹ Zurück zur Übersicht</button>
 
     <div id="admin-sec-pending" style="display:none;">
-    <h2 data-i18n="admin_title">Pending driver approvals</h2>
+    <h2 class="admin-sec-title" data-i18n="admin_title">Pending driver approvals</h2>
     <p class="dash-head" style="display:block; margin-bottom:20px;" data-i18n="admin_sub">Review uploaded documents, then approve to make a driver's listings publicly bookable.</p>
     <div id="admin-pending-list"></div>
 
     </div>
 
     <div id="admin-sec-openpay" style="display:none;">
-    <h2 style="margin-top:0;" data-i18n="admin_openpay_title">Open payments</h2>
+    <h2 class="admin-sec-title" data-i18n="admin_openpay_title">Open payments</h2>
     <p class="dash-head" style="display:block; margin-bottom:14px;" data-i18n="admin_openpay_sub">All drivers with open fees right now. You can collect fees manually here at any time — real billing also runs automatically every day.</p>
     <div class="panel" id="admin-openpayments-list" style="margin-bottom:8px;"></div>
 
     </div>
 
     <div id="admin-sec-stats" style="display:none;">
-    <h2 style="margin-top:0; margin-bottom:16px;" data-i18n="admin_stats_title">Business overview</h2>
+    <h2 class="admin-sec-title" data-i18n="admin_stats_title">Business overview</h2>
     <div class="period-tabs" id="admin-period-tabs">
       <button type="button" class="period-btn active" data-period="day" onclick="setAdminPeriod('day')" data-i18n="period_day">Daily</button>
       <button type="button" class="period-btn" data-period="month" onclick="setAdminPeriod('month')" data-i18n="period_month">Monthly</button>
@@ -2712,7 +2721,7 @@
     </div>
 
     <div id="admin-sec-driverstats" style="display:none;">
-    <h2 style="margin-top:0; text-align:center;">Fahrer- / Villen-Statistik</h2>
+    <h2 class="admin-sec-title">📈 Fahrer- / Villen-Statistik</h2>
     <div class="money-panel-grid" style="max-width:100%; margin:0 auto; gap:56px;">
     <div>
     <h3 data-i18n="admin_driverstats_title">Driver statistics</h3>
@@ -2735,7 +2744,7 @@
     </div>
 
     <div id="admin-sec-messages" style="display:none;">
-    <h2 style="margin-top:0; margin-bottom:16px;" data-i18n="admin_messages_title">Messages from drivers</h2>
+    <h2 class="admin-sec-title" data-i18n="admin_messages_title">Messages from drivers</h2>
     <button type="button" class="period-btn" onclick="openAdminComposeMsg()" style="margin-bottom:16px; background:var(--gold); border-color:var(--gold); color:var(--ink); font-weight:700;">✉️ <span data-i18n="admin_compose_btn">Message a driver</span></button>
     <div class="period-tabs" id="admin-msg-view-tabs">
       <button type="button" class="period-btn active" data-view="inbox" onclick="setAdminMsgViewTab('inbox')" data-i18n="mailbox_tab_inbox">Inbox</button>
@@ -2747,14 +2756,190 @@
     </div>
 
     <div id="admin-sec-block" style="display:none;">
-    <h2 style="margin-top:0;" data-i18n="admin_block_title">All drivers — block / unblock</h2>
-    <p class="dash-head" style="display:block; margin-bottom:20px;" data-i18n="admin_block_sub">Tap a driver to block them — blocked drivers and all their tours disappear from the traveler view immediately.</p>
-    <button type="button" class="link-btn" onclick="openDriversBlockModal()">📋 <span data-i18n="admin_view_drivers_btn">Alle Fahrer anzeigen</span> (<span id="admin-drivers-count">0</span>)</button>
+    <h2 class="admin-sec-title">🧑‍✈️🏠 Fahrer/Villa verwalten</h2>
+    <p class="dash-head" style="display:block; margin-bottom:20px;">Suchen und auswählen, dann bearbeiten — Stammdaten, Gebührensatz, MwSt-Einstellung und Konto-Aktionen an einem Ort.</p>
 
+    <div class="form-field">
+      <label>🔍 Fahrer oder Villa suchen</label>
+      <div style="position:relative;">
+        <input type="text" id="people-search" placeholder="Name oder RY-Nummer suchen…" autocomplete="off" style="padding-right:38px;"
+          oninput="renderPeopleSearchResults()" onfocus="renderPeopleSearchResults()">
+        <button type="button" id="people-search-clear" onclick="closePeopleForms()" aria-label="Suche leeren"
+          style="display:none; position:absolute; right:6px; top:50%; transform:translateY(-50%); background:none; border:none; font-size:1.15rem; color:var(--ink-soft); cursor:pointer; padding:6px 8px; line-height:1;">✕</button>
+      </div>
+      <div class="pickup-suggestions" id="people-search-results"></div>
+    </div>
+    <button type="button" class="link-btn" onclick="openLockedOverviewModal()" style="margin-top:10px; margin-bottom:6px; font-weight:700;">🔒 Gesperrte Fahrer &amp; deaktivierte Villen anzeigen (<span id="locked-overview-count">0</span>)</button>
+
+    <!-- ===== Fahrer-Formular ===== -->
+    <div id="people-driver-form" style="display:none; margin-top:18px;">
+      <div class="panel" style="padding:16px; margin-bottom:16px;">
+        <h3 style="margin-top:0;">👤 Stammdaten</h3>
+        <div class="form-field">
+          <label>Name</label>
+          <input type="text" id="pd-name">
+        </div>
+        <div style="display:flex; gap:10px;">
+          <div class="form-field" style="flex:1;">
+            <label>WhatsApp / Telefon</label>
+            <input type="text" id="pd-phone">
+          </div>
+          <div class="form-field" style="flex:1;">
+            <label>E-Mail <span class="optional">(optional)</span></label>
+            <input type="email" id="pd-email">
+          </div>
+        </div>
+        <div class="form-field">
+          <label>Adresse (Pflicht für Rechnungen)</label>
+          <input type="text" id="pd-address" placeholder="z.B. Jl. Raya Ubud No. 12, Gianyar, Bali">
+        </div>
+        <div class="form-field">
+          <label>Steuernummer (optional)</label>
+          <input type="text" id="pd-taxnumber">
+        </div>
+        <button type="button" class="period-btn" onclick="savePersonDriverStammdaten()" style="background:var(--gold); border-color:var(--gold); color:var(--ink); font-weight:700;">Änderungen speichern</button>
+        <p class="form-error" id="pd-stammdaten-status"></p>
+      </div>
+
+      <div class="panel" style="padding:16px; margin-bottom:16px;">
+        <h3 style="margin-top:0;">💳 Individueller Gebührensatz</h3>
+        <p class="dash-head" style="display:block; margin-bottom:10px;">Standard sind 10% pro Buchung. Hier kannst du für diesen Fahrer einen abweichenden Satz für einen Zeitraum festlegen.</p>
+        <div class="form-field">
+          <label>Gebühr in % (0 oder höher)</label>
+          <input type="number" id="pd-fee-percent" min="0" step="0.5" placeholder="z.B. 5">
+        </div>
+        <div style="display:flex; gap:10px;">
+          <div class="form-field" style="flex:1;">
+            <label>Startdatum</label>
+            <input type="date" id="pd-fee-start">
+          </div>
+          <div class="form-field" style="flex:1;">
+            <label>Enddatum</label>
+            <input type="date" id="pd-fee-end">
+          </div>
+        </div>
+        <button type="button" class="period-btn" onclick="savePersonDriverFeeOverride()" style="background:var(--gold); border-color:var(--gold); color:var(--ink); font-weight:700;">Speichern</button>
+        <p class="form-error" id="pd-fee-status"></p>
+        <div id="pd-fee-history" style="margin-top:14px;"></div>
+      </div>
+
+      <div class="panel" style="padding:16px; margin-bottom:16px;">
+        <h3 style="margin-top:0;">🧾 MwSt-Einstellung</h3>
+        <p class="dash-head" style="display:block; margin-bottom:10px;">Gilt für die automatisch am Monatsletzten erzeugte Rechnung dieses Fahrers. Vorbelegung ist MwSt-befreit — nur ändern, wenn für diesen Fahrer wirklich etwas anderes gilt.</p>
+        <div class="form-field">
+          <label class="toggle-row" style="display:flex; align-items:center; gap:10px; cursor:pointer;">
+            <input type="checkbox" id="pd-vat-exempt" onchange="togglePersonDriverVatRateField()" style="width:auto;">
+            <span>MwSt-befreit</span>
+          </label>
+        </div>
+        <div class="form-field" id="pd-vat-rate-wrap" style="display:none;">
+          <label>MwSt-Satz in %</label>
+          <input type="number" id="pd-vat-rate" min="0" step="0.5" placeholder="z.B. 19">
+        </div>
+        <button type="button" class="period-btn" onclick="savePersonDriverVat()" style="background:var(--gold); border-color:var(--gold); color:var(--ink); font-weight:700;">MwSt-Einstellung speichern</button>
+        <p class="form-error" id="pd-vat-status"></p>
+      </div>
+
+      <div class="panel" style="padding:16px; margin-bottom:16px;">
+        <h3 style="margin-top:0;">⚙️ Konto-Aktionen</h3>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button type="button" class="lock-btn" id="pd-lock-btn" style="white-space:nowrap;" onclick="togglePersonDriverLock()"></button>
+          <button type="button" class="lock-btn" id="pd-vip-btn" style="white-space:nowrap;" onclick="togglePersonDriverVip()"></button>
+          <button type="button" class="cancel-btn" style="white-space:nowrap;" onclick="deletePersonDriver()">🗑️ Löschen</button>
+        </div>
+      </div>
     </div>
 
+    <!-- ===== Villa-Formular ===== -->
+    <div id="people-villa-form" style="display:none; margin-top:18px;">
+      <div class="panel" style="padding:16px; margin-bottom:16px;">
+        <h3 style="margin-top:0;">🏠 Stammdaten</h3>
+        <div class="form-field">
+          <label>Name der Villa / des Hotels</label>
+          <input type="text" id="villa-edit-name">
+        </div>
+        <div class="form-field">
+          <label>Link (Kennung kann aus technischen Gründen nicht mehr geändert werden)</label>
+          <input type="text" id="villa-edit-slug" disabled style="opacity:0.6;">
+        </div>
+        <div style="display:flex; gap:10px;">
+          <div class="form-field" style="flex:1;">
+            <label>Ansprechpartner</label>
+            <input type="text" id="villa-edit-contact-name">
+          </div>
+          <div class="form-field" style="flex:1;">
+            <label>Region</label>
+            <select id="villa-edit-region">
+              <option value="bali">Bali</option>
+              <option value="lombok">Lombok</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:flex; gap:10px;">
+          <div class="form-field" style="flex:1;">
+            <label>WhatsApp / Telefon</label>
+            <input type="text" id="villa-edit-contact-phone">
+          </div>
+          <div class="form-field" style="flex:1;">
+            <label>E-Mail</label>
+            <input type="email" id="villa-edit-contact-email">
+          </div>
+        </div>
+        <div class="form-field">
+          <label>Provisionssatz der Villa (5–20%)</label>
+          <input type="number" id="villa-edit-commission" min="5" max="20" step="0.5">
+        </div>
+        <div class="form-field">
+          <label>Adresse (Pflicht für Rechnungen)</label>
+          <input type="text" id="villa-edit-address" placeholder="z.B. Jl. Sunset Road No. 5, Seminyak, Bali">
+        </div>
+        <div class="form-field">
+          <label>Steuernummer (optional)</label>
+          <input type="text" id="villa-edit-taxnumber">
+        </div>
+        <button type="button" class="period-btn" onclick="saveVillaEdits()" style="background:var(--gold); border-color:var(--gold); color:var(--ink); font-weight:700;">Änderungen speichern</button>
+        <button type="button" class="link-btn" id="villa-edit-toggle-active-btn" onclick="toggleVillaActiveFromEditForm()" style="margin-top:8px;"></button>
+        <p class="form-error" id="villa-edit-status"></p>
+
+        <div style="margin-top:18px; padding-top:14px; border-top:1px solid var(--line);">
+          <div class="when">🔗 <span id="villa-edit-link" class="mono villa-link-mono"></span></div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;">
+            <button type="button" class="link-btn" style="width:auto; text-decoration:none; background:var(--paper-dim); padding:8px 12px; border-radius:6px;" id="villa-edit-copy-btn" onclick="copyVillaLink()">📋 Link kopieren</button>
+            <button type="button" class="link-btn" style="width:auto; text-decoration:none; background:var(--paper-dim); padding:8px 12px; border-radius:6px;" onclick="toggleVillaQr()">📱 QR-Code</button>
+            <button type="button" class="link-btn" style="width:auto; text-decoration:none; background:var(--paper-dim); padding:8px 12px; border-radius:6px;" onclick="shareVillaLinkWhatsapp()">📲 Per WhatsApp senden</button>
+          </div>
+          <div id="villa-edit-qr-wrap" style="display:none; margin-top:12px; text-align:center;">
+            <img id="villa-edit-qr-img" alt="QR code" style="width:180px; height:180px; border:1px solid var(--line); border-radius:8px; background:#fff; padding:8px;">
+          </div>
+          <div class="when" style="margin-top:12px;">Offene Anfragen: <strong id="villa-edit-openreqs">0</strong></div>
+          <div class="when">Provision offen: <strong id="villa-edit-earned">IDR 0</strong></div>
+          <div class="when">Bereits ausgezahlt: <span id="villa-edit-paid">IDR 0</span></div>
+          <button type="button" class="link-btn" id="villa-edit-markpaid-btn" onclick="markVillaCommissionsPaid(currentManagedVillaId)" style="margin-top:8px;">Als ausgezahlt markieren</button>
+        </div>
+      </div>
+
+      <div class="panel" style="padding:16px; margin-bottom:16px;">
+        <h3 style="margin-top:0;">🧾 MwSt-Einstellung</h3>
+        <p class="dash-head" style="display:block; margin-bottom:10px;">Gilt für die automatisch am Monatsletzten erzeugte Gutschrift dieser Villa. Vorbelegung ist MwSt-befreit — nur ändern, wenn für diese Villa wirklich etwas anderes gilt.</p>
+        <div class="form-field">
+          <label class="toggle-row" style="display:flex; align-items:center; gap:10px; cursor:pointer;">
+            <input type="checkbox" id="villa-vat-exempt" onchange="toggleVillaVatRateField()" style="width:auto;">
+            <span>MwSt-befreit</span>
+          </label>
+        </div>
+        <div class="form-field" id="villa-vat-rate-wrap" style="display:none;">
+          <label>MwSt-Satz in %</label>
+          <input type="number" id="villa-vat-rate" min="0" step="0.5" placeholder="z.B. 19">
+        </div>
+        <button type="button" class="period-btn" onclick="saveVillaVat()" style="background:var(--gold); border-color:var(--gold); color:var(--ink); font-weight:700;">MwSt-Einstellung speichern</button>
+        <p class="form-error" id="villa-vat-status"></p>
+      </div>
+    </div>
+    </div>
+
+
     <div id="admin-sec-documents" style="display:none;">
-    <h2 style="margin-top:0;">📄 Fahrer Dokumente</h2>
+    <h2 class="admin-sec-title">📄 Fahrer Dokumente</h2>
     <p class="dash-head" style="display:block; margin-bottom:14px;">Fahrer auswählen, um die bei der Registrierung hochgeladenen Dokumente anzusehen. Die Dokumente selbst bleiben dauerhaft gespeichert — beim erneuten Öffnen dieser Seite wird automatisch ein frischer Link erzeugt, es geht also nichts verloren.</p>
     <div class="form-field" style="max-width:340px;">
       <select id="admin-documents-driver-select" onchange="renderAdminDocuments()"></select>
@@ -2764,35 +2949,12 @@
     </div>
 
     <div id="admin-sec-money" style="display:none;">
-    <h2 style="margin-top:0;" data-i18n="admin_money_title">💰 Geld — Gebühren &amp; Gutschriften</h2>
-    <p class="dash-head" style="display:block; margin-bottom:20px;" data-i18n="admin_money_sub">Standardmäßig gilt für alle Fahrer 10% Provision pro Buchung. Hier kannst du für einzelne Fahrer einen abweichenden Satz für einen bestimmten Zeitraum festlegen, oder eine Gutschrift erstellen.</p>
+    <h2 class="admin-sec-title" data-i18n="admin_money_title">💰 Geld — Gebühren &amp; Gutschriften</h2>
 
     <div class="money-panel-grid">
     <div>
-    <h3 data-i18n="admin_feeoverride_title">Individuellen Gebührensatz festlegen</h3>
-    <div class="panel" style="padding:16px; margin-bottom:20px;">
-      <div class="form-field">
-        <label data-i18n="admin_select_driver">Fahrer auswählen</label>
-        <select id="fee-override-driver-select"></select>
-      </div>
-      <div class="form-field">
-        <label data-i18n="admin_fee_percent">Gebühr in % (0 oder höher)</label>
-        <input type="number" id="fee-override-percent" min="0" step="0.5" placeholder="z.B. 5">
-      </div>
-      <div style="display:flex; gap:10px;">
-        <div class="form-field" style="flex:1;">
-          <label data-i18n="admin_fee_start">Startdatum</label>
-          <input type="date" id="fee-override-start">
-        </div>
-        <div class="form-field" style="flex:1;">
-          <label data-i18n="admin_fee_end">Enddatum</label>
-          <input type="date" id="fee-override-end">
-        </div>
-      </div>
-      <button type="button" class="period-btn" onclick="createFeeOverride()" style="background:var(--gold); border-color:var(--gold); color:var(--ink); font-weight:700;" data-i18n="admin_fee_save_btn">Speichern</button>
-      <p class="form-error" id="fee-override-status"></p>
-    </div>
-    <button type="button" class="link-btn" onclick="openFeeOverridesModal()" style="margin-bottom:24px;">📋 <span data-i18n="admin_view_overrides_btn">Alle individuellen Gebührensätze anzeigen</span> (<span id="fee-overrides-count">0</span>)</button>
+    <h3>Individuelle Gebührensatzung Fahrer</h3>
+    <button type="button" class="period-btn" onclick="openFeeOverridesModal()" style="background:var(--gold); border-color:var(--gold); color:var(--ink); font-weight:700; margin-bottom:24px;">📋 <span data-i18n="admin_view_overrides_btn">Alle individuellen Gebührensätze anzeigen</span> (<span id="fee-overrides-count">0</span>)</button>
     </div>
 
     <div>
@@ -2862,7 +3024,7 @@
     </div>
 
     <div id="admin-sec-invoices" style="display:none;">
-    <h2 style="margin-top:0;">🧾 Rechnungen</h2>
+    <h2 class="admin-sec-title">🧾 Rechnungen</h2>
     <p class="dash-head" style="display:block; margin-bottom:20px;">Rechnungen für Fahrer und Villa-Partner erstellen, archivieren, versenden und verwalten. Absender: Rydanu UG.</p>
 
     <div id="inv-view-list">
@@ -2871,15 +3033,18 @@
           <label>Monat</label>
           <input type="month" id="inv-filter-month" onchange="renderInvoicesList()">
         </div>
-        <div class="form-field" style="margin-bottom:0;">
+        <div class="form-field" style="margin-bottom:0; position:relative;">
           <label>Kunde</label>
-          <select id="inv-filter-customer" onchange="renderInvoicesList()">
+          <input type="text" id="inv-filter-customer-search" placeholder="Name oder RY-Nummer suchen…"
+            autocomplete="off" oninput="rebuildInvoiceCustomerOptions()" onfocus="rebuildInvoiceCustomerOptions()">
+          <div class="pickup-suggestions" id="inv-filter-customer-results"></div>
+          <select id="inv-filter-customer" style="display:none;">
             <option value="">Alle</option>
           </select>
         </div>
         <div class="form-field" style="margin-bottom:0;">
           <label>Empfänger-Art</label>
-          <select id="inv-filter-recipient" onchange="renderInvoicesList()">
+          <select id="inv-filter-recipient" onchange="onInvoiceRecipientFilterChange()">
             <option value="">Alle</option>
             <option value="driver">Fahrer</option>
             <option value="villa">Villa</option>
@@ -2914,11 +3079,11 @@
         </div>
         <div class="form-field" id="inv-form-driver-field">
           <label>Fahrer auswählen</label>
-          <select id="inv-form-driver-select"></select>
+          <select id="inv-form-driver-select" onchange="prefillInvoiceVatFromRecipient()"></select>
         </div>
         <div class="form-field" id="inv-form-villa-field" style="display:none;">
           <label>Villa auswählen</label>
-          <select id="inv-form-villa-select"></select>
+          <select id="inv-form-villa-select" onchange="prefillInvoiceVatFromRecipient()"></select>
         </div>
         <div style="display:flex; gap:10px;">
           <div class="form-field" style="flex:1;">
@@ -2962,7 +3127,7 @@
     </div>
 
     <div id="admin-sec-villa" style="display:none;">
-    <h2 style="margin-top:0;">Villa-Partner</h2>
+    <h2 class="admin-sec-title">🏠 Villa-Partner</h2>
     <p class="dash-head" style="display:block; margin-bottom:20px;">Villen &amp; Hotels anlegen, die ihren Gästen über einen persönlichen Link Transfers anfragen lassen können. Fahrer zahlen bei Villa-Buchungen pauschal 20% (statt normal 10%) — die Villa bekommt davon ihren festgelegten Anteil, Rydanu die Differenz.</p>
 
     <div class="panel" style="padding:16px; margin-bottom:20px;">
@@ -3036,86 +3201,11 @@
       <p class="form-error" id="villa-new-status"></p>
     </div>
     </div>
-
-    <div>
-    <h3>Villa verwalten</h3>
-    <div class="panel" style="padding:16px; margin-bottom:20px;">
-      <div class="form-field">
-        <label>Villa suchen / auswählen</label>
-        <input type="text" id="villa-manage-search" placeholder="Namen tippen zum Filtern…" oninput="filterVillaManageSelect()" style="margin-bottom:8px;">
-        <select id="villa-manage-select" onchange="loadVillaIntoManageForm()" size="5" style="height:auto;"></select>
-      </div>
-      <div id="villa-manage-form" style="display:none; margin-top:16px; padding-top:16px; border-top:1px solid var(--line);">
-        <div class="form-field">
-          <label>Name der Villa / des Hotels</label>
-          <input type="text" id="villa-edit-name">
-        </div>
-        <div class="form-field">
-          <label>Link (Kennung kann aus technischen Gründen nicht mehr geändert werden)</label>
-          <input type="text" id="villa-edit-slug" disabled style="opacity:0.6;">
-        </div>
-        <div style="display:flex; gap:10px;">
-          <div class="form-field" style="flex:1;">
-            <label>Ansprechpartner</label>
-            <input type="text" id="villa-edit-contact-name">
-          </div>
-          <div class="form-field" style="flex:1;">
-            <label>Region</label>
-            <select id="villa-edit-region">
-              <option value="bali">Bali</option>
-              <option value="lombok">Lombok</option>
-            </select>
-          </div>
-        </div>
-        <div style="display:flex; gap:10px;">
-          <div class="form-field" style="flex:1;">
-            <label>WhatsApp / Telefon</label>
-            <input type="text" id="villa-edit-contact-phone">
-          </div>
-          <div class="form-field" style="flex:1;">
-            <label>E-Mail</label>
-            <input type="email" id="villa-edit-contact-email">
-          </div>
-        </div>
-        <div class="form-field">
-          <label>Provisionssatz der Villa (5–20%)</label>
-          <input type="number" id="villa-edit-commission" min="5" max="20" step="0.5">
-        </div>
-        <div class="form-field">
-          <label>Adresse (Pflicht für Rechnungen)</label>
-          <input type="text" id="villa-edit-address" placeholder="z.B. Jl. Sunset Road No. 5, Seminyak, Bali">
-        </div>
-        <div class="form-field">
-          <label>Steuernummer (optional)</label>
-          <input type="text" id="villa-edit-taxnumber">
-        </div>
-        <button type="button" class="period-btn" onclick="saveVillaEdits()" style="background:var(--gold); border-color:var(--gold); color:var(--ink); font-weight:700;">Änderungen speichern</button>
-        <button type="button" class="link-btn" id="villa-edit-toggle-active-btn" onclick="toggleVillaActiveFromEditForm()" style="margin-top:8px;"></button>
-        <p class="form-error" id="villa-edit-status"></p>
-
-        <div style="margin-top:18px; padding-top:14px; border-top:1px solid var(--line);">
-          <div class="when">🔗 <span id="villa-edit-link" class="mono villa-link-mono"></span></div>
-          <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;">
-            <button type="button" class="link-btn" style="width:auto; text-decoration:none; background:var(--paper-dim); padding:8px 12px; border-radius:6px;" id="villa-edit-copy-btn" onclick="copyVillaLink()">📋 Link kopieren</button>
-            <button type="button" class="link-btn" style="width:auto; text-decoration:none; background:var(--paper-dim); padding:8px 12px; border-radius:6px;" onclick="toggleVillaQr()">📱 QR-Code</button>
-            <button type="button" class="link-btn" style="width:auto; text-decoration:none; background:var(--paper-dim); padding:8px 12px; border-radius:6px;" onclick="shareVillaLinkWhatsapp()">📲 Per WhatsApp senden</button>
-          </div>
-          <div id="villa-edit-qr-wrap" style="display:none; margin-top:12px; text-align:center;">
-            <img id="villa-edit-qr-img" alt="QR code" style="width:180px; height:180px; border:1px solid var(--line); border-radius:8px; background:#fff; padding:8px;">
-          </div>
-          <div class="when" style="margin-top:12px;">Offene Anfragen: <strong id="villa-edit-openreqs">0</strong></div>
-          <div class="when">Provision offen: <strong id="villa-edit-earned">IDR 0</strong></div>
-          <div class="when">Bereits ausgezahlt: <span id="villa-edit-paid">IDR 0</span></div>
-          <button type="button" class="link-btn" id="villa-edit-markpaid-btn" onclick="markVillaCommissionsPaid(currentManagedVillaId)" style="margin-top:8px;">Als ausgezahlt markieren</button>
-        </div>
-      </div>
-    </div>
-    </div>
     </div>
     </div>
 
     <div id="admin-sec-villabookings" style="display:none;">
-    <h2 style="margin-top:0;">📖 Villa-Buchungen</h2>
+    <h2 class="admin-sec-title">📖 Villa-Buchungen</h2>
     <p class="dash-head" style="display:block; margin-bottom:14px;">Villa auswählen, um alle ihre Buchungen mit Provisions-/Gebührenaufteilung einzusehen.</p>
     <div class="form-field" style="max-width:340px;">
       <select id="villa-bookings-select" onchange="renderVillaBookingsList(); renderVillaRequestsAdminList();"></select>
@@ -3131,7 +3221,7 @@
     </div>
 
     <div id="admin-sec-pwreset" style="display:none;">
-    <h2 style="margin-top:0;" data-i18n="admin_pwreset_title">🔑 Fahrer-Passwort zurücksetzen</h2>
+    <h2 class="admin-sec-title" data-i18n="admin_pwreset_title">🔑 Fahrer-Passwort zurücksetzen</h2>
     <p class="dash-head" style="display:block; margin-bottom:20px;" data-i18n="admin_pwreset_sub">Für Fahrer, die sich nicht mehr einloggen können (z. B. Passwort vergessen ohne eigene E-Mail). Das neue Passwort gibst du dem Fahrer danach selbst durch, z. B. per WhatsApp.</p>
     <div class="panel" style="padding:16px; margin-bottom:20px;">
       <div class="form-field">
@@ -3173,6 +3263,20 @@
 </div>
 
 <!-- fee overrides list modal -->
+<!-- gesperrte Fahrer & deaktivierte Villen -->
+<div class="modal-bg" id="locked-overview-modal-bg">
+  <div class="modal" style="max-width:520px;">
+    <div class="modal-header">
+      <button class="modal-close" onclick="closeLockedOverviewModal()">✕</button>
+      <span class="eyebrow">Fahrer/Villa verwalten</span>
+      <h2>🔒 Gesperrte Fahrer &amp; deaktivierte Villen</h2>
+    </div>
+    <div class="modal-body">
+      <div id="locked-overview-list"></div>
+    </div>
+  </div>
+</div>
+
 <div class="modal-bg" id="fee-overrides-modal-bg">
   <div class="modal" style="max-width:520px;">
     <div class="modal-header">
@@ -3331,6 +3435,10 @@
       <div class="form-field">
         <label data-i18n-html="lbl_whatsapp">WhatsApp number <span class="optional">(for booking confirmation)</span></label>
         <input type="tel" id="ep-phone" placeholder="+62 812 3456 7890">
+      </div>
+      <div class="form-field">
+        <label data-i18n-html="ep_email_label">Email <span class="optional">(optional, for invoices e.g.)</span></label>
+        <input type="email" id="ep-email" placeholder="name@example.com">
       </div>
       <div class="form-field">
         <label data-i18n="ep_address_label">Full address (required for invoices)</label>
@@ -4773,7 +4881,7 @@ async function shareQrViaWhatsapp(){
       return;
     }
   }catch(e){ /* fall through to text-link fallback below */ }
-  window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
+  window.location.href = 'https://wa.me/?text=' + encodeURIComponent(text);
 }
 function openQrModal(){
   // Bugfix: currentDriverId bleibt bei einem echten eingeloggten Fahrer auf dem alten Demo-Wert
@@ -6327,7 +6435,7 @@ function shareReferralLinkWhatsapp(){
     id: `Hai! 👋 Saya menawarkan perjalanan di Bali sebagai sopir independen lewat Rydanu — berjalan lancar banget! Mau ikut gabung? Daftar saja lewat link saya, nomor saya otomatis tersimpan sebagai referensi: ${link}`
   };
   const text = texts[currentLang] || texts.en;
-  window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
+  window.location.href = 'https://wa.me/?text=' + encodeURIComponent(text);
 }
 function copyRyvioNumber(elId){
   const el = document.getElementById(elId || 'profile-lwnumber');
@@ -6407,9 +6515,7 @@ function renderCurrentFeeRate(){
   if(override && Number(override.percent) === 0){
     const untilStr = override.endDate ? t('fee_rate_valid_until').replace('{date}', override.endDate) : t('fee_rate_valid_unlimited');
     el.classList.add('fee-rate-badge-vip');
-    // Joerg-Wunsch (2. Anlauf): "0% Gebuehren" + Gueltigkeit jetzt in EINER Zeile zusammengefasst,
-    // statt zwei getrennten Zeilen -- passt zur neuen 2er-Groessen-Hierarchie (Ueberschrift + Rest).
-    el.innerHTML = `<span class="fee-rate-badge-label">🌟 ${t('fee_rate_vip_bonus')}</span><span class="fee-rate-badge-main">${t('fee_rate_zero_fees')} · ${untilStr}</span><span class="fee-rate-badge-note">${t('fee_rate_villa_excluded')}</span>`;
+    el.innerHTML = `<span class="fee-rate-badge-label">${t('fee_rate_current')}</span><span class="fee-rate-badge-main">🌟 ${t('fee_rate_vip_bonus')} 0% · ${untilStr}</span><span class="fee-rate-badge-note">${t('fee_rate_villa_excluded')}</span>`;
   } else if(override && Number(override.percent) !== DEFAULT_FEE_PERCENT){
     // Gleicher Bugfix wie bei der echten Fahrer-Variante: Sonderkondition == Standardsatz zeigt jetzt
     // ganz normal "Standard" an, statt faelschlich weiter als Sonderkondition markiert zu bleiben.
@@ -6417,10 +6523,10 @@ function renderCurrentFeeRate(){
     const range = (override.startDate || override.endDate)
       ? `${override.startDate||'…'} – ${override.endDate||t('fee_rate_unlimited_short')}`
       : t('fee_rate_unlimited_short');
-    el.innerHTML = `<span class="fee-rate-badge-label">${t('fee_rate_special_condition')}</span><span class="fee-rate-badge-main">${t('fee_rate_current')} ${override.percent}% · ${range}</span>`;
+    el.innerHTML = `<span class="fee-rate-badge-label">${t('fee_rate_current')}</span><span class="fee-rate-badge-main">${t('fee_rate_special_condition')} ${override.percent}% · ${range}</span>`;
   } else {
     el.classList.remove('fee-rate-badge-vip');
-    el.innerHTML = `<span class="fee-rate-badge-main">${t('fee_rate_current')} ${DEFAULT_FEE_PERCENT}% · ${t('fee_rate_standard')}</span>`;
+    el.innerHTML = `<span class="fee-rate-badge-label">${t('fee_rate_current')}</span><span class="fee-rate-badge-main">${t('fee_rate_standard')} ${DEFAULT_FEE_PERCENT}%</span>`;
   }
 }
 // Bewertungen: nach den ersten 5 einklappen, "Mehr anzeigen" blendet den Rest ein (22.8.-Wunsch,
@@ -6508,6 +6614,49 @@ async function openFeeBreakdown(){
   document.getElementById('fee-breakdown-total').textContent = formatIDR(total);
 }
 function closeFeeBreakdown(){ document.getElementById('fee-breakdown-modal-bg').classList.remove('active'); }
+
+// NEU (5.9., Bugfix): die Gebuehren-Kachel rief bisher payFees() auf -- eine reine Alt-Platzhalter-
+// Funktion aus der Zeit vor dem Zahlungssystem-Umbau, die nur eine Meldung zeigt und nichts tut.
+// Diese neue Funktion zeigt stattdessen dieselbe Aufschluesselung, die auch die automatische
+// Monats-Rechnung nutzt: jede diesen Monat abgebuchte Buchung einzeln mit Fahrpreis + Satz +
+// Provision (Finanzamt-Nachweis-Format). Ist eine LIVE-Vorschau des laufenden Monats -- die
+// tatsaechliche Rechnung entsteht ja erst automatisch am Monatsletzten.
+function _baliTodayParts(){
+  // Asia/Makassar hat ganzjaehrig UTC+8, keine Sommerzeit -- einfache, zuverlaessige Berechnung.
+  const utcMs = Date.now() + (new Date().getTimezoneOffset() * 60000);
+  const bali = new Date(utcMs + 8 * 3600000);
+  return { y: bali.getUTCFullYear(), m: bali.getUTCMonth() }; // m: 0-basiert
+}
+async function openDriverMonthlyChargesPreview(){
+  if(!realDriverProfile) return;
+  const list = document.getElementById('fee-breakdown-list');
+  list.innerHTML = `<div class="empty-state">${t('loading_generic')}</div>`;
+  document.getElementById('fee-breakdown-modal-bg').classList.add('active');
+  document.getElementById('fee-breakdown-eyebrow').textContent = t('stat_fees');
+  document.getElementById('fee-breakdown-title').textContent = t('fee_breakdown_title_charged');
+  document.getElementById('fee-breakdown-total-label').textContent = t('fee_breakdown_total_label_charged');
+  const goBtn = document.getElementById('fee-breakdown-go-to-fees-btn');
+  if(goBtn) goBtn.style.display = 'none';
+  const pdfRow = document.getElementById('fee-breakdown-pdf-row');
+  if(pdfRow) pdfRow.style.display = 'none';
+  lastReceiptPdfData = null;
+
+  const { rows, total } = await getDriverMonthlyChargeRows(realDriverProfile.id);
+  if(rows.length === 0){
+    list.innerHTML = `<div class="empty-state">${t('fee_breakdown_empty')}</div>`;
+  } else {
+    list.innerHTML = rows.map(b=>{
+      const dateStr = b.fee_charged_at ? formatDateDisplay(b.fee_charged_at.slice(0,10)) : '—';
+      return `
+      <div class="booking-row">
+        <div><div class="who">Buchung #${b.booking_number}</div>
+          <div class="when">${dateStr} · Fahrpreis ${formatIDR(b.price_idr||0)} · Satz ${b.fee_percent_applied}%</div></div>
+        <span class="mono" style="font-weight:700;">${formatIDR(b.fee_idr||0)}</span>
+      </div>`;
+    }).join('');
+  }
+  document.getElementById('fee-breakdown-total').textContent = formatIDR(total);
+}
 document.getElementById('fee-breakdown-modal-bg').addEventListener('click', e=>{ if(e.target.id==='fee-breakdown-modal-bg') closeFeeBreakdown(); });
 
 // PDF-Beleg (14. August, auf Joergs Wunsch): wird komplett im Browser erzeugt, kein Server/Edge
@@ -6610,6 +6759,27 @@ function openFeeReceiptPdf(mode){
   }
 }
 
+// NEU (5.9.): gemeinsame Datengrundlage fuer Gebuehren-Kachel-Zahl UND Popup-Aufschluesselung --
+// vorher hat die Kachel die alte fees_due_idr gezeigt, das Popup aber schon die neue Berechnung,
+// dadurch stand auf der Kachel "IDR 0" waehrend das Popup "IDR 90.000" zeigte. Jetzt EINE
+// Berechnung fuer beides, damit die Zahlen immer exakt uebereinstimmen.
+async function getDriverMonthlyChargeRows(driverId){
+  const { y, m } = _baliTodayParts();
+  const firstDay = new Date(Date.UTC(y, m, 1)).toISOString().slice(0,10);
+  const lastDay = new Date(Date.UTC(y, m + 1, 0)).toISOString().slice(0,10);
+  const { data, error } = await supabaseClient.from('bookings')
+    .select('booking_number, price_idr, fee_percent_applied, fee_idr, fee_charged_at, status')
+    .eq('driver_id', driverId)
+    .gte('fee_charged_at', firstDay + 'T00:00:00+08:00')
+    .lt('fee_charged_at', lastDay + 'T23:59:59.999+08:00')
+    .not('status', 'in', '(cancel_requested,cancelled_by_customer)')
+    .order('fee_charged_at', { ascending:true });
+  if(error){ console.error('Monats-Gebühren konnten nicht geladen werden:', error); return { rows: [], total: 0 }; }
+  const rows = (data||[]).filter(b => (b.fee_idr||0) > 0);
+  const total = rows.reduce((sum,b)=> sum + (b.fee_idr||0), 0);
+  return { rows, total };
+}
+
 async function renderRealOverviewStats(){
   if(!realDriverProfile) return;
   const today = new Date().toISOString().slice(0,10);
@@ -6635,24 +6805,25 @@ async function renderRealOverviewStats(){
   const requestsEl = document.getElementById('stat-requests');
   if(requestsEl) requestsEl.textContent = String((driverBookings.length||0) + (completedBookings.length||0));
 
-  // Gebühren + Guthaben
+  // Gebühren + Guthaben (5.9.: Kachel-Zahl kommt jetzt aus derselben Berechnung wie das Popup,
+  // siehe getDriverMonthlyChargeRows() -- vorher zeigte die Kachel die alte fees_due_idr, die seit
+  // dem Zahlungsumbau nur noch fuer Featured-Placement genutzt wird und meist 0 ist.)
   const feesEl = document.getElementById('stat-fees');
-  if(feesEl) feesEl.textContent = formatIDR(feesDue);
+  if(feesEl){
+    getDriverMonthlyChargeRows(realDriverProfile.id).then(({total})=>{ feesEl.textContent = formatIDR(total); });
+  }
   const feesCard = document.getElementById('fees-stat-card');
-  // Baustein "Offener Betrag aufschluesseln" (13. August): echte Zahlung ist zwar weiterhin nicht
-  // angebunden (kein Zahlungsanbieter), aber jetzt kann der Fahrer wenigstens sehen, WELCHE Touren
-  // hinter dem offenen Betrag stecken (nutzt die neue fee_settled-Spalte, siehe openFeeBreakdown()).
+  // Bugfix (5.9., Joerg gemeldet): dieser Block hat den Klick der Kachel bisher komplett
+  // ABGESCHALTET (onclick=null), sobald feesDue (nur noch fuer Featured-Placement genutzt) bei 0
+  // lag -- was seit dem Zahlungssystem-Umbau der Normalfall ist. Die Kachel blieb dadurch faktisch
+  // fast immer tot. Jetzt IMMER klickbar, zeigt die Monats-Aufschluesselung (Fahrpreis+Satz+Provision
+  // pro Buchung, siehe openDriverMonthlyChargesPreview()) unabhaengig vom alten feesDue-Wert.
   if(feesCard){
-    if(feesDue > 0){
-      feesCard.onclick = openFeeBreakdown;
-      feesCard.classList.add('stat-card-clickable');
-    } else {
-      feesCard.onclick = null;
-      feesCard.classList.remove('stat-card-clickable');
-    }
+    feesCard.onclick = openDriverMonthlyChargesPreview;
+    feesCard.classList.add('stat-card-clickable');
   }
   const feesHint = document.getElementById('pay-fees-hint');
-  if(feesHint) feesHint.textContent = feesDue > 0 ? t('fee_breakdown_tap_hint') : ('✓ ' + t('st_paid'));
+  if(feesHint) feesHint.textContent = t('fee_breakdown_tap_hint');
   const balanceRow = document.getElementById('real-balance-row');
   const balanceLabel = document.getElementById('real-balance-label');
   const balanceAmount = document.getElementById('real-balance-amount');
@@ -6701,6 +6872,9 @@ async function renderRealOverviewStats(){
   }
 
   // aktueller Gebührensatz (Standard oder Sonderkondition)
+  // Format-Korrektur (5.9., Joerg-Wunsch): einheitlich für ALLE Faelle (Standard/Sonderkondition/VIP)
+  // zweizeilig -- Zeile 1 immer "Deine aktuelle Provision" als Ueberschrift, Zeile 2 "{Kategorie}
+  // {Prozent}%" (Kategorie zuerst, dann Prozent -- vorher andersrum und in einer Zeile zusammen).
   const rateEl = document.getElementById('current-fee-rate-display');
   if(rateEl){
     rateEl.style.display = 'inline-block';
@@ -6708,22 +6882,16 @@ async function renderRealOverviewStats(){
     if(ov && Number(ov.fee_percent) === 0){
       const untilStr = ov.ends_at ? t('fee_rate_valid_until').replace('{date}', formatDateDisplay(ov.ends_at)) : t('fee_rate_valid_unlimited');
       rateEl.classList.add('fee-rate-badge-vip');
-      rateEl.innerHTML = `<span class="fee-rate-badge-label">🌟 ${t('fee_rate_vip_bonus')}</span><span class="fee-rate-badge-main">${t('fee_rate_zero_fees')} · ${untilStr}</span><span class="fee-rate-badge-note">${t('fee_rate_villa_excluded')}</span>`;
+      rateEl.innerHTML = `<span class="fee-rate-badge-label">${t('fee_rate_current')}</span><span class="fee-rate-badge-main">🌟 ${t('fee_rate_vip_bonus')} 0% · ${untilStr}</span><span class="fee-rate-badge-note">${t('fee_rate_villa_excluded')}</span>`;
     } else if(ov && Number(ov.fee_percent) !== DEFAULT_FEE_PERCENT){
-      // Bugfix (24.8., Joerg gemeldet): eine Sonderkondition, die der Admin exakt auf den Standardsatz
-      // (10%) zurueckgesetzt hat -- z.B. indem er einfach eine neue Sonderkondition mit 10% angelegt hat,
-      // statt die alte zu loeschen -- zeigte trotzdem weiterhin das "Sonderkondition"-Badge an, obwohl
-      // sie inhaltlich genau dem Standard entspricht. Jetzt: nur noch als Sonderkondition anzeigen, wenn
-      // der Satz WIRKLICH vom Standard abweicht. Eine wirklich abgelaufene Sonderkondition faellt schon
-      // vorher aus der Datenbankabfrage raus (ends_at-Filter), landet also automatisch im "else"-Zweig.
       rateEl.classList.remove('fee-rate-badge-vip');
       const range = (ov.starts_at || ov.ends_at)
         ? `${ov.starts_at ? formatDateDisplay(ov.starts_at) : '…'} – ${ov.ends_at ? formatDateDisplay(ov.ends_at) : t('fee_rate_unlimited_short')}`
         : t('fee_rate_unlimited_short');
-      rateEl.innerHTML = `<span class="fee-rate-badge-label">${t('fee_rate_special_condition')}</span><span class="fee-rate-badge-main">${t('fee_rate_current')} ${ov.fee_percent}% · ${range}</span>`;
+      rateEl.innerHTML = `<span class="fee-rate-badge-label">${t('fee_rate_current')}</span><span class="fee-rate-badge-main">${t('fee_rate_special_condition')} ${ov.fee_percent}% · ${range}</span>`;
     } else {
       rateEl.classList.remove('fee-rate-badge-vip');
-      rateEl.innerHTML = `<span class="fee-rate-badge-main">${t('fee_rate_current')} ${DEFAULT_FEE_PERCENT}% · ${t('fee_rate_standard')}</span>`;
+      rateEl.innerHTML = `<span class="fee-rate-badge-label">${t('fee_rate_current')}</span><span class="fee-rate-badge-main">${t('fee_rate_standard')} ${DEFAULT_FEE_PERCENT}%</span>`;
     }
   }
   const rankEl = document.getElementById('rank-panel-body');
@@ -8819,14 +8987,11 @@ async function createVillaPartner(){
 let villaAdminCache = [];
 let currentManagedVillaId = null;
 async function loadVillaAdminData(){
-  const sel = document.getElementById('villa-manage-select');
-  if(!sel) return;
   const linkEl = document.getElementById('villa-apply-link');
   if(linkEl) linkEl.textContent = location.origin + '/?apply=villa';
   const { data: villas, error: villasErr } = await supabaseClient.from('villa_partners').select('*').order('name');
   if(villasErr){ console.error('Villen konnten nicht geladen werden:', villasErr); return; }
   villaAdminCache = villas || [];
-  renderVillaManageOptions(villaAdminCache);
   loadVillaApplications();
 }
 // Nur die Anzahl laden (fuer die rote Admin-Kachel), ohne den ganzen Villa-Bereich zu oeffnen --
@@ -8923,30 +9088,14 @@ function shareVillaApplyLinkWhatsapp(){
   // Bewusst fest auf Englisch (24.8., Joerg-Wunsch): Villa-Partner sind international, Ansprache
   // per WhatsApp soll unabhaengig von der eigenen App-Sprache immer auf Englisch rausgehen.
   const text = `Hello! We'd love to welcome you as a Rydanu Villa Partner — your guests will then be able to book transfers easily through your own personal link. Quick sign-up here:\n${link}`;
-  window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
+  window.location.href = 'https://wa.me/?text=' + encodeURIComponent(text);
 }
-function renderVillaManageOptions(list){
-  const sel = document.getElementById('villa-manage-select');
-  if(!sel) return;
-  if(list.length === 0){
-    sel.innerHTML = '<option disabled>Keine Villa gefunden</option>';
-    return;
-  }
-  sel.innerHTML = list.map(v => `<option value="${v.id}">${v.active ? '' : '🚫 '}${escapeHtml(v.name)} (${v.slug})</option>`).join('');
-}
-function filterVillaManageSelect(){
-  const q = document.getElementById('villa-manage-search').value.trim().toLowerCase();
-  const filtered = q ? villaAdminCache.filter(v => v.name.toLowerCase().includes(q) || v.slug.toLowerCase().includes(q)) : villaAdminCache;
-  renderVillaManageOptions(filtered);
-}
-async function loadVillaIntoManageForm(){
-  const sel = document.getElementById('villa-manage-select');
-  const villaId = sel.value;
+async function loadVillaIntoManageForm(villaId){
   if(!villaId) return;
   currentManagedVillaId = villaId;
   const v = villaAdminCache.find(x=>x.id===villaId);
   if(!v) return;
-  document.getElementById('villa-manage-form').style.display = 'block';
+  document.getElementById('people-villa-form').style.display = 'block';
   document.getElementById('villa-edit-name').value = v.name;
   document.getElementById('villa-edit-slug').value = v.slug;
   document.getElementById('villa-edit-contact-name').value = v.contact_name || '';
@@ -8957,6 +9106,10 @@ async function loadVillaIntoManageForm(){
   document.getElementById('villa-edit-address').value = v.address || '';
   document.getElementById('villa-edit-taxnumber').value = v.tax_number || '';
   document.getElementById('villa-edit-status').textContent = '';
+  document.getElementById('villa-vat-exempt').checked = (v.default_vat_exempt !== false);
+  document.getElementById('villa-vat-rate').value = v.default_vat_rate || '';
+  toggleVillaVatRateField();
+  document.getElementById('villa-vat-status').textContent = '';
   const activeBtn = document.getElementById('villa-edit-toggle-active-btn');
   activeBtn.textContent = v.active ? '🚫 Villa deaktivieren' : '✓ Villa aktivieren';
   // Zeilenumbruch-Fix Runde 2 (siehe .villa-link-mono CSS): einfacher Text reicht jetzt, das
@@ -8973,6 +9126,22 @@ async function loadVillaIntoManageForm(){
   document.getElementById('villa-edit-openreqs').textContent = (openReqs||[]).length;
   document.getElementById('villa-edit-earned').textContent = formatIDR(earned);
   document.getElementById('villa-edit-paid').textContent = formatIDR(paid);
+}
+function toggleVillaVatRateField(){
+  document.getElementById('villa-vat-rate-wrap').style.display = document.getElementById('villa-vat-exempt').checked ? 'none' : 'block';
+}
+async function saveVillaVat(){
+  if(!currentManagedVillaId) return;
+  const exempt = document.getElementById('villa-vat-exempt').checked;
+  const rate = exempt ? 0 : Number(document.getElementById('villa-vat-rate').value || 0);
+  const statusEl = document.getElementById('villa-vat-status');
+  const { error } = await supabaseClient.from('villa_partners').update({ default_vat_exempt: exempt, default_vat_rate: rate }).eq('id', currentManagedVillaId);
+  if(error){ console.error('MwSt-Einstellung konnte nicht gespeichert werden:', error); statusEl.style.color = 'var(--danger)'; statusEl.textContent = 'Fehler beim Speichern.'; return; }
+  const v = villaAdminCache.find(x=>x.id===currentManagedVillaId);
+  if(v){ v.default_vat_exempt = exempt; v.default_vat_rate = rate; }
+  statusEl.style.color = 'var(--teal)';
+  statusEl.textContent = '✓ Gespeichert.';
+  setTimeout(closePeopleForms, 700);
 }
 // Villa-Link teilen: kopieren, QR-Code anzeigen, per WhatsApp senden (gleiches QR-API-Muster wie
 // beim bereits bestehenden Fahrer-QR-Code, keine neue Abhaengigkeit noetig).
@@ -9000,7 +9169,7 @@ function shareVillaLinkWhatsapp(){
   if(!link) return;
   const villaName = document.getElementById('villa-edit-name').value.trim() || 'Ihre Villa';
   const text = `Hallo! Hier ist Ihr persönlicher Rydanu-Buchungslink für ${villaName} — Gäste können darüber direkt einen Transfer anfragen:\n${link}`;
-  window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
+  window.location.href = 'https://wa.me/?text=' + encodeURIComponent(text);
 }
 async function saveVillaEdits(){
   if(!currentManagedVillaId) return;
@@ -9022,9 +9191,12 @@ async function saveVillaEdits(){
     address, tax_number: taxNumber || null
   }).eq('id', currentManagedVillaId);
   if(error){ console.error('Villa konnte nicht aktualisiert werden:', error); statusEl.style.color = 'var(--danger)'; statusEl.textContent = 'Fehler beim Speichern.'; return; }
+  await loadVillaAdminData();
   statusEl.style.color = 'var(--teal)';
   statusEl.textContent = '✓ Gespeichert.';
-  loadVillaAdminData();
+  // Joerg-Wunsch (5.9.): jede "Speichern"-Aktion schliesst das Formular danach wieder, statt
+  // einfach offen stehen zu bleiben. Kurze Verzoegerung, damit die Bestaetigung noch sichtbar ist.
+  setTimeout(closePeopleForms, 700);
 }
 async function toggleVillaActiveFromEditForm(){
   if(!currentManagedVillaId) return;
@@ -9032,18 +9204,251 @@ async function toggleVillaActiveFromEditForm(){
   if(!v) return;
   const { error } = await supabaseClient.from('villa_partners').update({ active: !v.active }).eq('id', currentManagedVillaId);
   if(error){ console.error('Status konnte nicht geaendert werden:', error); alert('Fehler beim Speichern.'); return; }
+  const keepId = currentManagedVillaId;
   await loadVillaAdminData();
-  const sel = document.getElementById('villa-manage-select');
-  sel.value = currentManagedVillaId;
-  loadVillaIntoManageForm();
+  updateLockedOverviewCount();
+  await loadVillaIntoManageForm(keepId);
 }
 async function markVillaCommissionsPaid(villaId){
   if(!villaId) return;
   if(!confirm('Alle offenen Provisionen dieser Villa als ausgezahlt markieren? (Auszahlung selbst läuft weiterhin manuell außerhalb der Plattform, z.B. per Überweisung.)')) return;
   const { error } = await supabaseClient.from('villa_commissions').update({ status:'paid', paid_at: new Date().toISOString() }).eq('villa_partner_id', villaId).eq('status','earned');
   if(error){ console.error('Konnte nicht als ausgezahlt markiert werden:', error); alert('Fehler beim Speichern.'); return; }
-  loadVillaIntoManageForm();
+  loadVillaIntoManageForm(villaId);
 }
+
+// ========== NEU (5.9.): Vereinheitlichte "Fahrer/Villa verwalten"-Suche ==========
+// Kombiniert Fahrer + Villen in einer Live-Ergebnisliste (gleiches Muster wie die
+// Rechnungs-Kundensuche), Auswahl zeigt darunter das passende Bearbeiten-Formular.
+async function loadPeopleAdminData(){
+  await Promise.all([loadRealAllDriversCache(), loadVillaAdminData()]);
+  updateLockedOverviewCount();
+}
+function updateLockedOverviewCount(){
+  const countEl = document.getElementById('locked-overview-count');
+  if(!countEl) return;
+  const lockedDrivers = realAllDriversCache.filter(d => d.is_locked).length;
+  const inactiveVillas = villaAdminCache.filter(v => !v.active).length;
+  countEl.textContent = lockedDrivers + inactiveVillas;
+}
+function openLockedOverviewModal(){
+  renderLockedOverviewList();
+  document.getElementById('locked-overview-modal-bg').classList.add('active');
+}
+function closeLockedOverviewModal(){ document.getElementById('locked-overview-modal-bg').classList.remove('active'); }
+document.getElementById('locked-overview-modal-bg').addEventListener('click', e=>{ if(e.target.id==='locked-overview-modal-bg') closeLockedOverviewModal(); });
+function renderLockedOverviewList(){
+  const el = document.getElementById('locked-overview-list');
+  const lockedDrivers = realAllDriversCache.filter(d => d.is_locked);
+  const inactiveVillas = villaAdminCache.filter(v => !v.active);
+  updateLockedOverviewCount();
+  if(lockedDrivers.length === 0 && inactiveVillas.length === 0){
+    el.innerHTML = '<div class="empty-state">Aktuell keine gesperrten Fahrer oder deaktivierten Villen.</div>';
+    return;
+  }
+  let html = '';
+  if(lockedDrivers.length > 0){
+    html += '<p class="dash-head" style="display:block; margin-bottom:6px;">🚗 Gesperrte Fahrer:</p>';
+    html += lockedDrivers.map(d => {
+      const reasonLabel = d.lock_reason === 'fees' ? t('admin_lock_reason_fees')
+        : d.lock_reason === 'autodebit_failed' ? t('admin_lock_reason_autodebit')
+        : t('admin_lock_reason_manual');
+      return `<div class="booking-row" style="cursor:pointer;" onclick="closeLockedOverviewModal(); selectPeopleSearchResult('driver','${d.id}');">
+        <div><div class="who">${escapeHtml(d.name)} (${d.lw_number||'—'})</div><div class="when">${reasonLabel}</div></div>
+        <span class="status-pill pending">Gesperrt</span>
+      </div>`;
+    }).join('');
+  }
+  if(inactiveVillas.length > 0){
+    html += '<p class="dash-head" style="display:block; margin:14px 0 6px;">🏠 Deaktivierte Villen:</p>';
+    html += inactiveVillas.map(v => `<div class="booking-row" style="cursor:pointer;" onclick="closeLockedOverviewModal(); selectPeopleSearchResult('villa','${v.id}');">
+        <div><div class="who">${escapeHtml(v.name)}</div><div class="when">${v.slug}</div></div>
+        <span class="status-pill pending">Deaktiviert</span>
+      </div>`).join('');
+  }
+  el.innerHTML = html;
+}
+function closePeopleForms(){
+  document.getElementById('people-search').value = '';
+  document.getElementById('people-search-results').classList.remove('open');
+  document.getElementById('people-search-results').innerHTML = '';
+  document.getElementById('people-search-clear').style.display = 'none';
+  document.getElementById('people-driver-form').style.display = 'none';
+  document.getElementById('people-villa-form').style.display = 'none';
+  currentManagedDriverId = null;
+  currentManagedVillaId = null;
+}
+function renderPeopleSearchResults(){
+  const box = document.getElementById('people-search-results');
+  const q = document.getElementById('people-search').value.trim().toLowerCase();
+  document.getElementById('people-search-clear').style.display = q ? 'block' : 'none';
+  const matches = (label) => !q || label.toLowerCase().includes(q);
+  let entries = realAllDriversCache
+    .filter(d => matches(d.name + ' ' + (d.lw_number||'')))
+    .map(d => ({ type:'driver', id:d.id, label:`🚗 ${d.name} (${d.lw_number||'—'})` }));
+  entries = entries.concat(villaAdminCache
+    .filter(v => matches(v.name))
+    .map(v => ({ type:'villa', id:v.id, label:`🏠 ${v.name}${v.active ? '' : ' (inaktiv)'}` })));
+  box.innerHTML = entries.length
+    ? entries.map(e => `<div class="suggestion-item" onclick="selectPeopleSearchResult('${e.type}','${e.id}')"><span class="s-name">${escapeHtml(e.label)}</span></div>`).join('')
+    : `<div class="suggestion-item" style="cursor:default; color:var(--ink-soft);">Keine Treffer</div>`;
+  box.classList.add('open');
+}
+document.addEventListener('click', (e)=>{
+  const box = document.getElementById('people-search-results');
+  const input = document.getElementById('people-search');
+  if(!box || !input) return;
+  if(e.target !== input && !box.contains(e.target)) box.classList.remove('open');
+});
+function selectPeopleSearchResult(type, id){
+  document.getElementById('people-search-results').classList.remove('open');
+  document.getElementById('people-search-clear').style.display = 'block';
+  if(type === 'driver'){
+    document.getElementById('people-villa-form').style.display = 'none';
+    document.getElementById('people-search').value = realAllDriversCache.find(d=>d.id===id)?.name || '';
+    loadDriverIntoManageForm(id);
+  } else {
+    document.getElementById('people-driver-form').style.display = 'none';
+    document.getElementById('people-search').value = villaAdminCache.find(v=>v.id===id)?.name || '';
+    loadVillaIntoManageForm(id);
+  }
+}
+
+// ---- Fahrer-Formular ----
+let currentManagedDriverId = null;
+function loadDriverIntoManageForm(driverId){
+  const d = realAllDriversCache.find(x=>x.id===driverId);
+  if(!d) return;
+  currentManagedDriverId = driverId;
+  document.getElementById('people-driver-form').style.display = 'block';
+  document.getElementById('pd-name').value = d.name || '';
+  document.getElementById('pd-phone').value = d.phone || '';
+  document.getElementById('pd-email').value = d.email || '';
+  document.getElementById('pd-address').value = d.address || '';
+  document.getElementById('pd-taxnumber').value = d.tax_number || '';
+  document.getElementById('pd-stammdaten-status').textContent = '';
+  document.getElementById('pd-fee-percent').value = '';
+  document.getElementById('pd-fee-start').value = '';
+  document.getElementById('pd-fee-end').value = '';
+  document.getElementById('pd-fee-status').textContent = '';
+  document.getElementById('pd-vat-exempt').checked = (d.default_vat_exempt !== false);
+  document.getElementById('pd-vat-rate').value = d.default_vat_rate || '';
+  togglePersonDriverVatRateField();
+  document.getElementById('pd-vat-status').textContent = '';
+  const lockBtn = document.getElementById('pd-lock-btn');
+  lockBtn.className = d.is_locked ? 'accept-btn' : 'lock-btn';
+  lockBtn.textContent = d.is_locked ? '🔓 Entsperren' : '🔒 Sperren';
+  const vipBtn = document.getElementById('pd-vip-btn');
+  vipBtn.className = d.auto_debit_enabled ? 'accept-btn' : 'lock-btn';
+  vipBtn.textContent = d.auto_debit_enabled ? '⭐ VIP aktiv' : '☆ VIP Auto-Einzug';
+  renderPersonDriverFeeHistory(driverId);
+}
+async function savePersonDriverStammdaten(){
+  if(!currentManagedDriverId) return;
+  const name = document.getElementById('pd-name').value.trim();
+  const phone = document.getElementById('pd-phone').value.trim();
+  const email = document.getElementById('pd-email').value.trim();
+  const address = document.getElementById('pd-address').value.trim();
+  const taxNumber = document.getElementById('pd-taxnumber').value.trim();
+  const statusEl = document.getElementById('pd-stammdaten-status');
+  if(!name){ statusEl.style.color = 'var(--danger)'; statusEl.textContent = 'Name darf nicht leer sein.'; return; }
+  if(email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ statusEl.style.color = 'var(--danger)'; statusEl.textContent = 'Bitte eine gültige E-Mail-Adresse angeben (oder leer lassen).'; return; }
+  const { error } = await supabaseClient.from('drivers').update({
+    name, phone: phone || null, email: email || null, address: address || null, tax_number: taxNumber || null
+  }).eq('id', currentManagedDriverId);
+  if(error){ console.error('Fahrer konnte nicht aktualisiert werden:', error); statusEl.style.color = 'var(--danger)'; statusEl.textContent = 'Fehler beim Speichern.'; return; }
+  await loadRealAllDriversCache();
+  statusEl.style.color = 'var(--teal)';
+  statusEl.textContent = '✓ Gespeichert.';
+  setTimeout(closePeopleForms, 700);
+}
+function togglePersonDriverVatRateField(){
+  document.getElementById('pd-vat-rate-wrap').style.display = document.getElementById('pd-vat-exempt').checked ? 'none' : 'block';
+}
+async function savePersonDriverVat(){
+  if(!currentManagedDriverId) return;
+  const exempt = document.getElementById('pd-vat-exempt').checked;
+  const rate = exempt ? 0 : Number(document.getElementById('pd-vat-rate').value || 0);
+  const statusEl = document.getElementById('pd-vat-status');
+  const { error } = await supabaseClient.from('drivers').update({ default_vat_exempt: exempt, default_vat_rate: rate }).eq('id', currentManagedDriverId);
+  if(error){ console.error('MwSt-Einstellung konnte nicht gespeichert werden:', error); statusEl.style.color = 'var(--danger)'; statusEl.textContent = 'Fehler beim Speichern.'; return; }
+  const d = realAllDriversCache.find(x=>x.id===currentManagedDriverId);
+  if(d){ d.default_vat_exempt = exempt; d.default_vat_rate = rate; }
+  statusEl.style.color = 'var(--teal)';
+  statusEl.textContent = '✓ Gespeichert.';
+  setTimeout(closePeopleForms, 700);
+}
+async function savePersonDriverFeeOverride(){
+  if(!currentManagedDriverId) return;
+  const percent = document.getElementById('pd-fee-percent').value;
+  const start = document.getElementById('pd-fee-start').value;
+  const end = document.getElementById('pd-fee-end').value;
+  const statusEl = document.getElementById('pd-fee-status');
+  if(percent === '' || percent === null){ statusEl.style.color=''; statusEl.textContent = t('admin_fo_fill_required'); return; }
+  if(Number(percent) < 0){ statusEl.style.color=''; statusEl.textContent = t('admin_fo_negative_error'); return; }
+  const { error } = await supabaseClient.from('fee_overrides').insert({
+    driver_id: currentManagedDriverId,
+    fee_percent: Number(percent),
+    starts_at: start || new Date().toISOString().slice(0,10),
+    ends_at: end || null,
+    created_by: (realDriverProfile && realDriverProfile.name) ? realDriverProfile.name : 'admin'
+  });
+  if(error){ console.error('Sonderkondition konnte nicht gespeichert werden:', error); statusEl.style.color = 'var(--danger)'; statusEl.textContent = 'Fehler beim Speichern.'; return; }
+  // Fahrer wie gewohnt per Nachricht informieren (gleiches Verhalten wie die alte Sonderkonditionen-Seite)
+  const range = (start || end) ? t('admin_fo_range_from_to').replace('{start}', start||'…').replace('{end}', end||'…') : t('admin_fo_range_immediate');
+  const noticeBody = Number(percent) === 0
+    ? t('admin_fo_notify_body_vip').replace('{range}', range)
+    : t('admin_fo_notify_body_set').replace('{percent}', Number(percent)).replace('{range}', range);
+  await supabaseClient.from('driver_messages').insert({
+    driver_id: currentManagedDriverId, type:'system', subject: t('admin_fo_notify_title'), body: noticeBody
+  });
+  statusEl.style.color = 'var(--teal)';
+  statusEl.textContent = '✓ Gespeichert.';
+  document.getElementById('pd-fee-percent').value = '';
+  document.getElementById('pd-fee-start').value = '';
+  document.getElementById('pd-fee-end').value = '';
+  renderPersonDriverFeeHistory(currentManagedDriverId);
+  // Joerg-Wunsch (5.9., Runde 2): jede "Speichern"-Aktion im Fahrer-/Villa-Formular soll das
+  // Formular danach schliessen -- vorher war das nur bei den Stammdaten der Fall, bei MwSt und
+  // Gebuehrensatz blieb die Karte faelschlich offen stehen.
+  setTimeout(closePeopleForms, 700);
+}
+async function renderPersonDriverFeeHistory(driverId){
+  const el = document.getElementById('pd-fee-history');
+  el.innerHTML = '<p class="note">Lädt…</p>';
+  const rows = await loadRealFeeOverridesCache(driverId);
+  if(rows.length === 0){ el.innerHTML = '<p class="note">Noch keine Sonderkonditionen für diesen Fahrer.</p>'; return; }
+  el.innerHTML = '<p class="dash-head" style="display:block; margin-bottom:6px;">Verlauf für diesen Fahrer:</p>' + rows.map(r => `
+    <div class="booking-row">
+      <div><div class="who">${r.fee_percent}%</div>
+        <div class="when">${r.starts_at ? formatDateDisplay(r.starts_at) : '…'} – ${r.ends_at ? formatDateDisplay(r.ends_at) : 'unbefristet'}</div></div>
+    </div>`).join('');
+}
+async function togglePersonDriverLock(){
+  if(!currentManagedDriverId) return;
+  const d = realAllDriversCache.find(x=>x.id===currentManagedDriverId);
+  if(!d) return;
+  await toggleRealDriverLock(d.id, d.is_locked, d.name);
+  await loadRealAllDriversCache();
+  updateLockedOverviewCount();
+  loadDriverIntoManageForm(currentManagedDriverId);
+}
+async function togglePersonDriverVip(){
+  if(!currentManagedDriverId) return;
+  const d = realAllDriversCache.find(x=>x.id===currentManagedDriverId);
+  if(!d) return;
+  await toggleAutoDebit(d.id, d.auto_debit_enabled, d.name);
+  await loadRealAllDriversCache();
+  loadDriverIntoManageForm(currentManagedDriverId);
+}
+async function deletePersonDriver(){
+  if(!currentManagedDriverId) return;
+  const d = realAllDriversCache.find(x=>x.id===currentManagedDriverId);
+  if(!d) return;
+  await deleteRealDriver(d.id, d.name);
+  closePeopleForms();
+}
+
 // ---------- Villa-Buchungen (Detailansicht je Villa) ----------
 async function populateVillaBookingsSelect(){
   const sel = document.getElementById('villa-bookings-select');
@@ -10090,6 +10495,7 @@ function openEditProfileReal(){
   document.getElementById('ep-paylink').value = pay.link || '';
   document.getElementById('ep-qris').checked = pay.qris !== false;
   document.getElementById('ep-phone').value = d.phone || '';
+  document.getElementById('ep-email').value = d.email || '';
   document.getElementById('ep-address').value = d.address || '';
   document.getElementById('ep-taxnumber').value = d.tax_number || '';
   document.getElementById('ep-error').textContent = '';
@@ -10161,10 +10567,15 @@ async function saveEditProfileReal(){
     link: document.getElementById('ep-paylink').value.trim()
   };
   const phone = document.getElementById('ep-phone').value.trim();
+  const email = document.getElementById('ep-email').value.trim();
+  if(email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+    document.getElementById('ep-error').textContent = t('ep_err_email');
+    return;
+  }
   const taxNumber = document.getElementById('ep-taxnumber').value.trim();
   const villa_exclusive_opt_in = document.getElementById('ep-villa-optin-toggle').checked;
 
-  const updatePayload = { name, region: island, home_area, languages, services, vehicle, payment, phone, villa_exclusive_opt_in, address, tax_number: taxNumber || null };
+  const updatePayload = { name, region: island, home_area, languages, services, vehicle, payment, phone, email: email || null, villa_exclusive_opt_in, address, tax_number: taxNumber || null };
   if(island === 'lombok'){ updatePayload.service_regions_lombok = currentRegions; }
   else { updatePayload.service_regions = currentRegions; }
 
@@ -10243,7 +10654,7 @@ const translations = {
     support_error: "Please enter a subject and a message.",
     support_sent: "Your message has been sent to Rydanu Support. ✓ We'll reply to your inbox.",
     period_day: "Daily", period_month: "Monthly", period_year: "Yearly",
-    admin_stats_title: "Business overview", admin_messages_title: "Messages from drivers",
+    admin_stats_title: "📊 Business overview", admin_messages_title: "✉️ Messages from drivers",
     admin_compose_btn: "Message a driver", admin_compose_title: "Message a driver", admin_compose_driver_label: "Driver", admin_compose_send_btn: "Send message",
     admin_driverstats_title: "Driver statistics", admin_driverstats_sub: "Select a driver to see their completed and cancelled tours.",
     admin_stat_driver_completed: "Completed tours", admin_stat_driver_cancelled_driver: "Cancelled by driver", admin_stat_driver_cancelled_customer: "Cancelled by customer", admin_stat_driver_total: "Total tours", admin_stat_driver_revenue: "Revenue", admin_stat_driver_fee_revenue: "Fee revenue",
@@ -10287,6 +10698,8 @@ const translations = {
     reg_terms_checkbox_label: "I have read and accept Rydanu's terms & conditions for drivers.", reg_terms_submit_btn: "Accept & submit registration",
     ep_err_name: "Name cannot be empty.",
     ep_err_address: "Please enter your full address (required for invoices).",
+    ep_err_email: "Please enter a valid email address (or leave it empty).",
+    ep_email_label: 'Email <span class="optional">(optional, e.g. for invoices)</span>',
     map_note_dropoff_booking: "Marker shows the general drop-off area — your driver will confirm the exact address after booking.", map_note_dropoff_general: "Marker shows the general drop-off area.",
     form_err_name_email: "Please enter your name and email to continue.", form_err_pickup: "Please enter your pickup location (hotel or address) before continuing — your driver needs it to plan the tour.", form_err_required_all: "Please fill in all fields (WhatsApp number, date and pickup location) — only luggage and notes are optional.",
     eyebrow_profile: "Driver profile", eyebrow_trip: "Trip details", eyebrow_payment: "Payment", eyebrow_confirm: "All set",
@@ -10425,7 +10838,7 @@ const translations = {
     nav_bookings: "Bookings", booking_history_title: "Booking history",
     bd_title: "Booking details", bd_email: "Email", bd_phone: "WhatsApp", bd_ref: "Reference", bd_status: "Status",
     rcpt_title: "Receipt", rcpt_no: "Receipt no.", rcpt_item: "Booking fees", rcpt_total: "Total paid", rcpt_note: "This receipt was also sent to your email address. Payment method: your saved payment method (Stripe).", el_eyebrow: "My listings", el_title: "Edit listing", el_name_label: "Tour name *", el_price_label: "Price *", el_duration_label: "Duration", el_save_btn: "Save changes", el_error: "Please fill the highlighted fields.", el_delete_btn: "🗑️ Delete this listing", el_delete_confirm: "Really delete \"{name}\"? This cannot be undone.", nl_pickup_prices_title: "Different price per pickup region? (optional — leave empty to use the same price everywhere)", nl_special_rates_title: "Special destinations (optional) — free text, info only, not auto-matched", nl_special_rates_add: "+ Add destination", rcpt_credit_applied: "Referral credit applied", rcpt_pdf_open_btn: "🧾 Open as PDF", rcpt_pdf_download_btn: "⬇ Download", rcpt_pdf_receipt_no: "Receipt no.", rcpt_pdf_date: "Date", rcpt_pdf_driver: "Driver", rcpt_pdf_rydanu_no: "Rydanu no.", rcpt_pdf_item: "Trip", rcpt_pdf_amount: "Amount", rcpt_pdf_total: "Total settled", rcpt_pdf_footer: "This receipt was generated automatically by Rydanu and lists the trip fees included in this settlement.", rcpt_pdf_filename_prefix: "Rydanu-Beleg",
-    admin_openpay_title: "Open payments", admin_openpay_sub: "Drivers whose automatic month-end fee payment failed. They have 5 days to settle before their account is automatically suspended.",
+    admin_openpay_title: "💳 Open payments", admin_openpay_sub: "Drivers whose automatic month-end fee payment failed. They have 5 days to settle before their account is automatically suspended.",
     admin_run_settlement_btn: "Run month-end settlement now (test)", admin_settlement_real_note: "Real fee billing already runs automatically every day (daily cron job) — there's no manual trigger for real drivers, and this button only affects demo data.", admin_openpay_empty: "No open payments right now — everyone is settled.",
     admin_openpay_amount: "Amount due", admin_openpay_due: "Due date", admin_openpay_suspended: "🚫 Suspended", admin_openpay_overdue: "Overdue",
     admin_openpay_balance: "Balance", admin_openpay_credit: "Pending credit", admin_openpay_collect_btn: "Collect now", admin_openpay_details_btn: "Details", admin_openpay_hide_btn: "Hide",
@@ -10457,7 +10870,7 @@ const translations = {
     stat_requests: "Booking requests",
     stat_rating: "Avg. rating",
     stat_fees: "Fees this month", loading_generic: "Loading…",
-    fee_breakdown_eyebrow: "Fees this month", fee_breakdown_title: "What's in your open balance", fee_breakdown_total_label: "Total open", fee_receipt_breakdown_eyebrow: "Receipt", fee_receipt_breakdown_title: "What this receipt covers", fee_receipt_breakdown_total_label: "Total settled", fee_receipt_no_breakdown: "No trip breakdown available for this receipt.", fee_breakdown_go_to_fees_btn: "Go to Fees & billing", fee_breakdown_tap_hint: "Tap to see what's included", fee_breakdown_empty: "Nothing open right now.", fee_breakdown_load_err: "Couldn't load this — please try again.",
+    fee_breakdown_eyebrow: "Fees this month", fee_breakdown_title: "What's in your open balance", fee_breakdown_title_charged: "Charged so far this month", fee_breakdown_total_label: "Total open", fee_breakdown_total_label_charged: "Total charged this month", fee_receipt_breakdown_eyebrow: "Receipt", fee_receipt_breakdown_title: "What this receipt covers", fee_receipt_breakdown_total_label: "Total settled", fee_receipt_no_breakdown: "No trip breakdown available for this receipt.", fee_breakdown_go_to_fees_btn: "Go to Fees & billing", fee_breakdown_tap_hint: "Tap to see what's included", fee_breakdown_empty: "Nothing charged yet this month.", fee_breakdown_load_err: "Couldn't load this — please try again.",
     upcoming_bookings: "Upcoming bookings",
     view_calendar_btn: "View calendar",
     listings_title: "My listings",
@@ -10526,7 +10939,7 @@ const translations = {
     rd_notify_admin_wa: "WhatsApp to Rydanu admin",
     rd_notify_driver: "Email & WhatsApp to you",
     rd_pending_done_btn: "Go to my dashboard",
-    admin_title: "Pending driver approvals",
+    admin_title: "🆕 Pending driver approvals",
     admin_sub: "Review uploaded documents, then approve to make a driver's listings publicly bookable.",
     admin_block_title: "All drivers — block / unblock",
     admin_block_sub: "Tap a driver to block them — blocked drivers and all their tours disappear from the traveler view immediately.",
@@ -10541,7 +10954,7 @@ const translations = {
     admin_fc_cannot_delete_applied: "This credit was already used against a fee and can no longer be deleted.",
     admin_view_balances_btn: "View all balances",
     fee_rate_vip_bonus: "VIP Bonus", fee_rate_zero_fees: "0% fees", fee_rate_valid_until: "valid until {date}", fee_rate_valid_unlimited: "valid indefinitely", fee_rate_villa_excluded: "*excludes villa bookings",
-    fee_rate_current: "📊 Your current commission:", fee_rate_special_condition: "special rate", fee_rate_standard: "Standard", fee_rate_unlimited_short: "unlimited",
+    fee_rate_current: "📊 Your current commission", fee_rate_special_condition: "Special rate", fee_rate_standard: "Standard", fee_rate_unlimited_short: "unlimited",
     admin_fo_fill_required: "Please select a driver and enter a percentage.", admin_fo_negative_error: "The percentage cannot be negative.",
     admin_fo_saved: "✓ Saved and driver notified.", admin_fo_confirm_delete: "Really delete this individual fee rate? The driver will pay the standard 10% again.",
     admin_fo_notify_title: "📊 Your fee has been adjusted",
@@ -10616,7 +11029,7 @@ const translations = {
     support_error: "Bitte gib einen Betreff und eine Nachricht ein.",
     support_sent: "Deine Nachricht wurde an den Rydanu Support gesendet. ✓ Die Antwort erhältst du in deinem Posteingang.",
     period_day: "Täglich", period_month: "Monatlich", period_year: "Jährlich",
-    admin_stats_title: "Geschäftsübersicht", admin_messages_title: "Nachrichten von Fahrern",
+    admin_stats_title: "📊 Geschäftsübersicht", admin_messages_title: "✉️ Nachrichten von Fahrern",
     admin_compose_btn: "Nachricht an Fahrer", admin_compose_title: "Nachricht an Fahrer", admin_compose_driver_label: "Fahrer", admin_compose_send_btn: "Nachricht senden",
     admin_driverstats_title: "Fahrer-Statistik", admin_driverstats_sub: "Wähle einen Fahrer, um dessen abgeschlossene und stornierte Touren zu sehen.",
     admin_stat_driver_completed: "Abgeschlossene Touren", admin_stat_driver_cancelled_driver: "Storniert durch Fahrer", admin_stat_driver_cancelled_customer: "Storniert durch Kunde", admin_stat_driver_total: "Touren insgesamt", admin_stat_driver_revenue: "Umsatz", admin_stat_driver_fee_revenue: "Gebühren-Umsatz",
@@ -10660,6 +11073,8 @@ const translations = {
     reg_terms_checkbox_label: "Ich habe die Rydanu-Nutzungsbedingungen für Fahrer gelesen und akzeptiere sie.", reg_terms_submit_btn: "Akzeptieren & Registrierung absenden",
     ep_err_name: "Der Name darf nicht leer sein.",
     ep_err_address: "Bitte deine vollständige Adresse angeben (Pflichtangabe für Rechnungen).",
+    ep_err_email: "Bitte eine gültige E-Mail-Adresse angeben (oder leer lassen).",
+    ep_email_label: 'E-Mail <span class="optional">(optional, z.B. für Rechnungen)</span>',
     map_note_dropoff_booking: "Der Marker zeigt den ungefähren Abholbereich — dein Fahrer bestätigt die genaue Adresse nach der Buchung.", map_note_dropoff_general: "Der Marker zeigt den ungefähren Abholbereich.",
     form_err_name_email: "Bitte gib deinen Namen und deine E-Mail-Adresse ein, um fortzufahren.", form_err_pickup: "Bitte gib deinen Abholort ein (Hotel oder Adresse), bevor du fortfährst — dein Fahrer braucht diese Angabe zur Planung der Tour.", form_err_required_all: "Bitte fülle alle Felder aus (WhatsApp-Nummer, Datum und Abholort) — nur Gepäck und Notizen sind optional.",
     eyebrow_profile: "Fahrerprofil", eyebrow_trip: "Reisedetails", eyebrow_payment: "Zahlung", eyebrow_confirm: "Fertig",
@@ -10798,7 +11213,7 @@ const translations = {
     nav_bookings: "Buchungen", booking_history_title: "Buchungsverlauf",
     bd_title: "Buchungsdetails", bd_email: "E-Mail", bd_phone: "WhatsApp", bd_ref: "Referenz", bd_status: "Status",
     rcpt_title: "Beleg", rcpt_no: "Beleg-Nr.", rcpt_item: "Buchungsgebühren", rcpt_total: "Gesamt bezahlt", rcpt_note: "Dieser Beleg wurde zusätzlich an deine E-Mail-Adresse gesendet. Zahlungsmethode: deine hinterlegte Zahlungsmethode (Stripe).", el_eyebrow: "Meine Angebote", el_title: "Angebot bearbeiten", el_name_label: "Tour-Name *", el_price_label: "Preis *", el_duration_label: "Dauer", el_save_btn: "Änderungen speichern", el_error: "Bitte fülle die markierten Felder aus.", el_delete_btn: "🗑️ Angebot löschen", el_delete_confirm: "\"{name}\" wirklich löschen? Das kann nicht rückgängig gemacht werden.", nl_pickup_prices_title: "Unterschiedlicher Preis je Abholregion? (optional — leer lassen für überall denselben Preis)", nl_special_rates_title: "Spezialziele (optional) — Freitext, nur Info, kein automatisches Matching", nl_special_rates_add: "+ Ziel hinzufügen", rcpt_credit_applied: "Empfehlungs-Gutschrift angerechnet", rcpt_pdf_open_btn: "🧾 Als PDF öffnen", rcpt_pdf_download_btn: "⬇ Herunterladen", rcpt_pdf_receipt_no: "Beleg-Nr.", rcpt_pdf_date: "Datum", rcpt_pdf_driver: "Fahrer", rcpt_pdf_rydanu_no: "Rydanu-Nr.", rcpt_pdf_item: "Fahrt", rcpt_pdf_amount: "Betrag", rcpt_pdf_total: "Gesamt beglichen", rcpt_pdf_footer: "Dieser Beleg wurde automatisch von Rydanu erstellt und listet die Fahrtgebühren dieses Einzugs auf.", rcpt_pdf_filename_prefix: "Rydanu-Beleg",
-    admin_openpay_title: "Offene Zahlungen", admin_openpay_sub: "Fahrer, deren automatische Monatsend-Gebührenzahlung fehlgeschlagen ist. Sie haben 5 Tage Zeit zu zahlen, bevor ihr Konto automatisch gesperrt wird.",
+    admin_openpay_title: "💳 Offene Zahlungen", admin_openpay_sub: "Fahrer, deren automatische Monatsend-Gebührenzahlung fehlgeschlagen ist. Sie haben 5 Tage Zeit zu zahlen, bevor ihr Konto automatisch gesperrt wird.",
     admin_run_settlement_btn: "Monatsabrechnung jetzt ausführen (Test)", admin_settlement_real_note: "Die echte Gebührenabrechnung läuft schon automatisch jeden Tag (täglicher Cronjob) — dafür gibt es keinen manuellen Auslöser für echte Fahrer, dieser Button betrifft nur Demo-Daten.", admin_openpay_empty: "Aktuell keine offenen Zahlungen — alles beglichen.",
     admin_openpay_amount: "Fälliger Betrag", admin_openpay_due: "Fällig am", admin_openpay_suspended: "🚫 Gesperrt", admin_openpay_overdue: "Überfällig",
     admin_openpay_balance: "Guthaben", admin_openpay_credit: "Offene Gutschrift", admin_openpay_collect_btn: "Jetzt einziehen", admin_openpay_details_btn: "Details", admin_openpay_hide_btn: "Ausblenden",
@@ -10827,10 +11242,10 @@ const translations = {
     dash_greeting_sub: "So laufen deine Angebote diese Woche.",
     plan_chip_line1: "Kostenlos einstellen", plan_chip_line2: "10% pro Buchung", plan_chip_line3: "20% bei Villa-Anfragen",
     stat_views: "Profilaufrufe",
-    stat_requests: "Buchungsanfragen",
+    stat_requests: "Anfragen",
     stat_rating: "Ø Bewertung",
     stat_fees: "Gebühren diesen Monat", loading_generic: "Wird geladen…",
-    fee_breakdown_eyebrow: "Gebühren diesen Monat", fee_breakdown_title: "Das steckt in deinem offenen Betrag", fee_breakdown_total_label: "Gesamt offen", fee_receipt_breakdown_eyebrow: "Beleg", fee_receipt_breakdown_title: "Das steckt in diesem Beleg", fee_receipt_breakdown_total_label: "Gesamt beglichen", fee_receipt_no_breakdown: "Für diesen Beleg ist keine Touren-Aufschlüsselung verfügbar.", fee_breakdown_go_to_fees_btn: "Zu Gebühren & Abrechnung", fee_breakdown_tap_hint: "Antippen für Details", fee_breakdown_empty: "Aktuell nichts offen.", fee_breakdown_load_err: "Konnte nicht geladen werden — bitte nochmal versuchen.",
+    fee_breakdown_eyebrow: "Gebühren diesen Monat", fee_breakdown_title: "Das steckt in deinem offenen Betrag", fee_breakdown_title_charged: "Das wurde diesen Monat bereits abgebucht", fee_breakdown_total_label: "Gesamt offen", fee_breakdown_total_label_charged: "Gesamt diesen Monat abgebucht", fee_receipt_breakdown_eyebrow: "Beleg", fee_receipt_breakdown_title: "Das steckt in diesem Beleg", fee_receipt_breakdown_total_label: "Gesamt beglichen", fee_receipt_no_breakdown: "Für diesen Beleg ist keine Touren-Aufschlüsselung verfügbar.", fee_breakdown_go_to_fees_btn: "Zu Gebühren & Abrechnung", fee_breakdown_tap_hint: "Antippen für Details", fee_breakdown_empty: "Diesen Monat noch nichts abgebucht.", fee_breakdown_load_err: "Konnte nicht geladen werden — bitte nochmal versuchen.",
     upcoming_bookings: "Anstehende Buchungen",
     view_calendar_btn: "Kalender ansehen",
     listings_title: "Meine Angebote",
@@ -10899,7 +11314,7 @@ const translations = {
     rd_notify_admin_wa: "WhatsApp an Rydanu-Admin",
     rd_notify_driver: "E-Mail & WhatsApp an dich",
     rd_pending_done_btn: "Zu meinem Dashboard",
-    admin_title: "Ausstehende Fahrer-Freischaltungen",
+    admin_title: "🆕 Ausstehende Fahrer-Freischaltungen",
     admin_sub: "Prüfe die hochgeladenen Dokumente und schalte den Fahrer frei, damit seine Angebote öffentlich buchbar werden.",
     admin_block_title: "Alle Fahrer — sperren / entsperren",
     admin_block_sub: "Tippe einen Fahrer an, um ihn zu sperren — gesperrte Fahrer und alle ihre Touren verschwinden sofort aus der Kundenansicht.",
@@ -10914,7 +11329,7 @@ const translations = {
     admin_fc_cannot_delete_applied: "Diese Gutschrift wurde bereits mit einer Gebühr verrechnet und kann nicht mehr gelöscht werden.",
     admin_view_balances_btn: "Alle Guthaben anzeigen",
     fee_rate_vip_bonus: "VIP Bonus", fee_rate_zero_fees: "0% Gebühren", fee_rate_valid_until: "gültig bis {date}", fee_rate_valid_unlimited: "unbefristet gültig", fee_rate_villa_excluded: "*ausgenommen Villa-Buchungen",
-    fee_rate_current: "📊 Deine aktuelle Provision:", fee_rate_special_condition: "Sonderkondition", fee_rate_standard: "Standard", fee_rate_unlimited_short: "unbefristet",
+    fee_rate_current: "📊 Deine aktuelle Provision", fee_rate_special_condition: "Sonderkondition", fee_rate_standard: "Standard", fee_rate_unlimited_short: "unbefristet",
     admin_fo_fill_required: "Bitte Fahrer und Prozentsatz angeben.", admin_fo_negative_error: "Der Prozentsatz darf nicht negativ sein.",
     admin_fo_saved: "✓ Gespeichert und Fahrer benachrichtigt.", admin_fo_confirm_delete: "Diesen individuellen Gebührensatz wirklich löschen? Der Fahrer zahlt danach wieder den Standardsatz von 10%.",
     admin_fo_notify_title: "📊 Deine Gebühr wurde angepasst",
@@ -10989,7 +11404,7 @@ const translations = {
     support_error: "Mohon isi subjek dan pesan.",
     support_sent: "Pesan Anda telah dikirim ke Dukungan Rydanu. ✓ Balasan akan masuk ke kotak masuk Anda.",
     period_day: "Harian", period_month: "Bulanan", period_year: "Tahunan",
-    admin_stats_title: "Ringkasan bisnis", admin_messages_title: "Pesan dari sopir",
+    admin_stats_title: "📊 Ringkasan bisnis", admin_messages_title: "✉️ Pesan dari sopir",
     admin_compose_btn: "Pesan ke sopir", admin_compose_title: "Pesan ke sopir", admin_compose_driver_label: "Sopir", admin_compose_send_btn: "Kirim pesan",
     admin_driverstats_title: "Statistik sopir", admin_driverstats_sub: "Pilih sopir untuk melihat tur yang selesai dan dibatalkan.",
     admin_stat_driver_completed: "Tur selesai", admin_stat_driver_cancelled_driver: "Dibatalkan oleh sopir", admin_stat_driver_cancelled_customer: "Dibatalkan oleh pelanggan", admin_stat_driver_total: "Total tur", admin_stat_driver_revenue: "Pendapatan", admin_stat_driver_fee_revenue: "Pendapatan biaya",
@@ -11033,6 +11448,8 @@ const translations = {
     reg_terms_checkbox_label: "Saya telah membaca dan menerima syarat & ketentuan Rydanu untuk sopir.", reg_terms_submit_btn: "Terima & kirim pendaftaran",
     ep_err_name: "Nama tidak boleh kosong.",
     ep_err_address: "Silakan masukkan alamat lengkap Anda (wajib untuk faktur).",
+    ep_err_email: "Silakan masukkan alamat email yang valid (atau biarkan kosong).",
+    ep_email_label: 'Email <span class="optional">(opsional, misalnya untuk faktur)</span>',
     map_note_dropoff_booking: "Penanda menunjukkan area penjemputan umum — sopir Anda akan mengonfirmasi alamat pastinya setelah pemesanan.", map_note_dropoff_general: "Penanda menunjukkan area penjemputan umum.",
     form_err_name_email: "Mohon masukkan nama dan email Anda untuk melanjutkan.", form_err_pickup: "Mohon masukkan lokasi penjemputan Anda (hotel atau alamat) sebelum melanjutkan — sopir Anda memerlukannya untuk merencanakan tur.", form_err_required_all: "Mohon isi semua kolom (nomor WhatsApp, tanggal, dan lokasi penjemputan) — hanya bagasi dan catatan yang opsional.",
     eyebrow_profile: "Profil sopir", eyebrow_trip: "Detail perjalanan", eyebrow_payment: "Pembayaran", eyebrow_confirm: "Selesai",
@@ -11171,7 +11588,7 @@ const translations = {
     nav_bookings: "Pemesanan", booking_history_title: "Riwayat pemesanan",
     bd_title: "Detail pemesanan", bd_email: "Email", bd_phone: "WhatsApp", bd_ref: "Referensi", bd_status: "Status",
     rcpt_title: "Kuitansi", rcpt_no: "No. kuitansi", rcpt_item: "Biaya pemesanan", rcpt_total: "Total dibayar", rcpt_note: "Kuitansi ini juga dikirim ke alamat email Anda. Metode pembayaran: metode pembayaran tersimpan Anda (Stripe).", el_eyebrow: "Tur saya", el_title: "Edit tur", el_name_label: "Nama tur *", el_price_label: "Harga *", el_duration_label: "Durasi", el_save_btn: "Simpan perubahan", el_error: "Mohon isi kolom yang ditandai.", el_delete_btn: "🗑️ Hapus tur ini", el_delete_confirm: "Yakin ingin menghapus \"{name}\"? Tindakan ini tidak dapat dibatalkan.", nl_pickup_prices_title: "Harga berbeda per wilayah penjemputan? (opsional — kosongkan untuk harga yang sama di mana saja)", nl_special_rates_title: "Tujuan khusus (opsional) — teks bebas, hanya info, tidak dicocokkan otomatis", nl_special_rates_add: "+ Tambah tujuan", rcpt_credit_applied: "Kredit referral diterapkan", rcpt_pdf_open_btn: "🧾 Buka sebagai PDF", rcpt_pdf_download_btn: "⬇ Unduh", rcpt_pdf_receipt_no: "No. kuitansi", rcpt_pdf_date: "Tanggal", rcpt_pdf_driver: "Pengemudi", rcpt_pdf_rydanu_no: "No. Rydanu", rcpt_pdf_item: "Perjalanan", rcpt_pdf_amount: "Jumlah", rcpt_pdf_total: "Total diselesaikan", rcpt_pdf_footer: "Kuitansi ini dibuat otomatis oleh Rydanu dan mencantumkan biaya perjalanan dalam penyelesaian ini.", rcpt_pdf_filename_prefix: "Rydanu-Kuitansi",
-    admin_openpay_title: "Pembayaran terbuka", admin_openpay_sub: "Sopir yang pembayaran biaya akhir bulan otomatisnya gagal. Mereka punya 5 hari untuk melunasi sebelum akun mereka otomatis ditangguhkan.",
+    admin_openpay_title: "💳 Pembayaran terbuka", admin_openpay_sub: "Sopir yang pembayaran biaya akhir bulan otomatisnya gagal. Mereka punya 5 hari untuk melunasi sebelum akun mereka otomatis ditangguhkan.",
     admin_run_settlement_btn: "Jalankan penyelesaian akhir bulan sekarang (uji)", admin_settlement_real_note: "Penagihan biaya sesungguhnya sudah berjalan otomatis setiap hari (cron job harian) — tidak ada pemicu manual untuk sopir sungguhan, tombol ini hanya memengaruhi data demo.", admin_openpay_empty: "Tidak ada pembayaran terbuka saat ini — semua sudah lunas.",
     admin_openpay_amount: "Jumlah jatuh tempo", admin_openpay_due: "Tanggal jatuh tempo", admin_openpay_suspended: "🚫 Ditangguhkan", admin_openpay_overdue: "Terlambat",
     admin_openpay_balance: "Saldo", admin_openpay_credit: "Kredit tertunda", admin_openpay_collect_btn: "Tagih sekarang", admin_openpay_details_btn: "Rincian", admin_openpay_hide_btn: "Sembunyikan",
@@ -11203,7 +11620,7 @@ const translations = {
     stat_requests: "Permintaan pemesanan",
     stat_rating: "Rating rata-rata",
     stat_fees: "Biaya bulan ini", loading_generic: "Memuat…",
-    fee_breakdown_eyebrow: "Biaya bulan ini", fee_breakdown_title: "Rincian saldo terbuka Anda", fee_breakdown_total_label: "Total terbuka", fee_receipt_breakdown_eyebrow: "Kwitansi", fee_receipt_breakdown_title: "Rincian kwitansi ini", fee_receipt_breakdown_total_label: "Total diselesaikan", fee_receipt_no_breakdown: "Rincian perjalanan tidak tersedia untuk kwitansi ini.", fee_breakdown_go_to_fees_btn: "Ke Biaya & tagihan", fee_breakdown_tap_hint: "Ketuk untuk rincian", fee_breakdown_empty: "Tidak ada yang terbuka saat ini.", fee_breakdown_load_err: "Gagal memuat — silakan coba lagi.",
+    fee_breakdown_eyebrow: "Biaya bulan ini", fee_breakdown_title: "Rincian saldo terbuka Anda", fee_breakdown_title_charged: "Sudah dibebankan bulan ini", fee_breakdown_total_label: "Total terbuka", fee_breakdown_total_label_charged: "Total dibebankan bulan ini", fee_receipt_breakdown_eyebrow: "Kwitansi", fee_receipt_breakdown_title: "Rincian kwitansi ini", fee_receipt_breakdown_total_label: "Total diselesaikan", fee_receipt_no_breakdown: "Rincian perjalanan tidak tersedia untuk kwitansi ini.", fee_breakdown_go_to_fees_btn: "Ke Biaya & tagihan", fee_breakdown_tap_hint: "Ketuk untuk rincian", fee_breakdown_empty: "Belum ada biaya bulan ini.", fee_breakdown_load_err: "Gagal memuat — silakan coba lagi.",
     upcoming_bookings: "Pemesanan mendatang",
     view_calendar_btn: "Lihat kalender",
     listings_title: "Tur saya",
@@ -11272,7 +11689,7 @@ const translations = {
     rd_notify_admin_wa: "WhatsApp ke admin Rydanu",
     rd_notify_driver: "Email & WhatsApp ke Anda",
     rd_pending_done_btn: "Ke dasbor saya",
-    admin_title: "Persetujuan sopir yang tertunda",
+    admin_title: "🆕 Persetujuan sopir yang tertunda",
     admin_sub: "Tinjau dokumen yang diunggah, lalu setujui agar tur sopir dapat dipesan publik.",
     admin_block_title: "Semua sopir — blokir / buka blokir",
     admin_block_sub: "Ketuk sopir untuk memblokirnya — sopir yang diblokir dan semua turnya langsung hilang dari tampilan wisatawan.",
@@ -11287,7 +11704,7 @@ const translations = {
     admin_fc_cannot_delete_applied: "Kredit ini sudah digunakan untuk biaya dan tidak dapat dihapus lagi.",
     admin_view_balances_btn: "Lihat semua saldo",
     fee_rate_vip_bonus: "VIP Bonus", fee_rate_zero_fees: "0% biaya", fee_rate_valid_until: "berlaku hingga {date}", fee_rate_valid_unlimited: "berlaku tanpa batas waktu", fee_rate_villa_excluded: "*tidak termasuk pemesanan villa",
-    fee_rate_current: "📊 Komisi Anda saat ini:", fee_rate_special_condition: "tarif khusus", fee_rate_standard: "Standar", fee_rate_unlimited_short: "tanpa batas",
+    fee_rate_current: "📊 Komisi Anda saat ini", fee_rate_special_condition: "Tarif khusus", fee_rate_standard: "Standar", fee_rate_unlimited_short: "tanpa batas",
     admin_fo_fill_required: "Harap pilih sopir dan masukkan persentase.", admin_fo_negative_error: "Persentase tidak boleh negatif.",
     admin_fo_saved: "✓ Disimpan dan sopir telah diberi tahu.", admin_fo_confirm_delete: "Yakin ingin menghapus tarif biaya individual ini? Sopir akan kembali membayar tarif standar 10%.",
     admin_fo_notify_title: "📊 Biaya Anda telah disesuaikan",
@@ -12077,24 +12494,84 @@ async function loadInvoicesList(){
   showInvoiceView('list');
 }
 
-// Kombinierte "Kunde"-Filterliste aus Fahrern + Villen, damit man wie gewuenscht nach einem
-// konkreten Empfaenger filtern kann (nicht nur nach Fahrer/Villa als Kategorie).
+// Kombinierte "Kunde"-Filterliste aus Fahrern + Villen (5.9., zwei Bugfixes zusammen mit Jörg
+// besprochen): (1) zeigt jetzt eine Live-Ergebnisliste direkt unterm Suchfeld beim Tippen, statt
+// dass man erst ein separates Dropdown oeffnen muss (gleiches Muster wie die bestehende
+// Adress-Autocomplete, .pickup-suggestions/.suggestion-item). (2) berücksichtigt den aktuell
+// gewaehlten "Empfaenger-Art"-Filter, zeigt also nicht mehr immer Fahrer+Villen zusammen.
+let _invCustomerCache = { drivers: [], villas: [] };
+
 async function populateInvoiceFilterCustomerSelect(){
-  const sel = document.getElementById('inv-filter-customer');
-  if(!sel) return;
-  const current = sel.value;
   const { data: drivers } = await supabaseClient.from('drivers').select('id, name, lw_number').order('name');
   const { data: villas } = await supabaseClient.from('villa_partners').select('id, name').order('name');
-  let opts = '<option value="">Alle</option>';
-  opts += (drivers||[]).map(d => `<option value="driver:${d.id}">🚗 ${escapeHtml(d.name)} (${d.lw_number||'—'})</option>`).join('');
-  opts += (villas||[]).map(v => `<option value="villa:${v.id}">🏠 ${escapeHtml(v.name)}</option>`).join('');
-  sel.innerHTML = opts;
-  if(current && sel.querySelector(`option[value="${current}"]`)) sel.value = current;
+  _invCustomerCache.drivers = drivers || [];
+  _invCustomerCache.villas = villas || [];
 }
+
+function rebuildInvoiceCustomerOptions(){
+  const box = document.getElementById('inv-filter-customer-results');
+  const searchEl = document.getElementById('inv-filter-customer-search');
+  const recipientFilter = document.getElementById('inv-filter-recipient').value; // '', 'driver', 'villa'
+  if(!box) return;
+  const q = (searchEl.value || '').trim().toLowerCase();
+  const matchesSearch = (label) => !q || label.toLowerCase().includes(q);
+
+  let entries = [];
+  if(recipientFilter === '' || recipientFilter === 'driver'){
+    entries = entries.concat(_invCustomerCache.drivers
+      .filter(d => matchesSearch(d.name + ' ' + (d.lw_number||'')))
+      .map(d => ({ value:`driver:${d.id}`, label:`🚗 ${d.name} (${d.lw_number||'—'})` })));
+  }
+  if(recipientFilter === '' || recipientFilter === 'villa'){
+    entries = entries.concat(_invCustomerCache.villas
+      .filter(v => matchesSearch(v.name))
+      .map(v => ({ value:`villa:${v.id}`, label:`🏠 ${v.name}` })));
+  }
+
+  let html = `<div class="suggestion-item" onclick="selectInvoiceCustomer('','Alle')"><span class="s-name">Alle</span></div>`;
+  html += entries.length
+    ? entries.map(e => `<div class="suggestion-item" onclick="selectInvoiceCustomer('${e.value}', '${escapeHtml(e.label).replace(/'/g,"\\'")}')"><span class="s-name">${escapeHtml(e.label)}</span></div>`).join('')
+    : `<div class="suggestion-item" style="cursor:default; color:var(--ink-soft);">Keine Treffer</div>`;
+  box.innerHTML = html;
+  box.classList.add('open');
+}
+
+function selectInvoiceCustomer(value, label){
+  document.getElementById('inv-filter-customer').value = value;
+  document.getElementById('inv-filter-customer-search').value = value ? label : '';
+  document.getElementById('inv-filter-customer-results').classList.remove('open');
+  renderInvoicesList();
+}
+
+// Wenn "Empfänger-Art" gewechselt wird, waehrend schon ein konkreter Fahrer/Villa im Suchfeld
+// ausgewaehlt ist, der zur neuen Kategorie nicht mehr passt: Auswahl zuruecksetzen statt eine
+// widerspruechliche Kombination (z.B. "Villa" + ein Fahrer-Name) stehen zu lassen.
+function onInvoiceRecipientFilterChange(){
+  const recipientFilter = document.getElementById('inv-filter-recipient').value;
+  const current = document.getElementById('inv-filter-customer').value;
+  if(current){
+    const currentType = current.split(':')[0];
+    if(recipientFilter && currentType !== recipientFilter){
+      document.getElementById('inv-filter-customer').value = '';
+      document.getElementById('inv-filter-customer-search').value = '';
+    }
+  }
+  renderInvoicesList();
+}
+
+// Ergebnisliste schliessen, wenn man daneben tippt (gleiches Muster wie die bestehende Adress-Autocomplete)
+document.addEventListener('click', (e)=>{
+  const box = document.getElementById('inv-filter-customer-results');
+  const searchEl = document.getElementById('inv-filter-customer-search');
+  if(!box || !searchEl) return;
+  if(e.target !== searchEl && !box.contains(e.target)) box.classList.remove('open');
+});
 
 function resetInvoiceFilters(){
   document.getElementById('inv-filter-month').value = '';
+  document.getElementById('inv-filter-customer-search').value = '';
   document.getElementById('inv-filter-customer').value = '';
+  document.getElementById('inv-filter-customer-results').classList.remove('open');
   document.getElementById('inv-filter-recipient').value = '';
   document.getElementById('inv-filter-status').value = '';
   renderInvoicesList();
@@ -12112,7 +12589,7 @@ async function renderInvoicesList(){
 
   let query = supabaseClient
     .from('invoices')
-    .select('id, invoice_number, recipient_type, driver_id, villa_partner_id, invoice_date, period_start, period_end, amount_gross, currency, status, drivers(name, lw_number), villa_partners(name, slug)')
+    .select('id, invoice_number, document_type, recipient_type, driver_id, villa_partner_id, invoice_date, period_start, period_end, amount_gross, currency, status, created_by, drivers(name, lw_number), villa_partners(name, slug)')
     .order('invoice_number', { ascending:false });
 
   if(customerFilter){
@@ -12134,17 +12611,37 @@ async function renderInvoicesList(){
   const rows = data || [];
   if(rows.length === 0){ listEl.innerHTML = '<div class="empty-state">Keine Rechnungen gefunden.</div>'; return; }
 
+  // Bugfix/Feature (7.9., Joerg-Wunsch): eine bezahlte Rechnung/Gutschrift, die spaeter durch eine
+  // Korrektur storniert wurde, behaelt jetzt bewusst ihren "Bezahlt"-Status (siehe cancel_invoice()-
+  // Fix -- das Original bleibt laut Konzept unveraendert stehen). Damit man das aber auch OHNE
+  // Aufklicken auf einen Blick sieht, wird hier zusaetzlich abgefragt, welche invoice_ids als
+  // replaces_invoice_id irgendwo auftauchen (= wurden spaeter storniert), und ein kleiner
+  // "↳ storniert"-Hinweis direkt neben dem Bezahlt-Badge ergaenzt.
+  const { data: supersededRows } = await supabaseClient.from('invoices').select('replaces_invoice_id').not('replaces_invoice_id', 'is', null);
+  const supersededIds = new Set((supersededRows||[]).map(r=>r.replaces_invoice_id));
+
   listEl.innerHTML = rows.map(r=>{
     const name = r.recipient_type === 'driver'
       ? (r.drivers ? escapeHtml(r.drivers.name) + ' (' + (r.drivers.lw_number||'—') + ')' : '—')
       : (r.villa_partners ? escapeHtml(r.villa_partners.name) : '—');
+    // Dokumenttyp-Label (Rechnung/Gutschrift) + Erkennung automatisch vs. manuell erstellt (5.9.,
+    // Teil der "ausfuehrlichsten Auflistung" -- created_by wird von den automatischen Jobs auf
+    // 'system_monthly_job' bzw. 'system_referral_bonus' gesetzt, sonst ist es Jörgs Admin-Kennung).
+    const docLabel = r.document_type === 'gutschrift' ? '🧾 Gutschrift' : '🧾 Rechnung';
+    const isAuto = r.created_by === 'system_monthly_job' || r.created_by === 'system_referral_bonus';
+    const autoBadge = isAuto ? '<span class="status-pill" style="background:var(--paper-dim); color:var(--ink-soft); margin-left:6px;">⚙ automatisch</span>' : '';
+    const supersededBadge = supersededIds.has(r.id) ? '<span class="status-pill" style="background:var(--paper-dim); color:var(--ink-soft); text-decoration:line-through; margin-left:6px;">storniert</span>' : '';
     return `
     <div class="booking-row" style="cursor:pointer;" onclick="openInvoiceDetail('${r.id}')">
       <div>
-        <div class="who">#${r.invoice_number} · ${name}</div>
+        <div class="who">#${r.invoice_number} · ${docLabel} · ${name}</div>
         <div class="when">${r.period_start} – ${r.period_end} · ${formatIDR(r.amount_gross)}</div>
       </div>
-      <span class="status-pill ${invoiceStatusPillClass(r.status)}">${invoiceStatusLabel(r.status)}</span>
+      <div style="display:flex; align-items:center; flex-wrap:wrap; justify-content:flex-end; gap:4px;">
+        <span class="status-pill ${invoiceStatusPillClass(r.status)}">${invoiceStatusLabel(r.status)}</span>
+        ${supersededBadge}
+        ${autoBadge}
+      </div>
     </div>`;
   }).join('');
 }
@@ -12170,19 +12667,37 @@ async function openNewInvoiceForm(){
   showInvoiceView('new');
 }
 
+let _invFormDrivers = [], _invFormVillas = [];
 async function populateInvoiceFormSelects(){
   const dSel = document.getElementById('inv-form-driver-select');
   const vSel = document.getElementById('inv-form-villa-select');
-  const { data: drivers } = await supabaseClient.from('drivers').select('id, name, lw_number').eq('status','approved').order('name');
-  dSel.innerHTML = (drivers||[]).map(d=>`<option value="${d.id}">${escapeHtml(d.name)} (${d.lw_number||'—'})</option>`).join('');
-  const { data: villas } = await supabaseClient.from('villa_partners').select('id, name, slug').order('name');
-  vSel.innerHTML = (villas||[]).map(v=>`<option value="${v.id}">${escapeHtml(v.name)}</option>`).join('');
+  const { data: drivers } = await supabaseClient.from('drivers').select('id, name, lw_number, default_vat_exempt, default_vat_rate').eq('status','approved').order('name');
+  _invFormDrivers = drivers || [];
+  dSel.innerHTML = _invFormDrivers.map(d=>`<option value="${d.id}">${escapeHtml(d.name)} (${d.lw_number||'—'})</option>`).join('');
+  const { data: villas } = await supabaseClient.from('villa_partners').select('id, name, slug, default_vat_exempt, default_vat_rate').order('name');
+  _invFormVillas = villas || [];
+  vSel.innerHTML = _invFormVillas.map(v=>`<option value="${v.id}">${escapeHtml(v.name)}</option>`).join('');
+  prefillInvoiceVatFromRecipient();
 }
 
 function onInvoiceRecipientTypeChange(){
   const type = document.getElementById('inv-form-recipient-type').value;
   document.getElementById('inv-form-driver-field').style.display = (type==='driver') ? '' : 'none';
   document.getElementById('inv-form-villa-field').style.display = (type==='villa') ? '' : 'none';
+  prefillInvoiceVatFromRecipient();
+}
+// NEU (5.9., Joerg-Wunsch): der MwSt-Satz kommt jetzt automatisch aus den Stammdaten des
+// ausgewaehlten Fahrers/der Villa vor -- bleibt aber weiterhin manuell aenderbar fuer diese eine
+// Rechnung (die Stammdaten selbst werden dabei NICHT veraendert, nur dieses Formularfeld).
+function prefillInvoiceVatFromRecipient(){
+  const type = document.getElementById('inv-form-recipient-type').value;
+  const id = type === 'driver' ? document.getElementById('inv-form-driver-select').value : document.getElementById('inv-form-villa-select').value;
+  const list = type === 'driver' ? _invFormDrivers : _invFormVillas;
+  const entity = list.find(x=>x.id===id);
+  if(!entity) return;
+  document.getElementById('inv-form-vat-exempt').checked = (entity.default_vat_exempt !== false);
+  document.getElementById('inv-form-vat-rate').value = entity.default_vat_rate || 0;
+  onVatExemptToggle();
 }
 
 function addInvoiceItemRow(desc, qty, unit){
@@ -12333,10 +12848,21 @@ async function openInvoiceDetail(invoiceId){
   // statt der rohen UUID (rechtlich muss die Korrekturrechnung eindeutig auf die Original-
   // Rechnungsnummer verweisen, siehe Konzept-PDF Punkt 4.2).
   let originalInvoiceNumber = null;
+  let originalDocumentType = null;
   if(inv.replaces_invoice_id){
-    const { data: origInv } = await supabaseClient.from('invoices').select('invoice_number').eq('id', inv.replaces_invoice_id).single();
-    if(origInv) originalInvoiceNumber = origInv.invoice_number;
+    const { data: origInv } = await supabaseClient.from('invoices').select('invoice_number, document_type').eq('id', inv.replaces_invoice_id).single();
+    if(origInv){ originalInvoiceNumber = origInv.invoice_number; originalDocumentType = origInv.document_type; }
   }
+  // Bugfix (7.9.): umgekehrte Richtung -- prueft, ob DIESE Rechnung/Gutschrift selbst bereits durch
+  // eine spaetere Korrektur storniert wurde (Original bleibt seit dem cancel_invoice()-Fix bewusst
+  // auf 'paid' stehen, siehe renderInvoicesList). Wird gebraucht fuer den Hinweistext + um den
+  // "Stornieren"-Button auszublenden (kein Doppel-Storno auf dieselbe Original-Buchung).
+  let supersededBy = null;
+  if(inv.status === 'paid'){
+    const { data: supersede } = await supabaseClient.from('invoices').select('invoice_number, document_type').eq('replaces_invoice_id', inv.id).maybeSingle();
+    if(supersede) supersededBy = supersede;
+  }
+  const docTypeLabel = inv.document_type === 'gutschrift' ? 'Gutschrift' : 'Rechnung';
 
   const recipientName = inv.recipient_type === 'driver'
     ? (inv.drivers ? escapeHtml(inv.drivers.name) + ' (' + (inv.drivers.lw_number||'—') + ')' : '—')
@@ -12347,13 +12873,21 @@ async function openInvoiceDetail(invoiceId){
   const recipientEmail = inv.recipient_type === 'driver' ? (inv.drivers && inv.drivers.email) : (inv.villa_partners && inv.villa_partners.contact_email);
   const recipientPhone = inv.recipient_type === 'driver' ? (inv.drivers && inv.drivers.phone) : (inv.villa_partners && inv.villa_partners.contact_phone);
 
-  const itemsHtml = (items||[]).map(it=>`
-    <tr>
-      <td>${escapeHtml(it.description)}</td>
-      <td style="text-align:right;">${it.quantity}</td>
-      <td style="text-align:right;">${formatIDR(it.unit_price_idr)}</td>
-      <td style="text-align:right;">${formatIDR(it.line_total_idr)}</td>
-    </tr>`).join('');
+  // Bugfix (5.9., Joerg gemeldet per Screenshot): eine starre 4-Spalten-Tabelle (Position/Menge/
+  // Einzelpreis/Gesamt) ohne Zellenabstand funktioniert auf dem Handy nicht, sobald die Position
+  // laenger ist (z.B. "Buchung #4 (25.08.2026) — Fahrpreis 500.000 IDR, Satz 10%") -- die 3 Zahlen-
+  // Spalten wurden dann so schmal gequetscht, dass "Menge"/"Einzelpreis"/"Gesamt" ohne jeden Abstand
+  // ineinanderliefen. Jetzt zeilenweise (gleiches .booking-row-Muster wie ueberall sonst in der App):
+  // Position wird oben in voller Breite angezeigt und darf frei umbrechen, der Betrag steht rechts
+  // in einer eigenen Zeile und bricht nie mitten im Text um.
+  const itemsHtml = (items||[]).map(it=>{
+    const qtyPrefix = (Number(it.quantity) !== 1) ? `${it.quantity} × ${formatIDR(it.unit_price_idr)} = ` : '';
+    return `
+    <div class="booking-row">
+      <div class="who">${escapeHtml(it.description)}</div>
+      <span class="mono" style="font-weight:700; white-space:nowrap; flex-shrink:0;">${qtyPrefix}${formatIDR(it.line_total_idr)}</span>
+    </div>`;
+  }).join('');
 
   // Rohdaten fuer die PDF-Erzeugung (buildInvoicePdf() liest ausschliesslich hieraus) --
   // gleiches Zwischenspeicher-Muster wie beim bestehenden Gebuehren-Beleg (lastReceiptPdfData).
@@ -12372,7 +12906,7 @@ async function openInvoiceDetail(invoiceId){
     recipientPhone: recipientPhone || null,
     items: (items||[]).map(it=>({ description: it.description, quantity: it.quantity, unitPrice: it.unit_price_idr, lineTotal: it.line_total_idr })),
     amountNet: inv.amount_net, vatRate: inv.vat_rate, vatAmount: inv.vat_amount, amountGross: inv.amount_gross,
-    vatExempt: inv.vat_exempt, originalInvoiceNumber
+    vatExempt: inv.vat_exempt, originalInvoiceNumber, originalDocumentType, documentType: inv.document_type
   };
 
   let actionsHtml = '';
@@ -12380,16 +12914,32 @@ async function openInvoiceDetail(invoiceId){
     actionsHtml += `<button type="button" class="period-btn" onclick="editInvoiceDraft('${inv.id}')" style="margin-right:8px;">✎ Bearbeiten</button>`;
     actionsHtml += `<button type="button" class="period-btn" onclick="markInvoicePaidAdmin('${inv.id}')" style="background:var(--gold); border-color:var(--gold); color:var(--ink); font-weight:700;">✓ Als bezahlt markieren</button>`;
     actionsHtml += `<div style="margin-top:10px;"><button type="button" class="link-btn" style="width:auto;" onclick="openInvoicePdf('open')">📄 PDF-Vorschau</button></div>`;
-    actionsHtml += `<p class="dash-head" style="display:block; margin-top:4px; font-style:italic;">E-Mail-/WhatsApp-Versand erst möglich, sobald die Rechnung als bezahlt markiert ist (danach eingefroren).</p>`;
+    actionsHtml += `<p class="dash-head" style="display:block; margin-top:4px; font-style:italic;">E-Mail-/WhatsApp-Versand erst möglich, sobald die ${docTypeLabel} als bezahlt markiert ist (danach eingefroren).</p>`;
   } else if(inv.status === 'paid'){
-    actionsHtml += `<button type="button" class="period-btn" onclick="cancelInvoiceAdmin('${inv.id}')" style="color:var(--danger); border-color:var(--danger);">Rechnung stornieren</button>`;
+    // Bugfix (7.9.): kein Storno-Button mehr, wenn diese Rechnung/Gutschrift bereits durch eine
+    // Korrektur storniert wurde -- verhindert einen zweiten, ueberfluessigen Storno auf denselben
+    // Vorgang. Stattdessen ein klarer Hinweis mit Verweis auf die Korrektur-Nummer.
+    if(supersededBy){
+      const supersededLabel = supersededBy.document_type === 'gutschrift' ? 'Gutschrift' : 'Rechnung';
+      actionsHtml += `<p class="dash-head" style="display:block; color:var(--danger); font-weight:600;">↳ Diese ${docTypeLabel} wurde durch die Korrektur-${supersededLabel} #${supersededBy.invoice_number} storniert.</p>`;
+    } else {
+      actionsHtml += `<button type="button" class="period-btn" onclick="cancelInvoiceAdmin('${inv.id}')" style="color:var(--danger); border-color:var(--danger);">${docTypeLabel} stornieren</button>`;
+    }
+    // Bugfix (5.9., Joerg gemeldet): der E-Mail-Button war bisher immer sichtbar, auch wenn der
+    // Empfaenger (v.a. Fahrer -- Hauptkontaktweg ist WhatsApp) gar keine E-Mail hinterlegt hat.
+    // Der Versand lief dann ins Leere, ohne dass irgendwo eine Fehlermeldung erschien. Jetzt nur
+    // noch sichtbar, wenn wirklich eine E-Mail-Adresse vorliegt.
+    const emailBtnHtml = recipientEmail ? `<button type="button" class="link-btn" style="width:auto; background:var(--paper-dim); padding:8px 14px; border-radius:6px;" onclick="sendInvoiceEmailAdmin('${inv.id}')" id="inv-send-email-btn">✉️ Per E-Mail senden</button>` : '';
     actionsHtml += `<div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap;">
       <button type="button" class="link-btn" style="width:auto; background:var(--paper-dim); padding:8px 14px; border-radius:6px;" onclick="openInvoicePdf('save')">📄 PDF herunterladen</button>
-      <button type="button" class="link-btn" style="width:auto; background:var(--paper-dim); padding:8px 14px; border-radius:6px;" onclick="sendInvoiceEmailAdmin('${inv.id}')" id="inv-send-email-btn">✉️ Per E-Mail senden</button>
+      ${emailBtnHtml}
       <button type="button" class="link-btn" style="width:auto; background:var(--paper-dim); padding:8px 14px; border-radius:6px;" onclick="sendInvoiceWhatsappAdmin('${inv.id}')" id="inv-send-wa-btn">💬 Per WhatsApp senden</button>
     </div>`;
+    if(!recipientEmail){
+      actionsHtml += `<p class="dash-head" style="display:block; margin-top:6px; font-style:italic;">ℹ️ Keine E-Mail hinterlegt — Versand nur per WhatsApp möglich. E-Mail kann optional im Profil ergänzt werden.</p>`;
+    }
   } else if(inv.status === 'cancelled'){
-    actionsHtml += `<p class="dash-head" style="display:block;">Diese Rechnung wurde storniert. Die Gegen-Rechnung findest du in der Liste (gleicher Zeitraum, neuere Rechnungsnummer).</p>`;
+    actionsHtml += `<p class="dash-head" style="display:block;">Diese ${docTypeLabel} ist die Korrektur-Buchung und storniert das Original wertmäßig. Das Original findest du in der Liste (gleicher Zeitraum, kleinere Nummer, weiterhin als "Bezahlt" markiert).</p>`;
     actionsHtml += `<div style="margin-top:10px;"><button type="button" class="link-btn" style="width:auto;" onclick="openInvoicePdf('open')">📄 PDF-Vorschau (Original)</button></div>`;
   }
 
@@ -12397,12 +12947,15 @@ async function openInvoiceDetail(invoiceId){
     <div class="panel" style="padding:20px; max-width:640px;">
       <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px;">
         <div>
-          <h3 style="margin:0 0 4px;">${inv.replaces_invoice_id ? 'Korrekturrechnung ' : 'Rechnung '}#${inv.invoice_number}</h3>
+          <h3 style="margin:0 0 4px;">${inv.replaces_invoice_id ? 'Korrektur-' + docTypeLabel : docTypeLabel} #${inv.invoice_number}</h3>
           <div class="dash-head" style="display:block;">${recipientName}</div>
         </div>
-        <span class="status-pill ${invoiceStatusPillClass(inv.status)}">${invoiceStatusLabel(inv.status)}</span>
+        <div style="display:flex; align-items:center; gap:4px; flex-wrap:wrap; justify-content:flex-end;">
+          <span class="status-pill ${invoiceStatusPillClass(inv.status)}">${invoiceStatusLabel(inv.status)}</span>
+          ${supersededBy ? '<span class="status-pill" style="background:var(--paper-dim); color:var(--ink-soft); text-decoration:line-through;">storniert</span>' : ''}
+        </div>
       </div>
-      ${inv.replaces_invoice_id ? `<p class="dash-head" style="display:block; margin-bottom:10px;">Korrigiert/storniert Rechnung #${originalInvoiceNumber ?? '—'}.</p>` : ''}
+      ${inv.replaces_invoice_id ? `<p class="dash-head" style="display:block; margin-bottom:10px;">Korrigiert/storniert ${originalDocumentType === 'gutschrift' ? 'Gutschrift' : 'Rechnung'} #${originalInvoiceNumber ?? '—'}.</p>` : ''}
       ${!recipientAddress ? `<p class="form-error" style="margin-bottom:14px;">⚠ Keine Adresse hinterlegt — Pflichtangabe für eine gültige Rechnung. Bitte im ${inv.recipient_type==='driver' ? 'Fahrerprofil' : 'Villa-Verwalten-Bereich'} ergänzen, bevor die Rechnung finalisiert/versendet wird.</p>` : ''}
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:16px; font-size:0.92rem;">
         <div><strong>Rechnungsdatum</strong><br>${inv.invoice_date}</div>
@@ -12412,10 +12965,7 @@ async function openInvoiceDetail(invoiceId){
         <div><strong>Empfänger-Adresse</strong><br>${recipientAddress || '<span style="color:var(--danger);">fehlt</span>'}</div>
         <div><strong>Steuernummer Empfänger</strong><br>${recipientTaxNumber || '—'}</div>
       </div>
-      <table style="width:100%; border-collapse:collapse; margin-bottom:14px; font-size:0.9rem;">
-        <thead><tr style="border-bottom:1px solid var(--line);"><th style="text-align:left;">Position</th><th style="text-align:right;">Menge</th><th style="text-align:right;">Einzelpreis</th><th style="text-align:right;">Gesamt</th></tr></thead>
-        <tbody>${itemsHtml}</tbody>
-      </table>
+      <div class="panel" style="margin-bottom:14px;">${itemsHtml}</div>
       <div style="text-align:right; margin-bottom:18px;">
         <div>Netto: ${formatIDR(inv.amount_net)}</div>
         <div>${inv.vat_exempt ? 'MwSt-befreit' : 'MwSt (' + inv.vat_rate + '%): ' + formatIDR(inv.vat_amount)}</div>
@@ -12434,7 +12984,7 @@ async function editInvoiceDraft(invoiceId){
 
   await populateInvoiceFormSelects();
   document.getElementById('inv-form-editing-id').value = invoiceId;
-  document.getElementById('inv-form-title').textContent = 'Rechnung #' + inv.invoice_number + ' bearbeiten';
+  document.getElementById('inv-form-title').textContent = (inv.document_type === 'gutschrift' ? 'Gutschrift #' : 'Rechnung #') + inv.invoice_number + ' bearbeiten';
   document.getElementById('inv-form-submit-btn').textContent = 'Änderungen speichern';
   document.getElementById('inv-form-status').textContent = '';
   document.getElementById('inv-form-recipient-type').value = inv.recipient_type;
@@ -12491,7 +13041,11 @@ function buildInvoicePdf(){
   let y = 22;
 
   const isStorno = !!d.originalInvoiceNumber;
-  const docTitle = isStorno ? 'KORREKTURRECHNUNG' : 'RECHNUNG';
+  const isGutschrift = d.documentType === 'gutschrift';
+  const docLabel = isGutschrift ? 'Gutschrift' : 'Rechnung';
+  const docTitle = isGutschrift
+    ? (isStorno ? 'KORREKTUR-GUTSCHRIFT' : 'GUTSCHRIFT')
+    : (isStorno ? 'KORREKTURRECHNUNG' : 'RECHNUNG');
 
   // Kopfzeile
   doc.setFont('helvetica', 'bold'); doc.setFontSize(20); doc.setTextColor(...forestGreen);
@@ -12519,7 +13073,8 @@ function buildInvoicePdf(){
 
   if(isStorno){
     doc.setFont('helvetica', 'bold'); doc.setFontSize(9.5); doc.setTextColor(...ink);
-    doc.text(`Korrigiert/storniert Rechnung #${d.originalInvoiceNumber}`, marginX, y);
+    const origLabel = d.originalDocumentType === 'gutschrift' ? 'Gutschrift' : 'Rechnung';
+    doc.text(`Korrigiert/storniert ${origLabel} #${d.originalInvoiceNumber}`, marginX, y);
     y += 7;
   }
 
@@ -12530,8 +13085,8 @@ function buildInvoicePdf(){
     doc.setFont('helvetica', 'normal'); doc.text(String(value), marginX + 48, y);
     y += 6;
   };
-  metaRow('Rechnungsnummer', d.invoiceNumber);
-  metaRow('Rechnungsdatum', d.invoiceDate);
+  metaRow(docLabel + 'snummer', d.invoiceNumber);
+  metaRow(docLabel + 'sdatum', d.invoiceDate);
   metaRow('Abrechnungszeitraum', d.periodStart + ' – ' + d.periodEnd);
   if(d.collectionDate) metaRow('Datum Einzug', d.collectionDate);
   y += 3;
@@ -12582,7 +13137,8 @@ function buildInvoicePdf(){
 function openInvoicePdf(mode){
   const doc = buildInvoicePdf();
   if(!doc){ alert('PDF konnte nicht erzeugt werden — bitte nochmal versuchen.'); return; }
-  const filename = `Rydanu-Rechnung-${lastInvoicePdfData.invoiceNumber}.pdf`;
+  const docWord = lastInvoicePdfData.documentType === 'gutschrift' ? 'Gutschrift' : 'Rechnung';
+  const filename = `Rydanu-${docWord}-${lastInvoicePdfData.invoiceNumber}.pdf`;
   if(mode === 'save'){ doc.save(filename); }
   else { window.open(doc.output('bloburl'), '_blank'); }
 }
@@ -12593,7 +13149,8 @@ async function uploadInvoicePdfToStorage(){
   const doc = buildInvoicePdf();
   if(!doc) throw new Error('PDF konnte nicht erzeugt werden.');
   const blob = doc.output('blob');
-  const path = `${lastInvoicePdfData.id}/rechnung-${lastInvoicePdfData.invoiceNumber}.pdf`;
+  const docWordPath = lastInvoicePdfData.documentType === 'gutschrift' ? 'gutschrift' : 'rechnung';
+  const path = `${lastInvoicePdfData.id}/${docWordPath}-${lastInvoicePdfData.invoiceNumber}.pdf`;
   const { error } = await supabaseClient.storage.from('invoice-pdfs').upload(path, blob, { upsert: true, contentType: 'application/pdf' });
   if(error) throw error;
   return path;
@@ -12639,7 +13196,13 @@ async function sendInvoiceWhatsappAdmin(invoiceId){
     const { data: signed, error: signErr } = await supabaseClient.storage.from('invoice-pdfs').createSignedUrl(pdfPath, 60*60*24*7);
     if(signErr || !signed){ throw signErr || new Error('Link konnte nicht erzeugt werden.'); }
     const text = `Hello! Please find your Rydanu invoice #${lastInvoicePdfData.invoiceNumber} (${lastInvoicePdfData.periodStart} – ${lastInvoicePdfData.periodEnd}) here:\n${signed.signedUrl}\n\nThis link stays valid for 7 days.`;
-    window.open(waCallLinkWithText(lastInvoicePdfData.recipientPhone, text), '_blank');
+    // Bugfix Runde 2 (5.9., Joerg gemeldet per Screenshot): das Schliessen per waWindow.close() nach
+    // kurzer Verzoegerung hat NICHT funktioniert -- Safari verweigert das Schliessen eines Tabs, sobald
+    // er zu einer fremden Domain (wa.me) navigiert ist (Cross-Origin-Sicherheitsregel, technisch nicht
+    // umgehbar). Statt einen NEUEN Tab zu oeffnen (der dann leer haengen bleibt), navigiert jetzt der
+    // AKTUELLE Tab direkt zum WhatsApp-Link -- iOS uebergibt an die WhatsApp-App, bevor die Seite
+    // wirklich neu laedt, man landet beim Zurueckwechseln wieder genau hier, kein verwaister Tab mehr.
+    window.location.href = waCallLinkWithText(lastInvoicePdfData.recipientPhone, text);
     btn.disabled = false; btn.textContent = original;
   } catch(e){
     console.error('WhatsApp-Versand vorbereiten fehlgeschlagen:', e);
@@ -14828,7 +15391,7 @@ function openForgotPasswordWhatsapp(){
   const phone = document.getElementById('forgot-password-phone').value.trim();
   if(!phone){ alert(t('fp_err_no_phone')); return false; }
   const text = `Hallo Rydanu-Support, ich habe mein Passwort vergessen. Meine registrierte Telefonnummer ist: ${phone}`;
-  window.open('https://wa.me/' + SUPPORT_WHATSAPP_NUMBER + '?text=' + encodeURIComponent(text), '_blank');
+  window.location.href = 'https://wa.me/' + SUPPORT_WHATSAPP_NUMBER + '?text=' + encodeURIComponent(text);
   return false;
 }
 function openForgotPassword(){
@@ -15379,7 +15942,7 @@ async function requestDocReuploadWhatsApp(driverId, docKey, docLabel, driverPhon
   if(tokenErr || !token){ console.error('Upload-Link konnte nicht erzeugt werden:', tokenErr); alert('Fehler: Upload-Link konnte nicht erzeugt werden.'); return; }
   const link = location.origin + location.pathname + '?docupload=' + token;
   const text = `Hi! Bitte lade dein Dokument "${docLabel}" noch einmal bei Rydanu hoch — direkt hier, kein Login nötig: ${link}`;
-  window.open(waCallLink(driverPhone) + '?text=' + encodeURIComponent(text), '_blank');
+  window.location.href = waCallLink(driverPhone) + '?text=' + encodeURIComponent(text);
   await renderAdminDocuments();
 }
 // ---- echter Admin-Bereich (Baustein 9a): ausstehende Fahrer freischalten/ablehnen ----
@@ -15498,8 +16061,22 @@ function showAdminSection(id){
     const el = document.getElementById('admin-sec-'+s);
     if(el) el.style.display = (s===id) ? 'block' : 'none';
   });
-  const wrap = document.querySelector('#view-admin > div');
-  if(wrap) wrap.scrollIntoView({ behavior:'instant', block:'start' });
+  // Bugfix (5.9., Teil 2): scrollIntoView allein reicht nicht -- .topbar (Logo, Nav-Pillen,
+  // Admin-Buttons, Sprachumschalter) ist position:sticky; top:0 und auf dem Handy ca. 550-600px
+  // hoch. scrollIntoView kennt Sticky-Header nicht und positioniert das Ziel exakt auf Bildschirm-
+  // Position 0 -- der Sticky-Header ueberdeckt danach genau den oberen Teil der Sektion (die
+  // Ueberschrift), sichtbar wird erst der Rest darunter (wirkt wie ein Sprung "in die Mitte").
+  // Fix: Zielposition manuell berechnen und die aktuelle Topbar-Hoehe abziehen, dazu 12px Luft.
+  const target = document.getElementById('admin-sec-'+id) || document.querySelector('#view-admin > div');
+  requestAnimationFrame(()=>{
+    requestAnimationFrame(()=>{
+      if(!target) return;
+      const topbar = document.querySelector('.topbar');
+      const offset = topbar ? topbar.offsetHeight : 0;
+      const y = target.getBoundingClientRect().top + window.scrollY - offset - 12;
+      window.scrollTo({ top: Math.max(y, 0), left: 0, behavior: 'instant' });
+    });
+  });
 }
 function showAdminHome(){
   const menu = document.getElementById('admin-tile-menu');
@@ -15534,13 +16111,15 @@ document.getElementById('drivers-block-modal-bg').addEventListener('click', e=>{
 
 // ---- admin: Geld — fee overrides & fee credits ----
 async function renderFeeOverridePanel(){
-  const driverSel = document.getElementById('fee-override-driver-select');
+  // Bugfix (5.9.): fee-override-driver-select gibt es nicht mehr (das Formular ist jetzt Teil von
+  // "Fahrer/Villa verwalten", siehe pd-fee-*). Diese Funktion darf trotzdem nicht mehr komplett
+  // abbrechen, sonst wuerden auch die noch bestehenden Selects (Gutschrift, Belasten, Aufladen,
+  // Passwort-Reset, alle Filter) nie befuellt werden.
   const creditSel = document.getElementById('fee-credit-driver-select');
-  if(!driverSel || !creditSel) return; // not on this view
+  if(!creditSel) return; // nicht auf dieser Ansicht
   if(!(realDriverProfile || isAdminSession)) return;
   await loadRealAllDriversCache();
   const optsHTML = realDriverOptionsHTML();
-  driverSel.innerHTML = optsHTML;
   creditSel.innerHTML = optsHTML;
   const topupSel = document.getElementById('balance-topup-driver-select');
   if(topupSel) topupSel.innerHTML = optsHTML;
@@ -15569,9 +16148,6 @@ function openFeeCreditsModal(){ document.getElementById('fee-credits-modal-bg').
 function closeFeeCreditsModal(){ document.getElementById('fee-credits-modal-bg').classList.remove('active'); }
 document.getElementById('fee-credits-modal-bg').addEventListener('click', e=>{ if(e.target.id==='fee-credits-modal-bg') closeFeeCreditsModal(); });
 document.getElementById('fee-charges-modal-bg').addEventListener('click', e=>{ if(e.target.id==='fee-charges-modal-bg') closeFeeChargesModal(); });
-function createFeeOverride(){
-  if(realDriverProfile || isAdminSession) createRealFeeOverride();
-}
 function createFeeCredit(){
   if(realDriverProfile || isAdminSession) createRealFeeCredit();
 }
@@ -15585,7 +16161,7 @@ function closeFeeChargesModal(){ document.getElementById('fee-charges-modal-bg')
 let realAllDriversCache = [];
 async function loadRealAllDriversCache(){
   const { data, error } = await supabaseClient.from('drivers')
-    .select('id, name, lw_number, region, is_locked, locked_since, lock_reason, fees_due_idr, balance_idr, phone, auto_debit_enabled')
+    .select('id, name, lw_number, region, is_locked, locked_since, lock_reason, fees_due_idr, balance_idr, phone, email, address, tax_number, default_vat_exempt, default_vat_rate, auto_debit_enabled')
     .eq('status', 'approved')
     .order('name');
   if(error){ console.error('Fahrerliste konnte nicht geladen werden (evtl. nicht als Admin eingeloggt):', error); realAllDriversCache = []; return; }
@@ -15711,37 +16287,6 @@ async function loadRealFeeOverridesCache(filterDriverId){
   const { data, error } = await q;
   if(error){ console.error('Sonderkonditionen konnten nicht geladen werden:', error); return []; }
   return data || [];
-}
-async function createRealFeeOverride(){
-  const driverId = document.getElementById('fee-override-driver-select').value;
-  const percent = document.getElementById('fee-override-percent').value;
-  const start = document.getElementById('fee-override-start').value;
-  const end = document.getElementById('fee-override-end').value;
-  const statusEl = document.getElementById('fee-override-status');
-  if(!driverId || percent === '' || percent === null){ statusEl.style.color=''; statusEl.textContent = t('admin_fo_fill_required'); return; }
-  if(Number(percent) < 0){ statusEl.style.color=''; statusEl.textContent = t('admin_fo_negative_error'); return; }
-  const { error } = await supabaseClient.from('fee_overrides').insert({
-    driver_id: driverId,
-    fee_percent: Number(percent),
-    starts_at: start || new Date().toISOString().slice(0,10),
-    ends_at: end || null,
-    created_by: (realDriverProfile && realDriverProfile.name) ? realDriverProfile.name : 'admin'
-  });
-  if(error){ statusEl.style.color='var(--danger)'; statusEl.textContent = 'Fehler: ' + error.message; return; }
-  statusEl.style.color = 'var(--teal)';
-  statusEl.textContent = t('admin_fo_saved');
-  const range = (start || end) ? t('admin_fo_range_from_to').replace('{start}', start||'…').replace('{end}', end||'…') : t('admin_fo_range_immediate');
-  const noticeBody = Number(percent) === 0
-    ? t('admin_fo_notify_body_vip').replace('{range}', range)
-    : t('admin_fo_notify_body_set').replace('{percent}', Number(percent)).replace('{range}', range);
-  await supabaseClient.from('driver_messages').insert({
-    driver_id: driverId, type:'system', subject: t('admin_fo_notify_title'),
-    body: noticeBody
-  });
-  document.getElementById('fee-override-percent').value = '';
-  document.getElementById('fee-override-start').value = '';
-  document.getElementById('fee-override-end').value = '';
-  renderRealFeeOverridesList();
 }
 async function deleteRealFeeOverride(id, driverId){
   if(!confirm(t('admin_fo_confirm_delete'))) return;
@@ -15991,7 +16536,7 @@ function sendPwresetPasswordWhatsapp(){
   }
   const waPhone = phone.replace(/\D/g, '');
   const text = `Hallo ${driverName}, dein neues Rydanu-Passwort lautet: ${newPassword}\nBitte damit einloggen und bei Bedarf danach in deinem Profil ändern.`;
-  window.open('https://wa.me/' + waPhone + '?text=' + encodeURIComponent(text), '_blank');
+  window.location.href = 'https://wa.me/' + waPhone + '?text=' + encodeURIComponent(text);
   return false;
 }
 function openBalanceOverviewModal(){ document.getElementById('balance-overview-modal-bg').classList.add('active'); renderBalanceOverviewList(); }
@@ -16506,7 +17051,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v402</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v414</div>
 
 <!-- Etappe 4: Lade-Overlay waehrend "Buchung annehmen" im Hintergrund laeuft (kann bei VIP-Fahrern
      mit Auto-Einzug ein paar Sekunden dauern, da erst mit Xendit gesprochen wird, bevor die
