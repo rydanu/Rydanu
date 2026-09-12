@@ -2301,7 +2301,7 @@
         <div class="fee-badges-row">
           <span class="plan-chip plan-chip-clickable" style="text-align:left;" onclick="openTerms('fees')">
             <span class="fee-rate-badge-label" data-i18n="plan_chip_line1">Free listing</span>
-            <span class="fee-rate-badge-main" data-i18n="plan_chip_line2">10% commission per booking</span>
+            <span class="fee-rate-badge-main" data-i18n="plan_chip_line2">15% commission per booking</span>
             <span class="fee-rate-badge-sub" data-i18n="plan_chip_line3">20% for villa requests</span>
           </span>
           <div id="current-fee-rate-display" class="fee-rate-badge" style="text-align:left; display:none;"></div>
@@ -2569,14 +2569,14 @@
           <div>
             <div style="font-size:0.98rem; font-weight:800; color:var(--ink);">🚗 <span data-i18n="fees_row_any_booking">Any confirmed booking</span></div>
           </div>
-          <span class="mono" style="font-weight:800; font-size:1.1rem; color:var(--teal); white-space:nowrap;" data-i18n="fees_row_any_booking_val">10% of tour price</span>
+          <span class="mono" style="font-weight:800; font-size:1.1rem; color:var(--teal); white-space:nowrap;" data-i18n="fees_row_any_booking_val">15% of tour price</span>
         </div>
 
         <!-- Villa-Partner eigene Karte: gruen/abgerundet wie "Listing & Profil", eigener Baustein statt Tabellenzeile. -->
         <div class="panel" style="background:var(--teal-soft); border-color:var(--teal); padding:20px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center; gap:14px; flex-wrap:wrap;">
           <div>
             <div style="font-size:0.98rem; font-weight:800; color:var(--ink);">🏠 <span data-i18n="villa_source_tag">Villa Partner</span></div>
-            <div class="when" style="margin-top:4px;" data-i18n="fees_overview_villa_note">Platform fee for Villa Partner bookings (instead of the usual 10%)</div>
+            <div class="when" style="margin-top:4px;" data-i18n="fees_overview_villa_note">Platform fee for Villa Partner bookings (instead of the usual 15%)</div>
           </div>
           <span class="mono" style="font-weight:800; font-size:1.1rem; color:var(--teal); white-space:nowrap;" data-i18n="fees_villa_rate_val">20% of tour price</span>
         </div>
@@ -2817,7 +2817,7 @@
 
       <div class="panel" style="padding:16px; margin-bottom:16px;">
         <h3 style="margin-top:0;">💳 Individueller Gebührensatz</h3>
-        <p class="dash-head" style="display:block; margin-bottom:10px;">Standard sind 10% pro Buchung. Hier kannst du für diesen Fahrer einen abweichenden Satz für einen Zeitraum festlegen.</p>
+        <p class="dash-head" style="display:block; margin-bottom:10px;">Standard sind 15% pro Buchung. Hier kannst du für diesen Fahrer einen abweichenden Satz für einen Zeitraum festlegen.</p>
         <div class="form-field">
           <label>Gebühr in % (0 oder höher)</label>
           <input type="number" id="pd-fee-percent" min="0" step="0.5" placeholder="z.B. 5">
@@ -3142,7 +3142,7 @@
 
     <div id="admin-sec-villa" style="display:none;">
     <h2 class="admin-sec-title">🏠 Villa-Partner</h2>
-    <p class="dash-head" style="display:block; margin-bottom:20px;">Villen &amp; Hotels anlegen, die ihren Gästen über einen persönlichen Link Transfers anfragen lassen können. Fahrer zahlen bei Villa-Buchungen pauschal 20% (statt normal 10%) — die Villa bekommt davon ihren festgelegten Anteil, Rydanu die Differenz.</p>
+    <p class="dash-head" style="display:block; margin-bottom:20px;">Villen &amp; Hotels anlegen, die ihren Gästen über einen persönlichen Link Transfers anfragen lassen können. Fahrer zahlen bei Villa-Buchungen pauschal 25% (statt normal 15%) — die Villa bekommt davon ihren festgelegten Anteil, Rydanu die Differenz.</p>
 
     <div class="panel" style="padding:16px; margin-bottom:20px;">
       <h3 style="margin-top:0;">Bewerbungslink für neue Villen</h3>
@@ -3953,7 +3953,7 @@
       <div class="row" id="bd-row-pickup"><span class="k" data-i18n="lbl_pickup_loc">Pickup location</span><span class="v" id="bd-pickup"></span></div>
       <div class="row" id="bd-row-destination"><span class="k" data-i18n="lbl_airport_destination">Destination region</span><span class="v" id="bd-destination"></span> <button type="button" class="link-btn" style="margin-left:8px;" onclick="openBookingDetailMap()">🗺️</button></div>
       <div class="row" id="bd-row-price"><span class="k" data-i18n="lbl_total">Total tour price</span><span class="v mono" id="bd-price"></span></div>
-      <div class="row" id="bd-row-fee"><span class="k" data-i18n="lbl_ryvio_fee">Rydanu fee (10%)</span><span class="v mono" id="bd-fee"></span></div>
+      <div class="row" id="bd-row-fee"><span class="k" data-i18n="lbl_ryvio_fee">Rydanu fee</span><span class="v mono" id="bd-fee"></span></div>
       <div class="row" id="bd-row-vehicle"><span class="k" data-i18n="lbl_your_car">Your driver's car</span><span class="v" id="bd-vehicle"></span></div>
       <div class="row" id="bd-row-ref"><span class="k" data-i18n="bd_ref">Reference</span><span class="v mono" id="bd-ref"></span></div>
       <div class="row"><span class="k" data-i18n="bd_status">Status</span><span class="status-pill confirmed" id="bd-status"></span></div>
@@ -6407,7 +6407,7 @@ let feeOverrides = [];
 // feeCredits: [{id, driverId, amountIDR, note, dateISO}]
 let feeCredits = [];
 let feeCharges = [];
-const DEFAULT_FEE_PERCENT = 10; // standard commission, in percent
+const DEFAULT_FEE_PERCENT = 15; // standard commission, in percent (12.9.: von 10 auf 15 erhoeht)
 
 function getActiveFeeOverride(driverId, dateISO){
   const checkDate = dateISO ? new Date(dateISO) : new Date();
@@ -10689,7 +10689,7 @@ const translations = {
     lbl_tour: "Tour", lbl_duration: "Duration", lbl_vehicle: "Vehicle", lbl_languages: "Languages",
     lbl_rating: "Rating", lbl_price: "Price", lbl_not_included: "Not included", lbl_driver: "Driver",
     lbl_date: "Date", lbl_time: "Time", lbl_guests: "Guests", lbl_notes_for_driver: "Notes for the driver", btn_whatsapp_contact: "Contact via WhatsApp", join_rydanu_eyebrow: "Join Rydanu", register_driver_modal_title: "Register as new driver", pm_conv_not_found_title: "Conversation not found", pm_conv_not_found_body: "This link may be invalid, or the conversation may have been removed. Please contact your driver directly.", pm_conv_with_prefix: "Your conversation with", pm_your_reply_label: "Your reply", pm_reply_placeholder: "Write your reply...", pm_send_reply_btn: "Send reply", pm_write_message_first: "Please write a message first.", oc_offer_not_found_title: "Offer not found", oc_offer_not_found_body: "This link may be invalid, or the offer may have been withdrawn. Please contact your driver directly.", oc_already_confirmed_title: "Already confirmed", oc_already_confirmed_body: "You already confirmed this booking — see you soon!", oc_no_longer_available_title: "This offer is no longer available", oc_no_longer_available_body: "Please contact your driver directly for an updated offer.", oc_offer_from_prefix: "Your tour offer from", oc_confirm_btn: "Confirm this booking", oc_confirm_payment_note: "By confirming, you agree to arrange payment directly with your driver, as usual on Rydanu.", oc_decline_btn: "Decline this offer", oc_decline_confirm: "Decline this offer? This offer will be closed and cannot be un-declined — if you still want a transfer, you will need to submit a new request.", oc_declined_title: "Offer declined", oc_declined_body: "Your driver has been informed. This offer is now closed and can't be confirmed later — if you'd still like a transfer or tour, please submit a new request and a driver will get back to you with a fresh offer.", oc_confirm_err: "Something went wrong confirming this booking. Please try again, or contact your driver directly.", oc_confirm_driver_unavailable: "This driver can't accept new bookings right now. Please contact them directly, or submit a new request to find another driver.", payment_processing_title: "Processing payment…", payment_processing_note: "This can take a few seconds, please wait.", accept_err_low_balance: "This booking couldn't be confirmed — your balance buffer is reached. Please top up your balance first.", accept_err_generic: "Something went wrong confirming this booking. Please try again in a moment.", accept_err_autodebit_failed: "The automatic top-up didn't go through, so your account has been temporarily locked. Rydanu has been notified — please top up manually or contact support.", accept_err_account_locked: "Your account is locked. Please contact support to get it unlocked.", lbl_total: "Total tour price", lbl_pickup: "Pickup", lbl_tour_singular: "tour", lbl_tour_plural: "tours", lbl_rating_new: "New",
-    lbl_total_price_due: "Total — pay driver directly", lbl_ryvio_fee: "Rydanu fee (10%)", lbl_your_car: "Your driver's car",
+    lbl_total_price_due: "Total — pay driver directly", lbl_ryvio_fee: "Rydanu fee", lbl_your_car: "Your driver's car",
     lbl_fullname: "Full name", lbl_whatsapp: 'WhatsApp number <span class="optional">(for booking confirmation)</span>', ep_eyebrow: "Your profile", ep_title: "Edit profile", ep_address_label: "Full address (required for invoices)", ep_taxnumber_label: "Tax number (optional)",
     lbl_pickup_loc: "Pickup location", lbl_pickup_dropoff_loc: "Pickup / drop-off location", lbl_airport_destination: "Destination region", lbl_transfer_destination: "Destination", lbl_pickup_region: "Your pickup region",
     lbl_balance: "Balance — pay driver in cash on the day",
@@ -10726,7 +10726,7 @@ const translations = {
     admin_confirm_unblock: "Unblock {name}? Their tours become publicly bookable again.",
     admin_confirm_block: "Block {name}?\n\nAll their tours disappear from the traveler view immediately and they can no longer receive bookings.", lw_number_label: "Your Rydanu number:",
  fees_listing_profile: "Set up tours & driver profile", fees_hero_free_label: "always free", fees_listing_desc: "Create unlimited listings, no cost while you have zero bookings",
-    fees_conditions_apply: "Conditions apply", fees_see_full_terms: "see full terms", fees_th_booking_value: "Booking value", fees_th_fee_charged: "Fee charged to driver", fees_row_any_booking: "Any confirmed booking", fees_row_any_booking_val: "10% of tour price", fees_villa_rate_val: "20% of tour price", fees_conditions_apply_booking: "Conditions apply to every booking", fees_zero_bookings_note: "A driver with zero bookings this month pays nothing at all — the fee only appears once a guest actually confirms a paid trip.",
+    fees_conditions_apply: "Conditions apply", fees_see_full_terms: "see full terms", fees_th_booking_value: "Booking value", fees_th_fee_charged: "Fee charged to driver", fees_row_any_booking: "Any confirmed booking", fees_row_any_booking_val: "15% of tour price", fees_villa_rate_val: "25% of tour price", fees_conditions_apply_booking: "Conditions apply to every booking", fees_zero_bookings_note: "A driver with zero bookings this month pays nothing at all — the fee only appears once a guest actually confirms a paid trip.",
     fees_featured_placement: "Featured placement", fees_featured_desc: "Higher spot in search results — auto-expires after 1 month", fees_featured_price: "IDR 100,000 / month",
     topup_section_title: "Your balance", topup_current_balance_lbl: "Current balance", topup_choose_amount: "Choose an amount to top up",
     topup_custom_placeholder: "Other amount (IDR)", topup_submit_btn: "Top up", topup_loading: "Redirecting…",
@@ -10748,7 +10748,7 @@ const translations = {
     map_title_airport_dest: "Airport transfer destination", map_dropoff_area: "Drop-off area",
     admin_empty_pending: "No pending driver registrations right now.", admin_empty_approved: "No approved drivers yet.", email_greeting: "Hi",
     cal_hint: "Tap a booked or pending day to open the trip. Tap a free day to block it — blocked days never show up in traveler search.",
-    tier_transfer_row: "Transfer (no airport, flat rate)", tier_ten_percent: "10% of tour price",
+    tier_transfer_row: "Transfer (no airport, flat rate)", tier_ten_percent: "15% of tour price",
     btn_confirm_cancel: "Confirm cancellation", confirm_ack_cancel: "Confirm the cancellation requested by", btn_mark_completed: "Mark trip completed", confirm_complete_booking: "Confirm this trip is completed for", btn_decline_booking: "Decline", confirm_decline_booking: "Decline this booking request from", decline_outcome_note: "Declined. The customer will get an email letting them know and pointing them to other drivers for",
     bookings_tab_open: "Open", bookings_tab_completed: "Completed",
     mb_cancel_already_requested: "You already requested a cancellation for this booking — your driver has been notified and needs to confirm it.",
@@ -10787,7 +10787,7 @@ const translations = {
     vr_not_found_title: "Link not found", vr_not_found_body: "This booking link doesn't seem to be active anymore. Please contact your villa or hotel directly.",
     vr_sent_title: "Request sent!", vr_sent_body: "Thanks — an independent driver on Rydanu will pick this up shortly. We'll reach out to {email} with the details.",
     vr_matched_to: "✓ Matched to {area} on the map",
-    fees_overview_new_title: "Fees this month", fees_overview_villa_note: "Platform fee for Villa Partner bookings (instead of the usual 10%)", fees_how_it_works_title: "How fees work",
+    fees_overview_new_title: "Fees this month", fees_overview_villa_note: "Platform fee for Villa Partner bookings (instead of the usual 15%)", fees_how_it_works_title: "How fees work",
     requests_tab_open: "Open", requests_tab_offered: "Completed", requests_empty_offered: "No completed requests yet.", requests_tab_declined: "Declined", requests_empty_declined: "No declined requests.",
     co_open_btn_standalone: "✨ Or create a custom offer without a request",
     new_request_banner_one: "You have a new custom tour request — tap to view it", new_request_banner_many: "You have {n} new custom tour requests — tap to view them", new_villa_banner_one: "🏠 New Villa Partner request — tap to view it", new_villa_banner_many: "🏠 {n} new Villa Partner requests — tap to view them",
@@ -10879,7 +10879,7 @@ const translations = {
     switcher_label: "Logged in as",
     edit_profile_link: "Edit profile",
     dash_greeting_sub: "Here's how your listings are doing this week.",
-    plan_chip_line1: "Free listing", plan_chip_line2: "10% commission per booking", plan_chip_line3: "20% for villa requests",
+    plan_chip_line1: "Free listing", plan_chip_line2: "15% commission per booking", plan_chip_line3: "25% for villa requests",
     stat_views: "Profile views",
     stat_requests: "Booking requests",
     stat_rating: "Avg. rating",
@@ -10957,7 +10957,7 @@ const translations = {
     admin_sub: "Review uploaded documents, then approve to make a driver's listings publicly bookable.",
     admin_block_title: "All drivers — block / unblock",
     admin_block_sub: "Tap a driver to block them — blocked drivers and all their tours disappear from the traveler view immediately.",
-    admin_money_title: "💰 Money — fees & credits", admin_money_sub: "By default, all drivers pay a 10% commission per booking. Here you can set a different rate for an individual driver for a set period, or create a fee credit.",
+    admin_money_title: "💰 Money — fees & credits", admin_money_sub: "By default, all drivers pay a 15% commission per booking. Here you can set a different rate for an individual driver for a set period, or create a fee credit.",
     admin_feeoverride_title: "Set an individual fee rate", admin_select_driver: "Select driver", admin_fee_percent: "Fee in % (0 or higher)",
     admin_fee_start: "Start date", admin_fee_end: "End date", admin_fee_save_btn: "Save",
     admin_credit_title: "Create a fee credit", admin_credit_amount: "Amount (IDR)", admin_credit_note: "Note (optional)", admin_credit_save_btn: "Create credit", admin_view_overrides_btn: "View all individual fee rates", admin_view_credits_btn: "View all credits", admin_view_drivers_btn: "View all drivers", admin_filter_by_driver: "Filter by driver",
@@ -10970,14 +10970,14 @@ const translations = {
     fee_rate_vip_bonus: "VIP Bonus", fee_rate_zero_fees: "0% fees", fee_rate_valid_until: "valid until {date}", fee_rate_valid_unlimited: "valid indefinitely", fee_rate_villa_excluded: "*excludes villa bookings",
     fee_rate_current: "📊 Your current commission", fee_rate_special_condition: "Special rate", fee_rate_standard: "Standard", fee_rate_unlimited_short: "unlimited",
     admin_fo_fill_required: "Please select a driver and enter a percentage.", admin_fo_negative_error: "The percentage cannot be negative.",
-    admin_fo_saved: "✓ Saved and driver notified.", admin_fo_confirm_delete: "Really delete this individual fee rate? The driver will pay the standard 10% again.",
+    admin_fo_saved: "✓ Saved and driver notified.", admin_fo_confirm_delete: "Really delete this individual fee rate? The driver will pay the standard 15% again.",
     admin_fo_notify_title: "📊 Your fee has been adjusted",
     admin_fo_notify_body_set: "You now have an individual fee rate of {percent}% per booking ({range}). You can see your current rate anytime under \"Fees & billing\".",
     admin_fo_notify_body_vip: "🌟 You've got VIP status: 0% fees on all your bookings ({range})! You can see your current rate anytime under \"Fees & billing\".",
-    admin_fo_notify_body_removed: "Your individual fee rate has been removed. You are now back to the standard rate of 10% per booking.",
+    admin_fo_notify_body_removed: "Your individual fee rate has been removed. You are now back to the standard rate of 15% per booking.",
     admin_fo_range_from_to: "{start} to {end}", admin_fo_range_immediate: "effective immediately, ongoing",
     admin_fo_active_tag: "active", admin_fo_unlimited: "unlimited", admin_fo_active_only: "Show active only",
-    admin_fo_empty_default: "No individual fee rates set yet — the standard 10% applies to all drivers.", admin_fo_empty_filtered: "No individual fee rate set for this driver.",
+    admin_fo_empty_default: "No individual fee rates set yet — the standard 15% applies to all drivers.", admin_fo_empty_filtered: "No individual fee rate set for this driver.",
     admin_fc_fill_required: "Please select a driver and an amount greater than 0.", admin_fc_driver_not_found: "Driver not found.",
     admin_fc_created: "✓ Credit applied — the driver's fee balance was reduced right away.", admin_fc_created_to_balance: "✓ Applied: {due} to open fees, {balance} added to the driver's balance for future fees.", admin_fc_notify_title: "💚 You received a credit",
     admin_fc_notify_body: "You've been credited {amount}{note} — it was applied to your fees right away.", admin_fc_notify_body_balance: "You've been credited {amount}{note} — added to your balance and will be applied to your future fees automatically.",
@@ -11064,7 +11064,7 @@ const translations = {
     lbl_tour: "Tour", lbl_duration: "Dauer", lbl_vehicle: "Fahrzeug", lbl_languages: "Sprachen",
     lbl_rating: "Bewertung", lbl_price: "Preis", lbl_not_included: "Nicht enthalten", lbl_driver: "Fahrer",
     lbl_date: "Datum", lbl_time: "Uhrzeit", lbl_guests: "Gäste", lbl_notes_for_driver: "Notizen für den Fahrer", btn_whatsapp_contact: "Per WhatsApp kontaktieren", join_rydanu_eyebrow: "Rydanu beitreten", register_driver_modal_title: "Als neuer Fahrer registrieren", pm_conv_not_found_title: "Unterhaltung nicht gefunden", pm_conv_not_found_body: "Dieser Link ist evtl. ungültig, oder die Unterhaltung wurde entfernt. Bitte kontaktiere deinen Fahrer direkt.", pm_conv_with_prefix: "Deine Unterhaltung mit", pm_your_reply_label: "Deine Antwort", pm_reply_placeholder: "Antwort schreiben...", pm_send_reply_btn: "Antwort senden", pm_write_message_first: "Bitte zuerst eine Nachricht schreiben.", oc_offer_not_found_title: "Angebot nicht gefunden", oc_offer_not_found_body: "Dieser Link ist evtl. ungültig, oder das Angebot wurde zurückgezogen. Bitte kontaktiere deinen Fahrer direkt.", oc_already_confirmed_title: "Bereits bestätigt", oc_already_confirmed_body: "Du hast diese Buchung bereits bestätigt — bis bald!", oc_no_longer_available_title: "Dieses Angebot ist nicht mehr verfügbar", oc_no_longer_available_body: "Bitte kontaktiere deinen Fahrer direkt für ein aktuelles Angebot.", oc_offer_from_prefix: "Dein Tour-Angebot von", oc_confirm_btn: "Diese Buchung bestätigen", oc_confirm_payment_note: "Mit der Bestätigung erklärst du dich einverstanden, die Zahlung wie gewohnt bei Rydanu direkt mit deinem Fahrer zu klären.", oc_decline_btn: "Angebot ablehnen", oc_decline_confirm: "Dieses Angebot ablehnen? Es wird geschlossen und kann danach nicht mehr bestätigt werden — falls du weiterhin einen Transfer möchtest, musst du eine neue Anfrage stellen.", oc_declined_title: "Angebot abgelehnt", oc_declined_body: "Dein Fahrer wurde informiert. Dieses Angebot ist jetzt geschlossen und kann später nicht mehr bestätigt werden — falls du weiterhin einen Transfer oder eine Tour möchtest, stelle bitte eine neue Anfrage, ein Fahrer meldet sich dann mit einem neuen Angebot.", oc_confirm_err: "Bei der Bestätigung ist etwas schiefgelaufen. Bitte nochmal versuchen oder deinen Fahrer direkt kontaktieren.", oc_confirm_driver_unavailable: "Dieser Fahrer kann gerade keine neuen Buchungen annehmen. Bitte kontaktiere ihn direkt oder stelle eine neue Anfrage für einen anderen Fahrer.", payment_processing_title: "Zahlung wird bearbeitet…", payment_processing_note: "Das kann ein paar Sekunden dauern, bitte warten.", accept_err_low_balance: "Diese Buchung konnte nicht bestätigt werden — dein Guthaben-Puffer ist erreicht. Bitte lade zuerst dein Guthaben auf.", accept_err_generic: "Bei der Bestätigung ist etwas schiefgelaufen. Bitte gleich nochmal versuchen.", accept_err_autodebit_failed: "Der automatische Einzug hat nicht geklappt, dein Account wurde vorübergehend gesperrt. Rydanu wurde informiert — bitte manuell aufladen oder den Support kontaktieren.", accept_err_account_locked: "Dein Account ist gesperrt. Bitte kontaktiere den Support, damit er wieder freigeschaltet wird.", lbl_total: "Gesamtpreis der Tour", lbl_pickup: "Abholung", lbl_tour_singular: "Tour", lbl_tour_plural: "Touren", lbl_rating_new: "Neu",
-    lbl_total_price_due: "Gesamtbetrag — direkt an den Fahrer", lbl_ryvio_fee: "Rydanu-Gebühr (10%)", lbl_your_car: "Das Auto deines Fahrers",
+    lbl_total_price_due: "Gesamtbetrag — direkt an den Fahrer", lbl_ryvio_fee: "Rydanu-Gebühr", lbl_your_car: "Das Auto deines Fahrers",
     lbl_fullname: "Vollständiger Name", lbl_whatsapp: 'WhatsApp-Nummer <span class="optional">(für die Buchungsbestätigung)</span>', ep_eyebrow: "Dein Profil", ep_title: "Profil bearbeiten", ep_address_label: "Vollständige Adresse (Pflichtangabe für Rechnungen)", ep_taxnumber_label: "Steuernummer (optional)",
     lbl_pickup_loc: "Abholort", lbl_pickup_dropoff_loc: "Abhol-/Zielort", lbl_airport_destination: "Zielregion", lbl_transfer_destination: "Ziel", lbl_pickup_region: "Deine Abholregion",
     lbl_balance: "Restbetrag — bar an den Fahrer am Tourtag",
@@ -11101,7 +11101,7 @@ const translations = {
     admin_confirm_unblock: "{name} entsperren? Seine/ihre Touren werden wieder öffentlich buchbar.",
     admin_confirm_block: "{name} sperren?\n\nAlle Touren verschwinden sofort aus der Reisenden-Ansicht und er/sie kann keine Buchungen mehr erhalten.", lw_number_label: "Deine Rydanu Nummer:",
  fees_listing_profile: "Touren einstellen & Fahrerprofil", fees_hero_free_label: "immer kostenlos", fees_listing_desc: "Erstelle unbegrenzt viele Angebote, keine Kosten solange du keine Buchungen hast",
-    fees_conditions_apply: "Bedingungen gelten", fees_see_full_terms: "vollständige Bedingungen ansehen", fees_th_booking_value: "Buchungswert", fees_th_fee_charged: "Gebühr für Fahrer", fees_row_any_booking: "Jede bestätigte Buchung", fees_row_any_booking_val: "10% des Tourpreises", fees_villa_rate_val: "20% des Tourpreises", fees_conditions_apply_booking: "Bedingungen gelten für jede Buchung", fees_zero_bookings_note: "Ein Fahrer ohne Buchungen in diesem Monat zahlt gar nichts — die Gebühr entsteht erst, sobald ein Gast tatsächlich eine bezahlte Tour bestätigt.",
+    fees_conditions_apply: "Bedingungen gelten", fees_see_full_terms: "vollständige Bedingungen ansehen", fees_th_booking_value: "Buchungswert", fees_th_fee_charged: "Gebühr für Fahrer", fees_row_any_booking: "Jede bestätigte Buchung", fees_row_any_booking_val: "15% des Tourpreises", fees_villa_rate_val: "25% des Tourpreises", fees_conditions_apply_booking: "Bedingungen gelten für jede Buchung", fees_zero_bookings_note: "Ein Fahrer ohne Buchungen in diesem Monat zahlt gar nichts — die Gebühr entsteht erst, sobald ein Gast tatsächlich eine bezahlte Tour bestätigt.",
     fees_featured_placement: "Featured Placement", fees_featured_desc: "Höhere Platzierung in den Suchergebnissen — läuft automatisch nach 1 Monat aus", fees_featured_price: "IDR 100.000 / Monat",
     topup_section_title: "Dein Guthaben", topup_current_balance_lbl: "Aktuelles Guthaben", topup_choose_amount: "Betrag zum Aufladen wählen",
     topup_custom_placeholder: "Anderer Betrag (IDR)", topup_submit_btn: "Aufladen", topup_loading: "Weiterleitung…",
@@ -11123,7 +11123,7 @@ const translations = {
     map_title_airport_dest: "Flughafentransfer-Ziel", map_dropoff_area: "Abholbereich",
     admin_empty_pending: "Aktuell keine ausstehenden Fahrer-Registrierungen.", admin_empty_approved: "Noch keine freigeschalteten Fahrer.", email_greeting: "Hallo",
     cal_hint: "Tippe auf einen gebuchten oder wartenden Tag, um die Fahrt zu öffnen. Tippe auf einen freien Tag, um ihn zu blockieren — blockierte Tage erscheinen nie in der Kundensuche.",
-    tier_transfer_row: "Transfer (ohne Flughafen, Pauschale)", tier_ten_percent: "10% des Tourpreises",
+    tier_transfer_row: "Transfer (ohne Flughafen, Pauschale)", tier_ten_percent: "15% des Tourpreises",
     btn_confirm_cancel: "Stornierung bestätigen", confirm_ack_cancel: "Die von folgender Person angefragte Stornierung bestätigen:", btn_mark_completed: "Tour als abgeschlossen markieren", confirm_complete_booking: "Bestätige, dass diese Tour abgeschlossen wurde für", btn_decline_booking: "Ablehnen", confirm_decline_booking: "Diese Buchungsanfrage ablehnen von", decline_outcome_note: "Abgelehnt. Der Kunde bekommt eine E-Mail mit Bescheid und einem Hinweis auf andere Fahrer für",
     bookings_tab_open: "Offen", bookings_tab_completed: "Abgeschlossen",
     mb_cancel_already_requested: "Du hast für diese Buchung bereits eine Stornierung angefragt — dein Fahrer wurde benachrichtigt und muss sie bestätigen.",
@@ -11162,7 +11162,7 @@ const translations = {
     vr_not_found_title: "Link nicht gefunden", vr_not_found_body: "Dieser Buchungslink scheint nicht mehr aktiv zu sein. Bitte kontaktiere deine Villa oder dein Hotel direkt.",
     vr_sent_title: "Anfrage gesendet!", vr_sent_body: "Danke — ein unabhängiger Fahrer auf Rydanu meldet sich in Kürze bei dir. Wir kontaktieren {email} mit den Details.",
     vr_matched_to: "✓ {area} auf der Karte gefunden",
-    fees_overview_new_title: "Gebühren diesen Monat", fees_overview_villa_note: "Plattformgebühr für Villa-Partner-Buchungen (statt sonst 10%)", fees_how_it_works_title: "So funktionieren Gebühren",
+    fees_overview_new_title: "Gebühren diesen Monat", fees_overview_villa_note: "Plattformgebühr für Villa-Partner-Buchungen (statt sonst 15%)", fees_how_it_works_title: "So funktionieren Gebühren",
     requests_tab_open: "Offen", requests_tab_offered: "Abgeschlossen", requests_empty_offered: "Noch keine abgeschlossenen Anfragen.", requests_tab_declined: "Abgelehnt", requests_empty_declined: "Keine abgelehnten Anfragen.",
     co_open_btn_standalone: "✨ Oder individuelles Angebot ohne Anfrage erstellen",
     new_request_banner_one: "Du hast eine neue individuelle Touranfrage — antippen zum Ansehen", new_request_banner_many: "Du hast {n} neue individuelle Touranfragen — antippen zum Ansehen", new_villa_banner_one: "🏠 Neue Villa-Partner-Anfrage — antippen zum Ansehen", new_villa_banner_many: "🏠 {n} neue Villa-Partner-Anfragen — antippen zum Ansehen",
@@ -11254,7 +11254,7 @@ const translations = {
     switcher_label: "Angemeldet als",
     edit_profile_link: "Profil bearbeiten",
     dash_greeting_sub: "So laufen deine Angebote diese Woche.",
-    plan_chip_line1: "Kostenlos einstellen", plan_chip_line2: "10% pro Buchung", plan_chip_line3: "20% bei Villa-Anfragen",
+    plan_chip_line1: "Kostenlos einstellen", plan_chip_line2: "15% pro Buchung", plan_chip_line3: "25% bei Villa-Anfragen",
     stat_views: "Profilaufrufe",
     stat_requests: "Anfragen",
     stat_rating: "Ø Bewertung",
@@ -11332,7 +11332,7 @@ const translations = {
     admin_sub: "Prüfe die hochgeladenen Dokumente und schalte den Fahrer frei, damit seine Angebote öffentlich buchbar werden.",
     admin_block_title: "Alle Fahrer — sperren / entsperren",
     admin_block_sub: "Tippe einen Fahrer an, um ihn zu sperren — gesperrte Fahrer und alle ihre Touren verschwinden sofort aus der Kundenansicht.",
-    admin_money_title: "💰 Geld — Gebühren & Gutschriften", admin_money_sub: "Standardmäßig gilt für alle Fahrer 10% Provision pro Buchung. Hier kannst du für einzelne Fahrer einen abweichenden Satz für einen bestimmten Zeitraum festlegen, oder eine Gutschrift erstellen.",
+    admin_money_title: "💰 Geld — Gebühren & Gutschriften", admin_money_sub: "Standardmäßig gilt für alle Fahrer 15% Provision pro Buchung. Hier kannst du für einzelne Fahrer einen abweichenden Satz für einen bestimmten Zeitraum festlegen, oder eine Gutschrift erstellen.",
     admin_feeoverride_title: "Individuellen Gebührensatz festlegen", admin_select_driver: "Fahrer auswählen", admin_fee_percent: "Gebühr in % (0 oder höher)",
     admin_fee_start: "Startdatum", admin_fee_end: "Enddatum", admin_fee_save_btn: "Speichern",
     admin_credit_title: "Gebühren-Gutschrift erstellen", admin_credit_amount: "Betrag (IDR)", admin_credit_note: "Notiz (optional)", admin_credit_save_btn: "Gutschrift erstellen", admin_view_overrides_btn: "Alle individuellen Gebührensätze anzeigen", admin_view_credits_btn: "Alle Gutschriften anzeigen", admin_view_drivers_btn: "Alle Fahrer anzeigen", admin_filter_by_driver: "Nach Fahrer filtern",
@@ -11345,14 +11345,14 @@ const translations = {
     fee_rate_vip_bonus: "VIP Bonus", fee_rate_zero_fees: "0% Gebühren", fee_rate_valid_until: "gültig bis {date}", fee_rate_valid_unlimited: "unbefristet gültig", fee_rate_villa_excluded: "*ausgenommen Villa-Buchungen",
     fee_rate_current: "📊 Deine aktuelle Provision", fee_rate_special_condition: "Sonderkondition", fee_rate_standard: "Standard", fee_rate_unlimited_short: "unbefristet",
     admin_fo_fill_required: "Bitte Fahrer und Prozentsatz angeben.", admin_fo_negative_error: "Der Prozentsatz darf nicht negativ sein.",
-    admin_fo_saved: "✓ Gespeichert und Fahrer benachrichtigt.", admin_fo_confirm_delete: "Diesen individuellen Gebührensatz wirklich löschen? Der Fahrer zahlt danach wieder den Standardsatz von 10%.",
+    admin_fo_saved: "✓ Gespeichert und Fahrer benachrichtigt.", admin_fo_confirm_delete: "Diesen individuellen Gebührensatz wirklich löschen? Der Fahrer zahlt danach wieder den Standardsatz von 15%.",
     admin_fo_notify_title: "📊 Deine Gebühr wurde angepasst",
     admin_fo_notify_body_set: "Für deinen Account gilt ab jetzt ein individueller Gebührensatz von {percent}% pro Buchung ({range}). Deinen aktuellen Satz siehst du jederzeit in deinem Profil unter \"Gebühren & Abrechnung\".",
     admin_fo_notify_body_vip: "🌟 Du hast jetzt VIP-Status: 0% Gebühren auf alle deine Buchungen ({range})! Deinen aktuellen Satz siehst du jederzeit in deinem Profil unter \"Gebühren & Abrechnung\".",
-    admin_fo_notify_body_removed: "Dein individueller Gebührensatz wurde entfernt. Für dich gilt jetzt wieder der Standardsatz von 10% pro Buchung.",
+    admin_fo_notify_body_removed: "Dein individueller Gebührensatz wurde entfernt. Für dich gilt jetzt wieder der Standardsatz von 15% pro Buchung.",
     admin_fo_range_from_to: "{start} bis {end}", admin_fo_range_immediate: "ab sofort, unbefristet",
     admin_fo_active_tag: "aktiv", admin_fo_unlimited: "unbegrenzt", admin_fo_active_only: "Nur aktive anzeigen",
-    admin_fo_empty_default: "Noch keine individuellen Gebührensätze festgelegt — Standard 10% gilt für alle Fahrer.", admin_fo_empty_filtered: "Für diesen Fahrer sind keine individuellen Gebührensätze festgelegt.",
+    admin_fo_empty_default: "Noch keine individuellen Gebührensätze festgelegt — Standard 15% gilt für alle Fahrer.", admin_fo_empty_filtered: "Für diesen Fahrer sind keine individuellen Gebührensätze festgelegt.",
     admin_fc_fill_required: "Bitte Fahrer und einen Betrag über 0 angeben.", admin_fc_driver_not_found: "Fahrer nicht gefunden.",
     admin_fc_created: "✓ Gutschrift verrechnet — die Gebühren des Fahrers wurden sofort reduziert.", admin_fc_created_to_balance: "✓ Verrechnet: {due} mit offenen Gebühren, {balance} als Guthaben für künftige Gebühren gutgeschrieben.", admin_fc_notify_title: "💚 Gutschrift erhalten",
     admin_fc_notify_body: "Dir wurde eine Gutschrift von {amount}{note} gutgeschrieben — sie wurde direkt mit deinen Gebühren verrechnet.", admin_fc_notify_body_balance: "Dir wurde eine Gutschrift von {amount}{note} gutgeschrieben — sie wurde deinem Guthaben hinzugefügt und wird automatisch mit künftigen Gebühren verrechnet.",
@@ -11439,7 +11439,7 @@ const translations = {
     lbl_tour: "Tur", lbl_duration: "Durasi", lbl_vehicle: "Kendaraan", lbl_languages: "Bahasa",
     lbl_rating: "Rating", lbl_price: "Harga", lbl_not_included: "Tidak termasuk", lbl_driver: "Sopir",
     lbl_date: "Tanggal", lbl_time: "Waktu", lbl_guests: "Tamu", lbl_notes_for_driver: "Catatan untuk sopir", btn_whatsapp_contact: "Hubungi via WhatsApp", join_rydanu_eyebrow: "Bergabung dengan Rydanu", register_driver_modal_title: "Daftar sebagai sopir baru", pm_conv_not_found_title: "Percakapan tidak ditemukan", pm_conv_not_found_body: "Tautan ini mungkin tidak valid, atau percakapan telah dihapus. Silakan hubungi sopir Anda langsung.", pm_conv_with_prefix: "Percakapan Anda dengan", pm_your_reply_label: "Balasan Anda", pm_reply_placeholder: "Tulis balasan Anda...", pm_send_reply_btn: "Kirim balasan", pm_write_message_first: "Silakan tulis pesan terlebih dahulu.", oc_offer_not_found_title: "Penawaran tidak ditemukan", oc_offer_not_found_body: "Tautan ini mungkin tidak valid, atau penawaran telah ditarik. Silakan hubungi sopir Anda langsung.", oc_already_confirmed_title: "Sudah dikonfirmasi", oc_already_confirmed_body: "Anda sudah mengonfirmasi pemesanan ini — sampai jumpa!", oc_no_longer_available_title: "Penawaran ini sudah tidak tersedia", oc_no_longer_available_body: "Silakan hubungi sopir Anda langsung untuk penawaran terbaru.", oc_offer_from_prefix: "Penawaran tur Anda dari", oc_confirm_btn: "Konfirmasi pemesanan ini", oc_confirm_payment_note: "Dengan mengonfirmasi, Anda setuju untuk mengatur pembayaran langsung dengan sopir Anda, seperti biasa di Rydanu.", oc_decline_btn: "Tolak penawaran ini", oc_decline_confirm: "Tolak penawaran ini? Penawaran ini akan ditutup dan tidak dapat dibatalkan penolakannya — jika Anda masih ingin transfer, Anda perlu mengajukan permintaan baru.", oc_declined_title: "Penawaran ditolak", oc_declined_body: "Sopir Anda telah diberi tahu. Penawaran ini sekarang ditutup dan tidak dapat dikonfirmasi lagi — jika Anda masih ingin transfer atau tur, silakan ajukan permintaan baru dan sopir akan menghubungi Anda dengan penawaran baru.", oc_confirm_err: "Terjadi kesalahan saat mengonfirmasi pemesanan ini. Silakan coba lagi, atau hubungi sopir Anda langsung.", oc_confirm_driver_unavailable: "Sopir ini belum bisa menerima pemesanan baru saat ini. Silakan hubungi langsung, atau ajukan permintaan baru untuk mencari sopir lain.", payment_processing_title: "Memproses pembayaran…", payment_processing_note: "Ini bisa memakan waktu beberapa detik, mohon tunggu.", accept_err_low_balance: "Pemesanan ini tidak dapat dikonfirmasi — batas saldo Anda telah tercapai. Silakan isi ulang saldo Anda terlebih dahulu.", accept_err_generic: "Terjadi kesalahan saat mengonfirmasi pemesanan ini. Silakan coba lagi sebentar.", accept_err_autodebit_failed: "Isi ulang otomatis tidak berhasil, akun Anda sementara dikunci. Rydanu telah diberi tahu — silakan isi ulang manual atau hubungi dukungan.", accept_err_account_locked: "Akun Anda terkunci. Silakan hubungi dukungan untuk membukanya kembali.", lbl_total: "Total harga tur", lbl_pickup: "Penjemputan", lbl_tour_singular: "tur", lbl_tour_plural: "tur", lbl_rating_new: "Baru",
-    lbl_total_price_due: "Total — bayar langsung ke sopir", lbl_ryvio_fee: "Biaya Rydanu (10%)", lbl_your_car: "Mobil sopir Anda",
+    lbl_total_price_due: "Total — bayar langsung ke sopir", lbl_ryvio_fee: "Biaya Rydanu", lbl_your_car: "Mobil sopir Anda",
     lbl_fullname: "Nama lengkap", lbl_whatsapp: 'Nomor WhatsApp <span class="optional">(untuk konfirmasi pemesanan)</span>', ep_eyebrow: "Profil Anda", ep_title: "Edit profil", ep_address_label: "Alamat lengkap (wajib untuk faktur)", ep_taxnumber_label: "NPWP (opsional)",
     lbl_pickup_loc: "Lokasi penjemputan", lbl_pickup_dropoff_loc: "Lokasi jemput/antar", lbl_airport_destination: "Wilayah tujuan", lbl_transfer_destination: "Tujuan", lbl_pickup_region: "Wilayah penjemputan Anda",
     lbl_balance: "Sisa — bayar tunai ke sopir pada hari tur",
@@ -11476,7 +11476,7 @@ const translations = {
     admin_confirm_unblock: "Buka blokir {name}? Tur mereka akan dapat dipesan publik kembali.",
     admin_confirm_block: "Blokir {name}?\n\nSemua tur mereka langsung hilang dari tampilan wisatawan dan mereka tidak dapat lagi menerima pemesanan.", lw_number_label: "Nomor Rydanu Anda:",
  fees_listing_profile: "Atur tur & profil sopir", fees_hero_free_label: "selalu gratis", fees_listing_desc: "Buat tur aktif tanpa batas, tanpa biaya selama Anda belum memiliki pemesanan",
-    fees_conditions_apply: "Ketentuan berlaku", fees_see_full_terms: "lihat ketentuan lengkap", fees_th_booking_value: "Nilai pemesanan", fees_th_fee_charged: "Biaya yang dibebankan ke sopir", fees_row_any_booking: "Setiap pemesanan terkonfirmasi", fees_row_any_booking_val: "10% dari harga tur", fees_villa_rate_val: "20% dari harga tur", fees_conditions_apply_booking: "Ketentuan berlaku untuk setiap pemesanan", fees_zero_bookings_note: "Sopir tanpa pemesanan bulan ini tidak membayar apa pun — biaya baru muncul setelah tamu benar-benar mengonfirmasi perjalanan berbayar.",
+    fees_conditions_apply: "Ketentuan berlaku", fees_see_full_terms: "lihat ketentuan lengkap", fees_th_booking_value: "Nilai pemesanan", fees_th_fee_charged: "Biaya yang dibebankan ke sopir", fees_row_any_booking: "Setiap pemesanan terkonfirmasi", fees_row_any_booking_val: "15% dari harga tur", fees_villa_rate_val: "25% dari harga tur", fees_conditions_apply_booking: "Ketentuan berlaku untuk setiap pemesanan", fees_zero_bookings_note: "Sopir tanpa pemesanan bulan ini tidak membayar apa pun — biaya baru muncul setelah tamu benar-benar mengonfirmasi perjalanan berbayar.",
     fees_featured_placement: "Featured placement", fees_featured_desc: "Posisi lebih tinggi di hasil pencarian — otomatis berakhir setelah 1 bulan", fees_featured_price: "IDR 100.000 / bulan",
     topup_section_title: "Saldo Anda", topup_current_balance_lbl: "Saldo saat ini", topup_choose_amount: "Pilih jumlah untuk top up",
     topup_custom_placeholder: "Jumlah lain (IDR)", topup_submit_btn: "Top up", topup_loading: "Mengalihkan…",
@@ -11498,7 +11498,7 @@ const translations = {
     map_title_airport_dest: "Tujuan transfer bandara", map_dropoff_area: "Area penurunan",
     admin_empty_pending: "Tidak ada pendaftaran sopir yang tertunda saat ini.", admin_empty_approved: "Belum ada sopir yang disetujui.", email_greeting: "Hai",
     cal_hint: "Ketuk hari yang dipesan atau menunggu untuk membuka perjalanan. Ketuk hari kosong untuk memblokirnya — hari yang diblokir tidak pernah muncul dalam pencarian wisatawan.",
-    tier_transfer_row: "Transfer (tanpa bandara, tarif tetap)", tier_ten_percent: "10% dari harga tur",
+    tier_transfer_row: "Transfer (tanpa bandara, tarif tetap)", tier_ten_percent: "15% dari harga tur",
     btn_confirm_cancel: "Konfirmasi pembatalan", confirm_ack_cancel: "Konfirmasi pembatalan yang diminta oleh", btn_mark_completed: "Tandai perjalanan selesai", confirm_complete_booking: "Konfirmasi perjalanan ini telah selesai untuk", btn_decline_booking: "Tolak", confirm_decline_booking: "Tolak permintaan pemesanan ini dari", decline_outcome_note: "Ditolak. Pelanggan akan menerima email pemberitahuan dan diarahkan ke sopir lain untuk",
     bookings_tab_open: "Terbuka", bookings_tab_completed: "Selesai",
     mb_cancel_already_requested: "Anda sudah meminta pembatalan untuk pemesanan ini — sopir Anda telah diberi tahu dan perlu mengonfirmasinya.",
@@ -11537,7 +11537,7 @@ const translations = {
     vr_not_found_title: "Tautan tidak ditemukan", vr_not_found_body: "Tautan pemesanan ini sepertinya sudah tidak aktif. Silakan hubungi villa atau hotel Anda langsung.",
     vr_sent_title: "Permintaan terkirim!", vr_sent_body: "Terima kasih — sopir independen di Rydanu akan segera menghubungi Anda. Kami akan menghubungi {email} dengan detailnya.",
     vr_matched_to: "✓ Cocok dengan {area} di peta",
-    fees_overview_new_title: "Biaya bulan ini", fees_overview_villa_note: "Biaya platform untuk booking Villa Partner (bukan 10% seperti biasa)", fees_how_it_works_title: "Cara kerja biaya",
+    fees_overview_new_title: "Biaya bulan ini", fees_overview_villa_note: "Biaya platform untuk booking Villa Partner (bukan 15% seperti biasa)", fees_how_it_works_title: "Cara kerja biaya",
     requests_tab_open: "Terbuka", requests_tab_offered: "Selesai", requests_empty_offered: "Belum ada permintaan yang selesai.", requests_tab_declined: "Ditolak", requests_empty_declined: "Tidak ada permintaan yang ditolak.",
     co_open_btn_standalone: "✨ Atau buat penawaran khusus tanpa permintaan",
     new_request_banner_one: "Anda memiliki permintaan tur khusus baru — ketuk untuk melihatnya", new_request_banner_many: "Anda memiliki {n} permintaan tur khusus baru — ketuk untuk melihatnya", new_villa_banner_one: "🏠 Permintaan Villa Partner baru — ketuk untuk melihatnya", new_villa_banner_many: "🏠 {n} permintaan Villa Partner baru — ketuk untuk melihatnya",
@@ -11629,7 +11629,7 @@ const translations = {
     switcher_label: "Masuk sebagai",
     edit_profile_link: "Edit profil",
     dash_greeting_sub: "Begini performa tur Anda minggu ini.",
-    plan_chip_line1: "Gratis mendaftar", plan_chip_line2: "Komisi 10% per pemesanan", plan_chip_line3: "20% untuk permintaan villa",
+    plan_chip_line1: "Gratis mendaftar", plan_chip_line2: "Komisi 15% per pemesanan", plan_chip_line3: "25% untuk permintaan villa",
     stat_views: "Kunjungan profil",
     stat_requests: "Permintaan pemesanan",
     stat_rating: "Rating rata-rata",
@@ -11707,7 +11707,7 @@ const translations = {
     admin_sub: "Tinjau dokumen yang diunggah, lalu setujui agar tur sopir dapat dipesan publik.",
     admin_block_title: "Semua sopir — blokir / buka blokir",
     admin_block_sub: "Ketuk sopir untuk memblokirnya — sopir yang diblokir dan semua turnya langsung hilang dari tampilan wisatawan.",
-    admin_money_title: "💰 Uang — biaya & kredit", admin_money_sub: "Secara default, semua sopir membayar komisi 10% per pemesanan. Di sini Anda dapat menetapkan tarif berbeda untuk sopir tertentu selama periode tertentu, atau membuat kredit biaya.",
+    admin_money_title: "💰 Uang — biaya & kredit", admin_money_sub: "Secara default, semua sopir membayar komisi 15% per pemesanan. Di sini Anda dapat menetapkan tarif berbeda untuk sopir tertentu selama periode tertentu, atau membuat kredit biaya.",
     admin_feeoverride_title: "Tetapkan tarif biaya individual", admin_select_driver: "Pilih sopir", admin_fee_percent: "Biaya dalam % (0 atau lebih)",
     admin_fee_start: "Tanggal mulai", admin_fee_end: "Tanggal akhir", admin_fee_save_btn: "Simpan",
     admin_credit_title: "Buat kredit biaya", admin_credit_amount: "Jumlah (IDR)", admin_credit_note: "Catatan (opsional)", admin_credit_save_btn: "Buat kredit", admin_view_overrides_btn: "Lihat semua tarif biaya individual", admin_view_credits_btn: "Lihat semua kredit", admin_view_drivers_btn: "Lihat semua sopir", admin_filter_by_driver: "Filter berdasarkan sopir",
@@ -11720,14 +11720,14 @@ const translations = {
     fee_rate_vip_bonus: "VIP Bonus", fee_rate_zero_fees: "0% biaya", fee_rate_valid_until: "berlaku hingga {date}", fee_rate_valid_unlimited: "berlaku tanpa batas waktu", fee_rate_villa_excluded: "*tidak termasuk pemesanan villa",
     fee_rate_current: "📊 Komisi Anda saat ini", fee_rate_special_condition: "Tarif khusus", fee_rate_standard: "Standar", fee_rate_unlimited_short: "tanpa batas",
     admin_fo_fill_required: "Harap pilih sopir dan masukkan persentase.", admin_fo_negative_error: "Persentase tidak boleh negatif.",
-    admin_fo_saved: "✓ Disimpan dan sopir telah diberi tahu.", admin_fo_confirm_delete: "Yakin ingin menghapus tarif biaya individual ini? Sopir akan kembali membayar tarif standar 10%.",
+    admin_fo_saved: "✓ Disimpan dan sopir telah diberi tahu.", admin_fo_confirm_delete: "Yakin ingin menghapus tarif biaya individual ini? Sopir akan kembali membayar tarif standar 15%.",
     admin_fo_notify_title: "📊 Biaya Anda telah disesuaikan",
     admin_fo_notify_body_set: "Akun Anda sekarang memiliki tarif biaya individual sebesar {percent}% per pemesanan ({range}). Anda dapat melihat tarif Anda saat ini kapan saja di \"Biaya & tagihan\".",
     admin_fo_notify_body_vip: "🌟 Anda mendapat status VIP: 0% biaya untuk semua pemesanan Anda ({range})! Anda dapat melihat tarif Anda saat ini kapan saja di \"Biaya & tagihan\".",
-    admin_fo_notify_body_removed: "Tarif biaya individual Anda telah dihapus. Anda sekarang kembali ke tarif standar 10% per pemesanan.",
+    admin_fo_notify_body_removed: "Tarif biaya individual Anda telah dihapus. Anda sekarang kembali ke tarif standar 15% per pemesanan.",
     admin_fo_range_from_to: "{start} hingga {end}", admin_fo_range_immediate: "berlaku segera, tanpa batas waktu",
     admin_fo_active_tag: "aktif", admin_fo_unlimited: "tanpa batas", admin_fo_active_only: "Tampilkan yang aktif saja",
-    admin_fo_empty_default: "Belum ada tarif biaya individual yang ditetapkan — tarif standar 10% berlaku untuk semua sopir.", admin_fo_empty_filtered: "Tidak ada tarif biaya individual untuk sopir ini.",
+    admin_fo_empty_default: "Belum ada tarif biaya individual yang ditetapkan — tarif standar 15% berlaku untuk semua sopir.", admin_fo_empty_filtered: "Tidak ada tarif biaya individual untuk sopir ini.",
     admin_fc_fill_required: "Harap pilih sopir dan jumlah lebih dari 0.", admin_fc_driver_not_found: "Sopir tidak ditemukan.",
     admin_fc_created: "✓ Kredit diterapkan — biaya sopir langsung dikurangi.", admin_fc_created_to_balance: "✓ Diterapkan: {due} untuk biaya terbuka, {balance} ditambahkan ke saldo untuk biaya mendatang.", admin_fc_notify_title: "💚 Anda menerima kredit",
     admin_fc_notify_body: "Anda telah dikreditkan {amount}{note} — ini langsung diterapkan pada biaya Anda.", admin_fc_notify_body_balance: "Anda telah dikreditkan {amount}{note} — ditambahkan ke saldo Anda dan akan diterapkan otomatis pada biaya mendatang.",
@@ -13342,7 +13342,7 @@ const termsContent = {
       body:`<table class="tier-table" style="margin:0 0 10px;">
         <thead><tr><th>Booking value</th><th>Fee</th></tr></thead>
         <tbody>
-          <tr><td>Any confirmed booking</td><td class="mono">10% of tour price</td></tr>
+          <tr><td>Any confirmed booking</td><td class="mono">15% of tour price</td></tr>
           <tr><td>Featured placement (optional, auto-expires after 1 month)</td><td class="mono">IDR 100,000 / month</td></tr>
         </tbody>
       </table>
@@ -13377,7 +13377,7 @@ const termsContent = {
       body:`<table class="tier-table" style="margin:0 0 10px;">
         <thead><tr><th>Buchungswert</th><th>Gebühr</th></tr></thead>
         <tbody>
-          <tr><td>Jede bestätigte Buchung</td><td class="mono">10% des Tourpreises</td></tr>
+          <tr><td>Jede bestätigte Buchung</td><td class="mono">15% des Tourpreises</td></tr>
           <tr><td>Featured Placement (optional)</td><td class="mono">IDR 75.000 / Wo.</td></tr>
         </tbody>
       </table>
@@ -13412,7 +13412,7 @@ const termsContent = {
       body:`<table class="tier-table" style="margin:0 0 10px;">
         <thead><tr><th>Nilai pemesanan</th><th>Biaya</th></tr></thead>
         <tbody>
-          <tr><td>Setiap pemesanan terkonfirmasi</td><td class="mono">10% dari harga tur</td></tr>
+          <tr><td>Setiap pemesanan terkonfirmasi</td><td class="mono">15% dari harga tur</td></tr>
           <tr><td>Featured placement (opsional)</td><td class="mono">IDR 75.000 / mgg</td></tr>
         </tbody>
       </table>
@@ -14055,14 +14055,16 @@ ${bpt('driverFeeLine')}</div>`;
       // Bugfix (5. August): vorher stand hier immer fest 10% -- eine Sonderkondition (z.B. VIP-Bonus
       // 0%) wurde beim Anlegen einer neuen Buchung schlicht ignoriert. Jetzt wird die tatsaechlich
       // aktive Sonderkondition des gebuchten Fahrers abgefragt, genau wie im Fahrer-Dashboard.
-      let feePercent = 10;
+      // (12.9.: Standard-Fallback nutzt jetzt DEFAULT_FEE_PERCENT-Konstante statt eigener Zahl,
+      // damit es nur noch EINE Stelle gibt, die den Standardsatz kennt.)
+      let feePercent = DEFAULT_FEE_PERCENT;
       try{
         const today = new Date().toISOString().slice(0,10);
         const { data: ov } = await supabaseClient.from('fee_overrides').select('fee_percent')
           .eq('driver_id', bookingDriverId).lte('starts_at', today)
           .or(`ends_at.is.null,ends_at.gte.${today}`).order('created_at', { ascending:false }).limit(1);
         if(ov && ov.length) feePercent = Number(ov[0].fee_percent);
-      }catch(err){ console.error('Sonderkondition konnte nicht geladen werden, nutze Standard 10%:', err); }
+      }catch(err){ console.error('Sonderkondition konnte nicht geladen werden, nutze Standard '+DEFAULT_FEE_PERCENT+'%:', err); }
       const feeIdr = Math.round(priceNum * feePercent / 100);
       // Bugfix: die ID wird jetzt im Browser erzeugt statt per .select() zurueckgelesen -- ein
       // nicht eingeloggter Kunde darf laut Datenbank-Regeln zwar eine Buchung ANLEGEN, aber nicht
@@ -17065,7 +17067,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v416</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v417</div>
 
 <!-- Etappe 4: Lade-Overlay waehrend "Buchung annehmen" im Hintergrund laeuft (kann bei VIP-Fahrern
      mit Auto-Einzug ein paar Sekunden dauern, da erst mit Xendit gesprochen wird, bevor die
