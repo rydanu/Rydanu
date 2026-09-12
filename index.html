@@ -2302,7 +2302,7 @@
           <span class="plan-chip plan-chip-clickable" style="text-align:left;" onclick="openTerms('fees')">
             <span class="fee-rate-badge-label" data-i18n="plan_chip_line1">Free listing</span>
             <span class="fee-rate-badge-main" data-i18n="plan_chip_line2">15% commission per booking</span>
-            <span class="fee-rate-badge-sub" data-i18n="plan_chip_line3">20% for villa requests</span>
+            <span class="fee-rate-badge-sub" data-i18n="plan_chip_line3">25% for villa requests</span>
           </span>
           <div id="current-fee-rate-display" class="fee-rate-badge" style="text-align:left; display:none;"></div>
         </div>
@@ -2578,7 +2578,7 @@
             <div style="font-size:0.98rem; font-weight:800; color:var(--ink);">🏠 <span data-i18n="villa_source_tag">Villa Partner</span></div>
             <div class="when" style="margin-top:4px;" data-i18n="fees_overview_villa_note">Platform fee for Villa Partner bookings (instead of the usual 15%)</div>
           </div>
-          <span class="mono" style="font-weight:800; font-size:1.1rem; color:var(--teal); white-space:nowrap;" data-i18n="fees_villa_rate_val">20% of tour price</span>
+          <span class="mono" style="font-weight:800; font-size:1.1rem; color:var(--teal); white-space:nowrap;" data-i18n="fees_villa_rate_val">25% of tour price</span>
         </div>
 
         <div class="panel" style="background:var(--teal-soft); border-color:var(--teal); padding:20px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center; gap:14px; flex-wrap:wrap;">
@@ -8670,7 +8670,7 @@ function renderVillaRequests(){
 }
 // Nach erfolgreicher Uebernahme geht es NICHT in ein eigenes Villa-Buchungsformular, sondern direkt
 // in das bestehende individuelle Angebot (gleicher Baustein wie bei normalen Touranfragen) --
-// die Villa-Zuordnung + der 20%-Satz laufen dabei transparent im Hintergrund mit (siehe
+// die Villa-Zuordnung + der 25%-Satz laufen dabei transparent im Hintergrund mit (siehe
 // confirm_custom_tour_request in der Datenbank).
 // Villa-Anfrage Detail-Modal (21.8., Joerg-Wunsch): oeffnet die volle Ansicht einer offenen
 // Villa-Anfrage, bevor der Fahrer "Annehmen" antippen kann. villaDetailRequestId merkt sich,
@@ -9518,7 +9518,7 @@ async function renderVillaBookingsList(){
   if(!villaId){ listEl.innerHTML = ''; statsEl.innerHTML = ''; return; }
   const { data: bookings, error } = await supabaseClient
     .from('bookings')
-    .select('id, customer_name, booking_date, status, price_idr, fee_idr, villa_commissions(villa_amount_idr, rydanu_amount_idr, status)')
+    .select('id, customer_name, booking_date, status, price_idr, fee_idr, fee_percent_applied, villa_commissions(villa_amount_idr, rydanu_amount_idr, status)')
     .eq('villa_partner_id', villaId)
     .order('booking_date', { ascending:false });
   if(error){ console.error('Villa-Buchungen konnten nicht geladen werden:', error); listEl.innerHTML = '<div class="empty-state">Fehler beim Laden.</div>'; return; }
@@ -9543,7 +9543,7 @@ async function renderVillaBookingsList(){
     <div class="booking-row">
       <div>
         <div class="who">${escapeHtml(b.customer_name || '—')}</div>
-        <div class="when">${b.booking_date || '—'} · ${formatIDR(b.price_idr)} · Fahrer-Gebühr ${formatIDR(b.fee_idr)} (20%)</div>
+        <div class="when">${b.booking_date || '—'} · ${formatIDR(b.price_idr)} · Fahrer-Gebühr ${formatIDR(b.fee_idr)} (${b.fee_percent_applied ?? '—'}%)</div>
         ${comm ? `<div class="when">Villa: <strong>${formatIDR(comm.villa_amount_idr)}</strong> ${comm.status==='paid' ? '✓ ausgezahlt' : '(offen)'} · Rydanu: ${formatIDR(comm.rydanu_amount_idr)}</div>` : `<div class="when" style="font-style:italic;">Provision entsteht erst bei Bestätigung</div>`}
       </div>
       <span class="status-pill ${b.status==='completed' || b.status==='confirmed' ? 'confirmed' : ''}">${statusLabels[b.status] || b.status}</span>
@@ -12889,7 +12889,7 @@ async function openInvoiceDetail(invoiceId){
 
   // Bugfix (5.9., Joerg gemeldet per Screenshot): eine starre 4-Spalten-Tabelle (Position/Menge/
   // Einzelpreis/Gesamt) ohne Zellenabstand funktioniert auf dem Handy nicht, sobald die Position
-  // laenger ist (z.B. "Buchung #4 (25.08.2026) — Fahrpreis 500.000 IDR, Satz 10%") -- die 3 Zahlen-
+  // laenger ist (z.B. "Buchung #4 (25.08.2026) — Fahrpreis 500.000 IDR, Satz 15%") -- die 3 Zahlen-
   // Spalten wurden dann so schmal gequetscht, dass "Menge"/"Einzelpreis"/"Gesamt" ohne jeden Abstand
   // ineinanderliefen. Jetzt zeilenweise (gleiches .booking-row-Muster wie ueberall sonst in der App):
   // Position wird oben in voller Breite angezeigt und darf frei umbrechen, der Betrag steht rechts
@@ -13378,6 +13378,7 @@ const termsContent = {
         <thead><tr><th>Buchungswert</th><th>Gebühr</th></tr></thead>
         <tbody>
           <tr><td>Jede bestätigte Buchung</td><td class="mono">15% des Tourpreises</td></tr>
+          <tr><td>Villa-Partner-Buchung</td><td class="mono">25% des Tourpreises</td></tr>
           <tr><td>Featured Placement (optional)</td><td class="mono">IDR 75.000 / Wo.</td></tr>
         </tbody>
       </table>
@@ -13413,6 +13414,7 @@ const termsContent = {
         <thead><tr><th>Nilai pemesanan</th><th>Biaya</th></tr></thead>
         <tbody>
           <tr><td>Setiap pemesanan terkonfirmasi</td><td class="mono">15% dari harga tur</td></tr>
+          <tr><td>Pemesanan Villa Partner</td><td class="mono">25% dari harga tur</td></tr>
           <tr><td>Featured placement (opsional)</td><td class="mono">IDR 75.000 / mgg</td></tr>
         </tbody>
       </table>
@@ -17067,7 +17069,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v417</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v418</div>
 
 <!-- Etappe 4: Lade-Overlay waehrend "Buchung annehmen" im Hintergrund laeuft (kann bei VIP-Fahrern
      mit Auto-Einzug ein paar Sekunden dauern, da erst mit Xendit gesprochen wird, bevor die
