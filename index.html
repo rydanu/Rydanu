@@ -444,6 +444,13 @@
   }
   .book-btn:active{ transform:scale(0.98); }
   .modal-body .note{ font-size:0.78rem; color:var(--ink-soft); margin-top:12px; text-align:center; }
+  /* Bugfix (12.9., Joerg-Screenshot): der globale Reset (*{padding:0}) weiter oben nimmt auch
+     <ul>/<li> ihren Standard-Einzug -- dadurch landete eine umgebrochene Zeile (v.a. auffaellig
+     bei kurzen letzten Woertern wie "zutrifft.") buendig am linken Rand statt sauber unter dem
+     Aufzaehlungspunkt eingerueckt. Gezielter Einzug fuer alle Listen in Modals (z.B. "Terms"). */
+  .modal-body ul{ padding-left:20px; margin-bottom:4px; }
+  .modal-body ul li{ margin-bottom:8px; }
+  .modal-body ul li:last-child{ margin-bottom:0; }
 
   .form-field{ margin-bottom:17px; }
   .form-field label{ display:block; font-size:0.78rem; font-weight:600; margin-bottom:7px; color:var(--ink-soft); }
@@ -13348,7 +13355,7 @@ const termsContent = {
       </table>
       <ul>
         <li>Listing & profile are always free — you only pay once a guest confirms a booking.</li>
-        <li>Fees are collected monthly; you can pay them anytime under "Fees & billing".</li>
+        <li>Fees are deducted immediately from your balance as soon as a booking is confirmed — no monthly collection.</li>
         <li>Some drivers may have an individually agreed commission rate for a set period — this is shown to you directly if it applies.</li>
       </ul>`
     },
@@ -13384,7 +13391,7 @@ const termsContent = {
       </table>
       <ul>
         <li>Listing & Profil sind immer kostenlos — du zahlst nur, sobald ein Gast eine Buchung bestätigt.</li>
-        <li>Gebühren werden monatlich abgerechnet; du kannst sie jederzeit unter "Gebühren & Abrechnung" bezahlen.</li>
+        <li>Gebühren werden sofort bei Buchungsbestätigung direkt von deinem Guthaben abgezogen — kein monatliches Sammeln mehr.</li>
         <li>Für einzelne Fahrer kann für einen festgelegten Zeitraum ein individueller Gebührensatz gelten — dies wird dir direkt angezeigt, falls es zutrifft.</li>
       </ul>`
     },
@@ -13420,7 +13427,7 @@ const termsContent = {
       </table>
       <ul>
         <li>Listing & profil selalu gratis — Anda hanya membayar setelah tamu mengonfirmasi pemesanan.</li>
-        <li>Biaya dikumpulkan setiap bulan; Anda dapat membayarnya kapan saja di "Biaya & tagihan".</li>
+        <li>Biaya langsung dipotong dari saldo Anda begitu pemesanan dikonfirmasi — tidak ada penagihan bulanan lagi.</li>
         <li>Sebagian sopir mungkin memiliki tarif komisi yang disepakati secara individual untuk periode tertentu — ini akan ditampilkan langsung kepada Anda jika berlaku.</li>
       </ul>`
     },
@@ -17069,7 +17076,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v419</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v420</div>
 
 <!-- Etappe 4: Lade-Overlay waehrend "Buchung annehmen" im Hintergrund laeuft (kann bei VIP-Fahrern
      mit Auto-Einzug ein paar Sekunden dauern, da erst mit Xendit gesprochen wird, bevor die
