@@ -2700,6 +2700,11 @@
         <span class="at-title">Rechnungen</span>
         <span class="at-sub">Rechnungen für Fahrer &amp; Villa-Partner erstellen, archivieren &amp; verwalten</span>
       </button>
+      <button type="button" class="admin-tile" id="admin-tile-interessenten" onclick="showAdminSection('interessenten'); loadInteressentenList();">
+        <span class="at-icon">📋</span>
+        <span class="at-title">Interessenten</span>
+        <span class="at-sub">Vorab-Akquise Fahrer &amp; Villen verwalten, per WhatsApp einladen</span>
+      </button>
     </div>
 
     <button type="button" class="admin-back-link" id="admin-back-link" onclick="showAdminHome()" style="display:none;">‹ Zurück zur Übersicht</button>
@@ -3215,6 +3220,64 @@
       <p class="form-error" id="villa-new-status"></p>
     </div>
     </div>
+    </div>
+    </div>
+
+    <div id="admin-sec-interessenten" style="display:none;">
+    <h2 class="admin-sec-title">📋 Interessenten</h2>
+    <p class="dash-head" style="display:block; margin-bottom:14px;">Fahrer und Villen, die sich über die Demo-Seiten vorregistriert haben oder die du selbst auf Social Media gefunden hast. Lade sie per WhatsApp ein, sobald du bereit bist.</p>
+
+    <div id="int-view-list">
+      <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px; align-items:flex-end;">
+        <div class="form-field" style="margin-bottom:0;">
+          <label>Typ</label>
+          <select id="int-filter-typ" onchange="renderInteressentenList()">
+            <option value="">Alle</option>
+            <option value="fahrer">Fahrer</option>
+            <option value="villa">Villa</option>
+          </select>
+        </div>
+        <div class="form-field" style="margin-bottom:0;">
+          <label>Status</label>
+          <select id="int-filter-status" onchange="renderInteressentenList()">
+            <option value="">Alle</option>
+            <option value="offen">Offen</option>
+            <option value="eingeladen">Eingeladen</option>
+            <option value="registriert">Registriert</option>
+          </select>
+        </div>
+        <button type="button" class="link-btn" onclick="resetInteressentenFilters()" style="width:auto; padding:8px 4px;">Filter zurücksetzen</button>
+      </div>
+      <button type="button" class="add-btn" onclick="openNewInteressentForm()" style="margin-bottom:18px;">+ Interessent anlegen</button>
+      <div id="int-list"><div class="empty-state">Lädt…</div></div>
+    </div>
+
+    <div id="int-view-new" style="display:none;">
+      <button type="button" class="admin-back-link" style="display:inline-flex; margin-bottom:14px;" onclick="showInteressentView('list')">‹ Zurück zur Liste</button>
+      <h3 style="margin-top:0;">Neuen Interessenten anlegen</h3>
+      <div class="panel" style="padding:16px; max-width:420px;">
+        <div class="form-field">
+          <label>Typ</label>
+          <select id="int-form-typ">
+            <option value="fahrer">Fahrer</option>
+            <option value="villa">Villa</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label>Name</label>
+          <input type="text" id="int-form-name" placeholder="z.B. Made Surya oder Villa Sunset Ubud">
+        </div>
+        <div class="form-field">
+          <label>WhatsApp-Nummer</label>
+          <input type="text" id="int-form-whatsapp" placeholder="+62 812 3456 7890">
+        </div>
+        <div class="form-field">
+          <label>Region</label>
+          <input type="text" id="int-form-region" placeholder="z.B. Ubud">
+        </div>
+        <button type="button" class="period-btn" onclick="addManualInteressent()" style="background:var(--gold); border-color:var(--gold); color:var(--ink); font-weight:700;">Anlegen</button>
+        <p class="form-error" id="int-form-status"></p>
+      </div>
     </div>
     </div>
 
@@ -16069,7 +16132,7 @@ async function rejectRealDriver(id){
   alert(msgError ? 'Fahrer abgelehnt ✓ (die Benachrichtigung konnte allerdings nicht gesendet werden)' : 'Fahrer abgelehnt ✓');
 }
 // ---- Admin: Kachelmenü <-> einzelne Abschnitte (weniger Scrollen) ----
-const ADMIN_SECTIONS = ['pending','openpay','stats','driverstats','messages','block','documents','money','villa','villabookings','pwreset','invoices'];
+const ADMIN_SECTIONS = ['pending','openpay','stats','driverstats','messages','block','documents','money','villa','villabookings','pwreset','invoices','interessenten'];
 function showAdminSection(id){
   const menu = document.getElementById('admin-tile-menu');
   if(menu) menu.style.display = 'none';
@@ -16123,6 +16186,115 @@ function renderAdminList(){
 function renderAdminBlockList(){
   if(realDriverProfile || isAdminSession) renderRealAdminBlockList();
 }
+
+// ===== Admin: Interessenten (Vorab-Akquise Fahrer/Villen, 15.9.2026) =====
+// Eigene, von den echten drivers/villa_partners Tabellen komplett getrennte Tabelle
+// "interessenten" (siehe Vorab-Akquise-Plan). Wird aus den Demo-Seiten (getrydanu.app/demo,
+// /demo-villa) per Formular befuellt (quelle='demo_formular') oder hier manuell angelegt
+// (quelle='manuell').
+function showInteressentView(view){
+  const listEl = document.getElementById('int-view-list');
+  const newEl = document.getElementById('int-view-new');
+  if(listEl) listEl.style.display = view==='list' ? '' : 'none';
+  if(newEl) newEl.style.display = view==='new' ? '' : 'none';
+  if(view === 'new'){
+    document.getElementById('int-form-typ').value = 'fahrer';
+    document.getElementById('int-form-name').value = '';
+    document.getElementById('int-form-whatsapp').value = '';
+    document.getElementById('int-form-region').value = '';
+    document.getElementById('int-form-status').textContent = '';
+  }
+}
+function openNewInteressentForm(){ showInteressentView('new'); }
+function resetInteressentenFilters(){
+  document.getElementById('int-filter-typ').value = '';
+  document.getElementById('int-filter-status').value = '';
+  renderInteressentenList();
+}
+function loadInteressentenList(){
+  showInteressentView('list');
+  renderInteressentenList();
+}
+async function renderInteressentenList(){
+  const listEl = document.getElementById('int-list');
+  if(!listEl) return;
+  listEl.innerHTML = '<div class="empty-state">Lädt…</div>';
+  const typFilter = document.getElementById('int-filter-typ').value;
+  const statusFilter = document.getElementById('int-filter-status').value;
+  let query = supabaseClient.from('interessenten')
+    .select('id, name, whatsapp, typ, region, status, quelle, created_at')
+    .order('created_at', { ascending:false });
+  if(typFilter) query = query.eq('typ', typFilter);
+  if(statusFilter) query = query.eq('status', statusFilter);
+  const { data, error } = await query;
+  if(error){ listEl.innerHTML = '<div class="empty-state">Fehler beim Laden: '+escapeHtml(error.message)+'</div>'; return; }
+  const rows = data || [];
+  if(rows.length === 0){ listEl.innerHTML = '<div class="empty-state">Keine Interessenten gefunden.</div>'; return; }
+  listEl.innerHTML = rows.map(r => {
+    const typIcon = r.typ === 'villa' ? '🏠' : '🚗';
+    const statusPill = r.status === 'offen'
+      ? '<span class="status-pill pending">Offen</span>'
+      : r.status === 'eingeladen'
+        ? '<span class="status-pill confirmed">Eingeladen</span>'
+        : '<span class="status-pill" style="background:var(--ink); color:var(--paper);">Registriert</span>';
+    const quelleBadge = r.quelle === 'manuell' ? '<span class="status-pill" style="background:var(--paper-dim); color:var(--ink-soft); margin-left:6px;">manuell</span>' : '';
+    const safeWa = String(r.whatsapp||'').replace(/'/g,"\\'");
+    return `
+    <div class="booking-row">
+      <div>
+        <div class="who">${typIcon} ${escapeHtml(r.name)}</div>
+        <div class="when">${escapeHtml(r.whatsapp||'—')} · ${escapeHtml(r.region||'—')}</div>
+      </div>
+      <div class="row-actions">
+        ${statusPill}${quelleBadge}
+        <button type="button" class="accept-btn" onclick="inviteInteressentWhatsApp('${r.id}', '${r.typ}', '${safeWa}')">📲 Einladen</button>
+        ${r.status !== 'registriert' ? `<button type="button" class="link-btn" onclick="markInteressentRegistered('${r.id}')">✓ Registriert</button>` : ''}
+        <button type="button" class="cancel-btn" onclick="deleteInteressent('${r.id}')">🗑️</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function addManualInteressent(){
+  const typ = document.getElementById('int-form-typ').value;
+  const name = document.getElementById('int-form-name').value.trim();
+  const whatsapp = document.getElementById('int-form-whatsapp').value.trim();
+  const region = document.getElementById('int-form-region').value.trim();
+  const statusEl = document.getElementById('int-form-status');
+  if(!name || !whatsapp){ statusEl.style.color=''; statusEl.textContent = 'Bitte Name und WhatsApp-Nummer ausfüllen.'; return; }
+  const { error } = await supabaseClient.from('interessenten').insert({
+    name, whatsapp, typ, region: region || null, status: 'offen', quelle: 'manuell'
+  });
+  if(error){ statusEl.style.color='var(--danger)'; statusEl.textContent = 'Fehler: ' + error.message; return; }
+  showInteressentView('list');
+  renderInteressentenList();
+}
+
+// Texte 1:1 aus dem abgestimmten Vorab-Akquise-Plan (14.9.2026) uebernommen.
+const INTERESSENT_WA_TEXT = {
+  fahrer: "Hi! \ud83d\ude97 We're building Rydanu \u2014 a new platform to get Bali drivers more bookings, beyond just WhatsApp regulars. As one of the first drivers, you'd get 60 days at 0% commission before the official launch.\n\nTake a look here: https://getrydanu.app/demo\n\nIf you like what you see, you can register your interest directly on that page \u2014 no commitment yet, the real registration opens closer to launch.",
+  villa: "Hi! \ud83c\udfe8 We're building Rydanu \u2014 a platform where your guests can book a trusted local driver directly through a link or QR code in their room, and you earn a fixed commission on every booking, at no cost to you.\n\nHere's what Rydanu looks like: https://getrydanu.app/demo-villa\n\nAnd here's exactly what your guest would see when booking through you \u2014 their request goes straight to all available drivers, so they get an instant response: https://getrydanu.app/demo-villa/anfrage\n\nInterested? You can register your interest directly on the first page."
+};
+
+async function inviteInteressentWhatsApp(id, typ, whatsapp){
+  const text = INTERESSENT_WA_TEXT[typ] || INTERESSENT_WA_TEXT.fahrer;
+  await supabaseClient.from('interessenten').update({ status: 'eingeladen' }).eq('id', id).eq('status', 'offen');
+  window.location.href = waCallLinkWithText(whatsapp, text);
+}
+
+async function markInteressentRegistered(id){
+  const { error } = await supabaseClient.from('interessenten').update({ status: 'registriert' }).eq('id', id);
+  if(error){ alert('Fehler: ' + error.message); return; }
+  renderInteressentenList();
+}
+
+async function deleteInteressent(id){
+  if(!confirm('Diesen Interessenten wirklich l\u00f6schen?')) return;
+  const { error } = await supabaseClient.from('interessenten').delete().eq('id', id);
+  if(error){ alert('L\u00f6schen fehlgeschlagen: ' + error.message); return; }
+  renderInteressentenList();
+}
+
 function openDriversBlockModal(){ document.getElementById('drivers-block-modal-bg').classList.add('active'); renderAdminBlockList(); }
 function closeDriversBlockModal(){ document.getElementById('drivers-block-modal-bg').classList.remove('active'); }
 document.getElementById('drivers-block-modal-bg').addEventListener('click', e=>{ if(e.target.id==='drivers-block-modal-bg') closeDriversBlockModal(); });
@@ -17069,7 +17241,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v419</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v420</div>
 
 <!-- Etappe 4: Lade-Overlay waehrend "Buchung annehmen" im Hintergrund laeuft (kann bei VIP-Fahrern
      mit Auto-Einzug ein paar Sekunden dauern, da erst mit Xendit gesprochen wird, bevor die
