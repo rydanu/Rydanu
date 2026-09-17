@@ -2031,6 +2031,10 @@
           <input type="tel" id="f-phone" required inputmode="tel" placeholder="812 3456 7890" style="flex:1;">
         </div>
       </div>
+      <div class="form-field">
+        <label data-i18n-html="lbl_wechat_optional">WeChat ID <span class="optional">(optional — if you'd rather be reached there)</span></label>
+        <input type="text" id="f-wechat" placeholder="e.g. your_wechat_id">
+      </div>
       <div class="form-row">
         <div class="form-field">
           <label data-i18n="lbl_date">Date</label>
@@ -3768,6 +3772,10 @@
         </div>
       </div>
       <div class="form-field">
+        <label data-i18n-html="lbl_wechat_optional">WeChat ID <span class="optional">(optional — if you'd rather be reached there)</span></label>
+        <input type="text" id="tr-wechat" placeholder="e.g. your_wechat_id">
+      </div>
+      <div class="form-field">
         <label data-i18n="tr_email_label">Email address *</label>
         <input type="email" id="tr-email" placeholder="you@email.com">
       </div>
@@ -4011,6 +4019,10 @@
       </div>
       <div class="row" id="bd-row-phone-actions" style="display:none; justify-content:flex-end; gap:8px; padding-top:0;">
         <a id="bd-phone-wa-btn" class="link-btn" style="width:auto; padding:6px 14px; font-size:0.82rem;" href="#" target="_blank" rel="noopener">💬 <span data-i18n="btn_whatsapp_contact">Contact via WhatsApp</span></a>
+      </div>
+      <div class="row" id="bd-row-wechat">
+        <span class="k" data-i18n="bd_wechat">WeChat</span>
+        <span class="v" id="bd-wechat"></span>
       </div>
       <div class="row" id="bd-row-pickup"><span class="k" data-i18n="lbl_pickup_loc">Pickup location</span><span class="v" id="bd-pickup"></span></div>
       <div class="row" id="bd-row-destination"><span class="k" data-i18n="lbl_airport_destination">Destination region</span><span class="v" id="bd-destination"></span> <button type="button" class="link-btn" style="margin-left:8px;" onclick="openBookingDetailMap()">🗺️</button></div>
@@ -4870,6 +4882,8 @@ async function submitTourRequest(){
   const email = document.getElementById('tr-email').value.trim();
   const phoneRaw = document.getElementById('tr-phone').value.trim();
   const trCountry = document.getElementById('tr-country').value;
+  const wechatEl = document.getElementById('tr-wechat');
+  const wechat = wechatEl ? wechatEl.value.trim() : '';
   const destination = document.getElementById('tr-destination').value.trim();
   const trTime = document.getElementById('tr-time').value;
   // Bugfix (2.9., Joerg gemeldet): E-Mail war hier bisher optional, wird aber zwingend gebraucht,
@@ -4907,6 +4921,7 @@ async function submitTourRequest(){
     const { error } = await supabaseClient.from('tour_inquiries').insert({
       id: newId, driver_id: trRequestDriverId, customer_name: name, customer_email: email || null,
       customer_phone: phone || null, destination, date_wanted: dateWanted || null, pickup: pickup || null,
+      customer_wechat: wechat || null,
       guests, notes: notes || null, ref, highlights: trSelectedHighlights,
       trip_type: trSelectedTripType || null, pickup_time: pickupTimeVal
     });
@@ -7307,7 +7322,9 @@ function mapBookingRowToUI(row){
     when: formatDateDisplay(row.booking_date),
     dateISO: row.booking_date,
     status: row.status,
-    email: '', phone: (row.status !== 'pending' && row.status !== 'declined_by_driver') ? (row.customer_phone || '') : '', pickup: row.pickup || '',
+    email: '', phone: (row.status !== 'pending' && row.status !== 'declined_by_driver') ? (row.customer_phone || '') : '',
+    wechat: (row.status !== 'pending' && row.status !== 'declined_by_driver') ? (row.customer_wechat || '') : '',
+    pickup: row.pickup || '',
     pickupTime: row.pickup_time || '',
     price: formatIDR(row.price_idr),
     balance: formatIDR(row.price_idr || 0),
@@ -8722,6 +8739,7 @@ function renderVillaRequests(){
           <div class="when">${whenText} · ${r.guests || '—'} ${t('lbl_guests')}</div>
           ${r.pickup ? `<div class="when">📍 ${escapeHtml(r.pickup)}</div>` : ''}
           ${(r.customer_phone && r.status === 'booked') ? `<div class="when">📞 ${escapeHtml(r.customer_phone)}</div>` : ''}
+          ${(r.customer_wechat && r.status === 'booked') ? `<div class="when">💬 WeChat: ${escapeHtml(r.customer_wechat)}</div>` : ''}
           ${r.notes ? `<div class="when" style="font-style:italic;">"${escapeHtml(r.notes)}"</div>` : ''}
           <span class="status-pill" style="background:var(--accent-light,#eef4ee);">${t('villa_source_tag')}</span>
         </div>
@@ -10216,6 +10234,7 @@ function openBookingDetail(source, idx){
     ['bd-row-email', 'bd-email', b.email],
     ['bd-row-time', 'bd-time', b.pickupTime],
     ['bd-row-phone', 'bd-phone', b.phone],
+    ['bd-row-wechat', 'bd-wechat', b.wechat],
     ['bd-row-pickup', 'bd-pickup', b.pickup],
     ['bd-row-destination', 'bd-destination', b.destination],
     ['bd-row-price', 'bd-price', b.price],
@@ -10752,7 +10771,7 @@ const translations = {
     lbl_rating: "Rating", lbl_price: "Price", lbl_not_included: "Not included", lbl_driver: "Driver",
     lbl_date: "Date", lbl_time: "Time", lbl_guests: "Guests", lbl_notes_for_driver: "Notes for the driver", btn_whatsapp_contact: "Contact via WhatsApp", join_rydanu_eyebrow: "Join Rydanu", register_driver_modal_title: "Register as new driver", pm_conv_not_found_title: "Conversation not found", pm_conv_not_found_body: "This link may be invalid, or the conversation may have been removed. Please contact your driver directly.", pm_conv_with_prefix: "Your conversation with", pm_your_reply_label: "Your reply", pm_reply_placeholder: "Write your reply...", pm_send_reply_btn: "Send reply", pm_write_message_first: "Please write a message first.", oc_offer_not_found_title: "Offer not found", oc_offer_not_found_body: "This link may be invalid, or the offer may have been withdrawn. Please contact your driver directly.", oc_already_confirmed_title: "Already confirmed", oc_already_confirmed_body: "You already confirmed this booking — see you soon!", oc_no_longer_available_title: "This offer is no longer available", oc_no_longer_available_body: "Please contact your driver directly for an updated offer.", oc_offer_from_prefix: "Your tour offer from", oc_confirm_btn: "Confirm this booking", oc_confirm_payment_note: "By confirming, you agree to arrange payment directly with your driver, as usual on Rydanu.", oc_decline_btn: "Decline this offer", oc_decline_confirm: "Decline this offer? This offer will be closed and cannot be un-declined — if you still want a transfer, you will need to submit a new request.", oc_declined_title: "Offer declined", oc_declined_body: "Your driver has been informed. This offer is now closed and can't be confirmed later — if you'd still like a transfer or tour, please submit a new request and a driver will get back to you with a fresh offer.", oc_confirm_err: "Something went wrong confirming this booking. Please try again, or contact your driver directly.", oc_confirm_driver_unavailable: "This driver can't accept new bookings right now. Please contact them directly, or submit a new request to find another driver.", payment_processing_title: "Processing payment…", payment_processing_note: "This can take a few seconds, please wait.", accept_err_low_balance: "This booking couldn't be confirmed — your balance buffer is reached. Please top up your balance first.", accept_err_generic: "Something went wrong confirming this booking. Please try again in a moment.", accept_err_autodebit_failed: "The automatic top-up didn't go through, so your account has been temporarily locked. Rydanu has been notified — please top up manually or contact support.", accept_err_account_locked: "Your account is locked. Please contact support to get it unlocked.", lbl_total: "Total tour price", lbl_pickup: "Pickup", lbl_tour_singular: "tour", lbl_tour_plural: "tours", lbl_rating_new: "New",
     lbl_total_price_due: "Total — pay driver directly", lbl_ryvio_fee: "Rydanu fee", lbl_your_car: "Your driver's car",
-    lbl_fullname: "Full name", lbl_whatsapp: 'WhatsApp number <span class="optional">(for booking confirmation)</span>', ep_eyebrow: "Your profile", ep_title: "Edit profile", ep_address_label: "Full address (required for invoices)", ep_taxnumber_label: "Tax number (optional)",
+    lbl_fullname: "Full name", lbl_whatsapp: 'WhatsApp number <span class="optional">(for booking confirmation)</span>', lbl_wechat_optional: 'WeChat ID <span class="optional">(optional — if you\'d rather be reached there)</span>', bd_wechat: "WeChat", ep_eyebrow: "Your profile", ep_title: "Edit profile", ep_address_label: "Full address (required for invoices)", ep_taxnumber_label: "Tax number (optional)",
     lbl_pickup_loc: "Pickup location", lbl_pickup_dropoff_loc: "Pickup / drop-off location", lbl_airport_destination: "Destination region", lbl_transfer_destination: "Destination", lbl_pickup_region: "Your pickup region",
     lbl_balance: "Balance — pay driver in cash on the day",
     pay_direct_hint: "💵 You pay your driver directly in cash when you meet. No payment is due now, and Rydanu never handles your money.",
@@ -11126,7 +11145,7 @@ const translations = {
     lbl_rating: "Bewertung", lbl_price: "Preis", lbl_not_included: "Nicht enthalten", lbl_driver: "Fahrer",
     lbl_date: "Datum", lbl_time: "Uhrzeit", lbl_guests: "Gäste", lbl_notes_for_driver: "Notizen für den Fahrer", btn_whatsapp_contact: "Per WhatsApp kontaktieren", join_rydanu_eyebrow: "Rydanu beitreten", register_driver_modal_title: "Als neuer Fahrer registrieren", pm_conv_not_found_title: "Unterhaltung nicht gefunden", pm_conv_not_found_body: "Dieser Link ist evtl. ungültig, oder die Unterhaltung wurde entfernt. Bitte kontaktiere deinen Fahrer direkt.", pm_conv_with_prefix: "Deine Unterhaltung mit", pm_your_reply_label: "Deine Antwort", pm_reply_placeholder: "Antwort schreiben...", pm_send_reply_btn: "Antwort senden", pm_write_message_first: "Bitte zuerst eine Nachricht schreiben.", oc_offer_not_found_title: "Angebot nicht gefunden", oc_offer_not_found_body: "Dieser Link ist evtl. ungültig, oder das Angebot wurde zurückgezogen. Bitte kontaktiere deinen Fahrer direkt.", oc_already_confirmed_title: "Bereits bestätigt", oc_already_confirmed_body: "Du hast diese Buchung bereits bestätigt — bis bald!", oc_no_longer_available_title: "Dieses Angebot ist nicht mehr verfügbar", oc_no_longer_available_body: "Bitte kontaktiere deinen Fahrer direkt für ein aktuelles Angebot.", oc_offer_from_prefix: "Dein Tour-Angebot von", oc_confirm_btn: "Diese Buchung bestätigen", oc_confirm_payment_note: "Mit der Bestätigung erklärst du dich einverstanden, die Zahlung wie gewohnt bei Rydanu direkt mit deinem Fahrer zu klären.", oc_decline_btn: "Angebot ablehnen", oc_decline_confirm: "Dieses Angebot ablehnen? Es wird geschlossen und kann danach nicht mehr bestätigt werden — falls du weiterhin einen Transfer möchtest, musst du eine neue Anfrage stellen.", oc_declined_title: "Angebot abgelehnt", oc_declined_body: "Dein Fahrer wurde informiert. Dieses Angebot ist jetzt geschlossen und kann später nicht mehr bestätigt werden — falls du weiterhin einen Transfer oder eine Tour möchtest, stelle bitte eine neue Anfrage, ein Fahrer meldet sich dann mit einem neuen Angebot.", oc_confirm_err: "Bei der Bestätigung ist etwas schiefgelaufen. Bitte nochmal versuchen oder deinen Fahrer direkt kontaktieren.", oc_confirm_driver_unavailable: "Dieser Fahrer kann gerade keine neuen Buchungen annehmen. Bitte kontaktiere ihn direkt oder stelle eine neue Anfrage für einen anderen Fahrer.", payment_processing_title: "Zahlung wird bearbeitet…", payment_processing_note: "Das kann ein paar Sekunden dauern, bitte warten.", accept_err_low_balance: "Diese Buchung konnte nicht bestätigt werden — dein Guthaben-Puffer ist erreicht. Bitte lade zuerst dein Guthaben auf.", accept_err_generic: "Bei der Bestätigung ist etwas schiefgelaufen. Bitte gleich nochmal versuchen.", accept_err_autodebit_failed: "Der automatische Einzug hat nicht geklappt, dein Account wurde vorübergehend gesperrt. Rydanu wurde informiert — bitte manuell aufladen oder den Support kontaktieren.", accept_err_account_locked: "Dein Account ist gesperrt. Bitte kontaktiere den Support, damit er wieder freigeschaltet wird.", lbl_total: "Gesamtpreis der Tour", lbl_pickup: "Abholung", lbl_tour_singular: "Tour", lbl_tour_plural: "Touren", lbl_rating_new: "Neu",
     lbl_total_price_due: "Gesamtbetrag — direkt an den Fahrer", lbl_ryvio_fee: "Rydanu-Gebühr", lbl_your_car: "Das Auto deines Fahrers",
-    lbl_fullname: "Vollständiger Name", lbl_whatsapp: 'WhatsApp-Nummer <span class="optional">(für die Buchungsbestätigung)</span>', ep_eyebrow: "Dein Profil", ep_title: "Profil bearbeiten", ep_address_label: "Vollständige Adresse (Pflichtangabe für Rechnungen)", ep_taxnumber_label: "Steuernummer (optional)",
+    lbl_fullname: "Vollständiger Name", lbl_whatsapp: 'WhatsApp-Nummer <span class="optional">(für die Buchungsbestätigung)</span>', lbl_wechat_optional: 'WeChat-ID <span class="optional">(optional — falls dein Fahrer dich lieber dort erreichen soll)</span>', bd_wechat: "WeChat", ep_eyebrow: "Dein Profil", ep_title: "Profil bearbeiten", ep_address_label: "Vollständige Adresse (Pflichtangabe für Rechnungen)", ep_taxnumber_label: "Steuernummer (optional)",
     lbl_pickup_loc: "Abholort", lbl_pickup_dropoff_loc: "Abhol-/Zielort", lbl_airport_destination: "Zielregion", lbl_transfer_destination: "Ziel", lbl_pickup_region: "Deine Abholregion",
     lbl_balance: "Restbetrag — bar an den Fahrer am Tourtag",
     pay_direct_hint: "💵 Du bezahlst deinen Fahrer direkt in bar, wenn ihr euch trefft. Jetzt ist nichts fällig, Rydanu verwaltet niemals dein Geld.",
@@ -11500,7 +11519,7 @@ const translations = {
     lbl_rating: "Rating", lbl_price: "Harga", lbl_not_included: "Tidak termasuk", lbl_driver: "Sopir",
     lbl_date: "Tanggal", lbl_time: "Waktu", lbl_guests: "Tamu", lbl_notes_for_driver: "Catatan untuk sopir", btn_whatsapp_contact: "Hubungi via WhatsApp", join_rydanu_eyebrow: "Bergabung dengan Rydanu", register_driver_modal_title: "Daftar sebagai sopir baru", pm_conv_not_found_title: "Percakapan tidak ditemukan", pm_conv_not_found_body: "Tautan ini mungkin tidak valid, atau percakapan telah dihapus. Silakan hubungi sopir Anda langsung.", pm_conv_with_prefix: "Percakapan Anda dengan", pm_your_reply_label: "Balasan Anda", pm_reply_placeholder: "Tulis balasan Anda...", pm_send_reply_btn: "Kirim balasan", pm_write_message_first: "Silakan tulis pesan terlebih dahulu.", oc_offer_not_found_title: "Penawaran tidak ditemukan", oc_offer_not_found_body: "Tautan ini mungkin tidak valid, atau penawaran telah ditarik. Silakan hubungi sopir Anda langsung.", oc_already_confirmed_title: "Sudah dikonfirmasi", oc_already_confirmed_body: "Anda sudah mengonfirmasi pemesanan ini — sampai jumpa!", oc_no_longer_available_title: "Penawaran ini sudah tidak tersedia", oc_no_longer_available_body: "Silakan hubungi sopir Anda langsung untuk penawaran terbaru.", oc_offer_from_prefix: "Penawaran tur Anda dari", oc_confirm_btn: "Konfirmasi pemesanan ini", oc_confirm_payment_note: "Dengan mengonfirmasi, Anda setuju untuk mengatur pembayaran langsung dengan sopir Anda, seperti biasa di Rydanu.", oc_decline_btn: "Tolak penawaran ini", oc_decline_confirm: "Tolak penawaran ini? Penawaran ini akan ditutup dan tidak dapat dibatalkan penolakannya — jika Anda masih ingin transfer, Anda perlu mengajukan permintaan baru.", oc_declined_title: "Penawaran ditolak", oc_declined_body: "Sopir Anda telah diberi tahu. Penawaran ini sekarang ditutup dan tidak dapat dikonfirmasi lagi — jika Anda masih ingin transfer atau tur, silakan ajukan permintaan baru dan sopir akan menghubungi Anda dengan penawaran baru.", oc_confirm_err: "Terjadi kesalahan saat mengonfirmasi pemesanan ini. Silakan coba lagi, atau hubungi sopir Anda langsung.", oc_confirm_driver_unavailable: "Sopir ini belum bisa menerima pemesanan baru saat ini. Silakan hubungi langsung, atau ajukan permintaan baru untuk mencari sopir lain.", payment_processing_title: "Memproses pembayaran…", payment_processing_note: "Ini bisa memakan waktu beberapa detik, mohon tunggu.", accept_err_low_balance: "Pemesanan ini tidak dapat dikonfirmasi — batas saldo Anda telah tercapai. Silakan isi ulang saldo Anda terlebih dahulu.", accept_err_generic: "Terjadi kesalahan saat mengonfirmasi pemesanan ini. Silakan coba lagi sebentar.", accept_err_autodebit_failed: "Isi ulang otomatis tidak berhasil, akun Anda sementara dikunci. Rydanu telah diberi tahu — silakan isi ulang manual atau hubungi dukungan.", accept_err_account_locked: "Akun Anda terkunci. Silakan hubungi dukungan untuk membukanya kembali.", lbl_total: "Total harga tur", lbl_pickup: "Penjemputan", lbl_tour_singular: "tur", lbl_tour_plural: "tur", lbl_rating_new: "Baru",
     lbl_total_price_due: "Total — bayar langsung ke sopir", lbl_ryvio_fee: "Biaya Rydanu", lbl_your_car: "Mobil sopir Anda",
-    lbl_fullname: "Nama lengkap", lbl_whatsapp: 'Nomor WhatsApp <span class="optional">(untuk konfirmasi pemesanan)</span>', ep_eyebrow: "Profil Anda", ep_title: "Edit profil", ep_address_label: "Alamat lengkap (wajib untuk faktur)", ep_taxnumber_label: "NPWP (opsional)",
+    lbl_fullname: "Nama lengkap", lbl_whatsapp: 'Nomor WhatsApp <span class="optional">(untuk konfirmasi pemesanan)</span>', lbl_wechat_optional: 'ID WeChat <span class="optional">(opsional — jika kamu lebih suka dihubungi lewat sana)</span>', bd_wechat: "WeChat", ep_eyebrow: "Profil Anda", ep_title: "Edit profil", ep_address_label: "Alamat lengkap (wajib untuk faktur)", ep_taxnumber_label: "NPWP (opsional)",
     lbl_pickup_loc: "Lokasi penjemputan", lbl_pickup_dropoff_loc: "Lokasi jemput/antar", lbl_airport_destination: "Wilayah tujuan", lbl_transfer_destination: "Tujuan", lbl_pickup_region: "Wilayah penjemputan Anda",
     lbl_balance: "Sisa — bayar tunai ke sopir pada hari tur",
     pay_direct_hint: "💵 Anda membayar sopir langsung secara tunai saat bertemu. Belum ada yang perlu dibayar sekarang, Rydanu tidak pernah menangani uang Anda.",
@@ -14019,6 +14038,8 @@ function confirmPayment(){
   const fCountry = document.getElementById('f-country').value;
   const phoneRaw = phoneRawInput ? normalizePhoneE164(phoneRawInput, fCountry) : '';
   const phone = phoneRaw || '+62 —';
+  const wechatEl = document.getElementById('f-wechat');
+  const wechat = wechatEl ? wechatEl.value.trim() : '';
   const pickup = document.getElementById('f-pickup').value.trim() || 'To be confirmed with driver';
   const date = document.getElementById('pay-date').textContent;
   const ref = 'RY-' + Math.floor(10000 + Math.random()*89999);
@@ -14139,6 +14160,7 @@ ${bpt('driverFeeLine')}</div>`;
         customer_name: name,
         customer_email: email,
         customer_phone: phoneRaw || null,
+        customer_wechat: wechat || null,
         pickup: pickup,
         booking_date: bookingDate,
         pickup_time: bookingTime,
@@ -14703,6 +14725,9 @@ async function initVillaRequestPage(slug){
           <input type="tel" id="vr-phone" required inputmode="tel" placeholder="${t('vr_phone_placeholder')}" style="flex:1;">
         </div>
       </label>
+      <label class="form-field" style="display:block; margin-bottom:12px;">${t('lbl_wechat_optional')}
+        <input type="text" id="vr-wechat" style="width:100%; margin-top:4px;">
+      </label>
       <label class="form-field" style="display:block; margin-bottom:12px;">${t('vr_email')} <span style="font-weight:400; opacity:0.7;">(${t('vr_email_hint')})</span>
         <input type="email" id="vr-email" required style="width:100%; margin-top:4px;">
       </label>
@@ -14767,7 +14792,8 @@ async function submitVillaRequest(slug){
     p_notes: document.getElementById('vr-notes').value.trim() || null,
     p_pickup_region: vrPickupRegion,
     p_customer_phone: phone,
-    p_trip_type: vrSelectedTripType || null
+    p_trip_type: vrSelectedTripType || null,
+    p_customer_wechat: document.getElementById('vr-wechat').value.trim() || null
   });
   if(error){
     console.error('Villa-Anfrage fehlgeschlagen:', error);
@@ -17237,7 +17263,7 @@ if ('serviceWorker' in navigator) {
 
 <!-- Kleine, immer sichtbare Versionsanzeige (auch wenn die Baustellen-Tuer aktiv ist) --
      damit auf einen Blick klar ist, ob wirklich die neueste Version laeuft, statt zu raten. -->
-<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v421</div>
+<div id="version-footer" style="display:none; position:fixed; bottom:6px; right:8px; font-size:0.65rem; color:#999; z-index:100000; font-family:'JetBrains Mono', monospace; pointer-events:none; opacity:0.55; background:rgba(255,255,255,0.7); padding:1px 5px; border-radius:4px;">v422</div>
 
 <!-- Etappe 4: Lade-Overlay waehrend "Buchung annehmen" im Hintergrund laeuft (kann bei VIP-Fahrern
      mit Auto-Einzug ein paar Sekunden dauern, da erst mit Xendit gesprochen wird, bevor die
